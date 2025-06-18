@@ -83,7 +83,7 @@ extension Profile {
         floatingcarbs = preferences.floatingcarbs
         autoisf = preferences.autoisf
         enableBGacceleration = preferences.enableBGacceleration
-        enableSMBEvenOnOddOffalways = preferences.enableSMBEvenOnOddOffalways
+        enableSMBEvenOnOddOffAlways = preferences.enableSMBEvenOnOddOffAlways
         autoISFoffSport = preferences.autoISFoffSport
         enableB30 = preferences.enableB30
         ketoProtect = preferences.ketoProtect

@@ -87,7 +87,7 @@ struct Profile: Codable {
     var bgAccelISFweight: Decimal = 0
     var bgBrakeISFweight: Decimal = 0
     var iobThresholdPercent: Decimal = 1
-    var enableSMBEvenOnOddOffalways: Bool = false
+    var enableSMBEvenOnOddOffAlways: Bool = false
     var autoISFoffSport: Bool = false
     var targetUnits: GlucoseUnits = .mgdL
     // start B30 config
@@ -178,7 +178,7 @@ struct Profile: Codable {
         case smbMaxRangeExtension = "smb_max_range_extension"
         case floatingcarbs = "floating_carbs"
         case iobThresholdPercent = "iob_threshold_percent"
-        case enableSMBEvenOnOddOffalways = "enableSMB_EvenOn_OddOff_always"
+        case enableSMBEvenOnOddOffAlways = "enableSMB_EvenOn_OddOff_always"
         case smbDeliveryRatioMin = "smb_delivery_ratio_min"
         case smbDeliveryRatioMax = "smb_delivery_ratio_max"
         case higherISFrangeWeight = "higher_ISFrange_weight"
