@@ -160,11 +160,8 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
 
     /// Tracks if watchface is suppressed because datafield is active (user in activity).
     /// When datafield sends request → watchface suppressed (Garmin OS suspends it during activities)
-    /// When watchface sends request → activity ended, resume watchface
+    /// When watchface sends request → activity ended, immediately send fresh data
     private var watchfaceSuppressedDuringActivity: Bool = false
-
-    // Datafield: Always send if enabled - no inactivity check needed.
-    // Datafield requests data via temporal events (every 5 min) when activity is running.
 
     // MARK: - CoreData & Subscriptions
 
@@ -1121,20 +1118,22 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
         let isDatafield = appUUID == currentDatafield.datafieldUUID
 
         if isWatchface {
-            let wasInactive = isWatchfaceInactive()
             lastWatchfaceRequestTime = Date()
 
-            // Watchface request = activity ended, resume sending to watchface
+            // Watchface request while activity was running = activity just ended
+            // Send immediately with no hash checks
             if watchfaceSuppressedDuringActivity {
-                debug(.watchManager, "Garmin: Watchface request - activity ended, resuming watchface")
+                debug(.watchManager, "Garmin: Watchface request - activity ended, sending immediately")
                 watchfaceSuppressedDuringActivity = false
+                sendImmediateWatchState(to: appUUID)
+                return
             }
 
-            if wasInactive {
-                // Watchface just woke up after being inactive - send fresh data immediately
+            if isWatchfaceInactive() {
+                // Watchface just woke up after being inactive - send fresh data
                 debug(.watchManager, "Garmin: Watchface resumed after inactivity - sending fresh data")
-                lastPreparedDataHash = nil // Force data preparation
-                lastSentDataHash = nil // Force data send
+                lastPreparedDataHash = nil
+                lastSentDataHash = nil
             }
         } else if isDatafield {
             // Datafield request = activity started, suppress watchface sends
@@ -1158,6 +1157,44 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
             return false
         }
         return Date().timeIntervalSince(lastRequest) > watchfaceActiveTimeout
+    }
+
+    /// Sends watch state immediately to a specific app, bypassing all hash checks.
+    /// Used when watchface requests data after activity ends - needs immediate fresh data.
+    private func sendImmediateWatchState(to appUUID: UUID) {
+        Task {
+            do {
+                let watchState = try await setupGarminWatchState(triggeredBy: "ActivityEnded")
+                let watchStateData = try JSONEncoder().encode(watchState)
+                sendWatchStateToApp(watchStateData, appUUID: appUUID)
+            } catch {
+                debug(.watchManager, "Garmin: Cannot encode watch state: \(error)")
+            }
+        }
+    }
+
+    /// Sends data directly to a specific app without hash checks.
+    private func sendWatchStateToApp(_ data: Data, appUUID: UUID) {
+        guard let jsonObject = try? JSONSerialization.jsonObject(with: data, options: []) else {
+            debug(.watchManager, "Garmin: Invalid JSON for immediate send")
+            return
+        }
+
+        guard let app = watchApps.first(where: { $0.uuid == appUUID }) else {
+            debug(.watchManager, "Garmin: App not found for immediate send")
+            return
+        }
+
+        let appName = appDisplayName(for: appUUID)
+
+        connectIQ?.getAppStatus(app) { [weak self] status in
+            guard status?.isInstalled == true else {
+                debug(.watchManager, "Garmin: App not installed: \(appName)")
+                return
+            }
+            self?.debugGarmin("Garmin: Sending immediately to \(appName)")
+            self?.sendMessage(jsonObject as Any, to: app, appName: appName)
+        }
     }
 }
 
