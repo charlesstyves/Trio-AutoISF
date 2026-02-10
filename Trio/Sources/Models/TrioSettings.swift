@@ -89,6 +89,10 @@ struct TrioSettings: JSON, Equatable, Encodable {
     /// Controls whether watchface data transmission is enabled
     var isWatchfaceDataEnabled: Bool = false
 
+    /// When enabled, automatically switches between watchface and datafield based on activity detection.
+    /// When disabled, broadcasts to all configured apps simultaneously.
+    var smartGarminMessageSwitching: Bool = true
+
     /// Computed property that groups all Garmin settings into a single struct
     var garminSettings: GarminWatchSettings {
         get {
@@ -97,7 +101,8 @@ struct TrioSettings: JSON, Equatable, Encodable {
                 datafield: garminDatafield,
                 primaryAttributeChoice: primaryAttributeChoice,
                 secondaryAttributeChoice: secondaryAttributeChoice,
-                isWatchfaceDataEnabled: isWatchfaceDataEnabled
+                isWatchfaceDataEnabled: isWatchfaceDataEnabled,
+                smartGarminMessageSwitching: smartGarminMessageSwitching
             )
         }
         set {
@@ -106,6 +111,7 @@ struct TrioSettings: JSON, Equatable, Encodable {
             primaryAttributeChoice = newValue.primaryAttributeChoice
             secondaryAttributeChoice = newValue.secondaryAttributeChoice
             isWatchfaceDataEnabled = newValue.isWatchfaceDataEnabled
+            smartGarminMessageSwitching = newValue.smartGarminMessageSwitching
         }
     }
 }
@@ -381,6 +387,10 @@ extension TrioSettings: Decodable {
 
         if let isWatchfaceDataEnabled = try? container.decode(Bool.self, forKey: .isWatchfaceDataEnabled) {
             settings.isWatchfaceDataEnabled = isWatchfaceDataEnabled
+        }
+
+        if let smartGarminMessageSwitching = try? container.decode(Bool.self, forKey: .smartGarminMessageSwitching) {
+            settings.smartGarminMessageSwitching = smartGarminMessageSwitching
         }
 
         self = settings

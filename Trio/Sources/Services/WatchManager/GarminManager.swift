@@ -950,7 +950,11 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
             let isWatchface = appUUID == currentWatchface.watchfaceUUID
             let isDatafield = appUUID == currentDatafield.datafieldUUID
 
-            if isSmartMessageSwitchingEnabled {
+            // Only apply smart switching after we've received at least one status request
+            // On app restart, broadcast to both until we know which one is active
+            let hasReceivedAnyStatusRequest = lastWatchfaceRequestTime != nil || lastDatafieldRequestTime != nil
+
+            if isSmartMessageSwitchingEnabled, hasReceivedAnyStatusRequest {
                 // Fallback: if flag says activity running but datafield inactive for 15 min,
                 // assume activity ended (handles case where no watchface is installed)
                 if watchfaceSuppressedDuringActivity, isDatafieldInactive() {
@@ -1154,7 +1158,7 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
                 if watchfaceSuppressedDuringActivity {
                     debug(.watchManager, "Garmin: Watchface request - activity ended, sending immediately")
                     watchfaceSuppressedDuringActivity = false
-                    sendImmediateWatchState(to: appUUID)
+                    sendImmediateWatchState(to: appUUID, triggeredBy: "ActivityEnded")
                     return
                 }
 
@@ -1174,7 +1178,7 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
                 if !watchfaceSuppressedDuringActivity {
                     debug(.watchManager, "Garmin: Datafield request - activity started, sending immediately")
                     watchfaceSuppressedDuringActivity = true
-                    sendImmediateWatchState(to: appUUID)
+                    sendImmediateWatchState(to: appUUID, triggeredBy: "ActivityStarted")
                     return
                 }
                 // Activity already running - send fresh data through normal pipeline
@@ -1208,11 +1212,11 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
     }
 
     /// Sends watch state immediately to a specific app, bypassing all hash checks.
-    /// Used when watchface requests data after activity ends - needs immediate fresh data.
-    private func sendImmediateWatchState(to appUUID: UUID) {
+    /// Used when activity transitions (start/end) - needs immediate fresh data.
+    private func sendImmediateWatchState(to appUUID: UUID, triggeredBy: String) {
         Task {
             do {
-                let watchState = try await setupGarminWatchState(triggeredBy: "ActivityEnded")
+                let watchState = try await setupGarminWatchState(triggeredBy: triggeredBy)
                 let watchStateData = try JSONEncoder().encode(watchState)
                 sendWatchStateToApp(watchStateData, appUUID: appUUID)
             } catch {
