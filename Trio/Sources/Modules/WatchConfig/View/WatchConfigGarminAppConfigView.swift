@@ -7,6 +7,7 @@ struct WatchConfigGarminAppConfigView: View {
     @State private var shouldDisplayHint2: Bool = false
     @State private var shouldDisplayHint3: Bool = false
     @State private var shouldDisplayHint4: Bool = false
+    @State private var shouldDisplayHint5: Bool = false
     @State var hintDetent = PresentationDetent.large
 
     @Environment(\.colorScheme) var colorScheme
@@ -183,6 +184,38 @@ struct WatchConfigGarminAppConfigView: View {
                     }.padding(.vertical)
                 }
             ).listRowBackground(Color.chart)
+
+            // MARK: - Advanced Settings Section
+
+            Section(
+                header: Text("Advanced Settings"),
+                content: {
+                    VStack {
+                        Toggle("Smart Message Switching", isOn: $state.garminSettings.smartGarminMessageSwitching)
+                            .padding(.top)
+
+                        HStack(alignment: .center) {
+                            Text(
+                                "Automatically switches data delivery between watchface and datafield based on activity detection."
+                            )
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                            .lineLimit(nil)
+                            Spacer()
+                            Button(
+                                action: {
+                                    shouldDisplayHint5.toggle()
+                                },
+                                label: {
+                                    HStack {
+                                        Image(systemName: "questionmark.circle")
+                                    }
+                                }
+                            ).buttonStyle(BorderlessButtonStyle())
+                        }.padding(.top)
+                    }.padding(.vertical)
+                }
+            ).listRowBackground(Color.chart)
         }
         .listSectionSpacing(sectionSpacing)
         .scrollContentBackground(.hidden)
@@ -234,6 +267,22 @@ struct WatchConfigGarminAppConfigView: View {
                 hintLabel: "Choose data support",
                 hintText: Text(
                     "Choose which data types, along with BG and IOB etc., you want to show on your Garmin device. That data type will be shown both on watchface and datafield."
+                ),
+                sheetTitle: String(localized: "Help", comment: "Help sheet title")
+            )
+        }
+        .sheet(isPresented: $shouldDisplayHint5) {
+            SettingInputHintView(
+                hintDetent: $hintDetent,
+                shouldDisplayHint: $shouldDisplayHint5,
+                hintLabel: "Smart Message Switching",
+                hintText: Text(
+                    "When enabled, Trio automatically detects whether you're in an activity and routes data accordingly:\n\n" +
+                        "• During activities: Data is sent to the datafield\n" +
+                        "• Outside activities: Data is sent to the watchface\n\n" +
+                        "This prevents message queue buildup that can occur when Garmin OS suspends the watchface background service during activities.\n\n" +
+                        "If only a datafield is configured, data is sent only during activities (when datafield requests come in). This saves battery between activities.\n\n" +
+                        "When disabled, data is broadcast to all configured apps simultaneously. This is more robust and may help eliminate stale data issues."
                 ),
                 sheetTitle: String(localized: "Help", comment: "Help sheet title")
             )

@@ -266,6 +266,13 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
         settingsManager.settings.garminSettings.isWatchfaceDataEnabled
     }
 
+    /// Returns whether smart message switching is enabled in settings.
+    /// When enabled, automatically switches between watchface and datafield based on activity detection.
+    /// When disabled, broadcasts to all configured apps simultaneously.
+    private var isSmartMessageSwitchingEnabled: Bool {
+        settingsManager.settings.garminSettings.smartGarminMessageSwitching
+    }
+
     /// SwissAlpine watchface uses historical glucose data (24 entries)
     /// Trio watchface only uses current reading
     private var needsHistoricalGlucoseData: Bool {
@@ -943,32 +950,34 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
             let isWatchface = appUUID == currentWatchface.watchfaceUUID
             let isDatafield = appUUID == currentDatafield.datafieldUUID
 
-            // Fallback: if flag says activity running but datafield inactive for 15 min,
-            // assume activity ended (handles case where no watchface is installed)
-            if watchfaceSuppressedDuringActivity, isDatafieldInactive() {
-                debug(.watchManager, "Garmin: Datafield inactive for 15 min - assuming activity ended")
-                watchfaceSuppressedDuringActivity = false
-            }
+            if isSmartMessageSwitchingEnabled {
+                // Fallback: if flag says activity running but datafield inactive for 15 min,
+                // assume activity ended (handles case where no watchface is installed)
+                if watchfaceSuppressedDuringActivity, isDatafieldInactive() {
+                    debug(.watchManager, "Garmin: Datafield inactive for 15 min - assuming activity ended")
+                    watchfaceSuppressedDuringActivity = false
+                }
 
-            // Skip watchface if suppressed during activity (datafield is active)
-            if isWatchface, watchfaceSuppressedDuringActivity {
-                debug(.watchManager, "Garmin: Skipping watchface send - activity in progress (datafield active)")
-                return
-            }
+                // Skip watchface if suppressed during activity (datafield is active)
+                if isWatchface, watchfaceSuppressedDuringActivity {
+                    debug(.watchManager, "Garmin: Skipping watchface send - activity in progress (datafield active)")
+                    return
+                }
 
-            // Skip watchface if inactive (no status request in 5 min)
-            if isWatchface, isWatchfaceInactive() {
-                debug(
-                    .watchManager,
-                    "Garmin: Skipping watchface send - inactive (no status request in \(Int(watchfaceActiveTimeout / 60)) min)"
-                )
-                return
-            }
+                // Skip watchface if inactive (no status request in 5 min)
+                if isWatchface, isWatchfaceInactive() {
+                    debug(
+                        .watchManager,
+                        "Garmin: Skipping watchface send - inactive (no status request in \(Int(watchfaceActiveTimeout / 60)) min)"
+                    )
+                    return
+                }
 
-            // Skip datafield if no activity running (watchface is active)
-            if isDatafield, !watchfaceSuppressedDuringActivity {
-                debug(.watchManager, "Garmin: Skipping datafield send - no activity running (watchface active)")
-                return
+                // Skip datafield if no activity running (watchface is active)
+                if isDatafield, !watchfaceSuppressedDuringActivity {
+                    debug(.watchManager, "Garmin: Skipping datafield send - no activity running (watchface active)")
+                    return
+                }
             }
 
             connectIQ?.getAppStatus(app) { [weak self] status in
@@ -1139,34 +1148,38 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
         if isWatchface {
             lastWatchfaceRequestTime = Date()
 
-            // Watchface request while activity was running = activity just ended
-            // Send immediately with no hash checks
-            if watchfaceSuppressedDuringActivity {
-                debug(.watchManager, "Garmin: Watchface request - activity ended, sending immediately")
-                watchfaceSuppressedDuringActivity = false
-                sendImmediateWatchState(to: appUUID)
-                return
-            }
+            if isSmartMessageSwitchingEnabled {
+                // Watchface request while activity was running = activity just ended
+                // Send immediately with no hash checks
+                if watchfaceSuppressedDuringActivity {
+                    debug(.watchManager, "Garmin: Watchface request - activity ended, sending immediately")
+                    watchfaceSuppressedDuringActivity = false
+                    sendImmediateWatchState(to: appUUID)
+                    return
+                }
 
-            if isWatchfaceInactive() {
-                // Watchface just woke up after being inactive - send fresh data
-                debug(.watchManager, "Garmin: Watchface resumed after inactivity - sending fresh data")
-                lastPreparedDataHash = nil
-                lastSentDataHash = nil
+                if isWatchfaceInactive() {
+                    // Watchface just woke up after being inactive - send fresh data
+                    debug(.watchManager, "Garmin: Watchface resumed after inactivity - sending fresh data")
+                    lastPreparedDataHash = nil
+                    lastSentDataHash = nil
+                }
             }
         } else if isDatafield {
             lastDatafieldRequestTime = Date()
 
-            // Datafield request while no activity was running = activity just started
-            // Send immediately with no hash checks (mirror of watchface logic)
-            if !watchfaceSuppressedDuringActivity {
-                debug(.watchManager, "Garmin: Datafield request - activity started, sending immediately")
-                watchfaceSuppressedDuringActivity = true
-                sendImmediateWatchState(to: appUUID)
-                return
+            if isSmartMessageSwitchingEnabled {
+                // Datafield request while no activity was running = activity just started
+                // Send immediately with no hash checks (mirror of watchface logic)
+                if !watchfaceSuppressedDuringActivity {
+                    debug(.watchManager, "Garmin: Datafield request - activity started, sending immediately")
+                    watchfaceSuppressedDuringActivity = true
+                    sendImmediateWatchState(to: appUUID)
+                    return
+                }
+                // Activity already running - send fresh data through normal pipeline
+                lastSentDataHash = nil
             }
-            // Activity already running - send fresh data through normal pipeline
-            lastSentDataHash = nil
         }
 
         // Reply only to the requesting app through the full pipeline
