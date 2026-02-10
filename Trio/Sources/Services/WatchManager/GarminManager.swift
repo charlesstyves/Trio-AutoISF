@@ -163,6 +163,14 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
     /// When watchface sends request → activity ended, immediately send fresh data
     private var watchfaceSuppressedDuringActivity: Bool = false
 
+    /// Tracks when the datafield last sent a status request.
+    /// Used as fallback to detect activity end when no watchface is installed.
+    private var lastDatafieldRequestTime: Date?
+
+    /// How long since last datafield request before we assume activity ended (seconds).
+    /// Fallback for when no watchface is installed to detect "activity ended".
+    private let datafieldInactiveTimeout: TimeInterval = 15 * 60 // 15 minutes
+
     // MARK: - CoreData & Subscriptions
 
     /// Queue for handling Core Data change notifications
@@ -935,6 +943,13 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
             let isWatchface = appUUID == currentWatchface.watchfaceUUID
             let isDatafield = appUUID == currentDatafield.datafieldUUID
 
+            // Fallback: if flag says activity running but datafield inactive for 15 min,
+            // assume activity ended (handles case where no watchface is installed)
+            if watchfaceSuppressedDuringActivity, isDatafieldInactive() {
+                debug(.watchManager, "Garmin: Datafield inactive for 15 min - assuming activity ended")
+                watchfaceSuppressedDuringActivity = false
+            }
+
             // Skip watchface if suppressed during activity (datafield is active)
             if isWatchface, watchfaceSuppressedDuringActivity {
                 debug(.watchManager, "Garmin: Skipping watchface send - activity in progress (datafield active)")
@@ -950,7 +965,11 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
                 return
             }
 
-            // Datafield: Always send if enabled - datafield requests data when activity runs
+            // Skip datafield if no activity running (watchface is active)
+            if isDatafield, !watchfaceSuppressedDuringActivity {
+                debug(.watchManager, "Garmin: Skipping datafield send - no activity running (watchface active)")
+                return
+            }
 
             connectIQ?.getAppStatus(app) { [weak self] status in
                 guard status?.isInstalled == true else {
@@ -1136,12 +1155,17 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
                 lastSentDataHash = nil
             }
         } else if isDatafield {
-            // Datafield request = activity started, suppress watchface sends
+            lastDatafieldRequestTime = Date()
+
+            // Datafield request while no activity was running = activity just started
+            // Send immediately with no hash checks (mirror of watchface logic)
             if !watchfaceSuppressedDuringActivity {
-                debug(.watchManager, "Garmin: Datafield request - activity started, suppressing watchface")
+                debug(.watchManager, "Garmin: Datafield request - activity started, sending immediately")
                 watchfaceSuppressedDuringActivity = true
+                sendImmediateWatchState(to: appUUID)
+                return
             }
-            // Always send fresh data to datafield
+            // Activity already running - send fresh data through normal pipeline
             lastSentDataHash = nil
         }
 
@@ -1157,6 +1181,17 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
             return false
         }
         return Date().timeIntervalSince(lastRequest) > watchfaceActiveTimeout
+    }
+
+    /// Checks if the datafield has been inactive (no status requests) for longer than the timeout.
+    /// Fallback for detecting "activity ended" when no watchface is installed.
+    /// - Returns: true if datafield is inactive (activity likely ended), false if recently active.
+    private func isDatafieldInactive() -> Bool {
+        guard let lastRequest = lastDatafieldRequestTime else {
+            // Never received a request - consider inactive
+            return true
+        }
+        return Date().timeIntervalSince(lastRequest) > datafieldInactiveTimeout
     }
 
     /// Sends watch state immediately to a specific app, bypassing all hash checks.
