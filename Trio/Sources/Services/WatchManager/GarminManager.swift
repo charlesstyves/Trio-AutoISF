@@ -566,12 +566,23 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
             return []
         }
 
-        if debugWatchState {
+        let shouldDebug = debugWatchState
+        if shouldDebug {
             debug(.watchManager, "Garmin: Preparing watch state [Trigger: \(triggeredBy)]")
         }
 
+        // Extract all needed values from self before entering perform block (Sendable compliance)
+        let unitsValue = units
+        let iobValue = formatIOB(iobService.currentIOB ?? Decimal(0))
+        let basalProfile = settingsManager.preferences.basalProfile as? [BasalProfileEntry] ?? []
+        let displayPrimaryChoice = settingsManager.settings.garminSettings.primaryAttributeChoice.rawValue
+        let displaySecondaryChoice = settingsManager.settings.garminSettings.secondaryAttributeChoice.rawValue
+        let needsHistoricalData = needsHistoricalGlucoseData
+        let previousHash = lastPreparedDataHash
+        let previousWatchState = lastPreparedWatchState
+
         // Fetch glucose - SwissAlpine needs 24, Trio needs 2 (for delta calculation)
-        let glucoseLimit = needsHistoricalGlucoseData ? 24 : 2
+        let glucoseLimit = needsHistoricalData ? 24 : 2
         let glucoseIds = try await fetchGlucose(limit: glucoseLimit)
 
         // Fetch all determinations from last 30 minutes (no limit)
@@ -580,93 +591,60 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
 
         let tempBasalIds = try await fetchTempBasals()
 
-        let glucoseObjects: [GlucoseStored] = try await CoreDataStack.shared
-            .getNSManagedObject(with: glucoseIds, context: backgroundContext)
-        let allDeterminationObjects: [OrefDetermination] = try await CoreDataStack.shared
-            .getNSManagedObject(with: allDeterminationIds, context: backgroundContext)
-        let tempBasalObjects: [PumpEventStored] = try await CoreDataStack.shared
-            .getNSManagedObject(with: tempBasalIds, context: backgroundContext)
+        // Capture context locally for use in perform block
+        let context = backgroundContext
 
-        // Extract all needed values from Core Data objects before the @Sendable closure
-        // This prevents capturing non-Sendable Core Data objects in the perform block
+        // Single perform block: Fetch objects from IDs and extract all values
+        // All self properties extracted above to avoid capturing non-Sendable BaseGarminManager
+        let watchStates: [GarminWatchState] = await context.perform {
+            // Fetch Core Data objects inside perform block
+            let glucoseObjects = glucoseIds.compactMap { context.object(with: $0) as? GlucoseStored }
+            let allDeterminationObjects = allDeterminationIds.compactMap {
+                context.object(with: $0) as? OrefDetermination
+            }
+            let tempBasalObjects = tempBasalIds.compactMap { context.object(with: $0) as? PumpEventStored }
+            var states: [GarminWatchState] = []
 
-        // Process determinations - extract enacted timestamp
-        let enactedTimestamp: Date = await backgroundContext.perform {
+            let unitsHint = unitsValue == .mgdL ? "mgdl" : "mmol"
+
+            // Find enacted determination for timestamp (when loop actually ran)
+            // If no enacted determination exists in last 30 min, use a synthetic timestamp
+            // of "31 minutes ago" so watchface can distinguish between:
+            //   - nil = no data received yet (watch startup)
+            //   - 31+ min old = loop is stale
             let enactedDetermination = allDeterminationObjects.first(where: { $0.enacted })
-            return enactedDetermination?.timestamp ?? Date().addingTimeInterval(-31 * 60)
-        }
+            let enactedTimestamp: Date = enactedDetermination?.timestamp ?? Date().addingTimeInterval(-31 * 60)
 
-        // Extract determination values (cob, sensRatio, isf, eventualBG)
-        let determinationValues: (cob: Double?, sensRatio: Double?, isf: Int16?, eventualBG: Int16?) = await backgroundContext
-            .perform {
-                guard let latestDetermination = allDeterminationObjects.first else {
-                    return (nil, nil, nil, nil)
+            // Extract data values from most recent determination (enacted or suggested)
+            // Suggested sets provide latest calculations even if loop hasn't run yet
+            var cobValue: Double?
+            var sensRatioValue: Double?
+            var isfValue: Int16?
+            var eventualBGValue: Int16?
+
+            if let latestDetermination = allDeterminationObjects.first {
+                cobValue = Double(latestDetermination.cob)
+
+                if let ratio = latestDetermination.autoISFratio {
+                    sensRatioValue = Double(truncating: ratio)
                 }
 
-                let cobValue = Double(latestDetermination.cob)
-                let sensRatioValue = latestDetermination.autoISFratio.map { Double(truncating: $0) }
-                let isfValue = latestDetermination.insulinSensitivity.map { Int16(truncating: $0) }
-                let eventualBGValue = latestDetermination.eventualBG.map { Int16(truncating: $0) }
+                if let isf = latestDetermination.insulinSensitivity {
+                    isfValue = Int16(truncating: isf)
+                }
 
-                return (cobValue, sensRatioValue, isfValue, eventualBGValue)
+                if let eventualBG = latestDetermination.eventualBG {
+                    eventualBGValue = Int16(truncating: eventualBG)
+                }
             }
 
-        // Process temp basal - extract rate
-        let tempBasalRate: Double? = await backgroundContext.perform {
+            // TBR from temp basal or profile
+            var tbrValue: Double?
             if let firstTempBasal = tempBasalObjects.first,
                let tempBasalData = firstTempBasal.tempBasal,
                let tempRate = tempBasalData.rate
             {
-                return Double(truncating: tempRate)
-            }
-            return nil
-        }
-
-        // Process glucose data - extract values into Sendable struct
-        struct GlucoseData: Sendable {
-            let value: Int16
-            let date: Date?
-            let direction: String?
-        }
-
-        let glucoseData: [GlucoseData] = await backgroundContext.perform {
-            glucoseObjects.map { glucose in
-                GlucoseData(
-                    value: glucose.glucose,
-                    date: glucose.date,
-                    direction: glucose.direction
-                )
-            }
-        }
-
-        // Capture needed values before the @Sendable closure
-        let units = self.units
-        let currentIOB = iobService.currentIOB ?? Decimal(0)
-        let iobValue = formatIOB(currentIOB)
-        let basalProfile = settingsManager.preferences.basalProfile as? [BasalProfileEntry] ?? []
-        let displayPrimaryChoice = settingsManager.settings.garminSettings.primaryAttributeChoice.rawValue
-        let displaySecondaryChoice = settingsManager.settings.garminSettings.secondaryAttributeChoice.rawValue
-        let needsHistoricalData = needsHistoricalGlucoseData
-        let debugEnabled = debugWatchState
-        let lastPreparedHash = lastPreparedDataHash
-        let lastPreparedState = lastPreparedWatchState
-
-        // Build watch states using only pre-extracted Sendable values
-        let watchStates = await backgroundContext.perform {
-            var watchStates: [GarminWatchState] = []
-
-            let unitsHint = units == .mgdL ? "mgdl" : "mmol"
-
-            // Use pre-extracted determination values
-            let cobValue = determinationValues.cob
-            let sensRatioValue = determinationValues.sensRatio
-            let isfValue = determinationValues.isf
-            let eventualBGValue = determinationValues.eventualBG
-
-            // Calculate TBR - use temp basal rate if available, otherwise fall back to scheduled basal
-            var tbrValue: Double?
-            if let tempRate = tempBasalRate {
-                tbrValue = tempRate
+                tbrValue = Double(truncating: tempRate)
             } else {
                 // Fall back to scheduled basal from profile
                 if !basalProfile.isEmpty {
@@ -683,13 +661,13 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
                 }
             }
 
-            // Process glucose readings using pre-extracted data
-            let entriesToSend = needsHistoricalData ? glucoseData.count : 1
+            // Process glucose readings
+            let entriesToSend = needsHistoricalData ? glucoseObjects.count : 1
 
-            for (index, glucose) in glucoseData.enumerated() {
+            for (index, glucose) in glucoseObjects.enumerated() {
                 guard index < entriesToSend else { break }
 
-                let glucoseValue = glucose.value
+                let glucoseValue = glucose.glucose
 
                 var watchState = GarminWatchState()
 
@@ -708,8 +686,8 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
                     watchState.direction = glucose.direction ?? "--"
 
                     // Delta calculation
-                    if glucoseData.count > 1 {
-                        watchState.delta = glucose.value - glucoseData[1].value
+                    if glucoseObjects.count > 1 {
+                        watchState.delta = glucose.glucose - glucoseObjects[1].glucose
                     } else {
                         watchState.delta = 0
                     }
@@ -729,22 +707,22 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
                     watchState.displaySecondaryAttributeChoice = displaySecondaryChoice
                 }
 
-                watchStates.append(watchState)
+                states.append(watchState)
             }
 
-            return watchStates
+            return states
         }
 
         // Deduplicate: Check if data is unchanged from last preparation (outside perform block)
         let currentHash = watchStates.hashValue
-        if currentHash == lastPreparedHash {
-            if debugEnabled {
+        if currentHash == previousHash {
+            if shouldDebug {
                 debug(.watchManager, "Garmin: Skipping - data unchanged")
             }
-            return lastPreparedState ?? watchStates
+            return previousWatchState ?? watchStates
         }
 
-        if debugEnabled {
+        if shouldDebug {
             let iobFormatted = String(format: "%.1f", watchStates.first?.iob ?? 0)
             let cobFormatted = String(format: "%.0f", watchStates.first?.cob ?? 0)
             let tbrFormatted = String(format: "%.2f", watchStates.first?.tbr ?? 0)
@@ -755,7 +733,7 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
             )
         }
 
-        // Cache for deduplication
+        // Cache for deduplication (outside perform block)
         lastPreparedDataHash = currentHash
         lastPreparedWatchState = watchStates
 
