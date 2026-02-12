@@ -210,6 +210,27 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
     /// Prevents multiple re-registrations for a single flapping event.
     private var hasTriggeredFlappingReregistration: Bool = false
 
+    // MARK: - Missed Status Request Detection (Pattern 3)
+
+    /// Expected interval between watchface status requests (seconds).
+    /// Watchface polls every 5 minutes when active.
+    private let expectedStatusRequestInterval: TimeInterval = 5 * 60
+
+    /// Number of missed status requests before triggering proactive recovery.
+    /// 3 missed = 15 minutes of silence, recovery triggers 30s before 4th would be missed.
+    private let missedRequestThreshold: Int = 3
+
+    /// How long before the next expected request to trigger recovery (seconds).
+    /// Gives time for re-registration to complete before the watchface would poll again.
+    private let proactiveRecoveryLeadTime: TimeInterval = 30
+
+    /// Pending proactive recovery work item for missed status requests.
+    private var pendingProactiveRecovery: DispatchWorkItem?
+
+    /// Track if proactive recovery has been triggered for the current silence period.
+    /// Resets when a status request is received.
+    private var hasTriggeredProactiveRecovery: Bool = false
+
     // MARK: - CoreData & Subscriptions
 
     /// Queue for handling Core Data change notifications
@@ -1276,6 +1297,87 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
         connectionStateHistory.removeAll()
     }
 
+    // MARK: - Proactive Recovery (Pattern 3: Missed Status Requests)
+
+    /// Schedules a proactive recovery check for when 3 status requests would be missed.
+    /// Called each time a watchface status request is received.
+    /// Recovery triggers 30 seconds before the 4th expected request would be missed.
+    private func scheduleProactiveRecoveryCheck() {
+        // Only schedule if watchface data is enabled
+        guard isWatchfaceDataEnabled else { return }
+
+        // Cancel any existing pending check
+        pendingProactiveRecovery?.cancel()
+
+        // Calculate when to trigger recovery:
+        // After 3 missed requests, the 4th would be missed at (missedThreshold + 1) * interval
+        // Trigger 30s before that: (3 + 1) * 5min - 30s = 20min - 30s = 19min 30s from now
+        let recoveryDelay = (Double(missedRequestThreshold + 1) * expectedStatusRequestInterval) - proactiveRecoveryLeadTime
+
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self = self else { return }
+            self.checkAndPerformProactiveRecovery()
+        }
+
+        pendingProactiveRecovery = workItem
+        timerQueue.asyncAfter(deadline: .now() + recoveryDelay, execute: workItem)
+    }
+
+    /// Checks if proactive recovery is needed and performs it if so.
+    /// Called after the scheduled delay when no status requests have been received.
+    private func checkAndPerformProactiveRecovery() {
+        // Verify conditions are still met
+        guard isWatchfaceDataEnabled,
+              !hasTriggeredProactiveRecovery,
+              !devices.isEmpty
+        else {
+            return
+        }
+
+        // Verify the watchface has actually been silent for the expected time
+        guard let lastRequest = lastWatchfaceRequestTime else {
+            // No previous request recorded - this shouldn't happen, but skip recovery
+            return
+        }
+
+        let silenceDuration = Date().timeIntervalSince(lastRequest)
+        let expectedSilence = (Double(missedRequestThreshold + 1) * expectedStatusRequestInterval) - proactiveRecoveryLeadTime
+
+        // Only recover if we've been silent for at least the expected duration (with some tolerance)
+        guard silenceDuration >= expectedSilence - 10 else {
+            // Request came in recently, no recovery needed
+            return
+        }
+
+        performProactiveRecovery()
+    }
+
+    /// Performs proactive recovery by re-registering devices.
+    /// Triggered when watchface stops sending status requests without BLE issues.
+    /// This handles Pattern 3: Garmin OS suspending watchface service without BLE flapping.
+    private func performProactiveRecovery() {
+        hasTriggeredProactiveRecovery = true
+
+        let silenceMinutes = Int((Double(missedRequestThreshold + 1) * expectedStatusRequestInterval - proactiveRecoveryLeadTime) / 60)
+        debug(
+            .watchManager,
+            "Garmin: PROACTIVE RECOVERY - No watchface status requests for ~\(silenceMinutes) min (\(missedRequestThreshold) missed), re-registering devices"
+        )
+
+        // Clear activity tracking state
+        lastWatchfaceRequestTime = nil
+        watchfaceSuppressedDuringActivity = false
+
+        // Clear hash caches to ensure fresh data is sent after re-registration
+        lastPreparedDataHash = nil
+        lastSentDataHash = nil
+
+        // Re-register devices
+        registerDevices(devices)
+
+        debug(.watchManager, "Garmin: Proactive recovery complete - waiting for watch app status requests")
+    }
+
     /// Called when device characteristics are discovered and the device is ready for communication.
     /// This is required in SDK 1.8+ - sending before this callback may fail.
     /// - Parameter device: The device whose characteristics have been discovered.
@@ -1315,6 +1417,11 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
 
         if isWatchface {
             lastWatchfaceRequestTime = Date()
+
+            // Reset proactive recovery state and schedule next check
+            // This ensures we detect if watchface stops responding
+            hasTriggeredProactiveRecovery = false
+            scheduleProactiveRecoveryCheck()
 
             if isSmartMessageSwitchingEnabled {
                 // Watchface request while activity was running = activity just ended
