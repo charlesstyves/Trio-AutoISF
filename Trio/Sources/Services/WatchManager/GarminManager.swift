@@ -940,6 +940,12 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
     ///   - data: JSON-encoded watch state data.
     ///   - targetAppUUID: If provided, only send to this app. If nil, send to all.
     private func broadcastWatchStateData(_ data: Data, targetAppUUID: UUID? = nil) {
+        // Skip sends during active BLE flapping - wait for status request or timeout
+        if isFlapping {
+            debug(.watchManager, "Garmin: Skipping send - BLE flapping in progress")
+            return
+        }
+
         // Deduplicate: Use stable content-based hash (sorted JSON bytes)
         let currentHash: Int
         if let sortedData = try? JSONSerialization.data(
@@ -1233,11 +1239,16 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
 
     /// Schedules a re-registration attempt after BLE flapping has stabilized.
     /// Waits for the stabilization period to ensure connection is truly stable.
+    /// Note: Once scheduled, the recovery timer is NOT reset by subsequent state changes.
+    /// This ensures recovery actually fires instead of being indefinitely postponed.
     private func scheduleFlappingRecovery() {
         guard isFlapping, !hasTriggeredFlappingReregistration else { return }
 
-        // Cancel any existing pending recovery
-        pendingFlappingReregistration?.cancel()
+        // Don't reschedule if we already have a pending recovery - let it fire
+        if pendingFlappingReregistration != nil {
+            debug(.watchManager, "Garmin: BLE flapping subsided (recovery already scheduled)")
+            return
+        }
 
         debug(.watchManager, "Garmin: BLE flapping subsided - scheduling recovery in \(Int(flappingStabilizationTime))s")
 
@@ -1245,7 +1256,12 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
             guard let self = self else { return }
 
             // Verify we haven't resumed flapping during the stabilization period
-            guard self.isFlapping, !self.hasTriggeredFlappingReregistration else {
+            guard self.isFlapping else {
+                debug(.watchManager, "Garmin: Flapping recovery cancelled - flapping state was reset")
+                return
+            }
+            guard !self.hasTriggeredFlappingReregistration else {
+                debug(.watchManager, "Garmin: Flapping recovery cancelled - already triggered")
                 return
             }
 
@@ -1289,12 +1305,14 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
         resetFlappingState()
     }
 
-    /// Resets flapping detection state after recovery or timeout.
+    /// Resets flapping detection state after recovery or status request.
     private func resetFlappingState() {
         isFlapping = false
         hasTriggeredFlappingReregistration = false
         lastFlappingDetectedTime = nil
         connectionStateHistory.removeAll()
+        pendingFlappingReregistration?.cancel()
+        pendingFlappingReregistration = nil
     }
 
     // MARK: - Proactive Recovery (Pattern 3: Missed Status Requests)
@@ -1358,7 +1376,8 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
     private func performProactiveRecovery() {
         hasTriggeredProactiveRecovery = true
 
-        let silenceMinutes = Int((Double(missedRequestThreshold + 1) * expectedStatusRequestInterval - proactiveRecoveryLeadTime) / 60)
+        let silenceMinutes =
+            Int((Double(missedRequestThreshold + 1) * expectedStatusRequestInterval - proactiveRecoveryLeadTime) / 60)
         debug(
             .watchManager,
             "Garmin: PROACTIVE RECOVERY - No watchface status requests for ~\(silenceMinutes) min (\(missedRequestThreshold) missed), re-registering devices"
@@ -1423,6 +1442,13 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
             hasTriggeredProactiveRecovery = false
             scheduleProactiveRecoveryCheck()
 
+            // Cancel pending flapping recovery - status request proves communication restored
+            if isFlapping {
+                debug(.watchManager, "Garmin: Watchface request received - cancelling flapping recovery (communication restored)")
+                pendingFlappingReregistration?.cancel()
+                resetFlappingState()
+            }
+
             if isSmartMessageSwitchingEnabled {
                 // Watchface request while activity was running = activity just ended
                 // Send immediately with no hash checks
@@ -1442,6 +1468,13 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
             }
         } else if isDatafield {
             lastDatafieldRequestTime = Date()
+
+            // Cancel pending flapping recovery - status request proves communication restored
+            if isFlapping {
+                debug(.watchManager, "Garmin: Datafield request received - cancelling flapping recovery (communication restored)")
+                pendingFlappingReregistration?.cancel()
+                resetFlappingState()
+            }
 
             if isSmartMessageSwitchingEnabled {
                 // Datafield request while no activity was running = activity just started
