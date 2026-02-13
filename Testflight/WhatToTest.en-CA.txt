@@ -1,2 +1,3 @@
 Trio dev 0.6.0.48
 rework GarminManager with new watch app & smartMessaging
+Glucose Peaks
