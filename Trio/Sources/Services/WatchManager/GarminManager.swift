@@ -177,8 +177,8 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
     /// Format: (timestamp, isConnected) where isConnected distinguishes connected vs disconnected states.
     private var connectionStateHistory: [(Date, Bool)] = []
 
-    /// How many state changes within the detection window constitutes flapping.
-    /// Based on log analysis (Feb 06, Feb 12): flapping shows 4+ state changes in rapid succession.
+    /// How many disconnects within the detection window constitutes flapping.
+    /// Based on log analysis (Feb 06, Feb 12): flapping shows 4+ disconnects in rapid succession.
     private let flappingThreshold: Int = 4
 
     /// Time window for detecting flapping (seconds).
@@ -189,8 +189,8 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
     /// Based on log analysis: Feb 06 had 1-2s gaps, Feb 12 had 0-4s gaps during flapping.
     private let rapidTransitionThreshold: TimeInterval = 5
 
-    /// How many consecutive rapid transitions indicates flapping.
-    /// Based on log analysis: 3+ rapid transitions in a row is a strong flapping indicator.
+    /// How many consecutive rapid disconnects indicates flapping.
+    /// Based on log analysis: 3+ rapid disconnects in a row is a strong flapping indicator.
     private let consecutiveRapidThreshold: Int = 3
 
     /// How long the connection must remain stable after flapping before re-registration (seconds).
@@ -1163,30 +1163,33 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
 
     /// Tracks connection state changes and detects BLE flapping.
     /// Flapping is detected when either:
-    /// 1. 4+ state changes occur within 30 seconds, OR
-    /// 2. 3+ consecutive transitions have gaps ≤5 seconds
+    /// 1. 4+ disconnects occur within 30 seconds, OR
+    /// 2. 3+ consecutive disconnects have gaps ≤5 seconds
+    /// Only disconnects count toward flapping - connects are recovery attempts, not problems.
     /// When detected, schedules automatic re-registration once the connection stabilizes.
     /// - Parameter isConnected: Whether the device just connected (true) or disconnected (false).
     private func trackConnectionStateChange(isConnected: Bool) {
         let now = Date()
 
-        // Add current state change to history
-        connectionStateHistory.append((now, isConnected))
+        // Only track disconnects for flapping detection - connects are recovery attempts
+        if !isConnected {
+            connectionStateHistory.append((now, isConnected))
+        }
 
         // Remove entries older than the detection window (keep slightly longer for rapid detection)
         let cutoff = now.addingTimeInterval(-flappingDetectionWindow * 2)
         connectionStateHistory = connectionStateHistory.filter { $0.0 > cutoff }
 
-        // Detection method 1: Count state changes within the tight window
+        // Detection method 1: Count disconnects within the tight window
         let recentCutoff = now.addingTimeInterval(-flappingDetectionWindow)
-        let recentChanges = connectionStateHistory.filter { $0.0 > recentCutoff }
-        let stateChangeCount = recentChanges.count
+        let recentDisconnects = connectionStateHistory.filter { $0.0 > recentCutoff }
+        let disconnectCount = recentDisconnects.count
 
-        // Detection method 2: Check for consecutive rapid transitions (gaps ≤5s)
-        let consecutiveRapidCount = countConsecutiveRapidTransitions()
+        // Detection method 2: Check for consecutive rapid disconnects (gaps ≤5s)
+        let consecutiveRapidCount = countConsecutiveRapidDisconnects()
 
-        // Detect flapping: either 4+ changes in 30s OR 3+ consecutive rapid transitions
-        let isFlappingDetected = stateChangeCount >= flappingThreshold || consecutiveRapidCount >= consecutiveRapidThreshold
+        // Detect flapping: either 4+ disconnects in 30s OR 3+ consecutive rapid disconnects
+        let isFlappingDetected = disconnectCount >= flappingThreshold || consecutiveRapidCount >= consecutiveRapidThreshold
 
         if isFlappingDetected {
             if !isFlapping {
@@ -1196,29 +1199,33 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
                 if consecutiveRapidCount >= consecutiveRapidThreshold {
                     debug(
                         .watchManager,
-                        "Garmin: BLE FLAPPING DETECTED - \(consecutiveRapidCount) consecutive rapid transitions (≤\(Int(rapidTransitionThreshold))s gaps)"
+                        "Garmin: BLE FLAPPING DETECTED - \(consecutiveRapidCount) consecutive rapid disconnects (≤\(Int(rapidTransitionThreshold))s gaps)"
                     )
                 } else {
                     debug(
                         .watchManager,
-                        "Garmin: BLE FLAPPING DETECTED - \(stateChangeCount) state changes in \(Int(flappingDetectionWindow))s window"
+                        "Garmin: BLE FLAPPING DETECTED - \(disconnectCount) disconnects in \(Int(flappingDetectionWindow))s window"
                     )
                 }
             }
             lastFlappingDetectedTime = now
 
-            // Cancel any pending re-registration since we're still flapping
-            pendingFlappingReregistration?.cancel()
-            pendingFlappingReregistration = nil
-        } else if isFlapping {
-            // Flapping appears to have stopped - schedule re-registration
+            // If flapping resumes while recovery is pending, cancel it and wait for true stability
+            if pendingFlappingReregistration != nil {
+                pendingFlappingReregistration?.cancel()
+                pendingFlappingReregistration = nil
+                debug(.watchManager, "Garmin: Flapping resumed - cancelled pending recovery, waiting for stability")
+            }
+        } else if isFlapping, isConnected {
+            // Flapping has stopped AND we ended on a connected state - schedule re-registration
+            // Don't schedule if we ended on disconnect - wait for the next connect event
             scheduleFlappingRecovery()
         }
     }
 
-    /// Counts the number of consecutive state changes where each gap is ≤ rapidTransitionThreshold.
-    /// Returns the maximum streak of rapid transitions found in the history.
-    private func countConsecutiveRapidTransitions() -> Int {
+    /// Counts the number of consecutive disconnects where each gap is ≤ rapidTransitionThreshold.
+    /// Returns the maximum streak of rapid disconnects found in the history.
+    private func countConsecutiveRapidDisconnects() -> Int {
         guard connectionStateHistory.count >= 2 else { return 0 }
 
         var maxStreak = 0
@@ -1239,25 +1246,22 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
 
     /// Schedules a re-registration attempt after BLE flapping has stabilized.
     /// Waits for the stabilization period to ensure connection is truly stable.
-    /// Note: Once scheduled, the recovery timer is NOT reset by subsequent state changes.
-    /// This ensures recovery actually fires instead of being indefinitely postponed.
+    /// If flapping resumes, the pending recovery is cancelled and rescheduled when it subsides again.
     private func scheduleFlappingRecovery() {
         guard isFlapping, !hasTriggeredFlappingReregistration else { return }
 
-        // Don't reschedule if we already have a pending recovery - let it fire
-        if pendingFlappingReregistration != nil {
-            debug(.watchManager, "Garmin: BLE flapping subsided (recovery already scheduled)")
-            return
-        }
+        // Cancel any existing pending recovery (shouldn't happen with current logic, but defensive)
+        pendingFlappingReregistration?.cancel()
+        pendingFlappingReregistration = nil
 
         debug(.watchManager, "Garmin: BLE flapping subsided - scheduling recovery in \(Int(flappingStabilizationTime))s")
 
         let workItem = DispatchWorkItem { [weak self] in
             guard let self = self else { return }
 
-            // Verify we haven't resumed flapping during the stabilization period
+            // Verify flapping state is still active (may have been reset by status request or toggle)
             guard self.isFlapping else {
-                debug(.watchManager, "Garmin: Flapping recovery cancelled - flapping state was reset")
+                debug(.watchManager, "Garmin: Flapping recovery skipped - communication already restored")
                 return
             }
             guard !self.hasTriggeredFlappingReregistration else {
@@ -1604,7 +1608,8 @@ extension BaseGarminManager: SettingsObserver {
                 // This allows the send to bypass the inactivity check (manual remedy for queue issues)
                 if watchfaceDataEnabledChanged {
                     lastWatchfaceRequestTime = Date()
-                    debug(.watchManager, "Garmin: Watchface data toggled - resetting activity tracking")
+                    resetFlappingState() // Clear any stuck flapping state
+                    debug(.watchManager, "Garmin: Watchface data toggled - resetting activity and flapping state")
                 }
 
                 triggerWatchStateUpdate(triggeredBy: "Settings", targetAppUUID: targetUUID)
