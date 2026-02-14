@@ -839,6 +839,14 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
                 debugGarmin("Garmin: Registered \(appDetailedName(for: watchfaceUUID))")
                 watchApps.append(watchfaceApp)
                 connectIQ?.register(forAppMessages: watchfaceApp, delegate: self)
+                // Seed the inactivity timeout on first registration (e.g. after app restart).
+                // This allows initial sends for up to watchfaceActiveTimeout seconds,
+                // after which isWatchfaceInactive() will block further sends unless
+                // a status request from the watchface resets the timer.
+                // Only set when nil to avoid overwriting a valid timestamp from a recent status request.
+                if lastWatchfaceRequestTime == nil {
+                    lastWatchfaceRequestTime = Date()
+                }
             } else if !isWatchfaceDataEnabled {
                 debugGarmin("Garmin: Watchface data disabled - skipping watchface registration")
             }
@@ -1502,8 +1510,9 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
     /// - Returns: true if watchface is considered inactive, false if recently active or never seen.
     private func isWatchfaceInactive() -> Bool {
         guard let lastRequest = lastWatchfaceRequestTime else {
-            // Never received a request - consider active (don't block initial sends)
-            return false
+            // No timestamp yet - seeded on registration, so nil here means
+            // watchface is not registered. Consider inactive.
+            return true
         }
         return Date().timeIntervalSince(lastRequest) > watchfaceActiveTimeout
     }
