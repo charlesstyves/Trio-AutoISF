@@ -149,10 +149,16 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
     // MARK: - Watchface Activity Tracking
 
     /// Tracks when the watchface last sent a "status" request (keep-alive).
-    /// Used to detect if watch background service is active and receiving messages.
+    /// Only set when an actual status request is received from the watchface.
+    /// Used to detect activity transitions and determine if watchface is responsive.
     private var lastWatchfaceRequestTime: Date?
 
-    /// How long since last watchface request before we consider it inactive (seconds).
+    /// Tracks when the watchface was registered (for inactivity grace period).
+    /// Set on registration, allows initial sends for watchfaceActiveTimeout seconds.
+    /// After that, isWatchfaceInactive() blocks sends unless a real status request is received.
+    private var watchfaceRegistrationTime: Date?
+
+    /// How long since last watchface request (or registration) before we consider it inactive (seconds).
     /// If no request in this period, we skip sending to avoid queue buildup.
     /// Note: Watch OS naturally suspends watchface background during activities,
     /// so this timeout handles both normal inactivity and activity-based suppression.
@@ -839,6 +845,11 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
                 debugGarmin("Garmin: Registered \(appDetailedName(for: watchfaceUUID))")
                 watchApps.append(watchfaceApp)
                 connectIQ?.register(forAppMessages: watchfaceApp, delegate: self)
+                // Set registration time for inactivity grace period.
+                // This allows initial sends for up to watchfaceActiveTimeout seconds,
+                // after which isWatchfaceInactive() will block further sends unless
+                // a real status request from the watchface sets lastWatchfaceRequestTime.
+                watchfaceRegistrationTime = Date()
             } else if !isWatchfaceDataEnabled {
                 debugGarmin("Garmin: Watchface data disabled - skipping watchface registration")
             }
@@ -977,6 +988,9 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
             ? watchApps.filter { $0.uuid == targetAppUUID }
             : watchApps
 
+        // Track if at least one send was initiated - only update hash if so
+        var didInitiateSend = false
+
         appsToSend.forEach { app in
             guard let appUUID = app.uuid else {
                 debug(.watchManager, "Garmin: Skipping app with undefined UUID")
@@ -1028,6 +1042,9 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
                 }
             }
 
+            // Mark that we're initiating at least one send attempt
+            didInitiateSend = true
+
             connectIQ?.getAppStatus(app) { [weak self] status in
                 guard status?.isInstalled == true else {
                     debug(.watchManager, "Garmin: App not installed: \(appName)")
@@ -1038,8 +1055,12 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
             }
         }
 
-        // Update last sent hash after initiating send
-        lastSentDataHash = currentHash
+        // Only update hash if we actually initiated at least one send
+        // If all apps were skipped (device not ready, activity logic), don't cache the hash
+        // This ensures we retry sending when conditions change (device becomes ready, etc.)
+        if didInitiateSend {
+            lastSentDataHash = currentHash
+        }
     }
 
     // MARK: - GarminManager Conformance
@@ -1357,8 +1378,16 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
         }
 
         // Verify the watchface has actually been silent for the expected time
-        guard let lastRequest = lastWatchfaceRequestTime else {
-            // No previous request recorded - this shouldn't happen, but skip recovery
+        // Use real status request time if available, otherwise fall back to registration time
+        let referenceTime: Date?
+        if let lastRequest = lastWatchfaceRequestTime {
+            referenceTime = lastRequest
+        } else {
+            referenceTime = watchfaceRegistrationTime
+        }
+
+        guard let lastRequest = referenceTime else {
+            // No timestamp available - skip recovery
             return
         }
 
@@ -1499,13 +1528,19 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
     }
 
     /// Checks if the watchface has been inactive (no status requests) for longer than the timeout.
-    /// - Returns: true if watchface is considered inactive, false if recently active or never seen.
+    /// Falls back to registration time for the initial grace period if no real request received yet.
+    /// - Returns: true if watchface is considered inactive, false if recently active or in grace period.
     private func isWatchfaceInactive() -> Bool {
-        guard let lastRequest = lastWatchfaceRequestTime else {
-            // Never received a request - consider active (don't block initial sends)
-            return false
+        // If we've received a real status request, use that timestamp
+        if let lastRequest = lastWatchfaceRequestTime {
+            return Date().timeIntervalSince(lastRequest) > watchfaceActiveTimeout
         }
-        return Date().timeIntervalSince(lastRequest) > watchfaceActiveTimeout
+        // No real request yet - use registration time for grace period
+        if let regTime = watchfaceRegistrationTime {
+            return Date().timeIntervalSince(regTime) > watchfaceActiveTimeout
+        }
+        // Watchface not registered - consider inactive
+        return true
     }
 
     /// Checks if the datafield has been inactive (no status requests) for longer than the timeout.
@@ -1607,9 +1642,9 @@ extension BaseGarminManager: SettingsObserver {
                 // Reset watchface activity tracking when watchface data is toggled
                 // This allows the send to bypass the inactivity check (manual remedy for queue issues)
                 if watchfaceDataEnabledChanged {
-                    lastWatchfaceRequestTime = Date()
+                    watchfaceRegistrationTime = Date()
                     resetFlappingState() // Clear any stuck flapping state
-                    debug(.watchManager, "Garmin: Watchface data toggled - resetting activity and flapping state")
+                    debug(.watchManager, "Garmin: Watchface data toggled - resetting registration time and flapping state")
                 }
 
                 triggerWatchStateUpdate(triggeredBy: "Settings", targetAppUUID: targetUUID)
