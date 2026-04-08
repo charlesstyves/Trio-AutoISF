@@ -32,58 +32,36 @@ struct GlucoseChartView: ChartContent {
                 glucoseColorScheme: glucoseColorScheme
             )
 
-            if !isSmoothingEnabled {
-                PointMark(
-                    x: .value("Time", item.date ?? Date(), unit: .second),
-                    y: .value("Value", glucoseToDisplay)
-                )
-                .foregroundStyle(pointMarkColor)
-                .symbol {
-                    if item.isManual {
-                        ZStack {
-                            Image(systemName: "drop.fill")
-                                .font(.system(size: 8))
-                                .symbolRenderingMode(.monochrome)
-                                .bold()
-                                .foregroundStyle(.white)
-                            Image(systemName: "drop.fill")
-                                .font(.system(size: 6))
-                                .symbolRenderingMode(.monochrome)
-                                .bold()
-                                .foregroundStyle(.red)
-                        }
-                    } else {
-                        Image(systemName: "circle.fill")
-                            .font(.system(size: 4))
-                            .bold()
-                            .foregroundStyle(pointMarkColor)
-                    }
+            PointMark(
+                x: .value("Time", item.date ?? Date(), unit: .second),
+                y: .value("Value", glucoseToDisplay)
+            )
+            .foregroundStyle(pointMarkColor)
+            .symbolSize(20)
+            .symbol {
+                if item.isManual {
+                    Image(systemName: "drop.fill")
+                        .font(.caption2)
+                        .symbolRenderingMode(.monochrome)
+                        .bold()
+                        .foregroundStyle(.red)
+                } else {
+                    Image(systemName: "circle.fill")
+                        .font(.system(size: 5))
+                        .bold()
+                        .foregroundStyle(pointMarkColor)
                 }
-            } else {
-                PointMark(
+            }
+
+            if isSmoothingEnabled, let smoothedGlucose = item.smoothedGlucose, smoothedGlucose != 0 {
+                let smoothedGlucoseForDisplay: Decimal = units == .mgdL ? smoothedGlucose.decimalValue : smoothedGlucose
+                    .decimalValue.asMmolL
+                LineMark(
                     x: .value("Time", item.date ?? Date(), unit: .second),
-                    y: .value("Value", glucoseToDisplay)
+                    y: .value("Value", smoothedGlucoseForDisplay),
+                    series: .value("Type", "Smoothed")
                 )
-                .symbol {
-                    if item.isManual {
-                        ZStack {
-                            Image(systemName: "drop.fill")
-                                .font(.system(size: 8))
-                                .symbolRenderingMode(.monochrome)
-                                .bold()
-                                .foregroundStyle(.white)
-                            Image(systemName: "drop.fill")
-                                .font(.system(size: 6))
-                                .symbolRenderingMode(.monochrome)
-                                .bold()
-                                .foregroundStyle(.red)
-                        }
-                    } else {
-                        Image(systemName: "record.circle.fill")
-                            .font(.system(size: 6))
-                            .foregroundStyle(pointMarkColor)
-                    }
-                }
+                .foregroundStyle(Color.secondary)
             }
         }
     }

@@ -73,9 +73,8 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
     /// Holds a promise used when the user is selecting devices (via `showDeviceSelection()`).
     private var deviceSelectionPromise: Future<[IQDevice], Never>.Promise?
 
-    /// Subject for debouncing watch state updates. Carries data and an optional target app UUID
-    /// (nil = broadcast to all, non-nil = send only to that app).
-    private let watchStateSubject = PassthroughSubject<(Data, UUID?), Never>()
+    /// Subject for debouncing watch state updates
+    private let watchStateSubject = PassthroughSubject<Data, Never>()
 
     /// Current glucose units, either mg/dL or mmol/L, read from user settings.
     private var units: GlucoseUnits = .mgdL
@@ -145,97 +144,6 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
 
     /// How long to wait for additional settings changes before sending (seconds)
     private let settingsThrottleDuration: TimeInterval = 10
-
-    // MARK: - Watchface Activity Tracking
-
-    /// Tracks when the watchface last sent a "status" request (keep-alive).
-    /// Only set when an actual status request is received from the watchface.
-    /// Used to detect activity transitions and determine if watchface is responsive.
-    private var lastWatchfaceRequestTime: Date?
-
-    /// Tracks when the watchface was registered (for inactivity grace period).
-    /// Set on registration, allows initial sends for watchfaceActiveTimeout seconds.
-    /// After that, isWatchfaceInactive() blocks sends unless a real status request is received.
-    private var watchfaceRegistrationTime: Date?
-
-    /// How long since last watchface request (or registration) before we consider it inactive (seconds).
-    /// If no request in this period, we skip sending to avoid queue buildup.
-    /// Note: Watch OS naturally suspends watchface background during activities,
-    /// so this timeout handles both normal inactivity and activity-based suppression.
-    private let watchfaceActiveTimeout: TimeInterval = 5 * 60 // 5 minutes
-
-    /// Tracks if watchface is suppressed because datafield is active (user in activity).
-    /// When datafield sends request → watchface suppressed (Garmin OS suspends it during activities)
-    /// When watchface sends request → activity ended, immediately send fresh data
-    private var watchfaceSuppressedDuringActivity: Bool = false
-
-    /// Tracks when the datafield last sent a status request.
-    /// Used as fallback to detect activity end when no watchface is installed.
-    private var lastDatafieldRequestTime: Date?
-
-    /// How long since last datafield request before we assume activity ended (seconds).
-    /// Fallback for when no watchface is installed to detect "activity ended".
-    private let datafieldInactiveTimeout: TimeInterval = 15 * 60 // 15 minutes
-
-    // MARK: - BLE Flapping Detection
-
-    /// Tracks recent connection state changes for flapping detection.
-    /// Format: (timestamp, isConnected) where isConnected distinguishes connected vs disconnected states.
-    private var connectionStateHistory: [(Date, Bool)] = []
-
-    /// How many disconnects within the detection window constitutes flapping.
-    /// Based on log analysis (Feb 06, Feb 12): flapping shows 4+ disconnects in rapid succession.
-    private let flappingThreshold: Int = 4
-
-    /// Time window for detecting flapping (seconds).
-    /// Based on log analysis: problematic flapping occurs within 30 seconds (Feb 12: 6 changes in 15s).
-    private let flappingDetectionWindow: TimeInterval = 30
-
-    /// Maximum gap between consecutive state changes to be considered "rapid" (seconds).
-    /// Based on log analysis: Feb 06 had 1-2s gaps, Feb 12 had 0-4s gaps during flapping.
-    private let rapidTransitionThreshold: TimeInterval = 5
-
-    /// How many consecutive rapid disconnects indicates flapping.
-    /// Based on log analysis: 3+ rapid disconnects in a row is a strong flapping indicator.
-    private let consecutiveRapidThreshold: Int = 3
-
-    /// How long the connection must remain stable after flapping before re-registration (seconds).
-    /// Gives time for BLE to fully stabilize before attempting recovery.
-    private let flappingStabilizationTime: TimeInterval = 30
-
-    /// When flapping was last detected (used to trigger re-registration after stabilization).
-    private var lastFlappingDetectedTime: Date?
-
-    /// Pending re-registration work item after flapping stabilizes.
-    private var pendingFlappingReregistration: DispatchWorkItem?
-
-    /// Track if we're currently in a flapping state.
-    private var isFlapping: Bool = false
-
-    /// Track if we've already triggered re-registration for the current flapping episode.
-    /// Prevents multiple re-registrations for a single flapping event.
-    private var hasTriggeredFlappingReregistration: Bool = false
-
-    // MARK: - Missed Status Request Detection (Pattern 3)
-
-    /// Expected interval between watchface status requests (seconds).
-    /// Watchface polls every 5 minutes when active.
-    private let expectedStatusRequestInterval: TimeInterval = 5 * 60
-
-    /// Number of missed status requests before triggering proactive recovery.
-    /// 3 missed = 15 minutes of silence, recovery triggers 30s before 4th would be missed.
-    private let missedRequestThreshold: Int = 3
-
-    /// How long before the next expected request to trigger recovery (seconds).
-    /// Gives time for re-registration to complete before the watchface would poll again.
-    private let proactiveRecoveryLeadTime: TimeInterval = 30
-
-    /// Pending proactive recovery work item for missed status requests.
-    private var pendingProactiveRecovery: DispatchWorkItem?
-
-    /// Track if proactive recovery has been triggered for the current silence period.
-    /// Resets when a status request is received.
-    private var hasTriggeredProactiveRecovery: Bool = false
 
     // MARK: - CoreData & Subscriptions
 
@@ -332,13 +240,6 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
         settingsManager.settings.garminSettings.isWatchfaceDataEnabled
     }
 
-    /// Returns whether smart message switching is enabled in settings.
-    /// When enabled, automatically switches between watchface and datafield based on activity detection.
-    /// When disabled, broadcasts to all configured apps simultaneously.
-    private var isSmartMessageSwitchingEnabled: Bool {
-        settingsManager.settings.garminSettings.smartGarminMessageSwitching
-    }
-
     /// SwissAlpine watchface uses historical glucose data (24 entries)
     /// Trio watchface only uses current reading
     private var needsHistoricalGlucoseData: Bool {
@@ -420,7 +321,7 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
 
                     let watchState = try await self.setupGarminWatchState(triggeredBy: "Glucose")
                     let watchStateData = try JSONEncoder().encode(watchState)
-                    self.watchStateSubject.send((watchStateData, nil))
+                    self.watchStateSubject.send(watchStateData)
                 } catch {
                     debug(.watchManager, "Garmin: Error in glucose fallback: \(error)")
                 }
@@ -459,7 +360,7 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
 
                     let watchState = try await self.setupGarminWatchState(triggeredBy: "IOB")
                     let watchStateData = try JSONEncoder().encode(watchState)
-                    self.watchStateSubject.send((watchStateData, nil))
+                    self.watchStateSubject.send(watchStateData)
                 } catch {
                     debug(.watchManager, "Garmin: Error in IOB fallback: \(error)")
                 }
@@ -474,12 +375,9 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
         }
     }
 
-    /// Triggers watch state preparation and sends to debounce subject.
-    /// If triggered by Determination, cancels pending glucose fallback timer.
-    /// - Parameters:
-    ///   - trigger: Description of what triggered this update (for logging).
-    ///   - targetAppUUID: If provided, only send to this app. If nil, broadcast to all.
-    private func triggerWatchStateUpdate(triggeredBy trigger: String, targetAppUUID: UUID? = nil) {
+    /// Triggers watch state preparation and sends to debounce subject
+    /// If triggered by Determination, cancels pending glucose fallback timer
+    private func triggerWatchStateUpdate(triggeredBy trigger: String) {
         guard !devices.isEmpty else { return }
 
         // If determination arrived, cancel the glucose fallback timer
@@ -498,7 +396,7 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
             do {
                 let watchState = try await setupGarminWatchState(triggeredBy: trigger)
                 let watchStateData = try JSONEncoder().encode(watchState)
-                watchStateSubject.send((watchStateData, targetAppUUID))
+                watchStateSubject.send(watchStateData)
             } catch {
                 debug(.watchManager, "Garmin: Error preparing watch state (\(trigger)): \(error)")
             }
@@ -531,7 +429,7 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
                 do {
                     let watchState = try await self.setupGarminWatchState(triggeredBy: "Settings")
                     let watchStateData = try JSONEncoder().encode(watchState)
-                    self.watchStateSubject.send((watchStateData, nil))
+                    self.watchStateSubject.send(watchStateData)
                 } catch {
                     debug(.watchManager, "Garmin: Error preparing settings watch state: \(error)")
                 }
@@ -632,23 +530,12 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
             return []
         }
 
-        let shouldDebug = debugWatchState
-        if shouldDebug {
+        if debugWatchState {
             debug(.watchManager, "Garmin: Preparing watch state [Trigger: \(triggeredBy)]")
         }
 
-        // Extract all needed values from self before entering perform block (Sendable compliance)
-        let unitsValue = units
-        let iobValue = formatIOB(iobService.currentIOB ?? Decimal(0))
-        let basalProfile = settingsManager.preferences.basalProfile as? [BasalProfileEntry] ?? []
-        let displayPrimaryChoice = settingsManager.settings.garminSettings.primaryAttributeChoice.rawValue
-        let displaySecondaryChoice = settingsManager.settings.garminSettings.secondaryAttributeChoice.rawValue
-        let needsHistoricalData = needsHistoricalGlucoseData
-        let previousHash = lastPreparedDataHash
-        let previousWatchState = lastPreparedWatchState
-
         // Fetch glucose - SwissAlpine needs 24, Trio needs 2 (for delta calculation)
-        let glucoseLimit = needsHistoricalData ? 24 : 2
+        let glucoseLimit = needsHistoricalGlucoseData ? 24 : 2
         let glucoseIds = try await fetchGlucose(limit: glucoseLimit)
 
         // Fetch all determinations from last 30 minutes (no limit)
@@ -657,19 +544,26 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
 
         let tempBasalIds = try await fetchTempBasals()
 
+        // Extract all needed values from self before entering perform block (Sendable compliance)
+        let unitsValue = units
+        let iobValue = formatIOB(iobService.currentIOB ?? Decimal(0))
+        let basalProfile = settingsManager.preferences.basalProfile as? [BasalProfileEntry] ?? []
+        let displayPrimaryChoice = settingsManager.settings.garminSettings.primaryAttributeChoice.rawValue
+        let displaySecondaryChoice = settingsManager.settings.garminSettings.secondaryAttributeChoice.rawValue
+        let needsHistoricalData = needsHistoricalGlucoseData
+        let shouldDebug = debugWatchState
+        let previousHash = lastPreparedDataHash
+        let previousWatchState = lastPreparedWatchState
+
         // Capture context locally for use in perform block
         let context = backgroundContext
 
-        // Single perform block: Fetch objects from IDs and extract all values
-        // All self properties extracted above to avoid capturing non-Sendable BaseGarminManager
-        let watchStates: [GarminWatchState] = await context.perform {
+        let watchStates = await context.perform {
             // Fetch Core Data objects inside perform block
             let glucoseObjects = glucoseIds.compactMap { context.object(with: $0) as? GlucoseStored }
-            let allDeterminationObjects = allDeterminationIds.compactMap {
-                context.object(with: $0) as? OrefDetermination
-            }
+            let allDeterminationObjects = allDeterminationIds.compactMap { context.object(with: $0) as? OrefDetermination }
             let tempBasalObjects = tempBasalIds.compactMap { context.object(with: $0) as? PumpEventStored }
-            var states: [GarminWatchState] = []
+            var watchStates: [GarminWatchState] = []
 
             let unitsHint = unitsValue == .mgdL ? "mgdl" : "mmol"
 
@@ -691,7 +585,7 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
             if let latestDetermination = allDeterminationObjects.first {
                 cobValue = Double(latestDetermination.cob)
 
-                if let ratio = latestDetermination.autoISFratio {
+                if let ratio = latestDetermination.sensitivityRatio {
                     sensRatioValue = Double(truncating: ratio)
                 }
 
@@ -773,34 +667,34 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
                     watchState.displaySecondaryAttributeChoice = displaySecondaryChoice
                 }
 
-                states.append(watchState)
+                watchStates.append(watchState)
             }
 
-            return states
-        }
+            // Deduplicate: Check if data is unchanged from last preparation
+            let currentHash = watchStates.hashValue
+            if currentHash == previousHash {
+                if shouldDebug {
+                    debug(.watchManager, "Garmin: Skipping - data unchanged")
+                }
+                return previousWatchState ?? watchStates
+            }
 
-        // Deduplicate: Check if data is unchanged from last preparation (outside perform block)
-        let currentHash = watchStates.hashValue
-        if currentHash == previousHash {
             if shouldDebug {
-                debug(.watchManager, "Garmin: Skipping - data unchanged")
+                let iobFormatted = String(format: "%.1f", watchStates.first?.iob ?? 0)
+                let cobFormatted = String(format: "%.0f", watchStates.first?.cob ?? 0)
+                let tbrFormatted = String(format: "%.2f", watchStates.first?.tbr ?? 0)
+                let sensRatioFormatted = String(format: "%.2f", watchStates.first?.sensRatio ?? 0)
+                debug(
+                    .watchManager,
+                    "Garmin: Prepared \(watchStates.count) entries - sgv: \(watchStates.first?.sgv ?? 0), iob: \(iobFormatted), cob: \(cobFormatted), tbr: \(tbrFormatted), eventualBG: \(watchStates.first?.eventualBG ?? 0), sensRatio: \(sensRatioFormatted)"
+                )
             }
-            return previousWatchState ?? watchStates
-        }
 
-        if shouldDebug {
-            let iobFormatted = String(format: "%.1f", watchStates.first?.iob ?? 0)
-            let cobFormatted = String(format: "%.0f", watchStates.first?.cob ?? 0)
-            let tbrFormatted = String(format: "%.2f", watchStates.first?.tbr ?? 0)
-            let sensRatioFormatted = String(format: "%.2f", watchStates.first?.sensRatio ?? 0)
-            debug(
-                .watchManager,
-                "Garmin: Prepared \(watchStates.count) entries - sgv: \(watchStates.first?.sgv ?? 0), iob: \(iobFormatted), cob: \(cobFormatted), tbr: \(tbrFormatted), eventualBG: \(watchStates.first?.eventualBG ?? 0), sensRatio: \(sensRatioFormatted)"
-            )
+            return watchStates
         }
 
         // Cache for deduplication (outside perform block)
-        lastPreparedDataHash = currentHash
+        lastPreparedDataHash = watchStates.hashValue
         lastPreparedWatchState = watchStates
 
         return watchStates
@@ -845,11 +739,6 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
                 debugGarmin("Garmin: Registered \(appDetailedName(for: watchfaceUUID))")
                 watchApps.append(watchfaceApp)
                 connectIQ?.register(forAppMessages: watchfaceApp, delegate: self)
-                // Set registration time for inactivity grace period.
-                // This allows initial sends for up to watchfaceActiveTimeout seconds,
-                // after which isWatchfaceInactive() will block further sends unless
-                // a real status request from the watchface sets lastWatchfaceRequestTime.
-                watchfaceRegistrationTime = Date()
             } else if !isWatchfaceDataEnabled {
                 debugGarmin("Garmin: Watchface data disabled - skipping watchface registration")
             }
@@ -929,8 +818,8 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
     private func subscribeToWatchState() {
         watchStateSubject
             .debounce(for: .seconds(2), scheduler: DispatchQueue.main)
-            .sink { [weak self] data, targetAppUUID in
-                self?.broadcastWatchStateData(data, targetAppUUID: targetAppUUID)
+            .sink { [weak self] data in
+                self?.broadcastWatchStateData(data)
             }
             .store(in: &cancellables)
     }
@@ -946,17 +835,8 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
         deviceSelectionPromise = nil
     }
 
-    /// Broadcasts watch state data to registered apps.
-    /// - Parameters:
-    ///   - data: JSON-encoded watch state data.
-    ///   - targetAppUUID: If provided, only send to this app. If nil, send to all.
-    private func broadcastWatchStateData(_ data: Data, targetAppUUID: UUID? = nil) {
-        // Skip sends during active BLE flapping - wait for status request or timeout
-        if isFlapping {
-            debug(.watchManager, "Garmin: Skipping send - BLE flapping in progress")
-            return
-        }
-
+    /// Broadcasts watch state data to all registered apps
+    private func broadcastWatchStateData(_ data: Data) {
         // Deduplicate: Use stable content-based hash (sorted JSON bytes)
         let currentHash: Int
         if let sortedData = try? JSONSerialization.data(
@@ -970,11 +850,7 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
 
         if currentHash == lastSentDataHash {
             if debugWatchState {
-                if let targetAppUUID = targetAppUUID {
-                    debug(.watchManager, "Garmin: Skipping send to \(appDisplayName(for: targetAppUUID)) - data unchanged")
-                } else {
-                    debug(.watchManager, "Garmin: Skipping broadcast - data unchanged")
-                }
+                debug(.watchManager, "Garmin: Skipping broadcast - data unchanged")
             }
             return
         }
@@ -984,14 +860,7 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
             return
         }
 
-        let appsToSend = targetAppUUID != nil
-            ? watchApps.filter { $0.uuid == targetAppUUID }
-            : watchApps
-
-        // Track if at least one send was initiated - only update hash if so
-        var didInitiateSend = false
-
-        appsToSend.forEach { app in
+        watchApps.forEach { app in
             guard let appUUID = app.uuid else {
                 debug(.watchManager, "Garmin: Skipping app with undefined UUID")
                 return
@@ -1004,47 +873,6 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
                 return
             }
 
-            // Gate sends based on activity to prevent queue buildup
-            let isWatchface = appUUID == currentWatchface.watchfaceUUID
-            let isDatafield = appUUID == currentDatafield.datafieldUUID
-
-            // Only apply smart switching after we've received at least one status request
-            // On app restart, broadcast to both until we know which one is active
-            let hasReceivedAnyStatusRequest = lastWatchfaceRequestTime != nil || lastDatafieldRequestTime != nil
-
-            if isSmartMessageSwitchingEnabled, hasReceivedAnyStatusRequest {
-                // Fallback: if flag says activity running but datafield inactive for 15 min,
-                // assume activity ended (handles case where no watchface is installed)
-                if watchfaceSuppressedDuringActivity, isDatafieldInactive() {
-                    debug(.watchManager, "Garmin: Datafield inactive for 15 min - assuming activity ended")
-                    watchfaceSuppressedDuringActivity = false
-                }
-
-                // Skip watchface if suppressed during activity (datafield is active)
-                if isWatchface, watchfaceSuppressedDuringActivity {
-                    debug(.watchManager, "Garmin: Skipping watchface send - activity in progress (datafield active)")
-                    return
-                }
-
-                // Skip watchface if inactive (no status request in 5 min)
-                if isWatchface, isWatchfaceInactive() {
-                    debug(
-                        .watchManager,
-                        "Garmin: Skipping watchface send - inactive (no status request in \(Int(watchfaceActiveTimeout / 60)) min)"
-                    )
-                    return
-                }
-
-                // Skip datafield if no activity running (watchface is active)
-                if isDatafield, !watchfaceSuppressedDuringActivity {
-                    debug(.watchManager, "Garmin: Skipping datafield send - no activity running (watchface active)")
-                    return
-                }
-            }
-
-            // Mark that we're initiating at least one send attempt
-            didInitiateSend = true
-
             connectIQ?.getAppStatus(app) { [weak self] status in
                 guard status?.isInstalled == true else {
                     debug(.watchManager, "Garmin: App not installed: \(appName)")
@@ -1055,12 +883,8 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
             }
         }
 
-        // Only update hash if we actually initiated at least one send
-        // If all apps were skipped (device not ready, activity logic), don't cache the hash
-        // This ensures we retry sending when conditions change (device becomes ready, etc.)
-        if didInitiateSend {
-            lastSentDataHash = currentHash
-        }
+        // Update last sent hash after initiating send
+        lastSentDataHash = currentHash
     }
 
     // MARK: - GarminManager Conformance
@@ -1091,7 +915,7 @@ final class BaseGarminManager: NSObject, GarminManager, Injectable {
     /// Sends the given watch state data to the debounce subject for eventual broadcast.
     /// - Parameter data: JSON-encoded data representing the latest watch state.
     func sendWatchStateData(_ data: Data) {
-        watchStateSubject.send((data, nil))
+        watchStateSubject.send(data)
     }
 
     // MARK: - Helper: Sending Messages
@@ -1157,8 +981,6 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
     ///   - status: The new status for the device.
     func deviceStatusChanged(_ device: IQDevice, status: IQDeviceStatus) {
         // Always log connection state changes - critical for diagnosing SDK issues
-        let isConnectedState = (status == .connected)
-
         switch status {
         case .invalidDevice:
             debug(.watchManager, "Garmin: Device status -> invalidDevice")
@@ -1177,257 +999,6 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
         @unknown default:
             debug(.watchManager, "Garmin: Device status -> unknown(\(status.rawValue))")
         }
-
-        // Track connection state for flapping detection
-        trackConnectionStateChange(isConnected: isConnectedState)
-    }
-
-    /// Tracks connection state changes and detects BLE flapping.
-    /// Flapping is detected when either:
-    /// 1. 4+ disconnects occur within 30 seconds, OR
-    /// 2. 3+ consecutive disconnects have gaps ≤5 seconds
-    /// Only disconnects count toward flapping - connects are recovery attempts, not problems.
-    /// When detected, schedules automatic re-registration once the connection stabilizes.
-    /// - Parameter isConnected: Whether the device just connected (true) or disconnected (false).
-    private func trackConnectionStateChange(isConnected: Bool) {
-        let now = Date()
-
-        // Only track disconnects for flapping detection - connects are recovery attempts
-        if !isConnected {
-            connectionStateHistory.append((now, isConnected))
-        }
-
-        // Remove entries older than the detection window (keep slightly longer for rapid detection)
-        let cutoff = now.addingTimeInterval(-flappingDetectionWindow * 2)
-        connectionStateHistory = connectionStateHistory.filter { $0.0 > cutoff }
-
-        // Detection method 1: Count disconnects within the tight window
-        let recentCutoff = now.addingTimeInterval(-flappingDetectionWindow)
-        let recentDisconnects = connectionStateHistory.filter { $0.0 > recentCutoff }
-        let disconnectCount = recentDisconnects.count
-
-        // Detection method 2: Check for consecutive rapid disconnects (gaps ≤5s)
-        let consecutiveRapidCount = countConsecutiveRapidDisconnects()
-
-        // Detect flapping: either 4+ disconnects in 30s OR 3+ consecutive rapid disconnects
-        let isFlappingDetected = disconnectCount >= flappingThreshold || consecutiveRapidCount >= consecutiveRapidThreshold
-
-        if isFlappingDetected {
-            if !isFlapping {
-                // First detection of flapping - log which method triggered it
-                isFlapping = true
-                hasTriggeredFlappingReregistration = false
-                if consecutiveRapidCount >= consecutiveRapidThreshold {
-                    debug(
-                        .watchManager,
-                        "Garmin: BLE FLAPPING DETECTED - \(consecutiveRapidCount) consecutive rapid disconnects (≤\(Int(rapidTransitionThreshold))s gaps)"
-                    )
-                } else {
-                    debug(
-                        .watchManager,
-                        "Garmin: BLE FLAPPING DETECTED - \(disconnectCount) disconnects in \(Int(flappingDetectionWindow))s window"
-                    )
-                }
-            }
-            lastFlappingDetectedTime = now
-
-            // If flapping resumes while recovery is pending, cancel it and wait for true stability
-            if pendingFlappingReregistration != nil {
-                pendingFlappingReregistration?.cancel()
-                pendingFlappingReregistration = nil
-                debug(.watchManager, "Garmin: Flapping resumed - cancelled pending recovery, waiting for stability")
-            }
-        } else if isFlapping, isConnected {
-            // Flapping has stopped AND we ended on a connected state - schedule re-registration
-            // Don't schedule if we ended on disconnect - wait for the next connect event
-            scheduleFlappingRecovery()
-        }
-    }
-
-    /// Counts the number of consecutive disconnects where each gap is ≤ rapidTransitionThreshold.
-    /// Returns the maximum streak of rapid disconnects found in the history.
-    private func countConsecutiveRapidDisconnects() -> Int {
-        guard connectionStateHistory.count >= 2 else { return 0 }
-
-        var maxStreak = 0
-        var currentStreak = 0
-
-        for i in 1 ..< connectionStateHistory.count {
-            let gap = connectionStateHistory[i].0.timeIntervalSince(connectionStateHistory[i - 1].0)
-            if gap <= rapidTransitionThreshold {
-                currentStreak += 1
-                maxStreak = max(maxStreak, currentStreak)
-            } else {
-                currentStreak = 0
-            }
-        }
-
-        return maxStreak
-    }
-
-    /// Schedules a re-registration attempt after BLE flapping has stabilized.
-    /// Waits for the stabilization period to ensure connection is truly stable.
-    /// If flapping resumes, the pending recovery is cancelled and rescheduled when it subsides again.
-    private func scheduleFlappingRecovery() {
-        guard isFlapping, !hasTriggeredFlappingReregistration else { return }
-
-        // Cancel any existing pending recovery (shouldn't happen with current logic, but defensive)
-        pendingFlappingReregistration?.cancel()
-        pendingFlappingReregistration = nil
-
-        debug(.watchManager, "Garmin: BLE flapping subsided - scheduling recovery in \(Int(flappingStabilizationTime))s")
-
-        let workItem = DispatchWorkItem { [weak self] in
-            guard let self = self else { return }
-
-            // Verify flapping state is still active (may have been reset by status request or toggle)
-            guard self.isFlapping else {
-                debug(.watchManager, "Garmin: Flapping recovery skipped - communication already restored")
-                return
-            }
-            guard !self.hasTriggeredFlappingReregistration else {
-                debug(.watchManager, "Garmin: Flapping recovery cancelled - already triggered")
-                return
-            }
-
-            self.performFlappingRecovery()
-        }
-
-        pendingFlappingReregistration = workItem
-        timerQueue.asyncAfter(deadline: .now() + flappingStabilizationTime, execute: workItem)
-    }
-
-    /// Performs recovery after BLE flapping by re-registering devices.
-    /// This forces the SDK to re-establish communication channels that may have been
-    /// corrupted during the flapping episode.
-    private func performFlappingRecovery() {
-        guard !devices.isEmpty else {
-            debug(.watchManager, "Garmin: Flapping recovery skipped - no devices registered")
-            resetFlappingState()
-            return
-        }
-
-        debug(.watchManager, "Garmin: FLAPPING RECOVERY - Re-registering devices to restore communication")
-
-        // Mark that we've triggered re-registration for this flapping episode
-        hasTriggeredFlappingReregistration = true
-
-        // Clear activity tracking state since watch service may have lost state
-        lastWatchfaceRequestTime = nil
-        lastDatafieldRequestTime = nil
-        watchfaceSuppressedDuringActivity = false
-
-        // Clear hash caches to ensure fresh data is sent after re-registration
-        lastPreparedDataHash = nil
-        lastSentDataHash = nil
-
-        // Re-register devices - this will re-register for device events and app messages
-        registerDevices(devices)
-
-        debug(.watchManager, "Garmin: Flapping recovery complete - waiting for watch app status requests")
-
-        // Reset flapping state after successful recovery
-        resetFlappingState()
-    }
-
-    /// Resets flapping detection state after recovery or status request.
-    private func resetFlappingState() {
-        isFlapping = false
-        hasTriggeredFlappingReregistration = false
-        lastFlappingDetectedTime = nil
-        connectionStateHistory.removeAll()
-        pendingFlappingReregistration?.cancel()
-        pendingFlappingReregistration = nil
-    }
-
-    // MARK: - Proactive Recovery (Pattern 3: Missed Status Requests)
-
-    /// Schedules a proactive recovery check for when 3 status requests would be missed.
-    /// Called each time a watchface status request is received.
-    /// Recovery triggers 30 seconds before the 4th expected request would be missed.
-    private func scheduleProactiveRecoveryCheck() {
-        // Only schedule if watchface data is enabled
-        guard isWatchfaceDataEnabled else { return }
-
-        // Cancel any existing pending check
-        pendingProactiveRecovery?.cancel()
-
-        // Calculate when to trigger recovery:
-        // After 3 missed requests, the 4th would be missed at (missedThreshold + 1) * interval
-        // Trigger 30s before that: (3 + 1) * 5min - 30s = 20min - 30s = 19min 30s from now
-        let recoveryDelay = (Double(missedRequestThreshold + 1) * expectedStatusRequestInterval) - proactiveRecoveryLeadTime
-
-        let workItem = DispatchWorkItem { [weak self] in
-            guard let self = self else { return }
-            self.checkAndPerformProactiveRecovery()
-        }
-
-        pendingProactiveRecovery = workItem
-        timerQueue.asyncAfter(deadline: .now() + recoveryDelay, execute: workItem)
-    }
-
-    /// Checks if proactive recovery is needed and performs it if so.
-    /// Called after the scheduled delay when no status requests have been received.
-    private func checkAndPerformProactiveRecovery() {
-        // Verify conditions are still met
-        guard isWatchfaceDataEnabled,
-              !hasTriggeredProactiveRecovery,
-              !devices.isEmpty
-        else {
-            return
-        }
-
-        // Verify the watchface has actually been silent for the expected time
-        // Use real status request time if available, otherwise fall back to registration time
-        let referenceTime: Date?
-        if let lastRequest = lastWatchfaceRequestTime {
-            referenceTime = lastRequest
-        } else {
-            referenceTime = watchfaceRegistrationTime
-        }
-
-        guard let lastRequest = referenceTime else {
-            // No timestamp available - skip recovery
-            return
-        }
-
-        let silenceDuration = Date().timeIntervalSince(lastRequest)
-        let expectedSilence = (Double(missedRequestThreshold + 1) * expectedStatusRequestInterval) - proactiveRecoveryLeadTime
-
-        // Only recover if we've been silent for at least the expected duration (with some tolerance)
-        guard silenceDuration >= expectedSilence - 10 else {
-            // Request came in recently, no recovery needed
-            return
-        }
-
-        performProactiveRecovery()
-    }
-
-    /// Performs proactive recovery by re-registering devices.
-    /// Triggered when watchface stops sending status requests without BLE issues.
-    /// This handles Pattern 3: Garmin OS suspending watchface service without BLE flapping.
-    private func performProactiveRecovery() {
-        hasTriggeredProactiveRecovery = true
-
-        let silenceMinutes =
-            Int((Double(missedRequestThreshold + 1) * expectedStatusRequestInterval - proactiveRecoveryLeadTime) / 60)
-        debug(
-            .watchManager,
-            "Garmin: PROACTIVE RECOVERY - No watchface status requests for ~\(silenceMinutes) min (\(missedRequestThreshold) missed), re-registering devices"
-        )
-
-        // Clear activity tracking state
-        lastWatchfaceRequestTime = nil
-        watchfaceSuppressedDuringActivity = false
-
-        // Clear hash caches to ensure fresh data is sent after re-registration
-        lastPreparedDataHash = nil
-        lastSentDataHash = nil
-
-        // Re-register devices
-        registerDevices(devices)
-
-        debug(.watchManager, "Garmin: Proactive recovery complete - waiting for watch app status requests")
     }
 
     /// Called when device characteristics are discovered and the device is ready for communication.
@@ -1463,133 +1034,9 @@ extension BaseGarminManager: IQUIOverrideDelegate, IQDeviceEventDelegate, IQAppM
             return
         }
 
-        // Track app activity for queue prevention
-        let isWatchface = appUUID == currentWatchface.watchfaceUUID
-        let isDatafield = appUUID == currentDatafield.datafieldUUID
-
-        if isWatchface {
-            lastWatchfaceRequestTime = Date()
-
-            // Reset proactive recovery state and schedule next check
-            // This ensures we detect if watchface stops responding
-            hasTriggeredProactiveRecovery = false
-            scheduleProactiveRecoveryCheck()
-
-            // Cancel pending flapping recovery - status request proves communication restored
-            if isFlapping {
-                debug(.watchManager, "Garmin: Watchface request received - cancelling flapping recovery (communication restored)")
-                pendingFlappingReregistration?.cancel()
-                resetFlappingState()
-            }
-
-            if isSmartMessageSwitchingEnabled {
-                // Watchface request while activity was running = activity just ended
-                // Send immediately with no hash checks
-                if watchfaceSuppressedDuringActivity {
-                    debug(.watchManager, "Garmin: Watchface request - activity ended, sending immediately")
-                    watchfaceSuppressedDuringActivity = false
-                    sendImmediateWatchState(to: appUUID, triggeredBy: "ActivityEnded")
-                    return
-                }
-
-                if isWatchfaceInactive() {
-                    // Watchface just woke up after being inactive - send fresh data
-                    debug(.watchManager, "Garmin: Watchface resumed after inactivity - sending fresh data")
-                    lastPreparedDataHash = nil
-                    lastSentDataHash = nil
-                }
-            }
-        } else if isDatafield {
-            lastDatafieldRequestTime = Date()
-
-            // Cancel pending flapping recovery - status request proves communication restored
-            if isFlapping {
-                debug(.watchManager, "Garmin: Datafield request received - cancelling flapping recovery (communication restored)")
-                pendingFlappingReregistration?.cancel()
-                resetFlappingState()
-            }
-
-            if isSmartMessageSwitchingEnabled {
-                // Datafield request while no activity was running = activity just started
-                // Send immediately with no hash checks (mirror of watchface logic)
-                if !watchfaceSuppressedDuringActivity {
-                    debug(.watchManager, "Garmin: Datafield request - activity started, sending immediately")
-                    watchfaceSuppressedDuringActivity = true
-                    sendImmediateWatchState(to: appUUID, triggeredBy: "ActivityStarted")
-                    return
-                }
-                // Activity already running - send fresh data through normal pipeline
-                lastSentDataHash = nil
-            }
-        }
-
-        // Reply only to the requesting app through the full pipeline
-        triggerWatchStateUpdate(triggeredBy: "WatchRequest", targetAppUUID: appUUID)
-    }
-
-    /// Checks if the watchface has been inactive (no status requests) for longer than the timeout.
-    /// Falls back to registration time for the initial grace period if no real request received yet.
-    /// - Returns: true if watchface is considered inactive, false if recently active or in grace period.
-    private func isWatchfaceInactive() -> Bool {
-        // If we've received a real status request, use that timestamp
-        if let lastRequest = lastWatchfaceRequestTime {
-            return Date().timeIntervalSince(lastRequest) > watchfaceActiveTimeout
-        }
-        // No real request yet - use registration time for grace period
-        if let regTime = watchfaceRegistrationTime {
-            return Date().timeIntervalSince(regTime) > watchfaceActiveTimeout
-        }
-        // Watchface not registered - consider inactive
-        return true
-    }
-
-    /// Checks if the datafield has been inactive (no status requests) for longer than the timeout.
-    /// Fallback for detecting "activity ended" when no watchface is installed.
-    /// - Returns: true if datafield is inactive (activity likely ended), false if recently active.
-    private func isDatafieldInactive() -> Bool {
-        guard let lastRequest = lastDatafieldRequestTime else {
-            // Never received a request - consider inactive
-            return true
-        }
-        return Date().timeIntervalSince(lastRequest) > datafieldInactiveTimeout
-    }
-
-    /// Sends watch state immediately to a specific app, bypassing all hash checks.
-    /// Used when activity transitions (start/end) - needs immediate fresh data.
-    private func sendImmediateWatchState(to appUUID: UUID, triggeredBy: String) {
-        Task {
-            do {
-                let watchState = try await setupGarminWatchState(triggeredBy: triggeredBy)
-                let watchStateData = try JSONEncoder().encode(watchState)
-                sendWatchStateToApp(watchStateData, appUUID: appUUID)
-            } catch {
-                debug(.watchManager, "Garmin: Cannot encode watch state: \(error)")
-            }
-        }
-    }
-
-    /// Sends data directly to a specific app without hash checks.
-    private func sendWatchStateToApp(_ data: Data, appUUID: UUID) {
-        guard let jsonObject = try? JSONSerialization.jsonObject(with: data, options: []) else {
-            debug(.watchManager, "Garmin: Invalid JSON for immediate send")
-            return
-        }
-
-        guard let app = watchApps.first(where: { $0.uuid == appUUID }) else {
-            debug(.watchManager, "Garmin: App not found for immediate send")
-            return
-        }
-
-        let appName = appDisplayName(for: appUUID)
-
-        connectIQ?.getAppStatus(app) { [weak self] status in
-            guard status?.isInstalled == true else {
-                debug(.watchManager, "Garmin: App not installed: \(appName)")
-                return
-            }
-            self?.debugGarmin("Garmin: Sending immediately to \(appName)")
-            self?.sendMessage(jsonObject as Any, to: app, appName: appName)
-        }
+        // Use triggerWatchStateUpdate for consistent deduplication and debouncing
+        // This prevents double sends when watchface request coincides with determination
+        triggerWatchStateUpdate(triggeredBy: "WatchRequest")
     }
 }
 
@@ -1626,29 +1073,13 @@ extension BaseGarminManager: SettingsObserver {
         // Watchface/datafield changes only need re-registration, not data update
         // Disabling watchface data doesn't need an update (nothing to send to)
         let watchfaceDataJustEnabled = watchfaceDataEnabledChanged && currentGarminSettings.isWatchfaceDataEnabled
-        let datafieldJustEnabled = datafieldChanged && currentGarminSettings.datafield != .none
 
-        if watchfaceDataJustEnabled || datafieldJustEnabled {
-            // Send immediately to just the newly enabled app
-            let targetUUID = datafieldJustEnabled
-                ? currentGarminSettings.datafield.datafieldUUID
-                : currentGarminSettings.watchface.watchfaceUUID
-            if let targetUUID = targetUUID {
-                let appName = appDisplayName(for: targetUUID)
-                if debugWatchState {
-                    debug(.watchManager, "Garmin: \(appName) enabled - sending update immediately")
-                }
-
-                // Reset watchface activity tracking when watchface data is toggled
-                // This allows the send to bypass the inactivity check (manual remedy for queue issues)
-                if watchfaceDataEnabledChanged {
-                    watchfaceRegistrationTime = Date()
-                    resetFlappingState() // Clear any stuck flapping state
-                    debug(.watchManager, "Garmin: Watchface data toggled - resetting registration time and flapping state")
-                }
-
-                triggerWatchStateUpdate(triggeredBy: "Settings", targetAppUUID: targetUUID)
+        if watchfaceDataJustEnabled {
+            // Send immediately when watchface data is enabled - user wants to see data now
+            if debugWatchState {
+                debug(.watchManager, "Garmin: Watchface data enabled - sending update immediately")
             }
+            triggerWatchStateUpdate(triggeredBy: "Settings")
         } else if unitsChanged || displayAttributesChanged {
             // Throttle other settings changes in case user makes multiple changes
             if debugWatchState {

@@ -260,9 +260,12 @@
 		3BD9687F2D8DDD8800899469 /* CryptoSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 3BD9687E2D8DDD8800899469 /* CryptoSwift */; };
 		3BF85FE32E427312000D7351 /* IOBService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BF85FE12E427312000D7351 /* IOBService.swift */; };
 		3E28F2AB2EB5337F00FB9EEB /* ConnectIQ in Frameworks */ = {isa = PBXBuildFile; productRef = 3E28F2AA2EB5337F00FB9EEB /* ConnectIQ */; };
+		3E54EF2C2E476DA40006F54D /* MedtrumKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3E54EF2B2E476DA40006F54D /* MedtrumKit.framework */; };
+		3E54EF2D2E476DA40006F54D /* MedtrumKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3E54EF2B2E476DA40006F54D /* MedtrumKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		45252C95D220E796FDB3B022 /* ConfigEditorDataFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F8A87AA037BD079BA3528BA /* ConfigEditorDataFlow.swift */; };
 		45717281F743594AA9D87191 /* ConfigEditorRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 920DDB21E5D0EB813197500D /* ConfigEditorRootView.swift */; };
 		490566652D9AB1C1005C45F7 /* AlertEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 490566642D9AB1C1005C45F7 /* AlertEntry.swift */; };
+		49090A8D2E9FE8D200D0F5DB /* GarminWatchSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49090A8C2E9FE8D200D0F5DB /* GarminWatchSettings.swift */; };
 		491D6FBD2D56741C00C49F67 /* TempTargetStored+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 491D6FBC2D56741C00C49F67 /* TempTargetStored+CoreDataProperties.swift */; };
 		491D6FBE2D56741C00C49F67 /* TempTargetRunStored+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 491D6FB92D56741C00C49F67 /* TempTargetRunStored+CoreDataClass.swift */; };
 		491D6FBF2D56741C00C49F67 /* TempTargetRunStored+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 491D6FBA2D56741C00C49F67 /* TempTargetRunStored+CoreDataProperties.swift */; };
@@ -290,10 +293,12 @@
 		49B21BF32D7F21D100D0B6C3 /* AutoISFHistoryRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B21BEA2D7F21D100D0B6C3 /* AutoISFHistoryRootView.swift */; };
 		49B21BF52D7F222600D0B6C3 /* DetailPopupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B21BF42D7F222600D0B6C3 /* DetailPopupView.swift */; };
 		49B21BF72D7F231500D0B6C3 /* autoISFHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B21BF62D7F231500D0B6C3 /* autoISFHistory.swift */; };
+		4984D1D42EA2939E00263E83 /* WatchConfigGarminAppConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4984D1D32EA2939E00263E83 /* WatchConfigGarminAppConfigView.swift */; };
 		49B9B57F2D5768D2009C6B59 /* AdjustmentStored+Helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B9B57E2D5768D2009C6B59 /* AdjustmentStored+Helper.swift */; };
 		49C13F832DE1AFD900556D78 /* Trio.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 49C13F822DE1AFD900556D78 /* Trio.entitlements */; };
 		49C27EC92E1BBBCA00FC65DF /* TaiStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492B87002D9EC02700D5E42B /* TaiStyle.swift */; };
 		49CCD2142CAE5E99002A9476 /* BulletList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49CCD2102CAE5E99002A9476 /* BulletList.swift */; };
+		49D659722F3737EA00CF5074 /* PeakPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49D659712F3737EA00CF5074 /* PeakPicker.swift */; };
 		49E464D92E7BF8850037EC26 /* tai.icon in Resources */ = {isa = PBXBuildFile; fileRef = 49E464D82E7BF8850037EC26 /* tai.icon */; };
 		49E464DA2E7BF8850037EC26 /* tai.icon in Resources */ = {isa = PBXBuildFile; fileRef = 49E464D82E7BF8850037EC26 /* tai.icon */; };
 		49D659722F3737EA00CF5074 /* PeakPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49D659712F3737EA00CF5074 /* PeakPicker.swift */; };
@@ -310,6 +315,7 @@
 		49F299362D2D82EA00E4C00D /* B30SettingsStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F299322D2D82EA00E4C00D /* B30SettingsStateModel.swift */; };
 		49F299372D2D82EA00E4C00D /* B30SettingsRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F2992E2D2D82EA00E4C00D /* B30SettingsRootView.swift */; };
 		49F4A34D2E044D7E008A93CC /* ShareLogsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F4A34C2E044D66008A93CC /* ShareLogsTests.swift */; };
+		49C782A72F73D9870062B0DD /* AlertEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C782A62F73D9870062B0DD /* AlertEntry.swift */; };
 		5075C1608E6249A51495C422 /* TargetsEditorProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BDEA2DC60EDE0A3CA54DC73 /* TargetsEditorProvider.swift */; };
 		53F2382465BF74DB1A967C8B /* PumpConfigProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8630D58BDAD6D9C650B9B39 /* PumpConfigProvider.swift */; };
 		581516A42BCED84A00BF67D7 /* DebuggingIdentifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 581516A32BCED84A00BF67D7 /* DebuggingIdentifiers.swift */; };
@@ -503,6 +509,9 @@
 		C2AA6CF82E1A734A00BF6C16 /* SettingsExportDataFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2AA6CF22E1A734A00BF6C16 /* SettingsExportDataFlow.swift */; };
 		C2AA6CF92E1A734A00BF6C16 /* SettingsExportStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2AA6CF42E1A734A00BF6C16 /* SettingsExportStateModel.swift */; };
 		C2AA6D9C2E1AAC6300BF6C16 /* TDDStorageTimezoneTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2AA6D9B2E1AAC6300BF6C16 /* TDDStorageTimezoneTests.swift */; };
+		C2BA6B972F758E7500348E6A /* WatchNotificationHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2BA6B962F758E7500348E6A /* WatchNotificationHandler.swift */; };
+		C2BA6B992F758E7600348E6A /* NotificationIdentifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2BA6B982F758E7600348E6A /* NotificationIdentifiers.swift */; };
+		C2BA6B9A2F7593C300348E6A /* NotificationIdentifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2BA6B982F758E7600348E6A /* NotificationIdentifiers.swift */; };
 		C967DACD3B1E638F8B43BE06 /* ManualTempBasalStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFCFE0781F9074C2917890E8 /* ManualTempBasalStateModel.swift */; };
 		CA370FC152BC98B3D1832968 /* BasalProfileEditorRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8BCB0C37DEB5EC377B9612 /* BasalProfileEditorRootView.swift */; };
 		CC6C406E2ACDD69E009B8058 /* RawFetchedProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC6C406D2ACDD69E009B8058 /* RawFetchedProfile.swift */; };
@@ -545,7 +554,6 @@
 		CE95BF622BA7715900DC3DE3 /* MockKitUI.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3818AA4F274C26A300843DB3 /* MockKitUI.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		CE95BF632BA771BE00DC3DE3 /* LoopTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3818AA70274C278200843DB3 /* LoopTestingKit.framework */; };
 		CE95BF642BA771BE00DC3DE3 /* LoopTestingKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3818AA70274C278200843DB3 /* LoopTestingKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		CEA4F62329BE10F70011ADF7 /* SavitzkyGolayFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA4F62229BE10F70011ADF7 /* SavitzkyGolayFilter.swift */; };
 		CEB434E328B8F9DB00B70274 /* BluetoothStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB434E228B8F9DB00B70274 /* BluetoothStateManager.swift */; };
 		CEB434E528B8FF5D00B70274 /* UIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB434E428B8FF5D00B70274 /* UIColor.swift */; };
 		CEB434E728B9053300B70274 /* LoopUIColorPalette+Default.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB434E628B9053300B70274 /* LoopUIColorPalette+Default.swift */; };
@@ -666,6 +674,7 @@
 		DD9ECB712CA9A0BA00AA7C45 /* RemoteControlConfigProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9ECB6E2CA9A0BA00AA7C45 /* RemoteControlConfigProvider.swift */; };
 		DD9ECB722CA9A0BA00AA7C45 /* RemoteControlConfigDataFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9ECB6F2CA9A0BA00AA7C45 /* RemoteControlConfigDataFlow.swift */; };
 		DD9ECB742CA9A0C300AA7C45 /* RemoteControlConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9ECB732CA9A0C300AA7C45 /* RemoteControlConfig.swift */; };
+		DDA40BBA2F4DB18800257798 /* AlgorithmGlucose.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDA40BB92F4DB18100257798 /* AlgorithmGlucose.swift */; };
 		DDA6E2502D22187500C2988C /* ChartLegendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDA6E24F2D22187500C2988C /* ChartLegendView.swift */; };
 		DDA6E2852D2361F800C2988C /* LoopStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDA6E2842D2361F800C2988C /* LoopStatusView.swift */; };
 		DDA6E3202D258E0500C2988C /* OverrideHelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDA6E31F2D258E0500C2988C /* OverrideHelpView.swift */; };
@@ -695,6 +704,10 @@
 		DDD78A912DC4064800AC63F3 /* carbhistory.json in Resources */ = {isa = PBXBuildFile; fileRef = DDD78A902DC4064800AC63F3 /* carbhistory.json */; };
 		DDD78AD92DC421B500AC63F3 /* enacted.json in Resources */ = {isa = PBXBuildFile; fileRef = DDD78AD72DC421B500AC63F3 /* enacted.json */; };
 		DDD78ADA2DC421B500AC63F3 /* suggested.json in Resources */ = {isa = PBXBuildFile; fileRef = DDD78AD82DC421B500AC63F3 /* suggested.json */; };
+		DDD7C8C12F4DB45400E5CF09 /* GlucoseStored+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDD7C8BF2F4DB45400E5CF09 /* GlucoseStored+CoreDataClass.swift */; };
+		DDD7C8C22F4DB45400E5CF09 /* GlucoseStored+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDD7C8C02F4DB45400E5CF09 /* GlucoseStored+CoreDataProperties.swift */; };
+		DDDD0FFB2F4E22C000F9C645 /* GlucoseSmoothingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDDD0FFA2F4E22C000F9C645 /* GlucoseSmoothingTests.swift */; };
+		DDDD0FFF2F4E231B00F9C645 /* MockTDDStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDDD0FFE2F4E231B00F9C645 /* MockTDDStorage.swift */; };
 		DDE179522C910127003CDDB7 /* MealPresetStored+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDE179322C910127003CDDB7 /* MealPresetStored+CoreDataClass.swift */; };
 		DDE179532C910127003CDDB7 /* MealPresetStored+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDE179332C910127003CDDB7 /* MealPresetStored+CoreDataProperties.swift */; };
 		DDE179542C910127003CDDB7 /* LoopStatRecord+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDE179342C910127003CDDB7 /* LoopStatRecord+CoreDataClass.swift */; };
@@ -711,8 +724,6 @@
 		DDE179612C910127003CDDB7 /* StatsData+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDE179412C910127003CDDB7 /* StatsData+CoreDataProperties.swift */; };
 		DDE179622C910127003CDDB7 /* Forecast+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDE179422C910127003CDDB7 /* Forecast+CoreDataClass.swift */; };
 		DDE179632C910127003CDDB7 /* Forecast+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDE179432C910127003CDDB7 /* Forecast+CoreDataProperties.swift */; };
-		DDE179642C910127003CDDB7 /* GlucoseStored+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDE179442C910127003CDDB7 /* GlucoseStored+CoreDataClass.swift */; };
-		DDE179652C910127003CDDB7 /* GlucoseStored+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDE179452C910127003CDDB7 /* GlucoseStored+CoreDataProperties.swift */; };
 		DDE179662C910127003CDDB7 /* OpenAPS_Battery+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDE179462C910127003CDDB7 /* OpenAPS_Battery+CoreDataClass.swift */; };
 		DDE179672C910127003CDDB7 /* OpenAPS_Battery+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDE179472C910127003CDDB7 /* OpenAPS_Battery+CoreDataProperties.swift */; };
 		DDE179682C910127003CDDB7 /* TempBasalStored+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDE179482C910127003CDDB7 /* TempBasalStored+CoreDataClass.swift */; };
@@ -830,6 +841,7 @@
 				3B4BA7792D8DBD690069D5B8 /* MinimedKit.framework in Embed Frameworks */,
 				CE95BF5C2BA770C300DC3DE3 /* LoopKit.framework in Embed Frameworks */,
 				3B4BA7712D8DBD690069D5B8 /* G7SensorKit.framework in Embed Frameworks */,
+				3E54EF2D2E476DA40006F54D /* MedtrumKit.framework in Embed Frameworks */,
 				CEB434FE28B90B8C00B70274 /* SwiftCharts in Embed Frameworks */,
 				3B4BA7812D8DBD690069D5B8 /* OmniKitUI.framework in Embed Frameworks */,
 				3B4BA76F2D8DBD690069D5B8 /* DanaKit.framework in Embed Frameworks */,
@@ -1130,11 +1142,13 @@
 		3BDEA2DC60EDE0A3CA54DC73 /* TargetsEditorProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TargetsEditorProvider.swift; sourceTree = "<group>"; };
 		3BF768BD6264FF7D71D66767 /* NightscoutConfigProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NightscoutConfigProvider.swift; sourceTree = "<group>"; };
 		3BF85FE12E427312000D7351 /* IOBService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOBService.swift; sourceTree = "<group>"; };
+		3E54EF2B2E476DA40006F54D /* MedtrumKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = MedtrumKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3F60E97100041040446F44E7 /* PumpConfigStateModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PumpConfigStateModel.swift; sourceTree = "<group>"; };
 		3F8A87AA037BD079BA3528BA /* ConfigEditorDataFlow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConfigEditorDataFlow.swift; sourceTree = "<group>"; };
 		42369F66CF91F30624C0B3A6 /* BasalProfileEditorProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BasalProfileEditorProvider.swift; sourceTree = "<group>"; };
 		44080E4709E3AE4B73054563 /* ConfigEditorProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConfigEditorProvider.swift; sourceTree = "<group>"; };
 		490566642D9AB1C1005C45F7 /* AlertEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertEntry.swift; sourceTree = "<group>"; };
+		49090A8C2E9FE8D200D0F5DB /* GarminWatchSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarminWatchSettings.swift; sourceTree = "<group>"; };
 		491D6FB92D56741C00C49F67 /* TempTargetRunStored+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TempTargetRunStored+CoreDataClass.swift"; sourceTree = "<group>"; };
 		491D6FBA2D56741C00C49F67 /* TempTargetRunStored+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TempTargetRunStored+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		491D6FBB2D56741C00C49F67 /* TempTargetStored+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TempTargetStored+CoreDataClass.swift"; sourceTree = "<group>"; };
@@ -1161,6 +1175,7 @@
 		49B21BEE2D7F21D100D0B6C3 /* AutoISFHistoryStateModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFHistoryStateModel.swift; sourceTree = "<group>"; };
 		49B21BF42D7F222600D0B6C3 /* DetailPopupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailPopupView.swift; sourceTree = "<group>"; };
 		49B21BF62D7F231500D0B6C3 /* autoISFHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = autoISFHistory.swift; sourceTree = "<group>"; };
+		4984D1D32EA2939E00263E83 /* WatchConfigGarminAppConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConfigGarminAppConfigView.swift; sourceTree = "<group>"; };
 		49B9B57E2D5768D2009C6B59 /* AdjustmentStored+Helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AdjustmentStored+Helper.swift"; sourceTree = "<group>"; };
 		49C13F822DE1AFD900556D78 /* Trio.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Trio.entitlements; sourceTree = "<group>"; };
 		49CCD2102CAE5E99002A9476 /* BulletList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulletList.swift; sourceTree = "<group>"; };
@@ -1179,6 +1194,7 @@
 		49F299312D2D82EA00E4C00D /* B30SettingsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = B30SettingsProvider.swift; sourceTree = "<group>"; };
 		49F299322D2D82EA00E4C00D /* B30SettingsStateModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = B30SettingsStateModel.swift; sourceTree = "<group>"; };
 		49F4A34C2E044D66008A93CC /* ShareLogsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareLogsTests.swift; sourceTree = "<group>"; };
+		49C782A62F73D9870062B0DD /* AlertEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertEntry.swift; sourceTree = "<group>"; };
 		4DD795BA46B193644D48138C /* TargetsEditorRootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TargetsEditorRootView.swift; sourceTree = "<group>"; };
 		505E09DC17A0C3D0AF4B66FE /* ISFEditorStateModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ISFEditorStateModel.swift; sourceTree = "<group>"; };
 		581516A32BCED84A00BF67D7 /* DebuggingIdentifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebuggingIdentifiers.swift; sourceTree = "<group>"; };
@@ -1372,6 +1388,8 @@
 		C2AA6CF32E1A734A00BF6C16 /* SettingsExportProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsExportProvider.swift; sourceTree = "<group>"; };
 		C2AA6CF42E1A734A00BF6C16 /* SettingsExportStateModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsExportStateModel.swift; sourceTree = "<group>"; };
 		C2AA6D9B2E1AAC6300BF6C16 /* TDDStorageTimezoneTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDDStorageTimezoneTests.swift; sourceTree = "<group>"; };
+		C2BA6B962F758E7500348E6A /* WatchNotificationHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchNotificationHandler.swift; sourceTree = "<group>"; };
+		C2BA6B982F758E7600348E6A /* NotificationIdentifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationIdentifiers.swift; sourceTree = "<group>"; };
 		C377490C77661D75E8C50649 /* ManualTempBasalRootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ManualTempBasalRootView.swift; sourceTree = "<group>"; };
 		C8D1A7CA8C10C4403D4BBFA7 /* TreatmentsDataFlow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TreatmentsDataFlow.swift; sourceTree = "<group>"; };
 		CC6C406D2ACDD69E009B8058 /* RawFetchedProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RawFetchedProfile.swift; sourceTree = "<group>"; };
@@ -1403,6 +1421,7 @@
 		CE7CA34D2A064973004BE681 /* StateIntentRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StateIntentRequest.swift; sourceTree = "<group>"; };
 		CE7CA3572A064E2F004BE681 /* ListStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListStateView.swift; sourceTree = "<group>"; };
 		CE82E02428E867BA00473A9C /* AlertStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertStorage.swift; sourceTree = "<group>"; };
+		CE94597929E9DF7B0047C9C6 /* ConnectIQ.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ConnectIQ.framework; path = "Dependencies/ios-armv7_arm64/ConnectIQ.framework"; sourceTree = "<group>"; };
 		CE94597D29E9E1EE0047C9C6 /* GarminManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarminManager.swift; sourceTree = "<group>"; };
 		CE94597F29E9E3BD0047C9C6 /* WatchConfigDataFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConfigDataFlow.swift; sourceTree = "<group>"; };
 		CE94598129E9E3D30047C9C6 /* WatchConfigProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConfigProvider.swift; sourceTree = "<group>"; };
@@ -1412,7 +1431,6 @@
 		CE95BF4A2BA5CED700DC3DE3 /* LoopKitUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LoopKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE95BF562BA5F5FE00DC3DE3 /* PluginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManager.swift; sourceTree = "<group>"; };
 		CE95BF592BA62E4A00DC3DE3 /* PluginSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginSource.swift; sourceTree = "<group>"; };
-		CEA4F62229BE10F70011ADF7 /* SavitzkyGolayFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavitzkyGolayFilter.swift; sourceTree = "<group>"; };
 		CEB434DE28B8F5C400B70274 /* OmniBLE.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = OmniBLE.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		CEB434E228B8F9DB00B70274 /* BluetoothStateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothStateManager.swift; sourceTree = "<group>"; };
 		CEB434E428B8FF5D00B70274 /* UIColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIColor.swift; sourceTree = "<group>"; };
@@ -1534,6 +1552,7 @@
 		DD9ECB6E2CA9A0BA00AA7C45 /* RemoteControlConfigProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RemoteControlConfigProvider.swift; sourceTree = "<group>"; };
 		DD9ECB6F2CA9A0BA00AA7C45 /* RemoteControlConfigDataFlow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RemoteControlConfigDataFlow.swift; sourceTree = "<group>"; };
 		DD9ECB732CA9A0C300AA7C45 /* RemoteControlConfig.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RemoteControlConfig.swift; sourceTree = "<group>"; };
+		DDA40BB92F4DB18100257798 /* AlgorithmGlucose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlgorithmGlucose.swift; sourceTree = "<group>"; };
 		DDA6E24F2D22187500C2988C /* ChartLegendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartLegendView.swift; sourceTree = "<group>"; };
 		DDA6E2842D2361F800C2988C /* LoopStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopStatusView.swift; sourceTree = "<group>"; };
 		DDA6E31F2D258E0500C2988C /* OverrideHelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverrideHelpView.swift; sourceTree = "<group>"; };
@@ -1566,6 +1585,10 @@
 		DDD78A902DC4064800AC63F3 /* carbhistory.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = carbhistory.json; sourceTree = "<group>"; };
 		DDD78AD72DC421B500AC63F3 /* enacted.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = enacted.json; sourceTree = "<group>"; };
 		DDD78AD82DC421B500AC63F3 /* suggested.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = suggested.json; sourceTree = "<group>"; };
+		DDD7C8BF2F4DB45400E5CF09 /* GlucoseStored+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GlucoseStored+CoreDataClass.swift"; sourceTree = "<group>"; };
+		DDD7C8C02F4DB45400E5CF09 /* GlucoseStored+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GlucoseStored+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		DDDD0FFA2F4E22C000F9C645 /* GlucoseSmoothingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlucoseSmoothingTests.swift; sourceTree = "<group>"; };
+		DDDD0FFE2F4E231B00F9C645 /* MockTDDStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockTDDStorage.swift; sourceTree = "<group>"; };
 		DDE179322C910127003CDDB7 /* MealPresetStored+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MealPresetStored+CoreDataClass.swift"; sourceTree = "<group>"; };
 		DDE179332C910127003CDDB7 /* MealPresetStored+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MealPresetStored+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		DDE179342C910127003CDDB7 /* LoopStatRecord+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LoopStatRecord+CoreDataClass.swift"; sourceTree = "<group>"; };
@@ -1582,8 +1605,6 @@
 		DDE179412C910127003CDDB7 /* StatsData+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StatsData+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		DDE179422C910127003CDDB7 /* Forecast+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Forecast+CoreDataClass.swift"; sourceTree = "<group>"; };
 		DDE179432C910127003CDDB7 /* Forecast+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Forecast+CoreDataProperties.swift"; sourceTree = "<group>"; };
-		DDE179442C910127003CDDB7 /* GlucoseStored+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GlucoseStored+CoreDataClass.swift"; sourceTree = "<group>"; };
-		DDE179452C910127003CDDB7 /* GlucoseStored+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GlucoseStored+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		DDE179462C910127003CDDB7 /* OpenAPS_Battery+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OpenAPS_Battery+CoreDataClass.swift"; sourceTree = "<group>"; };
 		DDE179472C910127003CDDB7 /* OpenAPS_Battery+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OpenAPS_Battery+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		DDE179482C910127003CDDB7 /* TempBasalStored+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TempBasalStored+CoreDataClass.swift"; sourceTree = "<group>"; };
@@ -1663,6 +1684,7 @@
 				3BD9687C2D8DDD4600899469 /* SlideButton in Frameworks */,
 				3B4BA7782D8DBD690069D5B8 /* MinimedKit.framework in Frameworks */,
 				3B4BA7762D8DBD690069D5B8 /* LibreTransmitterUI.framework in Frameworks */,
+				3E54EF2C2E476DA40006F54D /* MedtrumKit.framework in Frameworks */,
 				3B4BA7902D8DC0EC0069D5B8 /* TidepoolServiceKitUI.framework in Frameworks */,
 				3B4BA76A2D8DBD690069D5B8 /* CGMBLEKit.framework in Frameworks */,
 				3B4BA77C2D8DBD690069D5B8 /* OmniBLE.framework in Frameworks */,
@@ -2274,6 +2296,7 @@
 		3818AA48274C267000843DB3 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				3E54EF2B2E476DA40006F54D /* MedtrumKit.framework */,
 				3B4BA7882D8DC0EC0069D5B8 /* TidepoolServiceKit.framework */,
 				3B4BA7892D8DC0EC0069D5B8 /* TidepoolServiceKitUI.framework */,
 				3B4BA75B2D8DBD690069D5B8 /* CGMBLEKit.framework */,
@@ -2458,7 +2481,10 @@
 				490566642D9AB1C1005C45F7 /* AlertEntry.swift */,
 				492B88F42DADAFBA00D5E42B /* AlertEntry.swift */,
 				49B21BF62D7F231500D0B6C3 /* autoISFHistory.swift */,
+				49C782A62F73D9870062B0DD /* AlertEntry.swift */,
+				DDA40BB92F4DB18100257798 /* AlgorithmGlucose.swift */,
 				DD3D60302F0377350021A33B /* ExportSetting.swift */,
+				3E62C7812F54CC1600433237 /* BolusDisplayThreshold.swift */,
 				388E5A5F25B6F2310019842D /* Autosens.swift */,
 				388358C725EEF6D200E024B2 /* BasalProfileEntry.swift */,
 				38D0B3B525EBE24900CB6E88 /* Battery.swift */,
@@ -2468,28 +2494,59 @@
 				38D0B3D825EC07C400CB6E88 /* CarbsEntry.swift */,
 				DD6D67E32C9C253500660C9B /* ColorSchemeOption.swift */,
 				E592A36F2CEEC01E009A472C /* ContactTrickEntry.swift */,
+				19D4E4EA29FC6A9F00351451 /* Charts.swift */,
+				DD6D67E32C9C253500660C9B /* ColorSchemeOption.swift */,
+				DD9ECB692CA99F6C00AA7C45 /* CommandPayload.swift */,
+				E592A36F2CEEC01E009A472C /* ContactTrickEntry.swift */,
 				3811DF0125CA9FEA00A708ED /* Credentials.swift */,
 				DD3078692D42F94000DE0490 /* GarminDevice.swift */,
 				499FF4492E917B0100C76622 /* GarminWatchSettings.swift */,
 				DD4FFF322D458EE600B6CFF9 /* GarminWatchState.swift */,
 				DD940BA92CA7585D000830A5 /* GlucoseColorScheme.swift */,
 				715120D12D3C2B84005D9FB6 /* GlucoseNotificationsOption.swift */,
+				19A910352A24D6D700C8951B /* DateFilter.swift */,
+				DD21FCB42C6952AD00AF2C25 /* DecimalPickerSettings.swift */,
+				583684072BD195A700070A60 /* Determination.swift */,
+				DDD6D4D22CDE90720029439A /* EstimatedA1cDisplayUnit.swift */,
+				DD3D60302F0377350021A33B /* ExportSetting.swift */,
+				DD6B7CB32C7B71F700B75029 /* ForecastDisplayType.swift */,
+				DD3078692D42F94000DE0490 /* GarminDevice.swift */,
+				49090A8C2E9FE8D200D0F5DB /* GarminWatchSettings.swift */,
+				DD4FFF322D458EE600B6CFF9 /* GarminWatchState.swift */,
+				DD940BA92CA7585D000830A5 /* GlucoseColorScheme.swift */,
+				715120D12D3C2B84005D9FB6 /* GlucoseNotificationsOption.swift */,
+				E0D4F80427513ECF00BDF1FE /* HealthKitSample.swift */,
+				1967DFBD29D052C200759F30 /* Icons.swift */,
 				382C133625F13A1E00715CE1 /* InsulinSensitivities.swift */,
 				38887CCD25F5725200944304 /* IOBEntry.swift */,
+				BDF530D72B40F8AC002CAF43 /* LockScreenView.swift */,
+				193F6CDC2A512C8F001240FD /* Loops.swift */,
+				19012CDB291D2CB900FB8210 /* LoopStats.swift */,
 				DD68889C2C386E17006E3C44 /* NightscoutExercise.swift */,
+				FE41E4D529463EE20047FD55 /* NightscoutPreferences.swift */,
+				191F62672AD6B05A004D7911 /* NightscoutSettings.swift */,
 				385CEA8125F23DFD002D6D5B /* NightscoutStatus.swift */,
 				389442CA25F65F7100FA1F27 /* NightscoutTreatment.swift */,
+				BD54A95A2D28087700F9C1EE /* OverridePresetWatch.swift */,
+				BDC2EA462C3045AD00E5BBD0 /* Override.swift */,
 				BD54A95A2D28087700F9C1EE /* OverridePresetWatch.swift */,
 				3895E4C525B9E00D00214B37 /* Preferences.swift */,
 				38A13D3125E28B4B00EAA382 /* PumpHistoryEvent.swift */,
 				3883583325EEB38000E024B2 /* PumpSettings.swift */,
 				38E989DC25F5021400C0CED0 /* PumpStatus.swift */,
+				CC6C406D2ACDD69E009B8058 /* RawFetchedProfile.swift */,
 				38BF021C25E7E3AF00579895 /* Reservoir.swift */,
+				3B2F77852D7E52ED005ED9FA /* TDD.swift */,
+				19B0EF2028F6D66200069496 /* Statistics.swift */,
 				3B2F77852D7E52ED005ED9FA /* TDD.swift */,
 				38A0364125ED069400FCBB52 /* TempBasal.swift */,
 				3871F39B25ED892B0013ECB5 /* TempTarget.swift */,
 				BD54A9722D281A9C00F9C1EE /* TempTargetPresetWatch.swift */,
 				DDEBB05B2D89E9050032305D /* TimeInRangeType.swift */,
+				38AEE73C25F0200C0013F05B /* TrioSettings.swift */,
+				BD54A9722D281A9C00F9C1EE /* TempTargetPresetWatch.swift */,
+				DDEBB05B2D89E9050032305D /* TimeInRangeType.swift */,
+				1935363F28496F7D001E0B16 /* TrioCustomOrefVariables.swift */,
 				38AEE73C25F0200C0013F05B /* TrioSettings.swift */,
 				3811DE8E25C9D80400A708ED /* User.swift */,
 				DD3078672D42F5CE00DE0490 /* WatchGlucoseObject.swift */,
@@ -2498,6 +2555,11 @@
 				DDFF204F2DB2C11900AB8A96 /* WatchStateSnapshot.swift */,
 				E0D4F80427513ECF00BDF1FE /* HealthKitSample.swift */,
 				1935363F28496F7D001E0B16 /* TrioCustomOrefVariables.swift */,
+				DD3078672D42F5CE00DE0490 /* WatchGlucoseObject.swift */,
+				BD432CA02D2F4E3300D1EB79 /* WatchMessageKeys.swift */,
+				BDA25EFC2D261BF200035F34 /* WatchState.swift */,
+				DDFF204F2DB2C11900AB8A96 /* WatchStateSnapshot.swift */,
+				CE82E02628E869DF00473A9C /* AlertEntry.swift */,
 				19B0EF2028F6D66200069496 /* Statistics.swift */,
 				19012CDB291D2CB900FB8210 /* LoopStats.swift */,
 				FE41E4D529463EE20047FD55 /* NightscoutPreferences.swift */,
@@ -2514,6 +2576,7 @@
 				DD6B7CB32C7B71F700B75029 /* ForecastDisplayType.swift */,
 				DD9ECB692CA99F6C00AA7C45 /* CommandPayload.swift */,
 				DDD6D4D22CDE90720029439A /* EstimatedA1cDisplayUnit.swift */,
+				C2BA6B982F758E7600348E6A /* NotificationIdentifiers.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -2557,7 +2620,6 @@
 				DDD5889C2DDDC9A900C8848D /* TimeAgoFormatter.swift */,
 				CEB434E428B8FF5D00B70274 /* UIColor.swift */,
 				FEFFA7A12929FE49007B8193 /* UIDevice+Extensions.swift */,
-				CEA4F62229BE10F70011ADF7 /* SavitzkyGolayFilter.swift */,
 				BD2FF19F2AE29D43005D1C5D /* ToggleStyles.swift */,
 				BD1661302B82ADAB00256551 /* CustomProgressView.swift */,
 				581516A32BCED84A00BF67D7 /* DebuggingIdentifiers.swift */,
@@ -2702,6 +2764,8 @@
 		38FCF3EE25E9028E0078B0D1 /* TrioTests */ = {
 			isa = PBXGroup;
 			children = (
+				DDDD0FFD2F4E231600F9C645 /* Mocks */,
+				DDDD0FFA2F4E22C000F9C645 /* GlucoseSmoothingTests.swift */,
 				C2AA6D9B2E1AAC6300BF6C16 /* TDDStorageTimezoneTests.swift */,
 				BD8FC05C2D6618BE00B95AED /* BolusCalculatorTests */,
 				CEE9A65D2BBC9F6500EB5194 /* CalibrationsTests.swift */,
@@ -3359,6 +3423,7 @@
 			isa = PBXGroup;
 			children = (
 				4963550B2EA22A2E002EDB9E /* WatchConfigGarminAppConfigView.swift */,
+				4984D1D32EA2939E00263E83 /* WatchConfigGarminAppConfigView.swift */,
 				CE94598629E9E4110047C9C6 /* WatchConfigRootView.swift */,
 				DDF847E72C5DABA30049BB3B /* WatchConfigAppleWatchView.swift */,
 				DDF847E92C5DABAC0049BB3B /* WatchConfigGarminView.swift */,
@@ -3577,6 +3642,7 @@
 				DD09D5C62D29EB26000D82C9 /* Helper+Enums.swift */,
 				DD3A3CE82D29C97800AE478E /* Helper+ButtonStyles.swift */,
 				DD3A3CE62D29C93F00AE478E /* Helper+Extensions.swift */,
+				C2BA6B962F758E7500348E6A /* WatchNotificationHandler.swift */,
 			);
 			path = Helper;
 			sourceTree = "<group>";
@@ -3779,9 +3845,19 @@
 			path = View;
 			sourceTree = "<group>";
 		};
+		DDDD0FFD2F4E231600F9C645 /* Mocks */ = {
+			isa = PBXGroup;
+			children = (
+				DDDD0FFE2F4E231B00F9C645 /* MockTDDStorage.swift */,
+			);
+			path = Mocks;
+			sourceTree = "<group>";
+		};
 		DDE179112C9100FA003CDDB7 /* Classes+Properties */ = {
 			isa = PBXGroup;
 			children = (
+				DDD7C8BF2F4DB45400E5CF09 /* GlucoseStored+CoreDataClass.swift */,
+				DDD7C8C02F4DB45400E5CF09 /* GlucoseStored+CoreDataProperties.swift */,
 				BD4D738B2D15A4080052227B /* TDDStored+CoreDataClass.swift */,
 				BD4D738C2D15A4080052227B /* TDDStored+CoreDataProperties.swift */,
 				DDE179362C910127003CDDB7 /* BolusStored+CoreDataClass.swift */,
@@ -3796,8 +3872,6 @@
 				DDE179432C910127003CDDB7 /* Forecast+CoreDataProperties.swift */,
 				DDE179382C910127003CDDB7 /* ForecastValue+CoreDataClass.swift */,
 				DDE179392C910127003CDDB7 /* ForecastValue+CoreDataProperties.swift */,
-				DDE179442C910127003CDDB7 /* GlucoseStored+CoreDataClass.swift */,
-				DDE179452C910127003CDDB7 /* GlucoseStored+CoreDataProperties.swift */,
 				DDE179342C910127003CDDB7 /* LoopStatRecord+CoreDataClass.swift */,
 				DDE179352C910127003CDDB7 /* LoopStatRecord+CoreDataProperties.swift */,
 				DDE179322C910127003CDDB7 /* MealPresetStored+CoreDataClass.swift */,
@@ -4357,6 +4431,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DDA40BBA2F4DB18800257798 /* AlgorithmGlucose.swift in Sources */,
 				DD5DC9F12CF3D97C00AB8703 /* AdjustmentsStateModel+Overrides.swift in Sources */,
 				3811DE2325C9D48300A708ED /* MainDataFlow.swift in Sources */,
 				C2A0A42F2CE03131003B98E8 /* ConstantValues.swift in Sources */,
@@ -4386,7 +4461,6 @@
 				DD98ACC02D71013200C0778F /* StatChartUtils.swift in Sources */,
 				BD47FDD92D8B657D0043966B /* InsulinSensitivityStepView.swift in Sources */,
 				3862CC2E2743F9F700BF832C /* CalendarManager.swift in Sources */,
-				CEA4F62329BE10F70011ADF7 /* SavitzkyGolayFilter.swift in Sources */,
 				38B4F3C325E2A20B00E76A18 /* PumpSetupView.swift in Sources */,
 				38E4453C274E411700EC9A94 /* Disk+Codable.swift in Sources */,
 				58D08B322C8DF88900AA37D3 /* DummyCharts.swift in Sources */,
@@ -4468,6 +4542,7 @@
 				BD8E6B232D9036F700ABF8FA /* OnboardingDataFlow.swift in Sources */,
 				C2A6D1E42DB1581D0036DB66 /* GlucoseStatsSetup.swift in Sources */,
 				3811DE3125C9D49500A708ED /* HomeProvider.swift in Sources */,
+				4984D1D42EA2939E00263E83 /* WatchConfigGarminAppConfigView.swift in Sources */,
 				FE41E4D629463EE20047FD55 /* NightscoutPreferences.swift in Sources */,
 				DD868FD82E381A54005D3308 /* APNSJWTClaims.swift in Sources */,
 				E013D872273AC6FE0014109C /* GlucoseSimulatorSource.swift in Sources */,
@@ -4517,6 +4592,7 @@
 				DDF691012DA2CA11008BF16C /* AppDiagnosticsDataFlow.swift in Sources */,
 				DDA6E3202D258E0500C2988C /* OverrideHelpView.swift in Sources */,
 				DDA6E2502D22187500C2988C /* ChartLegendView.swift in Sources */,
+				49090A8D2E9FE8D200D0F5DB /* GarminWatchSettings.swift in Sources */,
 				49239B432EEA27AD00469145 /* TempTargetCalculations.swift in Sources */,
 				3811DEAF25C9D88300A708ED /* KeyValueStorage.swift in Sources */,
 				DDD6D4D32CDE90720029439A /* EstimatedA1cDisplayUnit.swift in Sources */,
@@ -4708,6 +4784,7 @@
 				53F2382465BF74DB1A967C8B /* PumpConfigProvider.swift in Sources */,
 				5D16287A969E64D18CE40E44 /* PumpConfigStateModel.swift in Sources */,
 				DDF6902C2DA028D3008BF16C /* DiagnosticsStepView.swift in Sources */,
+				C2BA6B992F758E7600348E6A /* NotificationIdentifiers.swift in Sources */,
 				19D466AA29AA3099004D5F33 /* MealSettingsRootView.swift in Sources */,
 				CEF1ED6B2D58FB5800FAF41E /* CGMOptions.swift in Sources */,
 				E974172296125A5AE99E634C /* PumpConfigRootView.swift in Sources */,
@@ -4740,6 +4817,8 @@
 				FA630397F76B582C8D8681A7 /* BasalProfileEditorProvider.swift in Sources */,
 				DD1745172C54389F00211FAC /* FeatureSettingsView.swift in Sources */,
 				DD3D60312F0377350021A33B /* ExportSetting.swift in Sources */,
+				DDD7C8C12F4DB45400E5CF09 /* GlucoseStored+CoreDataClass.swift in Sources */,
+				DDD7C8C22F4DB45400E5CF09 /* GlucoseStored+CoreDataProperties.swift in Sources */,
 				DD9ECB712CA9A0BA00AA7C45 /* RemoteControlConfigProvider.swift in Sources */,
 				63E890B4D951EAA91C071D5C /* BasalProfileEditorStateModel.swift in Sources */,
 				38FEF3FA2737E42000574A46 /* BaseStateModel.swift in Sources */,
@@ -4956,14 +5035,13 @@
 				49B21BF72D7F231500D0B6C3 /* autoISFHistory.swift in Sources */,
 				DDE179622C910127003CDDB7 /* Forecast+CoreDataClass.swift in Sources */,
 				DDE179632C910127003CDDB7 /* Forecast+CoreDataProperties.swift in Sources */,
-				DDE179642C910127003CDDB7 /* GlucoseStored+CoreDataClass.swift in Sources */,
-				DDE179652C910127003CDDB7 /* GlucoseStored+CoreDataProperties.swift in Sources */,
 				BDC531142D10611D00088832 /* AddContactImageSheet.swift in Sources */,
 				DDE179662C910127003CDDB7 /* OpenAPS_Battery+CoreDataClass.swift in Sources */,
 				DDE179672C910127003CDDB7 /* OpenAPS_Battery+CoreDataProperties.swift in Sources */,
 				DDE179682C910127003CDDB7 /* TempBasalStored+CoreDataClass.swift in Sources */,
 				DDE179692C910127003CDDB7 /* TempBasalStored+CoreDataProperties.swift in Sources */,
 				BD4D73A22D15A42A0052227B /* TDDStorage.swift in Sources */,
+				49C782A72F73D9870062B0DD /* AlertEntry.swift in Sources */,
 				DDE1796C2C910127003CDDB7 /* OverrideRunStored+CoreDataClass.swift in Sources */,
 				DDE1796D2C910127003CDDB7 /* OverrideRunStored+CoreDataProperties.swift in Sources */,
 				DDE1796E2C910127003CDDB7 /* OrefDetermination+CoreDataClass.swift in Sources */,
@@ -4993,6 +5071,7 @@
 				BD8FC0572D66188700B95AED /* PumpHistoryStorageTests.swift in Sources */,
 				BD8FC0642D6619EF00B95AED /* TempTargetStorageTests.swift in Sources */,
 				BD8FC0542D66186000B95AED /* TestError.swift in Sources */,
+				DDDD0FFB2F4E22C000F9C645 /* GlucoseSmoothingTests.swift in Sources */,
 				CEE9A65E2BBC9F6500EB5194 /* CalibrationsTests.swift in Sources */,
 				BD8FC0622D6619E600B95AED /* OverrideStorageTests.swift in Sources */,
 				BD8FC0592D66189700B95AED /* TestAssembly.swift in Sources */,
@@ -5000,6 +5079,7 @@
 				C2AA6D9C2E1AAC6300BF6C16 /* TDDStorageTimezoneTests.swift in Sources */,
 				3B997DCF2DC00A3A006B6BB2 /* JSONImporterTests.swift in Sources */,
 				BD8FC0662D661A0000B95AED /* GlucoseStorageTests.swift in Sources */,
+				DDDD0FFF2F4E231B00F9C645 /* MockTDDStorage.swift in Sources */,
 				BD8FC05B2D6618AF00B95AED /* DeterminationStorageTests.swift in Sources */,
 				49F4A34D2E044D7E008A93CC /* ShareLogsTests.swift in Sources */,
 				3BAAE60C2DE7766C0049589B /* DynamicISFEnableTests.swift in Sources */,
@@ -5038,6 +5118,7 @@
 				BDA25F202D26D5FE00035F34 /* CarbsInputView.swift in Sources */,
 				BDA25F1C2D26BD0700035F34 /* TrendShape.swift in Sources */,
 				BDFF7A892D25F97D0016C40C /* TrioWatchApp.swift in Sources */,
+				C2BA6B972F758E7500348E6A /* WatchNotificationHandler.swift in Sources */,
 				DD09D5C72D29EB2F000D82C9 /* Helper+Enums.swift in Sources */,
 				BD54A9742D281AEF00F9C1EE /* TempTargetPresetWatch.swift in Sources */,
 				BD54A95C2D2808A300F9C1EE /* OverridePresetWatch.swift in Sources */,
@@ -5049,6 +5130,7 @@
 				498B3E822DB96EF000737DD3 /* WatchStateSnapshot.swift in Sources */,
 				DD246F062D2836AA0027DDE0 /* GlucoseTrendView.swift in Sources */,
 				BD432CA22D2F4E4000D1EB79 /* WatchMessageKeys.swift in Sources */,
+				C2BA6B9A2F7593C300348E6A /* NotificationIdentifiers.swift in Sources */,
 				DD8262CB2D289297009F6F62 /* BolusConfirmationView.swift in Sources */,
 				BD54A9712D281A8100F9C1EE /* TempTargetPresetsView.swift in Sources */,
 				DD3A3CE92D29C97800AE478E /* Helper+ButtonStyles.swift in Sources */,
