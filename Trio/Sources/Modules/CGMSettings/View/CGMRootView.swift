@@ -9,6 +9,8 @@ extension CGMSettings {
         let bluetoothManager: BluetoothStateManager
         @StateObject var state = StateModel()
         @State private var shouldDisplayHint: Bool = false
+        @State private var shouldDisplayHint1: Bool = false
+        @State private var shouldDisplayHint2: Bool = false
         @State var hintDetent = PresentationDetent.large
         @State var selectedVerboseHint: AnyView?
         @State var hintLabel: String?
@@ -74,7 +76,7 @@ extension CGMSettings {
                                             Spacer()
                                             Button(
                                                 action: {
-                                                    shouldDisplayHint.toggle()
+                                                    shouldDisplayHint1.toggle()
                                                 },
                                                 label: {
                                                     HStack {
@@ -118,7 +120,7 @@ extension CGMSettings {
                             Text("Default: OFF").bold()
 
                             Text(
-                                "This feature smooths your CGM readings to reduce noise and make them easier to read. It is based on methods used in AndroidAPS (AAPS)."
+                                "This feature smooths your CGM readings to reduce noise and make them easier to read. 2 Algorithms can be used, exponential smoothing is the method used in stock AndroidAPS (AAPS). Alternatively, a more sophisticated method using UKF is adopted from the AAPS Tsunami branch."
                             )
 
                             Text(
@@ -143,20 +145,42 @@ extension CGMSettings {
                         }
                     )
 
-                    if state.smoothGlucose {
-                        HStack {
-                            Text("Smoothing Algorithm")
-                            Spacer()
-                            Picker("", selection: $state.smoothingAlgorithm) {
-                                ForEach(GlucoseSmoothingAlgorithm.allCases) { algorithm in
-                                    Text(algorithm.displayName).tag(algorithm)
+                    Section(
+                        header: Text("Smoothing Algorithm"),
+                        content: {
+                            VStack {
+                                Picker(
+                                    selection: $state.smoothingAlgorithm,
+                                    label: Text("Algorithm Selection").multilineTextAlignment(.leading)
+                                ) {
+                                    ForEach(GlucoseSmoothingAlgorithm.allCases) { algorithm in
+                                        Text(algorithm.displayName).tag(algorithm)
+                                    }
                                 }
-                            }
-                            .pickerStyle(.menu)
+                                .padding(.top)
+
+                                HStack(alignment: .center) {
+                                    Text(
+                                        "Choose which smoothing algorithm shall be applied."
+                                    )
+                                    .font(.footnote)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(nil)
+                                    Spacer()
+                                    Button(
+                                        action: {
+                                            shouldDisplayHint2.toggle()
+                                        },
+                                        label: {
+                                            HStack {
+                                                Image(systemName: "questionmark.circle")
+                                            }
+                                        }
+                                    ).buttonStyle(BorderlessButtonStyle())
+                                }.padding(.top)
+                            }.padding(.bottom)
                         }
-                        .padding(.horizontal)
-                        .padding(.vertical, 8)
-                    }
+                    ).listRowBackground(Color.chart)
                 }
                 .scrollContentBackground(.hidden).background(appState.trioBackgroundColor(for: colorScheme))
                 .onAppear(perform: configureView)
@@ -206,10 +230,10 @@ extension CGMSettings {
                         }
                     }
                 }
-                .sheet(isPresented: $shouldDisplayHint) {
+                .sheet(isPresented: $shouldDisplayHint1) {
                     SettingInputHintView(
                         hintDetent: $hintDetent,
-                        shouldDisplayHint: $shouldDisplayHint,
+                        shouldDisplayHint: $shouldDisplayHint1,
                         hintLabel: hintLabel ?? "",
                         hintText: selectedVerboseHint ?? AnyView(
                             VStack(alignment: .leading, spacing: 10) {
@@ -236,6 +260,53 @@ extension CGMSettings {
                         sheetTitle: String(localized: "Help", comment: "Help sheet title")
                     )
                 }
+                .sheet(isPresented: $shouldDisplayHint2) {
+                    SettingInputHintView(
+                        hintDetent: $hintDetent,
+                        shouldDisplayHint: $shouldDisplayHint2,
+                        hintLabel: "Smoothing Algorithms  ",
+                        hintText: selectedVerboseHint ?? AnyView(
+                            VStack(alignment: .leading, spacing: 10) {
+                                VStack(alignment: .leading) {
+                                    Text("• Second Order Exponential")
+                                    Text("• Tsunami Unscented Kalman Filter")
+                                }
+                                Text("Default: Exponential").bold()
+
+                                // Second-order exponential smoothing
+                                Text("Second-Order Exponential Smoothing")
+                                    .font(.headline)
+                                Text(
+                                    "Benefit: provides a simple, fast filter that smooths CGM values and captures approximately linear trends with minimal computation."
+                                )
+                                Text(
+                                    "Second-order exponential smoothing (Holt’s linear method) tracks both the level and the trend of a time series with two recursive updates."
+                                )
+
+                                // UKF Tsunami
+                                Text("Unscented Kalman Filter (UKF)")
+                                    .font(.headline)
+                                Text(
+                                    "Benefit: adapts automatically to changing sensor quality and outliers while preserving real glucose dynamics with less lag."
+                                )
+                                Text(
+                                    "The UKF maintains a state vector xₜ = [Gₜ, Ġₜ]ᵀ (glucose Gₜ and its rate of change Ġₜ) and a covariance matrix Pₜ that represent both the estimate and its uncertainty."
+                                )
+                                Text(
+                                    "Each step predicts the state with a nonlinear process model, then fuses the new CGM value zₜ using a measurement-noise term Rₜ and the innovation νₜ = zₜ − ẑₜ."
+                                )
+                                Text(
+                                    "In the Tsunami adaptation, Rₜ is learned online from recent νₜ values using dual-rate updates (fast and slow), and suspicious points are handled softly by inflating an effective Rₑ instead of discarding them."
+                                )
+                                Text(
+                                    "A Rauch–Tung–Striebel (RTS) smoother then runs backward over each segment, using a smoothing gain Cₜ = Pₜ · Fₜᵀ · (P̂ₜ)⁻¹ to reduce lag and sharpen the final smoothed glucose curve."
+                                )
+                            }
+                        ),
+                        sheetTitle: String(localized: "Help", comment: "Help sheet title")
+                    )
+                }
+
                 .confirmationDialog("CGM Model", isPresented: $showCGMSelection) {
                     cgmSelectionButtons
                 } message: {

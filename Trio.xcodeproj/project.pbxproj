@@ -288,7 +288,7 @@
 		498ED7BE2D80811800D18CAF /* HorizontalPumpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 498ED7BD2D80811800D18CAF /* HorizontalPumpView.swift */; };
 		499FF44A2E917B0100C76622 /* GarminWatchSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499FF4492E917B0100C76622 /* GarminWatchSettings.swift */; };
 		49AC5B642D7F2833005A47F3 /* CustomDateTimePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49AC5B632D7F2833005A47F3 /* CustomDateTimePicker.swift */; };
-		49AD0CEF2F8797F2004301B6 /* UKFTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49AD0CEE2F8797F2004301B6 /* UKFTest.swift */; };
+		49AD0CEF2F8797F2004301B6 /* UKFTestData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49AD0CEE2F8797F2004301B6 /* UKFTestData.swift */; };
 		49B21BBD2D7F102100D0B6C3 /* MainChartHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B21BBC2D7F102100D0B6C3 /* MainChartHelper.swift */; };
 		49B21BF02D7F21D100D0B6C3 /* AutoISFHistoryStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B21BEE2D7F21D100D0B6C3 /* AutoISFHistoryStateModel.swift */; };
 		49B21BF12D7F21D100D0B6C3 /* AutoISFHistoryDataFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B21BEC2D7F21D100D0B6C3 /* AutoISFHistoryDataFlow.swift */; };
@@ -1171,7 +1171,7 @@
 		49AC5B632D7F2833005A47F3 /* CustomDateTimePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomDateTimePicker.swift; sourceTree = "<group>"; };
 		49AC5CB32D7F5EB2005A47F3 /* ci_post_xcodebuild.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = ci_post_xcodebuild.sh; path = ci_scripts/ci_post_xcodebuild.sh; sourceTree = "<group>"; };
 		49AC5CE22D7F5F39005A47F3 /* WhatToTest.en-CA.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = "WhatToTest.en-CA.txt"; path = "Testflight/WhatToTest.en-CA.txt"; sourceTree = "<group>"; };
-		49AD0CEE2F8797F2004301B6 /* UKFTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UKFTest.swift; sourceTree = "<group>"; };
+		49AD0CEE2F8797F2004301B6 /* UKFTestData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UKFTestData.swift; sourceTree = "<group>"; };
 		49B21BBC2D7F102100D0B6C3 /* MainChartHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainChartHelper.swift; sourceTree = "<group>"; };
 		49B21BEA2D7F21D100D0B6C3 /* AutoISFHistoryRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFHistoryRootView.swift; sourceTree = "<group>"; };
 		49B21BEC2D7F21D100D0B6C3 /* AutoISFHistoryDataFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFHistoryDataFlow.swift; sourceTree = "<group>"; };
@@ -2284,8 +2284,6 @@
 				38A504F625DDA0E200C5B9E8 /* Extensions */,
 				388E5A5825B6F0070019842D /* OpenAPS */,
 				38A0362725ECF05300FCBB52 /* Storage */,
-				492DD6B32F86C65900EA69C1 /* UnscentedKalmanFilter.swift */,
-				49AD0CEE2F8797F2004301B6 /* UKFTest.swift */,
 			);
 			path = APS;
 			sourceTree = "<group>";
@@ -2552,6 +2550,7 @@
 		388E5A5A25B6F05F0019842D /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
+				492DD6B32F86C65900EA69C1 /* UnscentedKalmanFilter.swift */,
 				492B87002D9EC02700D5E42B /* TaiStyle.swift */,
 				49CCD2102CAE5E99002A9476 /* BulletList.swift */,
 				E06B9119275B5EEA003C04B6 /* Array+Extension.swift */,
@@ -2734,6 +2733,7 @@
 			children = (
 				DDDD0FFD2F4E231600F9C645 /* Mocks */,
 				DDDD0FFA2F4E22C000F9C645 /* GlucoseSmoothingTests.swift */,
+				49AD0CEE2F8797F2004301B6 /* UKFTestData.swift */,
 				C2AA6D9B2E1AAC6300BF6C16 /* TDDStorageTimezoneTests.swift */,
 				BD8FC05C2D6618BE00B95AED /* BolusCalculatorTests */,
 				CEE9A65D2BBC9F6500EB5194 /* CalibrationsTests.swift */,
@@ -4965,7 +4965,7 @@
 				BD7DA9A52AE06DFC00601B20 /* BolusCalculatorConfigDataFlow.swift in Sources */,
 				6EADD581738D64431902AC0A /* (null) in Sources */,
 				CE94598729E9E4110047C9C6 /* WatchConfigRootView.swift in Sources */,
-				49AD0CEF2F8797F2004301B6 /* UKFTest.swift in Sources */,
+				49AD0CEF2F8797F2004301B6 /* UKFTestData.swift in Sources */,
 				DD5DC9FB2CF3E1B100AB8703 /* AdjustmentsStateModel+Helpers.swift in Sources */,
 				BD249D972D42FCBF00412DEB /* AreaChartSetup.swift in Sources */,
 				DDF847E42C5C288F0049BB3B /* LiveActivitySettingsRootView.swift in Sources */,

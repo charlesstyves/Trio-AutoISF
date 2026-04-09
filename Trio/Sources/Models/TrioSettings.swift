@@ -23,7 +23,7 @@ enum GlucoseSmoothingAlgorithm: String, JSON, CaseIterable, Identifiable {
     var displayName: String {
         switch self {
         case .exponential:
-            return String(localized: "Exponential Smoothing")
+            return String(localized: "2nd Order Exponential")
         case .ukf:
             return String(localized: "Unscented Kalman Filter")
         }
@@ -62,7 +62,7 @@ struct TrioSettings: JSON, Equatable, Encodable {
     var delay: Decimal = 60
     var useAppleHealth: Bool = false
     var smoothGlucose: Bool = false
-    var smoothingAlgorithm: GlucoseSmoothingAlgorithm = .exponential
+    var smoothingAlgorithm: GlucoseSmoothingAlgorithm = .ukf
     var eA1cDisplayUnit: EstimatedA1cDisplayUnit = .percent
     var high: Decimal = 180
     var low: Decimal = 70

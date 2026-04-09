@@ -48,7 +48,7 @@ extension CGMSettings {
         @Published var shouldDisplayCGMSetupSheet: Bool = false
         @Published var cgmCurrent = cgmDefaultModel
         @Published var smoothGlucose = false
-        @Published var smoothingAlgorithm: GlucoseSmoothingAlgorithm = .exponential
+        @Published var smoothingAlgorithm: GlucoseSmoothingAlgorithm = .ukf
         @Published var cgmTransmitterDeviceAddress: String? = nil
         @Published var listOfCGM: [CGMModel] = []
         @Published var url: URL?
