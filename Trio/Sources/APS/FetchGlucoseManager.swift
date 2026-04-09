@@ -273,10 +273,12 @@ final class BaseFetchGlucoseManager: FetchGlucoseManager, Injectable {
         }
 
         let backfillGlucose = newGlucose.filter { $0.dateString <= syncDate }
+        var hasBackfilled = false
         if backfillGlucose.isNotEmpty {
             debug(.deviceManager, "Backfilling glucose...")
             do {
                 try await glucoseStorage.backfillGlucose(backfillGlucose)
+                hasBackfilled = true
             } catch {
                 debug(.deviceManager, "Unable to backfill glucose: \(error)")
             }
@@ -285,19 +287,28 @@ final class BaseFetchGlucoseManager: FetchGlucoseManager, Injectable {
         filteredByDate = newGlucose.filter { $0.dateString > syncDate }
         filtered = glucoseStorage.filterTooFrequentGlucose(filteredByDate, at: syncDate)
 
-        guard filtered.isNotEmpty else {
-            endBackgroundTaskSafely(&backgroundTaskID, taskName: "Glucose Store and Heartbeat Decision")
-            return
+        var hasStoredNew = false
+        if filtered.isNotEmpty {
+            debug(.deviceManager, "New glucose found")
+            try await glucoseStorage.storeGlucose(filtered)
+            hasStoredNew = true
         }
-        debug(.deviceManager, "New glucose found")
 
-        try await glucoseStorage.storeGlucose(filtered)
-
-        if settingsManager.settings.smoothGlucose {
+        // Run smoothing if ANY glucose was stored (backfilled or new)
+        if (hasBackfilled || hasStoredNew) && settingsManager.settings.smoothGlucose {
             await smoothGlucose(context: context)
         }
 
-        deviceDataManager.heartbeat(date: Date())
+        // Only trigger heartbeat if new glucose was stored (not backfill)
+        if hasStoredNew {
+            deviceDataManager.heartbeat(date: Date())
+        }
+
+        // Always end background task
+        guard hasBackfilled || hasStoredNew else {
+            endBackgroundTaskSafely(&backgroundTaskID, taskName: "Glucose Store and Heartbeat Decision")
+            return
+        }
 
         endBackgroundTaskSafely(&backgroundTaskID, taskName: "Glucose Store and Heartbeat Decision")
     }
@@ -480,6 +491,13 @@ extension BaseFetchGlucoseManager {
     ) {
         guard !data.isEmpty else { return }
 
+        // First, set fallback smoothed values for ALL readings
+        // This ensures no reading is left with nil smoothedGlucose
+        for object in data {
+            let raw = Decimal(Int(object.glucose))
+            object.smoothedGlucose = max(raw, minimumSmoothedGlucose) as NSDecimalNumber
+        }
+
         // Determine the size of the valid most-recent smoothing window.
         // We walk adjacent pairs from newest -> oldest to preserve the same window semantics
         // as the original implementation, but avoid manual reverse indexing.
@@ -506,16 +524,8 @@ extension BaseFetchGlucoseManager {
         }
 
         // Not enough recent contiguous readings to smooth (e.g. after CGM gap).
-        // IMPORTANT: Only apply fallback to the recent window, not all data.
-        // Otherwise a recent gap would overwrite historical smoothed values.
+        // Fallback values already set above, so just return
         guard validWindowCount >= minimumWindowSize else {
-            let recentWindow = data.suffix(validWindowCount)
-
-            for object in recentWindow {
-                let raw = Decimal(Int(object.glucose))
-                object.smoothedGlucose = max(raw, minimumSmoothedGlucose) as NSDecimalNumber
-            }
-
             return
         }
 
@@ -630,7 +640,12 @@ extension BaseFetchGlucoseManager {
                 }
 
                 guard bloodGlucoseArray.count >= 2 else {
-                    debug(.deviceManager, "UKF smoothing: insufficient readings for smoothing")
+                    debug(.deviceManager, "UKF smoothing: insufficient readings for smoothing, using raw values as fallback")
+                    // Fallback: set smoothed = raw for insufficient data
+                    for reading in glucoseReadings {
+                        reading.smoothedGlucose = NSDecimalNumber(value: Int(reading.glucose))
+                    }
+                    try context.save()
                     return
                 }
 
@@ -644,11 +659,15 @@ extension BaseFetchGlucoseManager {
                 for (idx, bloodGlucose) in smoothed.enumerated() where idx < glucoseReadings.count {
                     if let smoothedValue = bloodGlucose.glucose {
                         glucoseReadings[idx].smoothedGlucose = NSDecimalNumber(value: smoothedValue)
+                    } else {
+                        // Fallback: if UKF didn't produce a smoothed value, use raw
+                        debug(.deviceManager, "UKF smoothing: no smoothed value for index \(idx), using raw value")
+                        glucoseReadings[idx].smoothedGlucose = NSDecimalNumber(value: Int(glucoseReadings[idx].glucose))
                     }
                 }
 
                 try context.save()
-                debug(.deviceManager, "UKF smoothing: saved smoothed values to CoreData")
+                debug(.deviceManager, "UKF smoothing: saved \(smoothed.count) smoothed values to CoreData")
             }
 
             let duration = Date().timeIntervalSince(startTime)

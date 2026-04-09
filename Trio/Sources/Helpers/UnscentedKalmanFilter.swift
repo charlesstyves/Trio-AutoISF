@@ -112,7 +112,13 @@ struct UnscentedKalmanFilter {
         let segments = segmentIndices(result)
 
         for segmentIndices in segments {
-            guard segmentIndices.count >= 2 else { continue }
+            guard segmentIndices.count >= 2 else {
+                // For isolated single readings, keep raw value as smoothed value
+                for idx in segmentIndices {
+                    // Already has raw value, no change needed (glucose/sgv stay as-is)
+                }
+                continue
+            }
             let smoothed = processSegment(readings: result, indices: segmentIndices)
             for (idx, value) in smoothed {
                 // Clamp to reasonable glucose range to prevent Int overflow
