@@ -279,6 +279,9 @@ final class BaseFetchGlucoseManager: FetchGlucoseManager, Injectable {
             do {
                 try await glucoseStorage.backfillGlucose(backfillGlucose)
                 hasBackfilled = true
+
+                // Small delay to ensure persistent store coordinator propagates changes
+                try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
             } catch {
                 debug(.deviceManager, "Unable to backfill glucose: \(error)")
             }
@@ -289,14 +292,20 @@ final class BaseFetchGlucoseManager: FetchGlucoseManager, Injectable {
 
         var hasStoredNew = false
         if filtered.isNotEmpty {
-            debug(.deviceManager, "New glucose found")
+            debug(.deviceManager, "New glucose found: \(filtered.count) readings")
             try await glucoseStorage.storeGlucose(filtered)
             hasStoredNew = true
+
+            // Small delay to ensure persistent store coordinator propagates changes
+            try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
         }
 
         // Run smoothing if ANY glucose was stored (backfilled or new)
         if (hasBackfilled || hasStoredNew) && settingsManager.settings.smoothGlucose {
-            await smoothGlucose(context: context)
+            debug(.deviceManager, "Triggering smoothing: hasBackfilled=\(hasBackfilled), hasStoredNew=\(hasStoredNew)")
+            // Create a fresh context for smoothing to ensure it sees the latest data from the persistent store
+            let smoothingContext = CoreDataStack.shared.newTaskContext()
+            await smoothGlucose(context: smoothingContext)
         }
 
         // Only trigger heartbeat if new glucose was stored (not backfill)
@@ -382,7 +391,9 @@ extension BaseFetchGlucoseManager: SettingsObserver {
 
             self.glucoseStoreAndHeartLock.wait()
             Task {
-                await self.smoothGlucose(context: self.context)
+                // Create a fresh context for smoothing to ensure it sees the latest data
+                let smoothingContext = CoreDataStack.shared.newTaskContext()
+                await self.smoothGlucose(context: smoothingContext)
                 self.glucoseStoreAndHeartLock.signal()
             }
         }
@@ -391,6 +402,17 @@ extension BaseFetchGlucoseManager: SettingsObserver {
 
 extension BaseFetchGlucoseManager {
     func fetchGlucose(context: NSManagedObjectContext) async throws -> [NSManagedObjectID] {
+        // CRITICAL: Force the context to see changes from peer contexts (like GlucoseStorage's context)
+        // Since peer contexts don't automatically merge each other's changes, we need to:
+        // 1. Reset the context to clear its cache
+        // 2. Allow time for the persistent store coordinator to process saves from other contexts
+        await context.perform {
+            context.reset()
+        }
+
+        // Delay to ensure persistent store coordinator has fully processed saves from other contexts
+        try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
+
         // Compound predicate: time window + non-manual + valid date
         let timePredicate = NSPredicate.predicateForOneDayAgoInMinutes
         let manualPredicate = NSPredicate(format: "isManual == NO")
@@ -445,6 +467,7 @@ extension BaseFetchGlucoseManager {
         do {
             // get objectIDs
             let objectIDs = try await fetchGlucose(context: context)
+            debug(.deviceManager, "Exponential smoothing: fetched \(objectIDs.count) glucose readings")
 
             try await context.perform(schedule: .immediate) {
                 // Load managed objects from object IDs
@@ -453,7 +476,10 @@ extension BaseFetchGlucoseManager {
                     context.object(with: $0) as? GlucoseStored
                 }
 
-                guard !glucoseReadings.isEmpty else { return }
+                guard !glucoseReadings.isEmpty else {
+                    debug(.deviceManager, "Exponential smoothing: no readings after compactMap")
+                    return
+                }
 
                 // Static method call to avoid self-capture
                 Self.applyExponentialSmoothingAndStore(
@@ -469,6 +495,14 @@ extension BaseFetchGlucoseManager {
                 )
 
                 try context.save()
+            }
+
+            // Force viewContext to refresh so UI sees updated smoothed values immediately
+            // The viewContext has automaticallyMergesChangesFromParent = false and relies
+            // on persistent history tracking, which merges asynchronously
+            let viewContext = CoreDataStack.shared.persistentContainer.viewContext
+            await viewContext.perform {
+                viewContext.refreshAllObjects()
             }
 
             let duration = Date().timeIntervalSince(startTime)
@@ -511,11 +545,21 @@ extension BaseFetchGlucoseManager {
             let gapSeconds = newerDate.timeIntervalSince(olderDate)
             let gapMinutesRounded = Int((gapSeconds / 60.0).rounded())
 
-            if gapMinutesRounded >= maximumAllowedGapMinutes {
-                validWindowCount = recentOffset + 1 // include the more recent reading
+            // Log first 5 intervals to see pattern
+            if recentOffset < 5 {
+                let dateFormatter = ISO8601DateFormatter()
                 debug(
                     .deviceManager,
-                    "Exponential: Found gap of \(gapMinutesRounded) minutes at offset \(recentOffset), validWindowCount=\(validWindowCount)"
+                    "Exponential: offset \(recentOffset), gap=\(gapMinutesRounded)min. Newer: \(dateFormatter.string(from: newerDate)), Older: \(dateFormatter.string(from: olderDate))"
+                )
+            }
+
+            if gapMinutesRounded >= maximumAllowedGapMinutes {
+                validWindowCount = recentOffset + 1 // include the more recent reading
+                let dateFormatter = ISO8601DateFormatter()
+                debug(
+                    .deviceManager,
+                    "Exponential: Found gap of \(gapMinutesRounded) minutes at offset \(recentOffset), validWindowCount=\(validWindowCount). Newer: \(dateFormatter.string(from: newerDate)) (\(newer.glucose)), Older: \(dateFormatter.string(from: olderDate)) (\(older.glucose))"
                 )
                 break
             }
@@ -604,11 +648,19 @@ extension BaseFetchGlucoseManager {
         }
 
         // Apply to the most recent valid-window readings.
-        for (object, blendedValue) in zip(validWindow, blended) {
+        let dateFormatter = ISO8601DateFormatter()
+        for (index, (object, blendedValue)) in zip(validWindow, blended).enumerated() {
             let rounded = blendedValue.rounded(toPlaces: 0) // nearest integer, ties away from zero
             let clamped = max(rounded, minimumSmoothedGlucose)
             object.smoothedGlucose = clamped as NSDecimalNumber
+            if index < 3 || index >= validWindow.count - 3 {
+                debug(
+                    .deviceManager,
+                    "Exponential: Stored smoothed[\(index)/\(validWindow.count - 1)]: \(object.glucose) -> \(clamped) at \(dateFormatter.string(from: object.date ?? Date()))"
+                )
+            }
         }
+        debug(.deviceManager, "Exponential: Stored \(validWindow.count) smoothed values total")
     }
 
     /// UKF-based glucose smoothing + storage.
@@ -621,9 +673,10 @@ extension BaseFetchGlucoseManager {
             // get objectIDs
             let objectIDs = try await fetchGlucose(context: context)
             let objectIDsCount = objectIDs.count
+            debug(.deviceManager, "UKF smoothing: fetched \(objectIDsCount) glucose readings")
 
             try await context.perform(schedule: .immediate) {
-                debug(.deviceManager, "UKF smoothing: found \(objectIDsCount) readings to process")
+                debug(.deviceManager, "UKF smoothing: processing \(objectIDsCount) readings")
                 // Load managed objects from object IDs
                 let glucoseReadings = objectIDs.compactMap {
                     context.object(with: $0) as? GlucoseStored
@@ -688,6 +741,14 @@ extension BaseFetchGlucoseManager {
 
                 try context.save()
                 debug(.deviceManager, "UKF smoothing: saved \(smoothed.count) smoothed values to CoreData")
+            }
+
+            // Force viewContext to refresh so UI sees updated smoothed values immediately
+            // The viewContext has automaticallyMergesChangesFromParent = false and relies
+            // on persistent history tracking, which merges asynchronously
+            let viewContext = CoreDataStack.shared.persistentContainer.viewContext
+            await viewContext.perform {
+                viewContext.refreshAllObjects()
             }
 
             let duration = Date().timeIntervalSince(startTime)
