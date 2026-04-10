@@ -44,6 +44,7 @@ struct Preferences: JSON, Equatable {
     var timestamp: Date?
     var smbThresholdRatio: Decimal = 0.5
     var maxDeltaBGthreshold: Decimal = 0.2
+    var useProfileCSF: Bool = false
     // start dynISF config for oref variables
     var adjustmentFactor: Decimal = 0.8
     var adjustmentFactorSigmoid: Decimal = 0.5
@@ -136,6 +137,7 @@ extension Preferences {
         case suspendZerosIOB = "suspend_zeros_iob"
         case smbDeliveryRatioBGrange = "smb_delivery_ratio_bg_range"
         case maxDeltaBGthreshold = "maxDelta_bg_threshold"
+        case useProfileCSF = "use_profile_csf"
         // start dynISF config for oref variables
         case adjustmentFactor
         case adjustmentFactorSigmoid
@@ -467,6 +469,9 @@ extension Preferences: Decodable {
         }
         if let autoISFoffSport = try? container.decode(Bool.self, forKey: .autoISFoffSport) {
             preferences.autoISFoffSport = autoISFoffSport
+        }
+        if let useProfileCSF = try? container.decode(Bool.self, forKey: .useProfileCSF) {
+            preferences.useProfileCSF = useProfileCSF
         }
 
         // B30 config

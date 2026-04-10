@@ -31,6 +31,49 @@ extension AlgorithmAdvancedSettings {
                 ).listRowBackground(Color.tabBar)
 
                 SettingInputSection(
+                    decimalValue: $decimalPlaceholder,
+                    booleanValue: $state.useProfileCSF,
+                    shouldDisplayHint: $shouldDisplayHint,
+                    selectedVerboseHint: Binding(
+                        get: { selectedVerboseHint },
+                        set: {
+                            selectedVerboseHint = $0.map { AnyView($0) }
+                            hintLabel = String(localized: "Use Profile CSF", comment: "Use Profile CSF")
+                        }
+                    ),
+                    units: state.units,
+                    type: .boolean,
+                    label: String(localized: "Use Profile CSF", comment: "Use Profile CSF"),
+                    miniHint: String(localized: "Calculate CSF from profile CR and ISF."),
+                    verboseHint:
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Default: OFF").bold()
+                        Text(
+                            "When enabled, oref will calculate CSF (Carb Sensitivity Factor) from your profile's Carb Ratio and Insulin Sensitivity Factor, keeping CSF stable as a profile-based value."
+                        )
+                        Text(
+                            "This makes CSF independent of short-term ISF changes that occur with features like Dynamic ISF, autoISF, or Autosens."
+                        )
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("What is CSF?").bold()
+                            Text(
+                                "Carb Sensitivity Factor (CSF) represents how much your blood glucose rises per gram of carbohydrate consumed. It is calculated as: CSF = ISF / CR (Insulin Sensitivity Factor divided by Carb Ratio)."
+                            )
+                        }
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("Why is CSF not dependent on ISF when this setting is enabled?").bold()
+                            Text(
+                                "Normally, CSF is calculated using the current dynamic ISF value, which can change frequently based on algorithms like Dynamic ISF, autoISF, or Autosens. This can cause CSF to fluctuate as your ISF adjusts."
+                            )
+                            Text(
+                                "With this setting enabled, CSF is calculated using your static profile ISF value instead, ensuring CSF remains constant and predictable, unaffected by temporary ISF adjustments."
+                            )
+                        }
+                    },
+                    headerText: String(localized: "Carb Sensitivity Factor (CSF)")
+                )
+
+                SettingInputSection(
                     decimalValue: $state.maxDailySafetyMultiplier,
                     booleanValue: $booleanPlaceholder,
                     shouldDisplayHint: $shouldDisplayHint,

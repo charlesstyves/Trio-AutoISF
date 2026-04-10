@@ -21,6 +21,7 @@ extension AlgorithmAdvancedSettings {
         @Published var insulinActionCurve: Decimal = 10
         @Published var smbDeliveryRatio: Decimal = 0.5
         @Published var smbInterval: Decimal = 3
+        @Published var useProfileCSF: Bool = false
 
         override func subscribe() {
             units = settingsManager.settings.units
@@ -29,6 +30,7 @@ extension AlgorithmAdvancedSettings {
                 maxDailySafetyMultiplier = $0 }
             subscribePreferencesSetting(\.currentBasalSafetyMultiplier, on: $currentBasalSafetyMultiplier) {
                 currentBasalSafetyMultiplier = $0 }
+            subscribePreferencesSetting(\.skipNeutralTemps, on: $skipNeutralTemps) { skipNeutralTemps = $0 }
             subscribePreferencesSetting(\.unsuspendIfNoTemp, on: $unsuspendIfNoTemp) { unsuspendIfNoTemp = $0 }
             subscribePreferencesSetting(\.min5mCarbimpact, on: $min5mCarbimpact) { min5mCarbimpact = $0 }
             subscribePreferencesSetting(\.remainingCarbsFraction, on: $remainingCarbsFraction) { remainingCarbsFraction = $0 }
@@ -37,6 +39,7 @@ extension AlgorithmAdvancedSettings {
                 noisyCGMTargetMultiplier = $0 }
             subscribePreferencesSetting(\.smbDeliveryRatio, on: $smbDeliveryRatio) { smbDeliveryRatio = $0 }
             subscribePreferencesSetting(\.smbInterval, on: $smbInterval) { smbInterval = $0 }
+            subscribePreferencesSetting(\.useProfileCSF, on: $useProfileCSF) { useProfileCSF = $0 }
         }
     }
 }
