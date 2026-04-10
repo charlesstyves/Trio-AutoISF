@@ -1,3 +1,2 @@
 Trio dev 0.6.0.81
-updates
-simple Garmin Manager
+fix smoothing and introduce Unscented Kalman Filter
