@@ -1,6 +1,13 @@
-oref0 branch: autoISF3.01 - git version: 4282130
+oref0 branch: autoISF3.01 - git version: 789a103
 
 Last commits:
+789a103 Adds option to use profile sensitivity for CSF calculation
+fa6ab21 Renames FSL duration variable for clarity
+dfcbd80 Reduces FSL minimum duration requirement
+6031b81 Refactors glucose trend calculation
+0c1f78d Improves stability of matrix calculation
+eca6091 Reduces R-squared threshold for fitting
+c2f64c5 Increases CGM gap detection threshold
 4282130 logging concentraion, webpack-cp fix
 3a9fadc show lowest increment
 b86a1ab loop wanted log
@@ -24,10 +31,3 @@ b5332a2 use round_basal for insReq
 b82f5f6 Lower min carb ratio to 1 g/U (down from 3)
 68e63ea profile.temptargetset properly solved to avoid undefined
 bba17a9 Remove TDD calc
-6216969 3-digit temp basal rates
-2a0bd4e bolusIncrement for oref
-b555d7b Merge remote-tracking branch 'sam/iob-splitter-bug-fix' into tcd
-a1e5f0c resistanceMode active multiply with autoISF
-53e8fbb fix B30 suppress SMB condition
-b21e9b3 Fixes an incorrect undefined check
-c31d48c insert enable SMB with high BG option

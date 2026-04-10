@@ -194,7 +194,7 @@ var getLastGlucose = function (data) {
     var a1 = 0;
     var a2 = 0;
     var use1MinuteRaw = false
-    var fslMinDur = 20                        // minutes duration required for FSL with SGV every minute
+    var minFitDur = 15                        // minimum minutes of BG history required before fitting parabola; was 20; renamed from fslMinDur as it applies to all CGMs
 
     //  FSL 1-minute cgm data
     if ( sizeRecords > 2 ) {
@@ -204,7 +204,7 @@ var getLastGlucose = function (data) {
         var afterNext_date = getDateFromEntry(afterNext);
         if ( current_date - afterNext_date < 3 * 60000 ) {
             use1MinuteRaw = true
-            fslMinDur = 20
+            minFitDur = 20
         }
     }
 
@@ -221,21 +221,19 @@ var getLastGlucose = function (data) {
         var iframe = data[0];
         var time_0 = getDateFromEntry(iframe);
         var tiLast = 0;
-        //# for best numerical accurarcy time and bg must be of same order of magnitude
-        var scaleTime = 300;                  //# in 5m; values are  0, 1, 2, 3, 4, ...
-        var scaleBg   =  50;                  //# TIR range is now 1.4 - 3.6
+        var scaleTime = 1;                    // was 300
+        var scaleBg   = 1;                    // was 50
         n = 0;
         for (var i = 0; i < sizeRecords; i++) {
             if (data[i].glucose > 39) {
                 n += 1
                 var then = data[i];
                 var then_date = getDateFromEntry(then);
-                // skip records older than 47.5 minutes
                 var ti = (then_date - time_0) / 1000 / scaleTime;
-                if (-ti *scaleTime > 47 * 60) {                        // skip records older than 47.5 minutes
+                if (-ti * scaleTime > 47 * 60) {                        // skip records older than 47.5 minutes
                     break;
-                } else if (ti < tiLast - 7.5 * 60 / scaleTime) {       // stop scan if a CGM gap > 7.5 minutes is detected
-                    if (i < 3 || -ti * scaleTime < fslMinDur * 60) {          // history too short for fit & FSL safety
+                } else if (ti < tiLast - 11 * 60 / scaleTime) {         // stop scan if a CGM gap > 11 minutes is detected
+                    if (i < 3 || -ti * scaleTime < minFitDur * 60) {     // history too short for fit & FSL safety
                         duraP = -tiLast * scaleTime / 60.0
                         deltaPl = 0;
                         deltaPn = 0;
@@ -248,7 +246,7 @@ var getLastGlucose = function (data) {
                     break;
                 }
                 tiLast = ti;
-                var bg = then.glucose/scaleBg;
+                var bg = then.glucose / scaleBg;
                 sx += ti;
                 sx2 += Math.pow(ti, 2);
                 sx3 += Math.pow(ti, 3);
@@ -261,17 +259,16 @@ var getLastGlucose = function (data) {
                 var detA = 0;
                 var detB = 0;
                 var detC = 0;
-                if (n > 3 && -ti * scaleTime > fslMinDur * 60) {   //FSL safety
+                if (n > 3 && -ti * scaleTime > minFitDur * 60) {   //FSL safety
                     detH  = sx4 * (sx2 * n - sx * sx) - sx3 * (sx3 * n - sx * sx2) + sx2 * (sx3 * sx - sx2 * sx2);
                     detA = sx2y* (sx2 * n - sx * sx) - sxy * (sx3 * n - sx * sx2) + sy  * (sx3 * sx - sx2 * sx2);
                     detB = sx4 * (sxy * n - sy * sx) - sx3 * (sx2y* n - sy * sx2) + sx2 * (sx2y* sx - sxy * sx2);
                     detC = sx4 * (sx2 *sy - sx *sxy) - sx3 * (sx3 *sy - sx *sx2y) + sx2 * (sx3 *sxy - sx2 * sx2y);
                 }
-                const EPSILON = 1e-10; // Prevent division by zero issues
-                if (Math.abs(detH) > EPSILON) {  // Ensures stability in matrix calculation
-                    var a = detA / detH;
-                    var b = detB / detH;
-                    var c = detC / detH;
+                if (detH != 0) {
+                    var a = detA / detH * scaleBg * Math.pow(300 / scaleTime, 2);
+                    var b = detB / detH * scaleBg * (300 / scaleTime);
+                    var c = detC / detH * scaleBg;
                     var yMean = sy / n;
                     var sSquares = 0;
                     var sResidualSquares = 0;
@@ -279,25 +276,24 @@ var getLastGlucose = function (data) {
                         var before = data[j];
                         var before_date = getDateFromEntry(before);
                         sSquares += Math.pow(before.glucose / scaleBg - yMean, 2);
-                        var deltaT = (before_date - time_0) / 1000 / scaleTime;
+                        var deltaT = (before_date - time_0) / 1000 / 300;
                         var bgj = a * Math.pow(deltaT, 2) + b * deltaT + c;
-                        sResidualSquares += Math.pow(before.glucose / scaleBg - bgj, 2);
+                        sResidualSquares += Math.pow(before.glucose / scaleBg - bgj / scaleBg, 2);
                     }
-                    var rSqu = 0.64;
+                    var rSqu = 0;
                     if (sSquares != 0) {
                         rSqu = Number(((1 - sResidualSquares / sSquares).toFixed(4)));
                     }
                     if (rSqu >= corrMax) {
                         corrMax = rSqu;
-                        // double delta_t = (then_date - time_0) / 1000;
-                        duraP = Math.round((-ti * scaleTime / 60) * 10000) / 10000;            // remember we are going backwards in time
-                        var delta5Min = 5 * 60 / scaleTime;
-                        deltaPl =-scaleBg * (a * Math.pow(- delta5Min, 2) - b * delta5Min);     // 5 minute slope from last fitted bg starting from last bg, i.e. t=0
-                        deltaPn = scaleBg * (a * Math.pow( delta5Min, 2) + b * delta5Min);     // 5 minute slope to next fitted bg starting from last bg, i.e. t=0
-                        bgAcceleration = Math.round((2 * a * scaleBg) * 10000) / 10000;
-                        a0 = Math.round((c * scaleBg) * 10000) / 10000;
-                        a1 = Math.round((b * scaleBg) * 10000) / 10000;
-                        a2 = Math.round((a * scaleBg) * 10000) / 10000;
+                        duraP = Math.round((-ti * scaleTime / 60) * 10000) / 10000;    // remember we are going backwards in time
+                        var delta5Min = 1;                                               //5 * 60 / scaleTime
+                        deltaPl =-(a * Math.pow(- delta5Min, 2) - b * delta5Min);     // 5 minute slope from last fitted bg ending at this bg, i.e. t=0
+                        deltaPn =  (a * Math.pow( delta5Min, 2) + b * delta5Min);     // 5 minute slope to next fitted bg starting from this bg, i.e. t=0
+                        bgAcceleration = Math.round((2 * a) * 10000) / 10000;
+                        a0 = Math.round(c * 10000) / 10000;
+                        a1 = Math.round(b * 10000) / 10000;
+                        a2 = Math.round(a * 10000) / 10000;
                         bestFit = { duraP, deltaPl, deltaPn, bgAcceleration, a0, a1, a2 };  // Store best fit
                     }
                 }
