@@ -513,12 +513,20 @@ extension BaseFetchGlucoseManager {
 
             if gapMinutesRounded >= maximumAllowedGapMinutes {
                 validWindowCount = recentOffset + 1 // include the more recent reading
+                debug(
+                    .deviceManager,
+                    "Exponential: Found gap of \(gapMinutesRounded) minutes at offset \(recentOffset), validWindowCount=\(validWindowCount)"
+                )
                 break
             }
 
             // Ported from AAPS: 38 mg/dL may represent an xDrip error state.
             if Int(newer.glucose) == xDripErrorGlucose {
                 validWindowCount = recentOffset // exclude this 38 value
+                debug(
+                    .deviceManager,
+                    "Exponential: Found xDrip error glucose (38) at offset \(recentOffset), validWindowCount=\(validWindowCount)"
+                )
                 break
             }
         }
@@ -526,6 +534,10 @@ extension BaseFetchGlucoseManager {
         // Not enough recent contiguous readings to smooth (e.g. after CGM gap).
         // Fallback values already set above, so just return
         guard validWindowCount >= minimumWindowSize else {
+            debug(
+                .deviceManager,
+                "Exponential: Insufficient window size (\(validWindowCount) < \(minimumWindowSize)), keeping fallback values"
+            )
             return
         }
 
@@ -570,6 +582,10 @@ extension BaseFetchGlucoseManager {
             let nextSmoothed =
                 secondOrderAlpha * raw
                     + (1 - secondOrderAlpha) * (previousSecondOrderSmoothed + previousSecondOrderDelta)
+            let newLevel = secondOrderAlpha * raw + (1 - secondOrderAlpha) *
+                (previousSecondOrderSmoothed + previousSecondOrderDelta)
+            let newDelta = secondOrderBeta * (newLevel - previousSecondOrderSmoothed) + (1 - secondOrderBeta) *
+                previousSecondOrderDelta
 
             let nextDelta =
                 secondOrderBeta * (nextSmoothed - previousSecondOrderSmoothed)
@@ -641,6 +657,10 @@ extension BaseFetchGlucoseManager {
 
                 guard bloodGlucoseArray.count >= 2 else {
                     debug(.deviceManager, "UKF smoothing: insufficient readings for smoothing, using raw values as fallback")
+                    debug(
+                        .deviceManager,
+                        "UKF smoothing: insufficient readings for smoothing (\(bloodGlucoseArray.count) < 2), using raw values as fallback"
+                    )
                     // Fallback: set smoothed = raw for insufficient data
                     for reading in glucoseReadings {
                         reading.smoothedGlucose = NSDecimalNumber(value: Int(reading.glucose))
