@@ -2581,6 +2581,7 @@
 				DD82D4B72DCAB2BA00BAFC77 /* PropertyPersistentFlags.swift */,
 				3811DEE325CA063400A708ED /* PropertyWrappers */,
 				3811DE5525C9D4D500A708ED /* Publisher.swift */,
+				DD6B7CB12C7B6F0800B75029 /* Rounding.swift */,
 				38E98A3625F5509500C0CED0 /* String+Extensions.swift */,
 				49239B422EEA27AD00469145 /* TempTargetCalculations.swift */,
 				DDCAE8322D78D49C00B1BB51 /* TherapySettingsUtil.swift */,
