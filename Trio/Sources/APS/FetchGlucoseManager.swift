@@ -88,7 +88,7 @@ final class BaseFetchGlucoseManager: FetchGlucoseManager, Injectable {
     private func subscribe() {
         timer.publisher
             .receive(on: processQueue)
-            .flatMap { [self] _ -> AnyPublisher<[BloodGlucose], Never> in
+            .flatMap(maxPublishers: .max(1)) { [self] _ -> AnyPublisher<[BloodGlucose], Never> in
                 debug(.nightscout, "FetchGlucoseManager timer heartbeat")
                 if let glucoseSource = self.glucoseSource {
                     return glucoseSource.fetch(self.timer).eraseToAnyPublisher()
