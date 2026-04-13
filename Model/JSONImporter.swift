@@ -644,6 +644,28 @@ extension Determination: Codable {
         try container.encodeIfPresent(threshold, forKey: .threshold)
         try container.encodeIfPresent(carbRatio, forKey: .carbRatio)
         try container.encodeIfPresent(received, forKey: .received) // always encode the correct spelling
+        
+        // autoISF
+        try container.encodeIfPresent(smbRatio, forKey: .smbRatio)
+        try container.encodeIfPresent(duraISFratio, forKey: .duraISFratio)
+        try container.encodeIfPresent(bgISFratio, forKey: .bgISFratio)
+        try container.encodeIfPresent(ppISFratio, forKey: .ppISFratio)
+        try container.encodeIfPresent(acceISFratio, forKey: .acceISFratio)
+        try container.encodeIfPresent(autoISFratio, forKey: .autoISFratio)
+        try container.encodeIfPresent(iobTH, forKey: .iobTH)
+        try container.encodeIfPresent(tick, forKey: .tick)
+        
+        // acce calc
+        try container.encodeIfPresent(parabolaFitMinutes, forKey: .parabolaFitMinutes)
+        try container.encodeIfPresent(parabolaFitLastDelta, forKey: .parabolaFitLastDelta)
+        try container.encodeIfPresent(parabolaFitNextDelta, forKey: .parabolaFitNextDelta)
+        try container.encodeIfPresent(parabolaFitCorrelation, forKey: .parabolaFitCorrelation)
+        try container.encodeIfPresent(parabolaFitA0, forKey: .parabolaFitA0)
+        try container.encodeIfPresent(parabolaFitA1, forKey: .parabolaFitA1)
+        try container.encodeIfPresent(parabolaFitA2, forKey: .parabolaFitA2)
+        try container.encodeIfPresent(duraMin, forKey: .duraMin)
+        try container.encodeIfPresent(duraAvg, forKey: .duraAvg)
+        try container.encodeIfPresent(bgAcce, forKey: .bgAcce)
     }
 
     func checkForRequiredFields() throws {

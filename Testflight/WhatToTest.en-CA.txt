@@ -3,3 +3,4 @@ fix smoothing and introduce Unscented Kalman Filter
 introduce CSF profile as helper for CR
 adapt oref to use stable csf
 fix glucose fetching crash
+isfRatios to NS
