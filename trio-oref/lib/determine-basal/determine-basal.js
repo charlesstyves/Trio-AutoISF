@@ -886,7 +886,7 @@ var determine_basal = function determine_basal(glucose_status, currenttemp, iob_
     var carb_ratio;
     if (profile.use_profile_csf && sens !== profile.sens) {
         carb_ratio = round(profile.carb_ratio * sens / profile.sens, 2);
-        console.error("CR: adjusted from " + round(profile.carb_ratio,1) + " to " + round(carb_ratio,1) + " as ISF changed (sens ratio " + round(profile.sens/sens,2) + ")");
+        console.error("CR: adjusted from " + round(profile.carb_ratio,1) + " to " + round(carb_ratio,1) + " as ISF changed (sensRatio " + round(profile.sens/sens,2) + ")");
     } else {
         carb_ratio = profile.carb_ratio;
         console.error("CR: " + round(carb_ratio,1));
@@ -1462,7 +1462,7 @@ var determine_basal = function determine_basal(glucose_status, currenttemp, iob_
         MWreason = "Middleware:, " + middleWare + ", ";
     }
 
-    rT.reason =  MWreason + B30reason + SMBdelreason + autosensReason + TTreason + isfreason + ", Standard" + ", Target: " + convert_bg(target_bg, profile) + ", COB: " + rT.COB + ", Dev: " + convert_bg(deviation, profile) + ", BGI: " + convert_bg(bgi, profile) + ", ISF: " + convert_bg(sens, profile) + ", CR: " + rT.CR + ", minPredBG " + convert_bg(minPredBG, profile) + ", minGuardBG " + convert_bg(minGuardBG, profile) + ", IOBpredBG " + convert_bg(lastIOBpredBG, profile);
+    rT.reason =  MWreason + B30reason + SMBdelreason + autosensReason + TTreason + isfreason + ", Standard" + ", Target: " + convert_bg(target_bg, profile) + ", COB: " + rT.COB + ", Dev: " + convert_bg(deviation, profile) + ", BGI: " + convert_bg(bgi, profile) + ", ISF: " + convert_bg(sens, profile) + ", CR: " + (carb_ratio !== profile.carb_ratio ? round(profile.carb_ratio,1) + "\u2192" + rT.CR : rT.CR) + ", minPredBG " + convert_bg(minPredBG, profile) + ", minGuardBG " + convert_bg(minGuardBG, profile) + ", IOBpredBG " + convert_bg(lastIOBpredBG, profile);
 
     if (lastCOBpredBG > 0) {
         rT.reason += ", COBpredBG " + convert_bg(lastCOBpredBG, profile);

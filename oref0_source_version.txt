@@ -1,7 +1,7 @@
-oref0 branch: autoISF3.01 - git version: f0a22d6
+oref0 branch: autoISF3.01 - git version: 2e1c74a
 
 Last commits:
-f0a22d6 Corrects sensitivity ratio in carb ratio adjustment logs
+2e1c74a Corrects sensitivity ratio in carb ratio adjustment logs
 0e7bd10 fix webpack
 c6eaecc Adjusts carb ratio when use_profile_csf is active
 789a103 Adds option to use profile sensitivity for CSF calculation
