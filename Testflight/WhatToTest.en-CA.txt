@@ -4,3 +4,4 @@ introduce CSF profile as helper for CR
 adapt oref to use stable csf
 fix glucose fetching crash
 isfRatios to NS
+change CSF profile to 10g carb scale
