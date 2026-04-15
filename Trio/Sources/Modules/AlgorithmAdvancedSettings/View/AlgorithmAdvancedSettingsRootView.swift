@@ -52,6 +52,12 @@ extension AlgorithmAdvancedSettings {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Default: OFF").bold()
                         Text(
+                            "Important: Enabling this setting changes how the algorithm handles carb absorption. Review your algorithm and therapy settings, and consider starting with a higher glucose target while you adjust. Settings will generally need to be less aggressive, as the stable CSF combined with a reduced CR in insulin resistance situations can increase insulin dosing for meals."
+                        ).bold()
+                        Text(
+                            "Note: If \"Low Target Lowers Sensitivity\" is active, using an \"Eating Soon\" temporary target will be more aggressive than before. The lower target reduces ISF, which with a now reduced CR also increases meal insulin dosing. Review your targets and sensitivity settings accordingly."
+                        ).bold()
+                        Text(
                             "When enabled, oref will calculate CSF (Carb Sensitivity Factor) from your profile's Carb Ratio and profile's Insulin Sensitivity Factor, keeping CSF stable as a profile-based value."
                         )
                         Text(
@@ -65,6 +71,9 @@ extension AlgorithmAdvancedSettings {
                             Text(
                                 "CSF describes the digestive process of carbs entering your bloodstream as glucose. This process is not dependent on insulin sensitivity, which describes a different process: removing glucose from the blood."
                             )
+                            Text(
+                                "In the algorithm, CSF is used to estimate carb absorption rates, convert carb impact to grams absorbed, project remaining carb absorption, and calculate carbs required to prevent lows. With this setting enabled, all of these calculations use a stable, profile-based CSF."
+                            )
                         }
                         VStack(alignment: .leading, spacing: 5) {
                             Text("Why is CSF not dependent on ISF when this setting is enabled?").bold()
@@ -73,6 +82,9 @@ extension AlgorithmAdvancedSettings {
                             )
                             Text(
                                 "With this setting enabled, CSF is calculated using your static profile ISF value instead, ensuring CSF remains constant and predictable, unaffected by temporary ISF adjustments."
+                            )
+                            Text(
+                                "This also means that when calculating meal insulin, your Carb Ratio effectively becomes dynamic: since CR = ISF / CSF and CSF is held constant, CR automatically adjusts as ISF changes throughout the day. Some refer to this as \"dynamic CR\"."
                             )
                         }
                     },

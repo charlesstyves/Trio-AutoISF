@@ -23,10 +23,13 @@ struct TherapySettingsView: BaseView {
                 "Note: For practical reasons the profile is entered in units of mg/dL per 10g of carbs consumed (or mmol/L per 10g). This makes values easier to measure and document — eat 10g of fast carbs and observe the BG rise to determine your CSF. The conversion to per-gram is handled internally."
             )
             Text(
-                "The CSF profile is used to optionally re-calculate your Carb Ratio (CR) from your Insulin Sensitivity Factor (ISF) using the formula: CR = ISF / CSF"
+                "The CSF profile has a single purpose: to re-calculate your Carb Ratio (CR) from your Insulin Sensitivity Factor (ISF) using the formula: CR = ISF / CSF. It is not used directly by the algorithm or anything else."
             )
             Text(
-                "This approach is important because creating separate CR and ISF profiles implicitly defines an unreviewed CSF profile (calculated as CSF = ISF / CR) that may be incorrect. By explicitly defining your CSF profile (which should actually be just a single entry as most of us do not know much about how CSF changes), you ensure that CR automatically adjusts correctly throughout the day as your ISF changes, maintaining physiologically accurate insulin dosing for carbohydrates."
+                "This is important because creating separate CR and ISF profiles implicitly defines an unreviewed CSF profile (calculated as CSF = ISF / CR) that may be incorrect. By explicitly defining your CSF profile, you ensure that CR automatically adjusts correctly throughout the day as your ISF changes, maintaining physiologically accurate insulin dosing for carbohydrates."
+            )
+            Text(
+                "Tip: Start with a single CSF value for the entire day. Look at your current ISF and CR profile values at a time of day where you feel most confident they are working well — usually around midday — and calculate CSF = ISF / CR from those values."
             )
             Text(
                 "CR combines two independent physiological processes: CSF (carb absorption into blood) and ISF (insulin moving glucose out of blood). These processes operate separately, so when ISF changes due to exercise or stress, CSF remains stable, and CR adjusts accordingly through the formula CR = ISF / CSF."

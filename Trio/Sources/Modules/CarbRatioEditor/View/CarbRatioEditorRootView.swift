@@ -141,18 +141,57 @@ extension CarbRatioEditor {
         }
 
         // Calculate from CSF Button
+        @State private var shouldDisplayCSFHint: Bool = false
+
         private var calculateFromCSFButton: some View {
-            Button {
-                let impactMedium = UIImpactFeedbackGenerator(style: .medium)
-                impactMedium.impactOccurred()
-                state.calculateCRFromCSF()
-            } label: {
-                Text("Calculate CR from CSF & ISF Profiles")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue.opacity(0.1))
-                    .foregroundColor(.blue)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+            HStack {
+                Button {
+                    let impactMedium = UIImpactFeedbackGenerator(style: .medium)
+                    impactMedium.impactOccurred()
+                    state.calculateCRFromCSF()
+                } label: {
+                    Text("Calculate CR from CSF & ISF Profiles")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue.opacity(0.1))
+                        .foregroundColor(.blue)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+
+                Button {
+                    shouldDisplayCSFHint.toggle()
+                } label: {
+                    Image(systemName: "questionmark.circle")
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(BorderlessButtonStyle())
+            }
+            .sheet(isPresented: $shouldDisplayCSFHint) {
+                SettingInputHintView(
+                    hintDetent: .constant(.large),
+                    shouldDisplayHint: $shouldDisplayCSFHint,
+                    hintLabel: String(localized: "Calculate CR from CSF & ISF Profiles"),
+                    hintText: AnyView(
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text(
+                                "This button re-calculates your Carb Ratio (CR) profile from your Insulin Sensitivity Factor (ISF) and Carb Sensitivity Factor (CSF) profiles using the formula: CR = ISF / CSF."
+                            )
+                            Text(
+                                "Carb Sensitivity Factor (CSF) represents how much your blood glucose rises per gram of carbohydrate consumed. It describes the digestive process of carbs entering your bloodstream as glucose — a process that is independent of insulin sensitivity."
+                            )
+                            Text(
+                                "Because CR combines two independent physiological processes — CSF (carb absorption into blood) and ISF (insulin moving glucose out of blood) — calculating CR this way ensures it adjusts correctly across the day as your ISF profile changes, while CSF remains stable. If you do experience variation in carb absorption throughout the day, you can account for that in your CSF profile based on real physiological differences, rather than having CSF implicitly change as a mathematical side effect of a fixed CR and varying ISF."
+                            )
+                            Text(
+                                "If the \"Use Profile CSF\" setting is enabled in Algorithm Additionals, the algorithm will also keep CSF independent of dynamic ISF adjustments from autoISF, Autosens, or Dynamic ISF. This effectively makes your CR dynamic at runtime too — some refer to this as \"dynamic CR\"."
+                            )
+                            Text(
+                                "Tip: Start with a single CSF value for the entire day. Look at your current ISF and CR values at a time of day where you feel most confident they are working well — usually around midday — and calculate CSF = ISF / CR from those values."
+                            )
+                        }
+                    ),
+                    sheetTitle: String(localized: "Help", comment: "Help sheet title")
+                )
             }
         }
 
