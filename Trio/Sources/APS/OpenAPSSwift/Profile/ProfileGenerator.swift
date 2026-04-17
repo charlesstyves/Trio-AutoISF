@@ -35,6 +35,28 @@ extension Profile {
         thresholdSetting = preferences.threshold_setting
         maxMealAbsorptionTime = preferences.maxMealAbsorptionTime
         smbDeliveryRatio = preferences.smbDeliveryRatio
+        // autoISF
+        autoISFmax = preferences.autoISFmax
+        autoISFmin = preferences.autoISFmin
+        smbMaxRangeExtension = preferences.smbMaxRangeExtension
+        smbDeliveryRatioBGrange = preferences.smbDeliveryRatioBGrange
+        smbDeliveryRatioMin = preferences.smbDeliveryRatioMin
+        smbDeliveryRatioMax = preferences.smbDeliveryRatioMax
+        autoISFhourlyChange = preferences.autoISFhourlyChange
+        higherISFrangeWeight = preferences.higherISFrangeWeight
+        lowerISFrangeWeight = preferences.lowerISFrangeWeight
+        postMealISFweight = preferences.postMealISFweight
+        bgAccelISFweight = preferences.bgAccelISFweight
+        bgBrakeISFweight = preferences.bgBrakeISFweight
+        iobThresholdPercent = preferences.iobThresholdPercent
+        B30iTimeStartBolus = preferences.B30iTimeStartBolus
+        B30iTime = preferences.B30iTime
+        B30iTimeTarget = preferences.B30iTimeTarget
+        B30upperLimit = preferences.B30upperLimit
+        B30upperDelta = preferences.B30upperDelta
+        B30basalFactor = preferences.B30basalFactor
+        ketoProtectBasalPercent = preferences.ketoProtectBasalPercent
+        ketoProtectBasalAbsolut = preferences.ketoProtectBasalAbsolut
 
         // Bool properties
         highTemptargetRaisesSensitivity = preferences.highTemptargetRaisesSensitivity
@@ -57,6 +79,16 @@ extension Profile {
         useNewFormula = preferences.useNewFormula
         sigmoid = preferences.sigmoid
         tddAdjBasal = preferences.tddAdjBasal
+        // autoISF
+        floatingcarbs = preferences.floatingcarbs
+        autoisf = preferences.autoisf
+        enableBGacceleration = preferences.enableBGacceleration
+        enableSMBEvenOnOddOffalways = preferences.enableSMBEvenOnOddOffalways
+        autoISFoffSport = preferences.autoISFoffSport
+        enableB30 = preferences.enableB30
+        ketoProtect = preferences.ketoProtect
+        variableKetoProtect = preferences.variableKetoProtect
+        ketoProtectAbsolut = preferences.ketoProtectAbsolut
 
         // Enum properties
         curve = preferences.curve

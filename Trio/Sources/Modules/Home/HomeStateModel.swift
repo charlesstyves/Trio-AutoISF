@@ -51,7 +51,6 @@ extension Home {
         var pumpActivatedAtDate: Date?
         var highTTraisesSens: Bool = false
         var lowTTlowersSens: Bool = false
-        var isExerciseModeActive: Bool = false
         var settingHalfBasalTarget: Decimal = 160
         var percentage: Int = 100
         var shouldDisplayPumpSetupSheet = false
@@ -437,7 +436,6 @@ extension Home {
             showGlucosePeaks = settingsManager.settings.showGlucosePeaks
             showCarbsRequiredBadge = settingsManager.settings.showCarbsRequiredBadge
             forecastDisplayType = settingsManager.settings.forecastDisplayType
-            isExerciseModeActive = settingsManager.preferences.exerciseMode
             highTTraisesSens = settingsManager.preferences.highTemptargetRaisesSensitivity
             lowTTlowersSens = settingsManager.preferences.lowTemptargetLowersSensitivity
             settingHalfBasalTarget = settingsManager.preferences.halfBasalExerciseTarget
@@ -784,7 +782,6 @@ extension Home.StateModel:
         autoisfEnabled = settingsManager.preferences.autoisf
         settingHalfBasalTarget = settingsManager.preferences.halfBasalExerciseTarget
         highTTraisesSens = settingsManager.preferences.highTemptargetRaisesSensitivity
-        isExerciseModeActive = settingsManager.preferences.exerciseMode
         lowTTlowersSens = settingsManager.preferences.lowTemptargetLowersSensitivity
         maxIOB = settingsManager.preferences.maxIOB
         let oldBolusIncrement = bolusIncrement

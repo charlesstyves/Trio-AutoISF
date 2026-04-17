@@ -62,7 +62,6 @@ extension Adjustments {
         var halfBasalTarget: Decimal = 160
         var settingHalfBasalTarget: Decimal = 160
         var highTTraisesSens: Bool = false
-        var isExerciseModeActive: Bool = false
         var lowTTlowersSens: Bool = false
         var didSaveSettings: Bool = false
 
@@ -155,7 +154,6 @@ extension Adjustments {
             settingHalfBasalTarget = settingsManager.preferences.halfBasalExerciseTarget
             halfBasalTarget = settingsManager.preferences.halfBasalExerciseTarget
             highTTraisesSens = settingsManager.preferences.highTemptargetRaisesSensitivity
-            isExerciseModeActive = settingsManager.preferences.exerciseMode
             lowTTlowersSens = settingsManager.preferences.lowTemptargetLowersSensitivity
             percentage = TempTargetCalculations.computeAdjustedPercentage(
                 halfBasalTarget: halfBasalTarget,
@@ -269,7 +267,6 @@ extension Adjustments.StateModel: SettingsObserver, PreferencesObserver {
         settingHalfBasalTarget = settingsManager.preferences.halfBasalExerciseTarget
         halfBasalTarget = settingsManager.preferences.halfBasalExerciseTarget
         highTTraisesSens = settingsManager.preferences.highTemptargetRaisesSensitivity
-        isExerciseModeActive = settingsManager.preferences.exerciseMode
         lowTTlowersSens = settingsManager.preferences.lowTemptargetLowersSensitivity
         percentage = TempTargetCalculations.computeAdjustedPercentage(
             halfBasalTarget: halfBasalTarget,

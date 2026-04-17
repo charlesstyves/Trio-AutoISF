@@ -358,7 +358,7 @@ extension Home {
                 autosensMax: state.autosensMax
             ) ?? state.settingHalfBasalTarget
             var showPercentage = false
-            if target > 100, state.isExerciseModeActive || state.highTTraisesSens { showPercentage = true }
+            if target > 100, state.highTTraisesSens { showPercentage = true }
             if target < 100, state.lowTTlowersSens, state.autosensMax > 1 { showPercentage = true }
             if showPercentage {
                 percentageString =

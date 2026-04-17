@@ -58,7 +58,6 @@ struct Preferences: JSON, Equatable {
     // start autoISF config
     var floatingcarbs: Bool = false
     var autoisf: Bool = true
-    var exerciseMode: Bool = false
     var autoISFmax: Decimal = 2
     var autoISFmin: Decimal = 0.5
     var smbMaxRangeExtension: Decimal = 2
@@ -108,7 +107,6 @@ extension Preferences {
         case sensitivityRaisesTarget = "sensitivity_raises_target"
         case resistanceLowersTarget = "resistance_lowers_target"
         case advTargetAdjustments = "adv_target_adjustments"
-        case exerciseMode = "exercise_mode"
         case halfBasalExerciseTarget = "half_basal_exercise_target"
         case maxCOB
         case maxMealAbsorptionTime
@@ -246,10 +244,6 @@ extension Preferences: Decodable {
 
         if let advTargetAdjustments = try? container.decode(Bool.self, forKey: .advTargetAdjustments) {
             preferences.advTargetAdjustments = advTargetAdjustments
-        }
-
-        if let exerciseMode = try? container.decode(Bool.self, forKey: .exerciseMode) {
-            preferences.exerciseMode = exerciseMode
         }
 
         if let halfBasalExerciseTarget = try? container.decode(Decimal.self, forKey: .halfBasalExerciseTarget) {
@@ -415,9 +409,6 @@ extension Preferences: Decodable {
         }
         if let enableAutosens = try? container.decode(Bool.self, forKey: .enableAutosens) {
             preferences.enableAutosens = enableAutosens
-        }
-        if let exerciseMode = try? container.decode(Bool.self, forKey: .exerciseMode) {
-            preferences.exerciseMode = exerciseMode
         }
         if let autoISFmax = try? container.decode(Decimal.self, forKey: .autoISFmax) {
             preferences.autoISFmax = autoISFmax

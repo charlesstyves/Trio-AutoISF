@@ -70,6 +70,41 @@ struct Profile: Codable {
     var bgTargets: ComputedBGTargets?
     var carbRatios: CarbRatios?
 
+    // start autoISF config
+    var floatingcarbs: Bool = false
+    var autoisf: Bool = true
+    var autoISFmax: Decimal = 1.2
+    var autoISFmin: Decimal = 0.7
+    var smbMaxRangeExtension: Decimal = 1
+    var smbDeliveryRatioBGrange: Decimal = 0
+    var smbDeliveryRatioMin: Decimal = 0.5
+    var smbDeliveryRatioMax: Decimal = 0.8
+    var autoISFhourlyChange: Decimal = 0
+    var higherISFrangeWeight: Decimal = 0
+    var lowerISFrangeWeight: Decimal = 0
+    var postMealISFweight: Decimal = 0
+    var enableBGacceleration: Bool = false
+    var bgAccelISFweight: Decimal = 0
+    var bgBrakeISFweight: Decimal = 0
+    var iobThresholdPercent: Decimal = 1
+    var enableSMBEvenOnOddOffalways: Bool = false
+    var autoISFoffSport: Bool = false
+    var targetUnits: GlucoseUnits = .mgdL
+    // start B30 config
+    var enableB30: Bool = false
+    var B30iTimeStartBolus: Decimal = 1
+    var B30iTime: Decimal = 30
+    var B30iTimeTarget: Decimal = 80
+    var B30upperLimit: Decimal = 130
+    var B30upperDelta: Decimal = 8
+    var B30basalFactor: Decimal = 7
+    // start keto protect
+    var ketoProtect: Bool = false
+    var variableKetoProtect: Bool = false
+    var ketoProtectBasalPercent: Decimal = 0.2
+    var ketoProtectAbsolut: Bool = false
+    var ketoProtectBasalAbsolut: Decimal = 0
+
     private enum CodingKeys: String, CodingKey {
         case dia
         case min5mCarbImpact = "min_5m_carbimpact"
@@ -134,5 +169,38 @@ struct Profile: Codable {
         case isfProfile
         case bgTargets = "bg_targets"
         case carbRatios = "carb_ratios"
+        // start autoISF config for oref variables
+        case autoisf = "use_autoisf"
+        case targetUnits = "target_units"
+        case autoISFhourlyChange = "dura_ISF_weight"
+        case autoISFmax = "autoISF_max"
+        case autoISFmin = "autoISF_min"
+        case smbMaxRangeExtension = "smb_max_range_extension"
+        case floatingcarbs = "floating_carbs"
+        case iobThresholdPercent = "iob_threshold_percent"
+        case enableSMBEvenOnOddOffalways = "enableSMB_EvenOn_OddOff_always"
+        case smbDeliveryRatioMin = "smb_delivery_ratio_min"
+        case smbDeliveryRatioMax = "smb_delivery_ratio_max"
+        case higherISFrangeWeight = "higher_ISFrange_weight"
+        case lowerISFrangeWeight = "lower_ISFrange_weight"
+        case postMealISFweight = "pp_ISF_weight"
+        case bgAccelISFweight = "bgAccel_ISF_weight"
+        case bgBrakeISFweight = "bgBrake_ISF_weight"
+        case enableBGacceleration = "enable_BG_acceleration"
+        case autoISFoffSport = "autoISF_off_Sport"
+        // start B30 config
+        case enableB30 = "use_B30"
+        case B30iTimeStartBolus = "iTime_Start_Bolus"
+        case B30iTime = "b30_duration"
+        case B30iTimeTarget = "iTime_target"
+        case B30upperLimit = "b30_upperBG"
+        case B30upperDelta = "b30_upperdelta"
+        case B30basalFactor = "b30_factor"
+        // start keto protect
+        case ketoProtect = "keto_protect"
+        case variableKetoProtect = "variable_keto_protect_strategy"
+        case ketoProtectBasalPercent = "keto_protect_basal_percent"
+        case ketoProtectAbsolut = "keto_protect_absolute"
+        case ketoProtectBasalAbsolut = "keto_protect_basal_absolute"
     }
 }
