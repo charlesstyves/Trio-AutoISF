@@ -89,6 +89,7 @@ extension Profile {
         ketoProtect = preferences.ketoProtect
         variableKetoProtect = preferences.variableKetoProtect
         ketoProtectAbsolut = preferences.ketoProtectAbsolut
+        useProfileCSF = preferences.useProfileCSF
 
         // Enum properties
         curve = preferences.curve

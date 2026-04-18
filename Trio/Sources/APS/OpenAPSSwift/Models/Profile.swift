@@ -104,6 +104,7 @@ struct Profile: Codable {
     var ketoProtectBasalPercent: Decimal = 0.2
     var ketoProtectAbsolut: Bool = false
     var ketoProtectBasalAbsolut: Decimal = 0
+    var useProfileCSF: Bool = false
 
     private enum CodingKeys: String, CodingKey {
         case dia
@@ -202,5 +203,6 @@ struct Profile: Codable {
         case ketoProtectBasalPercent = "keto_protect_basal_percent"
         case ketoProtectAbsolut = "keto_protect_absolute"
         case ketoProtectBasalAbsolut = "keto_protect_basal_absolute"
+        case useProfileCSF = "use_profile_csf"
     }
 }

@@ -21,7 +21,6 @@ extension AlgorithmAdvancedSettings {
         @Published var noisyCGMTargetMultiplier: Decimal = 1.3
         @Published var useSwiftOref: Bool = false
         // preference
-        @Published var insulinActionCurve: Decimal = 10
         @Published var smbDeliveryRatio: Decimal = 0.5
         @Published var smbInterval: Decimal = 3
         @Published var useProfileCSF: Bool = false

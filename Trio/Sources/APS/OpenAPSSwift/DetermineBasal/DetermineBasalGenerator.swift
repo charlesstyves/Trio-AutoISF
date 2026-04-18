@@ -116,7 +116,27 @@ enum DeterminationGenerator {
                 minPredBG: nil,
                 threshold: nil,
                 carbRatio: nil,
-                received: false
+                received: false,
+                // autoISF
+                smbRatio: 0,
+                duraISFratio: 0,
+                bgISFratio: 0,
+                ppISFratio: 0,
+                acceISFratio: 0,
+                autoISFratio: 0,
+                iobTH: 0,
+                tick: 0,
+                // acce calc
+                parabolaFitMinutes: 0,
+                parabolaFitLastDelta: 0,
+                parabolaFitNextDelta: 0,
+                parabolaFitCorrelation: 0,
+                parabolaFitA0: 0,
+                parabolaFitA1: 0,
+                parabolaFitA2: 0,
+                duraMin: 0,
+                duraAvg: 0,
+                bgAcce: 0
             )
         }
 
@@ -387,7 +407,27 @@ enum DeterminationGenerator {
             minPredBG: forecastResult.minForecastedGlucose,
             threshold: threshold.jsRounded(),
             carbRatio: forecastResult.adjustedCarbRatio.jsRounded(scale: 1),
-            received: false
+            received: false,
+            // autoISF
+            smbRatio: 0,
+            duraISFratio: 0,
+            bgISFratio: 0,
+            ppISFratio: 0,
+            acceISFratio: 0,
+            autoISFratio: 0,
+            iobTH: 0,
+            tick: 0,
+            // acce calc
+            parabolaFitMinutes: 0,
+            parabolaFitLastDelta: 0,
+            parabolaFitNextDelta: 0,
+            parabolaFitCorrelation: 0,
+            parabolaFitA0: 0,
+            parabolaFitA1: 0,
+            parabolaFitA2: 0,
+            duraMin: 0,
+            duraAvg: 0,
+            bgAcce: 0
         )
 
         // MARK: - Core dosing logic
@@ -666,7 +706,27 @@ enum DeterminationGenerator {
                 minPredBG: nil,
                 threshold: nil,
                 carbRatio: nil,
-                received: false
+                received: false,
+                // autoISF
+                smbRatio: 0,
+                duraISFratio: 0,
+                bgISFratio: 0,
+                ppISFratio: 0,
+                acceISFratio: 0,
+                autoISFratio: 0,
+                iobTH: 0,
+                tick: 0,
+                // acce calc
+                parabolaFitMinutes: 0,
+                parabolaFitLastDelta: 0,
+                parabolaFitNextDelta: 0,
+                parabolaFitCorrelation: 0,
+                parabolaFitA0: 0,
+                parabolaFitA1: 0,
+                parabolaFitA2: 0,
+                duraMin: 0,
+                duraAvg: 0,
+                bgAcce: 0
             )
         } else if currentTemp.rate == 0, currentTemp.duration > 30 {
             // Shorten long zero temp to 30m
@@ -698,7 +758,27 @@ enum DeterminationGenerator {
                 minPredBG: nil,
                 threshold: nil,
                 carbRatio: nil,
-                received: false
+                received: false,
+                // autoISF
+                smbRatio: 0,
+                duraISFratio: 0,
+                bgISFratio: 0,
+                ppISFratio: 0,
+                acceISFratio: 0,
+                autoISFratio: 0,
+                iobTH: 0,
+                tick: 0,
+                // acce calc
+                parabolaFitMinutes: 0,
+                parabolaFitLastDelta: 0,
+                parabolaFitNextDelta: 0,
+                parabolaFitCorrelation: 0,
+                parabolaFitA0: 0,
+                parabolaFitA1: 0,
+                parabolaFitA2: 0,
+                duraMin: 0,
+                duraAvg: 0,
+                bgAcce: 0
             )
         } else {
             // Do nothing (temp already safe)
@@ -730,7 +810,27 @@ enum DeterminationGenerator {
                 minPredBG: nil,
                 threshold: nil,
                 carbRatio: nil,
-                received: false
+                received: false,
+                // autoISF
+                smbRatio: 0,
+                duraISFratio: 0,
+                bgISFratio: 0,
+                ppISFratio: 0,
+                acceISFratio: 0,
+                autoISFratio: 0,
+                iobTH: 0,
+                tick: 0,
+                // acce calc
+                parabolaFitMinutes: 0,
+                parabolaFitLastDelta: 0,
+                parabolaFitNextDelta: 0,
+                parabolaFitCorrelation: 0,
+                parabolaFitA0: 0,
+                parabolaFitA1: 0,
+                parabolaFitA2: 0,
+                duraMin: 0,
+                duraAvg: 0,
+                bgAcce: 0
             )
         }
     }
