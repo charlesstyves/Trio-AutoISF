@@ -73,8 +73,10 @@ struct Profile: Codable {
     // start autoISF config
     var floatingcarbs: Bool = false
     var autoisf: Bool = true
+    var enableAutosens: Bool = true
     var autoISFmax: Decimal = 1.2
     var autoISFmin: Decimal = 0.7
+    var smbThresholdRatio: Decimal = 0.5
     var smbMaxRangeExtension: Decimal = 1
     var smbDeliveryRatioBGrange: Decimal = 0
     var smbDeliveryRatioMin: Decimal = 0.5
@@ -172,6 +174,8 @@ struct Profile: Codable {
         case carbRatios = "carb_ratios"
         // start autoISF config for oref variables
         case autoisf = "use_autoisf"
+        case enableAutosens = "enable_autosens"
+        case smbThresholdRatio = "smb_threshold_ratio"
         case targetUnits = "target_units"
         case autoISFhourlyChange = "dura_ISF_weight"
         case autoISFmax = "autoISF_max"
@@ -180,6 +184,7 @@ struct Profile: Codable {
         case floatingcarbs = "floating_carbs"
         case iobThresholdPercent = "iob_threshold_percent"
         case enableSMBEvenOnOddOffAlways = "enableSMB_EvenOn_OddOff_always"
+        case smbDeliveryRatioBGrange = "smb_delivery_ratio_bg_range"
         case smbDeliveryRatioMin = "smb_delivery_ratio_min"
         case smbDeliveryRatioMax = "smb_delivery_ratio_max"
         case higherISFrangeWeight = "higher_ISFrange_weight"

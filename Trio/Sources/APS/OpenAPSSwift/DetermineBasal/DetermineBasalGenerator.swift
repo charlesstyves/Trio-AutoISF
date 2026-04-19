@@ -27,6 +27,21 @@ enum DeterminationGenerator {
     ) throws -> Determination? {
         let glucoseStatus = try Self.getGlucoseStatus(glucoseReadings: glucose)
         guard let glucoseStatus = glucoseStatus else { throw DeterminationError.missingInputs }
+
+        // Calculate autoISF status if enabled (this is where we have glucose data available)
+        debug(.openAPSSwift, "determineBasal: profile.autoisf = \(profile.autoisf)")
+        let autoISFStatus: AutoISFGlucoseStatus? = profile.autoisf ?
+            glucoseStatus.getAutoISFGlucoseStatus(
+                glucoseReadings: glucose,
+                profile
+            ) : nil
+        debug(.openAPSSwift, "determineBasal: autoISFStatus = \(autoISFStatus != nil ? "populated" : "nil")")
+        if let status = autoISFStatus {
+            debug(.openAPSSwift, "  dura_p=\(status.dura_p), delta_pl=\(status.delta_pl), delta_pn=\(status.delta_pn)")
+            debug(.openAPSSwift, "  r_squ=\(status.r_squ), a_0=\(status.a_0), bg_acceleration=\(status.bg_acceleration)")
+            debug(.openAPSSwift, "  dura_ISF_minutes=\(status.dura_ISF_minutes), dura_ISF_average=\(status.dura_ISF_average)")
+        }
+
         return try determineBasal(
             profile: profile,
             preferences: preferences,
@@ -37,6 +52,7 @@ enum DeterminationGenerator {
             reservoirData: reservoirData,
             glucoseStatus: glucoseStatus,
             microBolusAllowed: microBolusAllowed,
+            autoISFStatus: autoISFStatus,
             trioCustomOrefVariables: trioCustomOrefVariables,
             currentTime: currentTime
         )
@@ -55,6 +71,7 @@ enum DeterminationGenerator {
         reservoirData _: Decimal,
         glucoseStatus: GlucoseStatus,
         microBolusAllowed: Bool,
+        autoISFStatus: AutoISFGlucoseStatus?,
         trioCustomOrefVariables: TrioCustomOrefVariables,
         currentTime: Date
     ) throws -> Determination? {
@@ -115,28 +132,28 @@ enum DeterminationGenerator {
                 minGuardBG: nil,
                 minPredBG: nil,
                 threshold: nil,
-                carbRatio: nil,
+                carbRatio: profile.carbRatio,
                 received: false,
                 // autoISF
-                smbRatio: 0,
-                duraISFratio: 0,
-                bgISFratio: 0,
-                ppISFratio: 0,
-                acceISFratio: 0,
-                autoISFratio: 0,
-                iobTH: 0,
-                tick: 0,
-                // acce calc
-                parabolaFitMinutes: 0,
-                parabolaFitLastDelta: 0,
-                parabolaFitNextDelta: 0,
-                parabolaFitCorrelation: 0,
-                parabolaFitA0: 0,
-                parabolaFitA1: 0,
-                parabolaFitA2: 0,
-                duraMin: 0,
-                duraAvg: 0,
-                bgAcce: 0
+                smbRatio: nil,
+                duraISFratio: nil,
+                bgISFratio: nil,
+                ppISFratio: nil,
+                acceISFratio: nil,
+                autoISFratio: nil,
+                iobTH: nil,
+                tick: nil,
+                // acce calc - not calculated in error path
+                parabolaFitMinutes: nil,
+                parabolaFitLastDelta: nil,
+                parabolaFitNextDelta: nil,
+                parabolaFitCorrelation: nil,
+                parabolaFitA0: nil,
+                parabolaFitA1: nil,
+                parabolaFitA2: nil,
+                duraMin: nil,
+                duraAvg: nil,
+                bgAcce: nil
             )
         }
 
@@ -409,25 +426,28 @@ enum DeterminationGenerator {
             carbRatio: forecastResult.adjustedCarbRatio.jsRounded(scale: 1),
             received: false,
             // autoISF
-            smbRatio: 0,
+            // NOTE: ISF ratio fields (duraISFratio, bgISFratio, ppISFratio, acceISFratio)
+            // will be populated by AutoISFCalculation.calculate() once implemented.
+            smbRatio: 0.5,
             duraISFratio: 0,
             bgISFratio: 0,
             ppISFratio: 0,
             acceISFratio: 0,
             autoISFratio: 0,
-            iobTH: 0,
-            tick: 0,
-            // acce calc
-            parabolaFitMinutes: 0,
-            parabolaFitLastDelta: 0,
-            parabolaFitNextDelta: 0,
-            parabolaFitCorrelation: 0,
-            parabolaFitA0: 0,
-            parabolaFitA1: 0,
-            parabolaFitA2: 0,
-            duraMin: 0,
-            duraAvg: 0,
-            bgAcce: 0
+            iobTH: 1,
+            tick: 0, // to be removed
+            // acce calc (parabola fit metrics from glucose analysis)
+            parabolaFitMinutes: autoISFStatus?.dura_p,
+            parabolaFitLastDelta: autoISFStatus?.delta_pl,
+            parabolaFitNextDelta: autoISFStatus?.delta_pn,
+            parabolaFitCorrelation: autoISFStatus?.r_squ,
+            parabolaFitA0: autoISFStatus?.a_0,
+            parabolaFitA1: autoISFStatus?.a_1,
+            parabolaFitA2: autoISFStatus?.a_2,
+            // Duration ISF window metrics
+            duraMin: autoISFStatus?.dura_ISF_minutes,
+            duraAvg: autoISFStatus?.dura_ISF_average,
+            bgAcce: autoISFStatus?.bg_acceleration,
         )
 
         // MARK: - Core dosing logic
@@ -705,28 +725,28 @@ enum DeterminationGenerator {
                 minGuardBG: nil,
                 minPredBG: nil,
                 threshold: nil,
-                carbRatio: nil,
+                carbRatio: profile.carbRatio,
                 received: false,
                 // autoISF
-                smbRatio: 0,
-                duraISFratio: 0,
-                bgISFratio: 0,
-                ppISFratio: 0,
-                acceISFratio: 0,
-                autoISFratio: 0,
-                iobTH: 0,
-                tick: 0,
-                // acce calc
-                parabolaFitMinutes: 0,
-                parabolaFitLastDelta: 0,
-                parabolaFitNextDelta: 0,
-                parabolaFitCorrelation: 0,
-                parabolaFitA0: 0,
-                parabolaFitA1: 0,
-                parabolaFitA2: 0,
-                duraMin: 0,
-                duraAvg: 0,
-                bgAcce: 0
+                smbRatio: nil,
+                duraISFratio: nil,
+                bgISFratio: nil,
+                ppISFratio: nil,
+                acceISFratio: nil,
+                autoISFratio: nil,
+                iobTH: nil,
+                tick: nil,
+                // acce calc - not calculated in error path
+                parabolaFitMinutes: nil,
+                parabolaFitLastDelta: nil,
+                parabolaFitNextDelta: nil,
+                parabolaFitCorrelation: nil,
+                parabolaFitA0: nil,
+                parabolaFitA1: nil,
+                parabolaFitA2: nil,
+                duraMin: nil,
+                duraAvg: nil,
+                bgAcce: nil
             )
         } else if currentTemp.rate == 0, currentTemp.duration > 30 {
             // Shorten long zero temp to 30m
@@ -757,28 +777,28 @@ enum DeterminationGenerator {
                 minGuardBG: nil,
                 minPredBG: nil,
                 threshold: nil,
-                carbRatio: nil,
+                carbRatio: profile.carbRatio,
                 received: false,
                 // autoISF
-                smbRatio: 0,
-                duraISFratio: 0,
-                bgISFratio: 0,
-                ppISFratio: 0,
-                acceISFratio: 0,
-                autoISFratio: 0,
-                iobTH: 0,
-                tick: 0,
-                // acce calc
-                parabolaFitMinutes: 0,
-                parabolaFitLastDelta: 0,
-                parabolaFitNextDelta: 0,
-                parabolaFitCorrelation: 0,
-                parabolaFitA0: 0,
-                parabolaFitA1: 0,
-                parabolaFitA2: 0,
-                duraMin: 0,
-                duraAvg: 0,
-                bgAcce: 0
+                smbRatio: nil,
+                duraISFratio: nil,
+                bgISFratio: nil,
+                ppISFratio: nil,
+                acceISFratio: nil,
+                autoISFratio: nil,
+                iobTH: nil,
+                tick: nil,
+                // acce calc - not calculated in error path
+                parabolaFitMinutes: nil,
+                parabolaFitLastDelta: nil,
+                parabolaFitNextDelta: nil,
+                parabolaFitCorrelation: nil,
+                parabolaFitA0: nil,
+                parabolaFitA1: nil,
+                parabolaFitA2: nil,
+                duraMin: nil,
+                duraAvg: nil,
+                bgAcce: nil
             )
         } else {
             // Do nothing (temp already safe)
@@ -809,28 +829,28 @@ enum DeterminationGenerator {
                 minGuardBG: nil,
                 minPredBG: nil,
                 threshold: nil,
-                carbRatio: nil,
+                carbRatio: profile.carbRatio,
                 received: false,
                 // autoISF
-                smbRatio: 0,
-                duraISFratio: 0,
-                bgISFratio: 0,
-                ppISFratio: 0,
-                acceISFratio: 0,
-                autoISFratio: 0,
-                iobTH: 0,
-                tick: 0,
-                // acce calc
-                parabolaFitMinutes: 0,
-                parabolaFitLastDelta: 0,
-                parabolaFitNextDelta: 0,
-                parabolaFitCorrelation: 0,
-                parabolaFitA0: 0,
-                parabolaFitA1: 0,
-                parabolaFitA2: 0,
-                duraMin: 0,
-                duraAvg: 0,
-                bgAcce: 0
+                smbRatio: nil,
+                duraISFratio: nil,
+                bgISFratio: nil,
+                ppISFratio: nil,
+                acceISFratio: nil,
+                autoISFratio: nil,
+                iobTH: nil,
+                tick: nil,
+                // acce calc - not calculated in error path
+                parabolaFitMinutes: nil,
+                parabolaFitLastDelta: nil,
+                parabolaFitNextDelta: nil,
+                parabolaFitCorrelation: nil,
+                parabolaFitA0: nil,
+                parabolaFitA1: nil,
+                parabolaFitA2: nil,
+                duraMin: nil,
+                duraAvg: nil,
+                bgAcce: nil
             )
         }
     }

@@ -42,6 +42,7 @@ extension Profile {
         smbDeliveryRatioBGrange = preferences.smbDeliveryRatioBGrange
         smbDeliveryRatioMin = preferences.smbDeliveryRatioMin
         smbDeliveryRatioMax = preferences.smbDeliveryRatioMax
+        smbThresholdRatio = preferences.smbThresholdRatio
         autoISFhourlyChange = preferences.autoISFhourlyChange
         higherISFrangeWeight = preferences.higherISFrangeWeight
         lowerISFrangeWeight = preferences.lowerISFrangeWeight
@@ -82,6 +83,7 @@ extension Profile {
         // autoISF
         floatingcarbs = preferences.floatingcarbs
         autoisf = preferences.autoisf
+        enableAutosens = preferences.enableAutosens
         enableBGacceleration = preferences.enableBGacceleration
         enableSMBEvenOnOddOffAlways = preferences.enableSMBEvenOnOddOffAlways
         autoISFoffSport = preferences.autoISFoffSport
