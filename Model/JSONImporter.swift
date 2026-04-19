@@ -518,8 +518,6 @@ extension Determination: Codable {
         case isf = "ISF"
         case current_target
         case tdd = "TDD"
-        case insulinForManualBolus
-        case manualBolusErrorString
         case minDelta
         case expectedDelta
         case minGuardBG
@@ -573,8 +571,6 @@ extension Determination: Codable {
         isf = try container.decodeIfPresent(Decimal.self, forKey: .isf)
         current_target = try container.decodeIfPresent(Decimal.self, forKey: .current_target)
         tdd = try container.decodeIfPresent(Decimal.self, forKey: .tdd)
-        insulinForManualBolus = try container.decodeIfPresent(Decimal.self, forKey: .insulinForManualBolus)
-        manualBolusErrorString = try container.decodeIfPresent(Decimal.self, forKey: .manualBolusErrorString)
         minDelta = try container.decodeIfPresent(Decimal.self, forKey: .minDelta)
         expectedDelta = try container.decodeIfPresent(Decimal.self, forKey: .expectedDelta)
         minGuardBG = try container.decodeIfPresent(Decimal.self, forKey: .minGuardBG)
@@ -635,8 +631,6 @@ extension Determination: Codable {
         try container.encodeIfPresent(isf, forKey: .isf)
         try container.encodeIfPresent(current_target, forKey: .current_target)
         try container.encodeIfPresent(tdd, forKey: .tdd)
-        try container.encodeIfPresent(insulinForManualBolus, forKey: .insulinForManualBolus)
-        try container.encodeIfPresent(manualBolusErrorString, forKey: .manualBolusErrorString)
         try container.encodeIfPresent(minDelta, forKey: .minDelta)
         try container.encodeIfPresent(expectedDelta, forKey: .expectedDelta)
         try container.encodeIfPresent(minGuardBG, forKey: .minGuardBG)
@@ -696,12 +690,6 @@ extension Determination: Codable {
         guard let isf = isf else {
             throw JSONImporterError.missingRequiredPropertyInDetermination("ISF")
         }
-        guard let manualBolusErrorString = manualBolusErrorString else {
-            throw JSONImporterError.missingRequiredPropertyInDetermination("manualBolusErrorString")
-        }
-        guard let insulinForManualBolus = insulinForManualBolus else {
-            throw JSONImporterError.missingRequiredPropertyInDetermination("insulinForManualBolus")
-        }
         guard let cob = cob else {
             throw JSONImporterError.missingRequiredPropertyInDetermination("COB")
         }
@@ -738,7 +726,6 @@ extension Determination: Codable {
         newOrefDetermination.deliverAt = deliverAt
         newOrefDetermination.timestamp = timestamp
         newOrefDetermination.enacted = received ?? false
-        newOrefDetermination.insulinForManualBolus = decimalToNSDecimalNumber(insulinForManualBolus)
         newOrefDetermination.carbRatio = decimalToNSDecimalNumber(carbRatio)
         newOrefDetermination.glucose = decimalToNSDecimalNumber(bg)
         newOrefDetermination.reservoir = decimalToNSDecimalNumber(reservoir)
@@ -753,7 +740,6 @@ extension Determination: Codable {
         newOrefDetermination.sensitivityRatio = decimalToNSDecimalNumber(sensitivityRatio)
         newOrefDetermination.expectedDelta = decimalToNSDecimalNumber(expectedDelta)
         newOrefDetermination.cob = Int16(Int(cob ?? 0))
-        newOrefDetermination.manualBolusErrorString = decimalToNSDecimalNumber(manualBolusErrorString)
         newOrefDetermination.smbToDeliver = units.map { NSDecimalNumber(decimal: $0) }
         newOrefDetermination.carbsRequired = Int16(Int(carbsReq ?? 0))
         newOrefDetermination.isUploadedToNS = true

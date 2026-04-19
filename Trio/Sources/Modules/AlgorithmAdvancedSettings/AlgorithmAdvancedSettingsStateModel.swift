@@ -10,6 +10,7 @@ extension AlgorithmAdvancedSettings {
 
         var units: GlucoseUnits = .mgdL
 
+        // settings
         @Published var maxDailySafetyMultiplier: Decimal = 3
         @Published var currentBasalSafetyMultiplier: Decimal = 4
         @Published var skipNeutralTemps: Bool = false
@@ -18,6 +19,8 @@ extension AlgorithmAdvancedSettings {
         @Published var remainingCarbsFraction: Decimal = 1.0
         @Published var remainingCarbsCap: Decimal = 90
         @Published var noisyCGMTargetMultiplier: Decimal = 1.3
+        @Published var useSwiftOref: Bool = false
+        // preference
         @Published var insulinActionCurve: Decimal = 10
         @Published var smbDeliveryRatio: Decimal = 0.5
         @Published var smbInterval: Decimal = 3
@@ -37,6 +40,8 @@ extension AlgorithmAdvancedSettings {
             subscribePreferencesSetting(\.remainingCarbsCap, on: $remainingCarbsCap) { remainingCarbsCap = $0 }
             subscribePreferencesSetting(\.noisyCGMTargetMultiplier, on: $noisyCGMTargetMultiplier) {
                 noisyCGMTargetMultiplier = $0 }
+            subscribeSetting(\.useSwiftOref, on: $useSwiftOref) {
+                useSwiftOref = $0 }
             subscribePreferencesSetting(\.smbDeliveryRatio, on: $smbDeliveryRatio) { smbDeliveryRatio = $0 }
             subscribePreferencesSetting(\.smbInterval, on: $smbInterval) { smbInterval = $0 }
             subscribePreferencesSetting(\.useProfileCSF, on: $useProfileCSF) { useProfileCSF = $0 }
