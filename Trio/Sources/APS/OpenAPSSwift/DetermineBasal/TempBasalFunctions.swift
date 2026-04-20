@@ -59,7 +59,10 @@ enum TempBasalFunctions {
         duration: Decimal,
         profile: Profile,
         determination: Determination,
-        currentTemp: TempBasal
+        currentTemp: TempBasal,
+        bolusIOB: Decimal = 0,
+        basalIOB: Decimal = 0,
+        iobActivity: Decimal = 0
     ) throws -> Determination {
         var determination = determination
         let maxSafeBasal = try getMaxSafeBasalRate(profile: profile)
@@ -71,7 +74,19 @@ enum TempBasalFunctions {
             rate = maxSafeBasal
         }
 
-        let suggestedRate = roundBasal(profile: profile, basalRate: rate)
+        var suggestedRate = roundBasal(profile: profile, basalRate: rate)
+
+        let keto = KetoProtect.apply(
+            rate: suggestedRate,
+            profile: profile,
+            bolusIOB: bolusIOB,
+            basalIOB: basalIOB,
+            iobActivity: iobActivity
+        )
+        suggestedRate = keto.rate
+        if !keto.reason.isEmpty {
+            determination.reason = keto.reason + determination.reason
+        }
 
         if Decimal(currentTemp.duration) > (duration - 10),
            currentTemp.duration <= 120,

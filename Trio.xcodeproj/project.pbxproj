@@ -408,6 +408,7 @@
 		49ED6D872F9619680088D53D /* AutoISFSMBControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49ED6D862F9619680088D53D /* AutoISFSMBControl.swift */; };
 		49ED6D8E2F9688D60088D53D /* AimiB30.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49ED6D8C2F9688D60088D53D /* AimiB30.swift */; };
 		49ED6D8F2F9688D60088D53D /* AutoISF.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49ED6D8D2F9688D60088D53D /* AutoISF.swift */; };
+		49ED6D912F9688F70088D53D /* KetoProtect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49ED6D902F9688F70088D53D /* KetoProtect.swift */; };
 		49F298B72D2D7DBB00E4C00D /* AutoISFSettingsDataFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F298B42D2D7DBB00E4C00D /* AutoISFSettingsDataFlow.swift */; };
 		49F298B82D2D7DBB00E4C00D /* AutoISFSettingsStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F298B62D2D7DBB00E4C00D /* AutoISFSettingsStateModel.swift */; };
 		49F298B92D2D7DBB00E4C00D /* AutoISFSettingsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F298B52D2D7DBB00E4C00D /* AutoISFSettingsProvider.swift */; };
@@ -1405,6 +1406,7 @@
 		49ED6D862F9619680088D53D /* AutoISFSMBControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFSMBControl.swift; sourceTree = "<group>"; };
 		49ED6D8C2F9688D60088D53D /* AimiB30.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AimiB30.swift; sourceTree = "<group>"; };
 		49ED6D8D2F9688D60088D53D /* AutoISF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISF.swift; sourceTree = "<group>"; };
+		49ED6D902F9688F70088D53D /* KetoProtect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KetoProtect.swift; sourceTree = "<group>"; };
 		49F298B42D2D7DBB00E4C00D /* AutoISFSettingsDataFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFSettingsDataFlow.swift; sourceTree = "<group>"; };
 		49F298B52D2D7DBB00E4C00D /* AutoISFSettingsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFSettingsProvider.swift; sourceTree = "<group>"; };
 		49F298B62D2D7DBB00E4C00D /* AutoISFSettingsStateModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFSettingsStateModel.swift; sourceTree = "<group>"; };
@@ -4057,6 +4059,7 @@
 		DD30B9C52E0624C600DA677C /* DetermineBasal */ = {
 			isa = PBXGroup;
 			children = (
+				49ED6D902F9688F70088D53D /* KetoProtect.swift */,
 				49ED6D8C2F9688D60088D53D /* AimiB30.swift */,
 				49ED6D8D2F9688D60088D53D /* AutoISF.swift */,
 				49ED6D862F9619680088D53D /* AutoISFSMBControl.swift */,
@@ -5137,6 +5140,7 @@
 				49AC5B642D7F2833005A47F3 /* CustomDateTimePicker.swift in Sources */,
 				CEB434E728B9053300B70274 /* LoopUIColorPalette+Default.swift in Sources */,
 				19F95FF329F10FBC00314DDC /* StatDataFlow.swift in Sources */,
+				49ED6D912F9688F70088D53D /* KetoProtect.swift in Sources */,
 				582DF97B2C8CE209001F516D /* CarbView.swift in Sources */,
 				DD940BAA2CA7585D000830A5 /* GlucoseColorScheme.swift in Sources */,
 				3811DE2225C9D48300A708ED /* MainProvider.swift in Sources */,
