@@ -21,6 +21,7 @@ enum DeterminationGenerator {
         autosensData: Autosens,
         reservoirData: Decimal,
         glucose: [BloodGlucose],
+        pumpHistory: [PumpHistoryEvent],
         microBolusAllowed: Bool,
         trioCustomOrefVariables: TrioCustomOrefVariables,
         currentTime: Date
@@ -51,6 +52,7 @@ enum DeterminationGenerator {
             autosensData: autosensData,
             reservoirData: reservoirData,
             glucoseStatus: glucoseStatus,
+            pumpHistory: pumpHistory,
             microBolusAllowed: microBolusAllowed,
             autoISFStatus: autoISFStatus,
             trioCustomOrefVariables: trioCustomOrefVariables,
@@ -70,6 +72,7 @@ enum DeterminationGenerator {
         autosensData: Autosens,
         reservoirData _: Decimal,
         glucoseStatus: GlucoseStatus,
+        pumpHistory: [PumpHistoryEvent] = [],
         microBolusAllowed: Bool,
         autoISFStatus: AutoISFGlucoseStatus?,
         trioCustomOrefVariables: TrioCustomOrefVariables,
@@ -236,6 +239,16 @@ enum DeterminationGenerator {
             && tempTargetSet
             && adjustedGlucoseTargets.targetGlucose < baseProfileTarget
 
+        let b30Result = B30Engine.evaluate(
+            profile: profile,
+            pumpHistory: pumpHistory,
+            currentTime: currentTime,
+            targetBG: adjustedGlucoseTargets.targetGlucose,
+            currentBG: glucoseStatus.glucose,
+            bgDelta: glucoseStatus.delta,
+            basal: basal
+        )
+
         let originalSensitivity = profile.profileSensitivity(at: currentTime, trioCustomOrefVaribales: trioCustomOrefVariables)
         let autoISFResult = AutoISFEngine.run(
             profile: profile,
@@ -249,7 +262,7 @@ enum DeterminationGenerator {
             resistanceModeActive: resistanceModeActive,
             microBolusAllowed: microBolusAllowed,
             iob: iobData.first?.iob ?? 0,
-            b30IsActive: false,
+            b30IsActive: b30Result.isActive,
             autoISFStatus: autoISFStatus
         )
         if let adjusted = autoISFResult.adjustedSensitivity {
@@ -480,6 +493,22 @@ enum DeterminationGenerator {
         )
 
         // MARK: - Core dosing logic
+
+        // B30 fires before all safety checks — mirrors JS determine-basal.js line 1578
+        if b30Result.isActive {
+            // Prepend " for Xm, " fragment (matches JS rT.reason structure at point of B30 setTempBasal call)
+            determination.reason = b30Result.reason + determination.reason
+            // Append "calculated AIMI B30 Temp..." tail (matches JS before setTempBasal call)
+            determination.reason += "calculated AIMI B30 Temp \(b30Result.boostRate)U/hr\(b30Result.reason)"
+            return try TempBasalFunctions.setTempBasal(
+                rate: b30Result.boostRate,
+                duration: min(30, b30Result.remainingMinutes),
+                profile: profile,
+                determination: determination,
+                currentTemp: currentTemp,
+                aimiRateActivated: true
+            )
+        }
 
         let (shouldSetTempBasalForLowGlucoseSuspend, lowGlucoseSuspendDetermination) = try DosingEngine.lowGlucoseSuspend(
             currentGlucose: currentGlucose,

@@ -407,6 +407,7 @@
 		49ED6D852F9613850088D53D /* AutoISFAdjust.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49ED6D842F9613850088D53D /* AutoISFAdjust.swift */; };
 		49ED6D872F9619680088D53D /* AutoISFSMBControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49ED6D862F9619680088D53D /* AutoISFSMBControl.swift */; };
 		49ED6D892F961BED0088D53D /* AutoISFEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49ED6D882F961BED0088D53D /* AutoISFEngine.swift */; };
+		49ED6D8B2F96616C0088D53D /* B30Engine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49ED6D8A2F96616C0088D53D /* B30Engine.swift */; };
 		49F298B72D2D7DBB00E4C00D /* AutoISFSettingsDataFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F298B42D2D7DBB00E4C00D /* AutoISFSettingsDataFlow.swift */; };
 		49F298B82D2D7DBB00E4C00D /* AutoISFSettingsStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F298B62D2D7DBB00E4C00D /* AutoISFSettingsStateModel.swift */; };
 		49F298B92D2D7DBB00E4C00D /* AutoISFSettingsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F298B52D2D7DBB00E4C00D /* AutoISFSettingsProvider.swift */; };
@@ -1403,6 +1404,7 @@
 		49ED6D842F9613850088D53D /* AutoISFAdjust.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFAdjust.swift; sourceTree = "<group>"; };
 		49ED6D862F9619680088D53D /* AutoISFSMBControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFSMBControl.swift; sourceTree = "<group>"; };
 		49ED6D882F961BED0088D53D /* AutoISFEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFEngine.swift; sourceTree = "<group>"; };
+		49ED6D8A2F96616C0088D53D /* B30Engine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = B30Engine.swift; sourceTree = "<group>"; };
 		49F298B42D2D7DBB00E4C00D /* AutoISFSettingsDataFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFSettingsDataFlow.swift; sourceTree = "<group>"; };
 		49F298B52D2D7DBB00E4C00D /* AutoISFSettingsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFSettingsProvider.swift; sourceTree = "<group>"; };
 		49F298B62D2D7DBB00E4C00D /* AutoISFSettingsStateModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFSettingsStateModel.swift; sourceTree = "<group>"; };
@@ -4055,6 +4057,7 @@
 		DD30B9C52E0624C600DA677C /* DetermineBasal */ = {
 			isa = PBXGroup;
 			children = (
+				49ED6D8A2F96616C0088D53D /* B30Engine.swift */,
 				49ED6D882F961BED0088D53D /* AutoISFEngine.swift */,
 				49ED6D862F9619680088D53D /* AutoISFSMBControl.swift */,
 				49ED6D842F9613850088D53D /* AutoISFAdjust.swift */,
@@ -5429,6 +5432,7 @@
 				E592A3792CEEC038009A472C /* ContactImageRootView.swift in Sources */,
 				BDC531182D1062F200088832 /* ContactImageState.swift in Sources */,
 				BD249D9F2D42FD0600412DEB /* StackedChartSetup.swift in Sources */,
+				49ED6D8B2F96616C0088D53D /* B30Engine.swift in Sources */,
 				E592A37A2CEEC038009A472C /* ContactImageProvider.swift in Sources */,
 				DD30786A2D42F94000DE0490 /* GarminDevice.swift in Sources */,
 				38E4451E274DB04600EC9A94 /* AppDelegate.swift in Sources */,

@@ -84,6 +84,7 @@ struct OpenAPSSwift {
                 autosensData: autosensData,
                 reservoirData: reservoir ?? 100,
                 glucose: glucose,
+                pumpHistory: pumpHistory,
                 microBolusAllowed: microBolusAllowed,
                 trioCustomOrefVariables: trioCustomOrefVariables,
                 currentTime: clock
