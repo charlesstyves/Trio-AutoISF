@@ -406,8 +406,8 @@
 		49E464DA2E7BF8850037EC26 /* tai.icon in Resources */ = {isa = PBXBuildFile; fileRef = 49E464D82E7BF8850037EC26 /* tai.icon */; };
 		49ED6D852F9613850088D53D /* AutoISFAdjust.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49ED6D842F9613850088D53D /* AutoISFAdjust.swift */; };
 		49ED6D872F9619680088D53D /* AutoISFSMBControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49ED6D862F9619680088D53D /* AutoISFSMBControl.swift */; };
-		49ED6D892F961BED0088D53D /* AutoISFEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49ED6D882F961BED0088D53D /* AutoISFEngine.swift */; };
-		49ED6D8B2F96616C0088D53D /* B30Engine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49ED6D8A2F96616C0088D53D /* B30Engine.swift */; };
+		49ED6D8E2F9688D60088D53D /* AimiB30.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49ED6D8C2F9688D60088D53D /* AimiB30.swift */; };
+		49ED6D8F2F9688D60088D53D /* AutoISF.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49ED6D8D2F9688D60088D53D /* AutoISF.swift */; };
 		49F298B72D2D7DBB00E4C00D /* AutoISFSettingsDataFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F298B42D2D7DBB00E4C00D /* AutoISFSettingsDataFlow.swift */; };
 		49F298B82D2D7DBB00E4C00D /* AutoISFSettingsStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F298B62D2D7DBB00E4C00D /* AutoISFSettingsStateModel.swift */; };
 		49F298B92D2D7DBB00E4C00D /* AutoISFSettingsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F298B52D2D7DBB00E4C00D /* AutoISFSettingsProvider.swift */; };
@@ -1403,8 +1403,8 @@
 		49E464D82E7BF8850037EC26 /* tai.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = tai.icon; sourceTree = "<group>"; };
 		49ED6D842F9613850088D53D /* AutoISFAdjust.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFAdjust.swift; sourceTree = "<group>"; };
 		49ED6D862F9619680088D53D /* AutoISFSMBControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFSMBControl.swift; sourceTree = "<group>"; };
-		49ED6D882F961BED0088D53D /* AutoISFEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFEngine.swift; sourceTree = "<group>"; };
-		49ED6D8A2F96616C0088D53D /* B30Engine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = B30Engine.swift; sourceTree = "<group>"; };
+		49ED6D8C2F9688D60088D53D /* AimiB30.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AimiB30.swift; sourceTree = "<group>"; };
+		49ED6D8D2F9688D60088D53D /* AutoISF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISF.swift; sourceTree = "<group>"; };
 		49F298B42D2D7DBB00E4C00D /* AutoISFSettingsDataFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFSettingsDataFlow.swift; sourceTree = "<group>"; };
 		49F298B52D2D7DBB00E4C00D /* AutoISFSettingsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFSettingsProvider.swift; sourceTree = "<group>"; };
 		49F298B62D2D7DBB00E4C00D /* AutoISFSettingsStateModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFSettingsStateModel.swift; sourceTree = "<group>"; };
@@ -4057,8 +4057,8 @@
 		DD30B9C52E0624C600DA677C /* DetermineBasal */ = {
 			isa = PBXGroup;
 			children = (
-				49ED6D8A2F96616C0088D53D /* B30Engine.swift */,
-				49ED6D882F961BED0088D53D /* AutoISFEngine.swift */,
+				49ED6D8C2F9688D60088D53D /* AimiB30.swift */,
+				49ED6D8D2F9688D60088D53D /* AutoISF.swift */,
 				49ED6D862F9619680088D53D /* AutoISFSMBControl.swift */,
 				49ED6D842F9613850088D53D /* AutoISFAdjust.swift */,
 				49C7B1BC2ECC53720092ABD0 /* AutoISFGlucose+Helpers.swift */,
@@ -5257,6 +5257,8 @@
 				CE7CA3532A064973004BE681 /* TempPresetIntent.swift in Sources */,
 				D6DEC113821A7F1056C4AA1E /* NightscoutConfigDataFlow.swift in Sources */,
 				38E98A3025F52FF700C0CED0 /* Config.swift in Sources */,
+				49ED6D8E2F9688D60088D53D /* AimiB30.swift in Sources */,
+				49ED6D8F2F9688D60088D53D /* AutoISF.swift in Sources */,
 				BDB899882C564509006F3298 /* ForecastChart.swift in Sources */,
 				110AEDE32C5193D200615CC9 /* BolusIntent.swift in Sources */,
 				58645BA12CA2D2F8008AFCE7 /* OverrideSetup.swift in Sources */,
@@ -5308,7 +5310,6 @@
 				38E44536274E411700EC9A94 /* Disk.swift in Sources */,
 				19A910362A24D6D700C8951B /* DateFilter.swift in Sources */,
 				E06B911A275B5EEA003C04B6 /* Array+Extension.swift in Sources */,
-				49ED6D892F961BED0088D53D /* AutoISFEngine.swift in Sources */,
 				38EA0600262091870064E39B /* BolusProgressViewStyle.swift in Sources */,
 				389ECDFE2601061500D86C4F /* View+Snapshot.swift in Sources */,
 				38FEF3FE2738083E00574A46 /* CGMSettingsProvider.swift in Sources */,
@@ -5432,7 +5433,6 @@
 				E592A3792CEEC038009A472C /* ContactImageRootView.swift in Sources */,
 				BDC531182D1062F200088832 /* ContactImageState.swift in Sources */,
 				BD249D9F2D42FD0600412DEB /* StackedChartSetup.swift in Sources */,
-				49ED6D8B2F96616C0088D53D /* B30Engine.swift in Sources */,
 				E592A37A2CEEC038009A472C /* ContactImageProvider.swift in Sources */,
 				DD30786A2D42F94000DE0490 /* GarminDevice.swift in Sources */,
 				38E4451E274DB04600EC9A94 /* AppDelegate.swift in Sources */,
