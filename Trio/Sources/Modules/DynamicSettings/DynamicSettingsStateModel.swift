@@ -24,6 +24,9 @@ extension DynamicSettings {
                     useNewFormula = false
                     sigmoid = false
                 }
+                if dynamicSensitivityType != .disabled {
+                    settingsManager.preferences.autoisf = false
+                }
             }
         }
 
