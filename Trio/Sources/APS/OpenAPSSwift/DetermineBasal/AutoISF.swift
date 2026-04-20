@@ -24,7 +24,7 @@ struct AutoISFEngineResult {
 ///
 /// SMB control runs whenever autoISF is enabled, regardless of dynISF.
 /// ISF adjustment only runs when dynISF is inactive.
-enum AutoISFEngine {
+enum AutoISF {
     static func run(
         profile: Profile,
         dynamicIsfActive: Bool,

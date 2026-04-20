@@ -239,7 +239,7 @@ enum DeterminationGenerator {
             && tempTargetSet
             && adjustedGlucoseTargets.targetGlucose < baseProfileTarget
 
-        let b30Result = B30Engine.evaluate(
+        let b30Result = AimiB30.evaluate(
             profile: profile,
             pumpHistory: pumpHistory,
             currentTime: currentTime,
@@ -250,7 +250,7 @@ enum DeterminationGenerator {
         )
 
         let originalSensitivity = profile.profileSensitivity(at: currentTime, trioCustomOrefVaribales: trioCustomOrefVariables)
-        let autoISFResult = AutoISFEngine.run(
+        let autoISFResult = AutoISF.run(
             profile: profile,
             dynamicIsfActive: dynamicIsfResult != nil,
             adjustedSensitivity: adjustedSensitivity,
@@ -519,10 +519,10 @@ enum DeterminationGenerator {
                 currentTemp: currentTemp,
                 profile: profile
             )
-            let (suppressed, d) = try B30Engine.applySafetyChecks(inputs: safetyInputs, determination: determination)
+            let (suppressed, d) = try AimiB30.applySafetyChecks(inputs: safetyInputs, determination: determination)
             if suppressed { return d }
             determination = d
-            // Rate is already rounded and capped to maxBasal in B30Engine.
+            // Rate is already rounded and capped to maxBasal in AimiB30.
             // Bypass setTempBasal (which would re-apply the 4×currentBasal safety multiplier cap)
             // — mirrors JS aimiRateActivated path in basal-set-temp.js that uses max_basal directly.
             determination.reason = b30Result.reason + determination.reason

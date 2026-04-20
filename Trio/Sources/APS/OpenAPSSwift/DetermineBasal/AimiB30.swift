@@ -45,7 +45,7 @@ struct B30SafetyInputs {
 ///   - Last manual bolus ≥ iTime_Start_Bolus, within b30_duration minutes
 ///   - EatingSoon temp target active and equal to iTime_target
 ///   - Current BG < b30_upperBG and delta ≤ b30_upperdelta
-enum B30Engine {
+enum AimiB30 {
     static func evaluate(
         profile: Profile,
         pumpHistory: [PumpHistoryEvent],
