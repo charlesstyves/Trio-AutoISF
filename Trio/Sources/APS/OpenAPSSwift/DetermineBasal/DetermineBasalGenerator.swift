@@ -255,6 +255,14 @@ enum DeterminationGenerator {
             autoISFAdjustResult = nil
         }
 
+        let autoISFSMBResult = AutoISFSMBControl.evaluate(
+            profile: profile,
+            microBolusAllowed: microBolusAllowed,
+            iob: iobData.first?.iob ?? 0,
+            b30IsActive: false,
+            exerciseModeActive: exerciseModeActive
+        )
+
         let glucoseImpactSeries = buildGlucoseImpactSeries(iobDataSeries: iobData, sensitivity: adjustedSensitivity)
         let glucoseImpactSeriesWithZeroTemp = buildGlucoseImpactSeries(
             iobDataSeries: iobData,
@@ -343,6 +351,10 @@ enum DeterminationGenerator {
         let originalSensitivity = profile.profileSensitivity(at: currentTime, trioCustomOrefVaribales: trioCustomOrefVariables)
         let isfReason: String
         if let autoISFResult = autoISFAdjustResult {
+            var smbStr = ""
+            if let smbResult = autoISFSMBResult, !smbResult.reason.isEmpty {
+                smbStr = "\(smbResult.reason), "
+            }
             var parabolaStr = ""
             if let status = autoISFStatus, status.a_2 > 0 {
                 let tMin = -(status.a_1 / (2 * status.a_2))
@@ -352,7 +364,7 @@ enum DeterminationGenerator {
                     parabolaStr = "Parabolic Fit: saw Min of \(minBG), about \(minsAgo)min ago, "
                 }
             }
-            isfReason = "\(parabolaStr)\(autoISFResult.reason), Standard"
+            isfReason = "\(smbStr)\(parabolaStr)\(autoISFResult.reason), Standard"
         } else {
             isfReason =
                 "Autosens ratio: \(sensitivityRatio.jsRounded(scale: 2)), ISF: \(originalSensitivity.jsRounded())→\(adjustedSensitivity.jsRounded())"
@@ -426,7 +438,12 @@ enum DeterminationGenerator {
             clock: currentTime
         )
 
-        let smbIsEnabled = smbDecision.isEnabled
+        // autoISF SMB override: even/odd target and iobTH take priority over standard profile checks
+        var smbIsEnabled = smbDecision.isEnabled
+        if let autoISFSMBResult = autoISFSMBResult, autoISFSMBResult.loopMode != .oref {
+            smbIsEnabled = autoISFSMBResult.smbEnabled
+        }
+
         var reason = dosingInputs.reason
         if let smbReason = smbDecision.reason {
             reason += smbReason
