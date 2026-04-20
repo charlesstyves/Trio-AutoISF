@@ -21,4 +21,18 @@ struct Override {
     let end: Decimal
     let smbMinutes: Decimal
     let uamMinutes: Decimal
+    // AutoISF profile injection (nil = use profile default)
+    let autoISFmin: Decimal?
+    let autoISFmax: Decimal?
+    let autoISFhourlyChange: Decimal?
+    let higherISFrangeWeight: Decimal?
+    let lowerISFrangeWeight: Decimal?
+    let postMealISFweight: Decimal?
+    let bgAccelISFweight: Decimal?
+    let bgBrakeISFweight: Decimal?
+    let iobThresholdPercent: Decimal?
+    let smbDeliveryRatioBGrange: Decimal?
+    let smbDeliveryRatioMin: Decimal?
+    let smbDeliveryRatioMax: Decimal?
+    let enableBGacceleration: Bool?
 }

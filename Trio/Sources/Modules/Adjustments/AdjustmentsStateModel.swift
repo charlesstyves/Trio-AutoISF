@@ -39,6 +39,35 @@ extension Adjustments {
         var defaultSmbMinutes: Decimal = 0
         var defaultUamMinutes: Decimal = 0
         var selectedTab: Tab = .tempTargets
+
+        // AutoISF profile injection overrides — nil means use profile default
+        var overrideAutoISFmin: Decimal?
+        var overrideAutoISFmax: Decimal?
+        var overrideAutoISFhourlyChange: Decimal?
+        var overrideHigherISFrangeWeight: Decimal?
+        var overrideLowerISFrangeWeight: Decimal?
+        var overridePostMealISFweight: Decimal?
+        var overrideBgAccelISFweight: Decimal?
+        var overrideBgBrakeISFweight: Decimal?
+        var overrideIobThresholdPercent: Decimal?
+        var overrideSmbDeliveryRatioBGrange: Decimal?
+        var overrideSmbDeliveryRatioMin: Decimal?
+        var overrideSmbDeliveryRatioMax: Decimal?
+        var overrideEnableBGacceleration: Bool?
+        // Profile defaults for color comparison in UI
+        var profileAutoISFmin: Decimal = 0.5
+        var profileAutoISFmax: Decimal = 2
+        var profileAutoISFhourlyChange: Decimal = 0
+        var profileHigherISFrangeWeight: Decimal = 0
+        var profileLowerISFrangeWeight: Decimal = 0
+        var profilePostMealISFweight: Decimal = 0
+        var profileBgAccelISFweight: Decimal = 0.15
+        var profileBgBrakeISFweight: Decimal = 0.15
+        var profileIobThresholdPercent: Decimal = 1
+        var profileSmbDeliveryRatioBGrange: Decimal = 0
+        var profileSmbDeliveryRatioMin: Decimal = 0.5
+        var profileSmbDeliveryRatioMax: Decimal = 0.8
+        var profileEnableBGacceleration: Bool = true
         var activeOverrideName: String = ""
         var currentActiveOverride: OverrideStored?
         var activeTempTargetName: String = ""
@@ -160,9 +189,27 @@ extension Adjustments {
                 target: tempTargetTarget,
                 autosensMax: autosensMax
             )
+            loadAutoISFProfileDefaults()
             Task {
                 await getCurrentGlucoseTarget()
             }
+        }
+
+        func loadAutoISFProfileDefaults() {
+            let prefs = settingsManager.preferences
+            profileAutoISFmin = prefs.autoISFmin
+            profileAutoISFmax = prefs.autoISFmax
+            profileAutoISFhourlyChange = prefs.autoISFhourlyChange
+            profileHigherISFrangeWeight = prefs.higherISFrangeWeight
+            profileLowerISFrangeWeight = prefs.lowerISFrangeWeight
+            profilePostMealISFweight = prefs.postMealISFweight
+            profileBgAccelISFweight = prefs.bgAccelISFweight
+            profileBgBrakeISFweight = prefs.bgBrakeISFweight
+            profileIobThresholdPercent = prefs.iobThresholdPercent
+            profileSmbDeliveryRatioBGrange = prefs.smbDeliveryRatioBGrange
+            profileSmbDeliveryRatioMin = prefs.smbDeliveryRatioMin
+            profileSmbDeliveryRatioMax = prefs.smbDeliveryRatioMax
+            profileEnableBGacceleration = prefs.enableBGacceleration
         }
 
         /// Reorders Override Presets and updates the view.

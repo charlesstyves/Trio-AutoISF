@@ -189,20 +189,33 @@
     </entity>
     <entity name="OverrideStored" representedClassName="OverrideStored" syncable="YES">
         <attribute name="advancedSettings" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="autoISFhourlyChange" optional="YES" attributeType="Decimal"/>
+        <attribute name="autoISFmax" optional="YES" attributeType="Decimal"/>
+        <attribute name="autoISFmin" optional="YES" attributeType="Decimal"/>
+        <attribute name="bgAccelISFweight" optional="YES" attributeType="Decimal"/>
+        <attribute name="bgBrakeISFweight" optional="YES" attributeType="Decimal"/>
         <attribute name="cr" optional="YES" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
         <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="duration" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="enableBGacceleration" optional="YES" attributeType="Boolean" usesScalarValueType="NO"/>
         <attribute name="enabled" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="end" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="higherISFrangeWeight" optional="YES" attributeType="Decimal"/>
         <attribute name="id" optional="YES" attributeType="String"/>
         <attribute name="indefinite" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="iobThresholdPercent" optional="YES" attributeType="Decimal"/>
         <attribute name="isf" optional="YES" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
         <attribute name="isfAndCr" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="isPreset" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="isUploadedToNS" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="lowerISFrangeWeight" optional="YES" attributeType="Decimal"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="orderPosition" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="percentage" optional="YES" attributeType="Double" defaultValueString="100" usesScalarValueType="YES"/>
+        <attribute name="postMealISFweight" optional="YES" attributeType="Decimal"/>
+        <attribute name="smbDeliveryRatioBGrange" optional="YES" attributeType="Decimal"/>
+        <attribute name="smbDeliveryRatioMax" optional="YES" attributeType="Decimal"/>
+        <attribute name="smbDeliveryRatioMin" optional="YES" attributeType="Decimal"/>
         <attribute name="smbIsOff" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="smbIsScheduledOff" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="smbMinutes" optional="YES" attributeType="Decimal" defaultValueString="30"/>

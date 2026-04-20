@@ -555,6 +555,7 @@ final class OpenAPS {
             let glucose = try self.fetchGlucose()
 
             // Prepare Trio's custom oref variables
+            let activeOverride = isOverrideActive ? activeOverrides.first : nil
             let trioCustomOrefVariablesData = TrioCustomOrefVariables(
                 average_total_data: currentTDD > 0 ? averageTDDLastTenDays : 0,
                 weightedAverage: currentTDD > 0 ? weightedTDD : 1,
@@ -575,7 +576,20 @@ final class OpenAPS {
                 start: (activeOverrides.first?.start ?? 0) as Decimal,
                 end: (activeOverrides.first?.end ?? 0) as Decimal,
                 smbMinutes: activeOverrides.first?.smbMinutes?.decimalValue ?? maxSMBBasalMinutes,
-                uamMinutes: activeOverrides.first?.uamMinutes?.decimalValue ?? maxUAMBasalMinutes
+                uamMinutes: activeOverrides.first?.uamMinutes?.decimalValue ?? maxUAMBasalMinutes,
+                overrideAutoISFmin: activeOverride?.autoISFmin?.decimalValue,
+                overrideAutoISFmax: activeOverride?.autoISFmax?.decimalValue,
+                overrideAutoISFhourlyChange: activeOverride?.autoISFhourlyChange?.decimalValue,
+                overrideHigherISFrangeWeight: activeOverride?.higherISFrangeWeight?.decimalValue,
+                overrideLowerISFrangeWeight: activeOverride?.lowerISFrangeWeight?.decimalValue,
+                overridePostMealISFweight: activeOverride?.postMealISFweight?.decimalValue,
+                overrideBgAccelISFweight: activeOverride?.bgAccelISFweight?.decimalValue,
+                overrideBgBrakeISFweight: activeOverride?.bgBrakeISFweight?.decimalValue,
+                overrideIobThresholdPercent: activeOverride?.iobThresholdPercent?.decimalValue,
+                overrideSmbDeliveryRatioBGrange: activeOverride?.smbDeliveryRatioBGrange?.decimalValue,
+                overrideSmbDeliveryRatioMin: activeOverride?.smbDeliveryRatioMin?.decimalValue,
+                overrideSmbDeliveryRatioMax: activeOverride?.smbDeliveryRatioMax?.decimalValue,
+                overrideEnableBGacceleration: activeOverride?.enableBGacceleration?.boolValue
             )
             debug(
                 .openAPS,

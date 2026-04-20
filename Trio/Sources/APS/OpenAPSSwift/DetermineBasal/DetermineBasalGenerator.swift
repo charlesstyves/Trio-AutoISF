@@ -26,6 +26,22 @@ enum DeterminationGenerator {
         trioCustomOrefVariables: TrioCustomOrefVariables,
         currentTime: Date
     ) throws -> Determination? {
+        let profile = profile.applying(trioCustomOrefVariables.useOverride ? OverrideProfile(
+            autoISFmin: trioCustomOrefVariables.overrideAutoISFmin,
+            autoISFmax: trioCustomOrefVariables.overrideAutoISFmax,
+            autoISFhourlyChange: trioCustomOrefVariables.overrideAutoISFhourlyChange,
+            higherISFrangeWeight: trioCustomOrefVariables.overrideHigherISFrangeWeight,
+            lowerISFrangeWeight: trioCustomOrefVariables.overrideLowerISFrangeWeight,
+            postMealISFweight: trioCustomOrefVariables.overridePostMealISFweight,
+            bgAccelISFweight: trioCustomOrefVariables.overrideBgAccelISFweight,
+            bgBrakeISFweight: trioCustomOrefVariables.overrideBgBrakeISFweight,
+            iobThresholdPercent: trioCustomOrefVariables.overrideIobThresholdPercent,
+            smbDeliveryRatioBGrange: trioCustomOrefVariables.overrideSmbDeliveryRatioBGrange,
+            smbDeliveryRatioMin: trioCustomOrefVariables.overrideSmbDeliveryRatioMin,
+            smbDeliveryRatioMax: trioCustomOrefVariables.overrideSmbDeliveryRatioMax,
+            enableBGacceleration: trioCustomOrefVariables.overrideEnableBGacceleration
+        ) : nil)
+
         let glucoseStatus = try Self.getGlucoseStatus(glucoseReadings: glucose)
         guard let glucoseStatus = glucoseStatus else { throw DeterminationError.missingInputs }
 

@@ -1,6 +1,6 @@
 import Foundation
 
-/// Consolidated result from the autoISF engine for one loop iteration.
+/// Consolidated result from  autoISF  for one loop iteration.
 struct AutoISFEngineResult {
     /// Adjusted ISF — replaces the caller's `adjustedSensitivity` when non-nil.
     let adjustedSensitivity: Decimal?

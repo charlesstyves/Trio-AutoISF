@@ -107,7 +107,20 @@ extension Adjustments.StateModel {
                 start: start,
                 end: end,
                 smbMinutes: smbMinutes,
-                uamMinutes: uamMinutes
+                uamMinutes: uamMinutes,
+                autoISFmin: overrideAutoISFmin,
+                autoISFmax: overrideAutoISFmax,
+                autoISFhourlyChange: overrideAutoISFhourlyChange,
+                higherISFrangeWeight: overrideHigherISFrangeWeight,
+                lowerISFrangeWeight: overrideLowerISFrangeWeight,
+                postMealISFweight: overridePostMealISFweight,
+                bgAccelISFweight: overrideBgAccelISFweight,
+                bgBrakeISFweight: overrideBgBrakeISFweight,
+                iobThresholdPercent: overrideIobThresholdPercent,
+                smbDeliveryRatioBGrange: overrideSmbDeliveryRatioBGrange,
+                smbDeliveryRatioMin: overrideSmbDeliveryRatioMin,
+                smbDeliveryRatioMax: overrideSmbDeliveryRatioMax,
+                enableBGacceleration: overrideEnableBGacceleration
             )
 
             // First disable all Overrides
@@ -154,7 +167,20 @@ extension Adjustments.StateModel {
                 start: start,
                 end: end,
                 smbMinutes: smbMinutes,
-                uamMinutes: uamMinutes
+                uamMinutes: uamMinutes,
+                autoISFmin: overrideAutoISFmin,
+                autoISFmax: overrideAutoISFmax,
+                autoISFhourlyChange: overrideAutoISFhourlyChange,
+                higherISFrangeWeight: overrideHigherISFrangeWeight,
+                lowerISFrangeWeight: overrideLowerISFrangeWeight,
+                postMealISFweight: overridePostMealISFweight,
+                bgAccelISFweight: overrideBgAccelISFweight,
+                bgBrakeISFweight: overrideBgBrakeISFweight,
+                iobThresholdPercent: overrideIobThresholdPercent,
+                smbDeliveryRatioBGrange: overrideSmbDeliveryRatioBGrange,
+                smbDeliveryRatioMin: overrideSmbDeliveryRatioMin,
+                smbDeliveryRatioMax: overrideSmbDeliveryRatioMax,
+                enableBGacceleration: overrideEnableBGacceleration
             )
 
             async let storeOverride: () = overrideStorage.storeOverride(override: preset)
@@ -324,6 +350,19 @@ extension Adjustments.StateModel {
         smbMinutes = defaultSmbMinutes
         uamMinutes = defaultUamMinutes
         target = currentGlucoseTarget
+        overrideAutoISFmin = nil
+        overrideAutoISFmax = nil
+        overrideAutoISFhourlyChange = nil
+        overrideHigherISFrangeWeight = nil
+        overrideLowerISFrangeWeight = nil
+        overridePostMealISFweight = nil
+        overrideBgAccelISFweight = nil
+        overrideBgBrakeISFweight = nil
+        overrideIobThresholdPercent = nil
+        overrideSmbDeliveryRatioBGrange = nil
+        overrideSmbDeliveryRatioMin = nil
+        overrideSmbDeliveryRatioMax = nil
+        overrideEnableBGacceleration = nil
     }
 
     /// Rounds a target value to the nearest step.
