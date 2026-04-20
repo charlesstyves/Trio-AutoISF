@@ -208,7 +208,7 @@ enum DeterminationGenerator {
         }
 
         // this is the `sens` variable in JS, it's the adjusted sensitivity
-        let adjustedSensitivity = computeAdjustedSensitivity(
+        var adjustedSensitivity = computeAdjustedSensitivity(
             sensitivity: profile.sens ?? profile.sensitivityFor(time: currentTime),
             sensitivityRatio: sensitivityRatio,
             trioCustomOrefVariables: trioCustomOrefVariables
@@ -224,6 +224,36 @@ enum DeterminationGenerator {
             maxGlucose: profile.maxBg ?? 180,
             noise: 1
         )
+
+        // autoISF and dynISF are mutually exclusive: run autoISF only when dynISF is not active.
+        // exerciseModeActive / resistanceModeActive mirror the JS determine_basal conditions.
+        let tempTargetSet = profile.temptargetSet ?? false
+        let baseProfileTarget = profile.minBg ?? 100
+        let exerciseModeActive = profile.highTemptargetRaisesSensitivity
+            && tempTargetSet
+            && adjustedGlucoseTargets.targetGlucose > baseProfileTarget
+        let resistanceModeActive = profile.lowTemptargetLowersSensitivity
+            && tempTargetSet
+            && adjustedGlucoseTargets.targetGlucose < baseProfileTarget
+
+        let autoISFAdjustResult: AutoISFAdjustResult?
+        if dynamicIsfResult == nil, let autoISFStatus = autoISFStatus {
+            autoISFAdjustResult = AutoISFAdjust.calculate(
+                sens: adjustedSensitivity,
+                profileSens: profile.sens ?? profile.sensitivityFor(time: currentTime),
+                targetBG: adjustedGlucoseTargets.targetGlucose,
+                profile: profile,
+                glucoseStatus: autoISFStatus,
+                sensitivityRatio: sensitivityRatio,
+                exerciseModeActive: exerciseModeActive,
+                resistanceModeActive: resistanceModeActive
+            )
+            if let result = autoISFAdjustResult {
+                adjustedSensitivity = result.adjustedSens
+            }
+        } else {
+            autoISFAdjustResult = nil
+        }
 
         let glucoseImpactSeries = buildGlucoseImpactSeries(iobDataSeries: iobData, sensitivity: adjustedSensitivity)
         let glucoseImpactSeriesWithZeroTemp = buildGlucoseImpactSeries(
@@ -425,15 +455,13 @@ enum DeterminationGenerator {
             threshold: threshold.jsRounded(),
             carbRatio: forecastResult.adjustedCarbRatio.jsRounded(scale: 1),
             received: false,
-            // autoISF
-            // NOTE: ISF ratio fields (duraISFratio, bgISFratio, ppISFratio, acceISFratio)
-            // will be populated by AutoISFCalculation.calculate() once implemented.
+            // autoISF — nil when autoISF is disabled or dynISF is active instead
             smbRatio: 0.5,
-            duraISFratio: 0,
-            bgISFratio: 0,
-            ppISFratio: 0,
-            acceISFratio: 0,
-            autoISFratio: 0,
+            duraISFratio: autoISFAdjustResult?.duraISFratio,
+            bgISFratio: autoISFAdjustResult?.bgISFratio,
+            ppISFratio: autoISFAdjustResult?.ppISFratio,
+            acceISFratio: autoISFAdjustResult?.acceISFratio,
+            autoISFratio: autoISFAdjustResult?.autoISFratio,
             iobTH: 1,
             tick: 0, // to be removed
             // acce calc (parabola fit metrics from glucose analysis)
