@@ -236,32 +236,25 @@ enum DeterminationGenerator {
             && tempTargetSet
             && adjustedGlucoseTargets.targetGlucose < baseProfileTarget
 
-        let autoISFAdjustResult: AutoISFAdjustResult?
-        if dynamicIsfResult == nil, let autoISFStatus = autoISFStatus {
-            autoISFAdjustResult = AutoISFAdjust.calculate(
-                sens: adjustedSensitivity,
-                profileSens: profile.sens ?? profile.sensitivityFor(time: currentTime),
-                targetBG: adjustedGlucoseTargets.targetGlucose,
-                profile: profile,
-                glucoseStatus: autoISFStatus,
-                sensitivityRatio: sensitivityRatio,
-                exerciseModeActive: exerciseModeActive,
-                resistanceModeActive: resistanceModeActive
-            )
-            if let result = autoISFAdjustResult {
-                adjustedSensitivity = result.adjustedSens
-            }
-        } else {
-            autoISFAdjustResult = nil
-        }
-
-        let autoISFSMBResult = AutoISFSMBControl.evaluate(
+        let originalSensitivity = profile.profileSensitivity(at: currentTime, trioCustomOrefVaribales: trioCustomOrefVariables)
+        let autoISFResult = AutoISFEngine.run(
             profile: profile,
+            dynamicIsfActive: dynamicIsfResult != nil,
+            adjustedSensitivity: adjustedSensitivity,
+            profileSens: profile.sens ?? profile.sensitivityFor(time: currentTime),
+            targetBG: adjustedGlucoseTargets.targetGlucose,
+            sensitivityRatio: sensitivityRatio,
+            originalSensitivity: originalSensitivity,
+            exerciseModeActive: exerciseModeActive,
+            resistanceModeActive: resistanceModeActive,
             microBolusAllowed: microBolusAllowed,
             iob: iobData.first?.iob ?? 0,
             b30IsActive: false,
-            exerciseModeActive: exerciseModeActive
+            autoISFStatus: autoISFStatus
         )
+        if let adjusted = autoISFResult.adjustedSensitivity {
+            adjustedSensitivity = adjusted
+        }
 
         let glucoseImpactSeries = buildGlucoseImpactSeries(iobDataSeries: iobData, sensitivity: adjustedSensitivity)
         let glucoseImpactSeriesWithZeroTemp = buildGlucoseImpactSeries(
@@ -347,28 +340,7 @@ enum DeterminationGenerator {
             glucoseImpact: currentGlucoseImpact
         )
 
-        // Build isfReason: autoISF reason or "Autosens ratio: X, ISF: Y→Z"
-        let originalSensitivity = profile.profileSensitivity(at: currentTime, trioCustomOrefVaribales: trioCustomOrefVariables)
-        let isfReason: String
-        if let autoISFResult = autoISFAdjustResult {
-            var smbStr = ""
-            if let smbResult = autoISFSMBResult, !smbResult.reason.isEmpty {
-                smbStr = "\(smbResult.reason), "
-            }
-            var parabolaStr = ""
-            if let status = autoISFStatus, status.a_2 > 0 {
-                let tMin = -(status.a_1 / (2 * status.a_2))
-                if tMin < 0 {
-                    let minsAgo = (-tMin * 5).jsRounded(scale: 1)
-                    let minBG = (status.a_0 - status.a_1 * status.a_1 / (4 * status.a_2)).jsRounded()
-                    parabolaStr = "Parabolic Fit: saw Min of \(minBG), about \(minsAgo)min ago, "
-                }
-            }
-            isfReason = "\(smbStr)\(parabolaStr)\(autoISFResult.reason), Standard"
-        } else {
-            isfReason =
-                "Autosens ratio: \(sensitivityRatio.jsRounded(scale: 2)), ISF: \(originalSensitivity.jsRounded())→\(adjustedSensitivity.jsRounded())"
-        }
+        let isfReason = autoISFResult.isfReason
 
         // Build targetLog: "X" or "X→Y" or "X→Y→Z" if target was adjusted
         let profileTarget = profile.profileTarget(trioCustomOrefVariables: trioCustomOrefVariables) ?? 100
@@ -438,10 +410,9 @@ enum DeterminationGenerator {
             clock: currentTime
         )
 
-        // autoISF SMB override: even/odd target and iobTH take priority over standard profile checks
         var smbIsEnabled = smbDecision.isEnabled
-        if let autoISFSMBResult = autoISFSMBResult, autoISFSMBResult.loopMode != .oref {
-            smbIsEnabled = autoISFSMBResult.smbEnabled
+        if let override = autoISFResult.smbEnabled {
+            smbIsEnabled = override
         }
 
         var reason = dosingInputs.reason
@@ -488,25 +459,25 @@ enum DeterminationGenerator {
             received: false,
             // autoISF — nil when autoISF is disabled or dynISF is active instead
             smbRatio: 0.5,
-            duraISFratio: autoISFAdjustResult?.duraISFratio,
-            bgISFratio: autoISFAdjustResult?.bgISFratio,
-            ppISFratio: autoISFAdjustResult?.ppISFratio,
-            acceISFratio: autoISFAdjustResult?.acceISFratio,
-            autoISFratio: autoISFAdjustResult?.autoISFratio,
-            iobTH: 1,
+            duraISFratio: autoISFResult.adjustResult?.duraISFratio,
+            bgISFratio: autoISFResult.adjustResult?.bgISFratio,
+            ppISFratio: autoISFResult.adjustResult?.ppISFratio,
+            acceISFratio: autoISFResult.adjustResult?.acceISFratio,
+            autoISFratio: autoISFResult.adjustResult?.autoISFratio,
+            iobTH: autoISFResult.smbResult?.iobTHEffective,
             tick: 0, // to be removed
             // acce calc (parabola fit metrics from glucose analysis)
-            parabolaFitMinutes: autoISFStatus?.dura_p,
-            parabolaFitLastDelta: autoISFStatus?.delta_pl,
-            parabolaFitNextDelta: autoISFStatus?.delta_pn,
-            parabolaFitCorrelation: autoISFStatus?.r_squ,
-            parabolaFitA0: autoISFStatus?.a_0,
-            parabolaFitA1: autoISFStatus?.a_1,
-            parabolaFitA2: autoISFStatus?.a_2,
+            parabolaFitMinutes: autoISFResult.glucoseStatus?.dura_p,
+            parabolaFitLastDelta: autoISFResult.glucoseStatus?.delta_pl,
+            parabolaFitNextDelta: autoISFResult.glucoseStatus?.delta_pn,
+            parabolaFitCorrelation: autoISFResult.glucoseStatus?.r_squ,
+            parabolaFitA0: autoISFResult.glucoseStatus?.a_0,
+            parabolaFitA1: autoISFResult.glucoseStatus?.a_1,
+            parabolaFitA2: autoISFResult.glucoseStatus?.a_2,
             // Duration ISF window metrics
-            duraMin: autoISFStatus?.dura_ISF_minutes,
-            duraAvg: autoISFStatus?.dura_ISF_average,
-            bgAcce: autoISFStatus?.bg_acceleration,
+            duraMin: autoISFResult.glucoseStatus?.dura_ISF_minutes,
+            duraAvg: autoISFResult.glucoseStatus?.dura_ISF_average,
+            bgAcce: autoISFResult.glucoseStatus?.bg_acceleration,
         )
 
         // MARK: - Core dosing logic
