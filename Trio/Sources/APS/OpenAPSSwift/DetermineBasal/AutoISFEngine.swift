@@ -84,12 +84,18 @@ enum AutoISFEngine {
                 smbStr = "\(smbResult.reason), "
             }
             var parabolaStr = ""
-            if status.a_2 > 0 {
-                let tMin = -(status.a_1 / (2 * status.a_2))
-                if tMin < 0 {
-                    let minsAgo = (-tMin * 5).jsRounded(scale: 1)
-                    let minBG = (status.a_0 - status.a_1 * status.a_1 / (4 * status.a_2)).jsRounded()
-                    parabolaStr = "Parabolic Fit:, saw Min of \(minBG), about \(minsAgo)min ago, "
+            if status.a_2 != 0, status.r_squ >= Decimal(0.9) {
+                let tVertex = -(status.a_1 / (2 * status.a_2))
+                let minsDelta = (abs(tVertex) * 5).jsRounded(scale: 1)
+                let extremumBG = (status.a_0 - status.a_1 * status.a_1 / (4 * status.a_2)).jsRounded(scale: 1)
+                if tVertex > 0 {
+                    parabolaStr = status.bg_acceleration < 0
+                        ? "Parabolic Fit:, predicts Max of \(extremumBG), in about \(minsDelta)min, "
+                        : "Parabolic Fit:, predicts Min of \(extremumBG), in about \(minsDelta)min, "
+                } else {
+                    parabolaStr = status.bg_acceleration < 0
+                        ? "Parabolic Fit:, saw Max of \(extremumBG), about \(minsDelta)min ago, "
+                        : "Parabolic Fit:, saw Min of \(extremumBG), about \(minsDelta)min ago, "
                 }
             }
             let autosensStr = profile.enableAutosens ? "autosens:, \(sensitivityRatio.jsRounded(scale: 2)), " : ""
