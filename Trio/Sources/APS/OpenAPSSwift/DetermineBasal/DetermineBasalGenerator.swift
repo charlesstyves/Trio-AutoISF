@@ -496,6 +496,32 @@ enum DeterminationGenerator {
 
         // B30 fires before all safety checks — mirrors JS determine-basal.js line 1578
         if b30Result.isActive {
+            let safetyInputs = B30SafetyInputs(
+                currentGlucose: currentGlucose,
+                minGuardGlucose: forecastResult.minGuardGlucose,
+                iob: currentIob,
+                minDelta: minDelta,
+                expectedDelta: expectedDelta,
+                threshold: threshold,
+                overrideFactor: trioCustomOrefVariables.overrideFactor(),
+                adjustedSensitivity: adjustedSensitivity,
+                targetGlucose: adjustedGlucoseTargets.targetGlucose,
+                eventualGlucose: forecastResult.eventualGlucose,
+                minGlucose: adjustedGlucoseTargets.minGlucose,
+                maxGlucose: adjustedGlucoseTargets.maxGlucose,
+                carbsRequired: dosingInputs.rawCarbsRequired,
+                naiveEventualGlucose: naiveEventualGlucose,
+                glucoseStatus: glucoseStatus,
+                basal: basal,
+                smbIsEnabled: smbIsEnabled,
+                minForecastGlucose: forecastResult.minForecastedGlucose,
+                maxIob: profile.maxIob,
+                currentTemp: currentTemp,
+                profile: profile
+            )
+            let (suppressed, d) = try B30Engine.applySafetyChecks(inputs: safetyInputs, determination: determination)
+            if suppressed { return d }
+            determination = d
             // Rate is already rounded and capped to maxBasal in B30Engine.
             // Bypass setTempBasal (which would re-apply the 4×currentBasal safety multiplier cap)
             // — mirrors JS aimiRateActivated path in basal-set-temp.js that uses max_basal directly.

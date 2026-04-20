@@ -12,6 +12,31 @@ struct B30Result {
     let reason: String
 }
 
+/// All dosing-engine values needed to evaluate B30 safety checks.
+struct B30SafetyInputs {
+    let currentGlucose: Decimal
+    let minGuardGlucose: Decimal
+    let iob: Decimal
+    let minDelta: Decimal
+    let expectedDelta: Decimal
+    let threshold: Decimal
+    let overrideFactor: Decimal
+    let adjustedSensitivity: Decimal
+    let targetGlucose: Decimal
+    let eventualGlucose: Decimal
+    let minGlucose: Decimal
+    let maxGlucose: Decimal
+    let carbsRequired: Decimal
+    let naiveEventualGlucose: Decimal
+    let glucoseStatus: GlucoseStatus
+    let basal: Decimal
+    let smbIsEnabled: Bool
+    let minForecastGlucose: Decimal
+    let maxIob: Decimal
+    let currentTemp: TempBasal
+    let profile: Profile
+}
+
 /// Evaluates whether the autoISF B30 boost-basal should activate for this loop cycle.
 ///
 /// Ported from oref0 determine-basal.js lines 788–848.
@@ -74,5 +99,123 @@ enum B30Engine {
         let reason = " for \(remainingMinutes.jsRounded(scale: 0))m, "
 
         return B30Result(isActive: true, boostRate: boostRate, remainingMinutes: remainingMinutes, reason: reason)
+    }
+
+    /// Runs optional safety checks before the B30 boost activates.
+    ///
+    /// Progressive order: most critical → least. Set a flag to `true` to re-enforce
+    /// that check for B30 (by default all are bypassed, matching JS aimiRateActivated behaviour).
+    /// Returns `(suppressed: true, determination)` if a check fires and B30 should not activate.
+    static func applySafetyChecks(
+        inputs: B30SafetyInputs,
+        determination: Determination
+    ) throws -> (suppressed: Bool, determination: Determination) {
+        // ── B30 safety-check overrides ────────────────────────────────────────────
+        // Progressive order: most critical → least. Set `true` to re-enforce for B30.
+        let enforce1ZeroTempSuspend = true // BG or minGuardBG < threshold → zero temp
+        let enforce2LowEventualBG = true // eventualBG < min target → reduce/zero basal
+        let enforce3GlucoseFallingFast = true // BG falling faster than expected
+        let enforce4EventualForecastLow = false // eventual/forecast BG < max target
+        let enforce5IobCap = false // IOB > maxIOB
+
+        var det = determination
+
+        debug(
+            .openAPSSwift,
+            "B30 safety checks — BG: \(inputs.currentGlucose), minGuardBG: \(inputs.minGuardGlucose), threshold: \(inputs.threshold), eventualBG: \(inputs.eventualGlucose), minBG: \(inputs.minGlucose), minDelta: \(inputs.minDelta), expectedDelta: \(inputs.expectedDelta), IOB: \(inputs.iob)"
+        )
+
+        if enforce1ZeroTempSuspend {
+            let (fires, d) = try DosingEngine.lowGlucoseSuspend(
+                currentGlucose: inputs.currentGlucose,
+                minGuardGlucose: inputs.minGuardGlucose,
+                iob: inputs.iob,
+                minDelta: inputs.minDelta,
+                expectedDelta: inputs.expectedDelta,
+                threshold: inputs.threshold,
+                overrideFactor: inputs.overrideFactor,
+                profile: inputs.profile,
+                adjustedSensitivity: inputs.adjustedSensitivity,
+                targetGlucose: inputs.targetGlucose,
+                currentTemp: inputs.currentTemp,
+                determination: det
+            )
+            debug(.openAPSSwift, "B30 check 1 (zeroTempSuspend): fires=\(fires)")
+            if fires { return (true, d) }
+            det = d
+        }
+
+        if enforce2LowEventualBG {
+            let (fires, d) = try DosingEngine.handleLowEventualGlucose(
+                eventualGlucose: inputs.eventualGlucose,
+                minGlucose: inputs.minGlucose,
+                targetGlucose: inputs.targetGlucose,
+                minDelta: inputs.minDelta,
+                expectedDelta: inputs.expectedDelta,
+                carbsRequired: inputs.carbsRequired,
+                naiveEventualGlucose: inputs.naiveEventualGlucose,
+                glucoseStatus: inputs.glucoseStatus,
+                currentTemp: inputs.currentTemp,
+                basal: inputs.basal,
+                profile: inputs.profile,
+                determination: det,
+                adjustedSensitivity: inputs.adjustedSensitivity,
+                overrideFactor: inputs.overrideFactor
+            )
+            debug(.openAPSSwift, "B30 check 2 (lowEventualBG): fires=\(fires)")
+            if fires { return (true, d) }
+            det = d
+        }
+
+        if enforce3GlucoseFallingFast {
+            let (fires, d) = try DosingEngine.glucoseFallingFasterThanExpected(
+                eventualGlucose: inputs.eventualGlucose,
+                minGlucose: inputs.minGlucose,
+                minDelta: inputs.minDelta,
+                expectedDelta: inputs.expectedDelta,
+                glucoseStatus: inputs.glucoseStatus,
+                currentTemp: inputs.currentTemp,
+                basal: inputs.basal,
+                smbIsEnabled: inputs.smbIsEnabled,
+                profile: inputs.profile,
+                determination: det
+            )
+            debug(.openAPSSwift, "B30 check 3 (glucoseFallingFast): fires=\(fires)")
+            if fires { return (true, d) }
+            det = d
+        }
+
+        if enforce4EventualForecastLow {
+            let (fires, d) = try DosingEngine.eventualOrForecastGlucoseLessThanMax(
+                eventualGlucose: inputs.eventualGlucose,
+                maxGlucose: inputs.maxGlucose,
+                minForecastGlucose: inputs.minForecastGlucose,
+                currentTemp: inputs.currentTemp,
+                basal: inputs.basal,
+                smbIsEnabled: inputs.smbIsEnabled,
+                profile: inputs.profile,
+                determination: det
+            )
+            debug(.openAPSSwift, "B30 check 4 (eventualForecastLow): fires=\(fires)")
+            if fires { return (true, d) }
+            det = d
+        }
+
+        if enforce5IobCap {
+            let (fires, d) = try DosingEngine.iobGreaterThanMax(
+                iob: inputs.iob,
+                maxIob: inputs.maxIob,
+                currentTemp: inputs.currentTemp,
+                basal: inputs.basal,
+                profile: inputs.profile,
+                determination: det
+            )
+            debug(.openAPSSwift, "B30 check 5 (iobCap): fires=\(fires)")
+            if fires { return (true, d) }
+            det = d
+        }
+
+        debug(.openAPSSwift, "B30 safety checks passed — boost will activate")
+        return (false, det)
     }
 }
