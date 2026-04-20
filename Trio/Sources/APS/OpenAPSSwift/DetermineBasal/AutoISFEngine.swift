@@ -41,7 +41,7 @@ enum AutoISFEngine {
         autoISFStatus: AutoISFGlucoseStatus?
     ) -> AutoISFEngineResult {
         let autosensReason =
-            "Autosens ratio: \(sensitivityRatio.jsRounded(scale: 2)), ISF: \(originalSensitivity.jsRounded())→\(adjustedSensitivity.jsRounded())"
+            "autosens:, \(sensitivityRatio.jsRounded(scale: 2)), ISF: \(originalSensitivity.jsRounded())→\(adjustedSensitivity.jsRounded())"
 
         // SMB control: runs whenever autoISF is enabled, independent of dynISF
         let smbResult = AutoISFSMBControl.evaluate(
@@ -88,10 +88,11 @@ enum AutoISFEngine {
                 if tMin < 0 {
                     let minsAgo = (-tMin * 5).jsRounded(scale: 1)
                     let minBG = (status.a_0 - status.a_1 * status.a_1 / (4 * status.a_2)).jsRounded()
-                    parabolaStr = "Parabolic Fit: saw Min of \(minBG), about \(minsAgo)min ago, "
+                    parabolaStr = "Parabolic Fit:, saw Min of \(minBG), about \(minsAgo)min ago, "
                 }
             }
-            isfReason = "\(smbStr)\(parabolaStr)\(adjustResult.reason), Standard"
+            let autosensStr = profile.enableAutosens ? "autosens:, \(sensitivityRatio.jsRounded(scale: 2)), " : ""
+            isfReason = "\(autosensStr)\(smbStr)\(parabolaStr)\(adjustResult.reason), Standard"
         } else {
             isfReason = autosensReason
         }

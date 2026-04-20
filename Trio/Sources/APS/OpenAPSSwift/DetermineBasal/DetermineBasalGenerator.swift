@@ -340,7 +340,10 @@ enum DeterminationGenerator {
             glucoseImpact: currentGlucoseImpact
         )
 
-        let isfReason = autoISFResult.isfReason
+        let smbDelRatio = profile.smbDeliveryRatio != 0.5
+            ? "SMB Del.Ratio:, \(min(profile.smbDeliveryRatio, Decimal(1))), "
+            : ""
+        let isfReason = smbDelRatio + autoISFResult.isfReason
 
         // Build targetLog: "X" or "X→Y" or "X→Y→Z" if target was adjusted
         let profileTarget = profile.profileTarget(trioCustomOrefVariables: trioCustomOrefVariables) ?? 100
@@ -358,7 +361,7 @@ enum DeterminationGenerator {
             targetLog = "\(adjustedGlucoseTargets.targetGlucose.jsRounded())"
         }
 
-        // Build tddReason: ", Dynamic ISF: On, Sigmoid function, AF: X, Basal ratio: Y, SMB Ratio: Z"
+        // Build tddReason: ", Dynamic ISF: On, Sigmoid function, AF: X, Basal ratio: Y"
         var tddReason = ""
         if let dynamicIsfResult = dynamicIsfResult {
             tddReason = ", Dynamic ISF: On"
@@ -377,11 +380,6 @@ enum DeterminationGenerator {
                 tddReason += ", Basal ratio: \(dynamicIsfResult.tddRatio)"
             }
         }
-        // SMB Ratio is added if not default (0.5)
-        if profile.smbDeliveryRatio != 0.5 {
-            tddReason += ", SMB Ratio: \(min(profile.smbDeliveryRatio, 1))"
-        }
-
         let dosingInputs = DosingEngine.prepareDosingInputs(
             profile: profile,
             mealData: mealData,

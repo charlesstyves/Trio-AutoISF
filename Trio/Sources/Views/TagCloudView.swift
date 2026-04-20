@@ -63,8 +63,8 @@ struct TagCloudView: View {
                  textTag where textTag.contains("disabled"),
                  textTag where textTag.contains("final"):
                 return .loopRed
-            case "autosens:",
-                 "SMB Del.Ratio:":
+            case textTag where textTag.contains("autosens"),
+                 textTag where textTag.contains("SMB Del.Ratio"):
                 return .loopGreen
             case "Parabolic Fit:",
                  textTag where textTag.contains("acce-ISF"):
@@ -85,14 +85,12 @@ struct TagCloudView: View {
                  textTag where textTag.contains("AF:"),
                  textTag where textTag.contains("Autosens/Dynamic Limit:"),
                  textTag where textTag.contains("Dynamic ISF/CR"),
-                 textTag where textTag.contains("Basal ratio"),
-                 textTag where textTag.contains("SMB Ratio"):
+                 textTag where textTag.contains("Basal ratio"):
                 return .zt
             case textTag where textTag.contains("Middleware:"),
                  textTag where textTag.contains("Smoothing: On"):
                 return .red
-            case textTag where textTag.contains("SMB Ratio"),
-                 textTag where textTag.contains("iobTH:"):
+            case textTag where textTag.contains("iobTH:"):
                 return .orange
             default:
                 return .basal
