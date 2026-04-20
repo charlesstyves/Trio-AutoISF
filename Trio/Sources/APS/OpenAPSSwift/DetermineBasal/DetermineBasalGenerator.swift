@@ -496,18 +496,15 @@ enum DeterminationGenerator {
 
         // B30 fires before all safety checks — mirrors JS determine-basal.js line 1578
         if b30Result.isActive {
-            // Prepend " for Xm, " fragment (matches JS rT.reason structure at point of B30 setTempBasal call)
+            // Rate is already rounded and capped to maxBasal in B30Engine.
+            // Bypass setTempBasal (which would re-apply the 4×currentBasal safety multiplier cap)
+            // — mirrors JS aimiRateActivated path in basal-set-temp.js that uses max_basal directly.
             determination.reason = b30Result.reason + determination.reason
-            // Append "calculated AIMI B30 Temp..." tail (matches JS before setTempBasal call)
+            determination.reason = "AIMI B30, TBR \(b30Result.boostRate)U/hr" + determination.reason
             determination.reason += "calculated AIMI B30 Temp \(b30Result.boostRate)U/hr\(b30Result.reason)"
-            return try TempBasalFunctions.setTempBasal(
-                rate: b30Result.boostRate,
-                duration: min(30, b30Result.remainingMinutes),
-                profile: profile,
-                determination: determination,
-                currentTemp: currentTemp,
-                aimiRateActivated: true
-            )
+            determination.rate = b30Result.boostRate
+            determination.duration = min(30, b30Result.remainingMinutes)
+            return determination
         }
 
         let (shouldSetTempBasalForLowGlucoseSuspend, lowGlucoseSuspendDetermination) = try DosingEngine.lowGlucoseSuspend(

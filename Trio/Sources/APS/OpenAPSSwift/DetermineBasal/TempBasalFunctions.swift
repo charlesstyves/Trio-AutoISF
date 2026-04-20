@@ -36,21 +36,13 @@ enum TempBasalFunctions {
     }
 
     /// defines the max safe basal rate given a profile
-    /// When aimiRateActivated (B30 boost), bypasses safety multipliers and returns maxBasal directly (matches JS basal-set-temp.js).
-    static func getMaxSafeBasalRate(profile: Profile, aimiRateActivated: Bool = false) throws -> Decimal {
-        guard let maxBasal = profile.maxBasal else {
-            throw TempBasalFunctionError.invalidBasalRateOnProfile
-        }
-
-        if aimiRateActivated {
-            return maxBasal
-        }
-
+    static func getMaxSafeBasalRate(profile: Profile) throws -> Decimal {
         // use default values if either of these are NaN
         let maxDailySafetyMultiplier = profile.maxDailySafetyMultiplier.isNaN ? 3 : profile.maxDailySafetyMultiplier
         let currentBasalSafetyMultiplier = profile.currentBasalSafetyMultiplier.isNaN ? 4 : profile.currentBasalSafetyMultiplier
 
-        guard let currentBasal = profile.currentBasal, let maxDailyBasal = profile.maxDailyBasal
+        guard let currentBasal = profile.currentBasal, let maxDailyBasal = profile.maxDailyBasal,
+              let maxBasal = profile.maxBasal
         else {
             throw TempBasalFunctionError.invalidBasalRateOnProfile
         }
@@ -67,11 +59,10 @@ enum TempBasalFunctions {
         duration: Decimal,
         profile: Profile,
         determination: Determination,
-        currentTemp: TempBasal,
-        aimiRateActivated: Bool = false
+        currentTemp: TempBasal
     ) throws -> Determination {
         var determination = determination
-        let maxSafeBasal = try getMaxSafeBasalRate(profile: profile, aimiRateActivated: aimiRateActivated)
+        let maxSafeBasal = try getMaxSafeBasalRate(profile: profile)
 
         var rate = rate
         if rate < 0 {
@@ -115,9 +106,6 @@ enum TempBasalFunctions {
                 return determination
             }
         } else {
-            if aimiRateActivated {
-                determination.reason = "AIMI B30, TBR \(suggestedRate)U/hr" + determination.reason
-            }
             determination.duration = duration
             determination.rate = suggestedRate
             return determination

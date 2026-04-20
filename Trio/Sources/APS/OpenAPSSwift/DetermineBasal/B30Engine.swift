@@ -68,7 +68,9 @@ enum B30Engine {
             )
         }
 
-        let boostRate = TempBasalFunctions.roundBasal(profile: profile, basalRate: basal * profile.B30basalFactor)
+        let rawBoost = basal * profile.B30basalFactor
+        let cappedBoost = profile.maxBasal.map { min(rawBoost, $0) } ?? rawBoost
+        let boostRate = TempBasalFunctions.roundBasal(profile: profile, basalRate: cappedBoost)
         let reason = " for \(remainingMinutes.jsRounded(scale: 0))m, "
 
         return B30Result(isActive: true, boostRate: boostRate, remainingMinutes: remainingMinutes, reason: reason)
