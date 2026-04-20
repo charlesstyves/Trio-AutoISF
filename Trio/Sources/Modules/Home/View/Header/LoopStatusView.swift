@@ -158,31 +158,24 @@ struct LoopStatusView: View {
     }
 
     private func setStatusTitle() {
+        let algo = state.useSwiftOref ? "Swift" : "JS"
         if let determination = state.determinationsFromPersistence.first, let deliverAt = determination.deliverAt {
             let minutesAgo = abs(deliverAt.timeIntervalSinceNow) / 60
 
             if deliverAt < Date().addingTimeInterval(-5 * 60) {
                 let roundedMinutes = Int(minutesAgo.rounded())
-                statusTitle = String(
-                    localized: "Trio has not looped in \(roundedMinutes) minutes."
-                )
+                statusTitle = "\(algo) Algorithm — not looped in \(roundedMinutes) minutes."
             } else {
-                statusTitle = String(
-                    localized: "Enacted at \(Formatter.dateFormatter.string(from: deliverAt))"
-                )
+                statusTitle = "\(algo) Algorithm enacted at \(Formatter.dateFormatter.string(from: deliverAt))"
             }
         } else if let determination = lastDetermination, let deliverAt = determination.deliverAt {
             let minutesAgo = abs(deliverAt.timeIntervalSinceNow) / 60
 
             if deliverAt < Date().addingTimeInterval(-5 * 60) {
                 let roundedMinutes = Int(minutesAgo.rounded())
-                statusTitle = String(
-                    localized: "Trio has not looped in \(roundedMinutes) minutes."
-                )
+                statusTitle = "\(algo) Algorithm — not looped in \(roundedMinutes) minutes."
             } else {
-                statusTitle = String(
-                    localized: "Enacted at \(Formatter.dateFormatter.string(from: deliverAt))"
-                )
+                statusTitle = "\(algo) Algorithm enacted at \(Formatter.dateFormatter.string(from: deliverAt))"
             }
         } else {
             statusTitle = String(localized: "Not looping.")

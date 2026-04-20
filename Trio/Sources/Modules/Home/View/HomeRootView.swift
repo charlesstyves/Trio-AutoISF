@@ -1322,8 +1322,9 @@ extension Home {
                 dateFormatter.timeStyle = .short
 
                 // Check if the determination is from suggested or enacted source
+                let algo = state.useSwiftOref ? "Swift" : "JS"
                 if state.determinationsFromSuggestion.first?.objectID == determination?.objectID {
-                    var title = String(localized: "Algorithm suggested at", comment: "Headline in suggested popup") +
+                    var title = "\(algo) " + String(localized: "Algorithm suggested at", comment: "Headline in suggested popup") +
                         " " + dateFormatter.string(from: determination?.deliverAt ?? Date())
 
                     // Add warning if the loop is not closed or if it's a manual temp basal
@@ -1332,7 +1333,7 @@ extension Home {
                     }
                     return title
                 } else {
-                    return String(localized: "Algorithm enacted at", comment: "Headline in enacted popup") +
+                    return "\(algo) " + String(localized: "Algorithm enacted at", comment: "Headline in enacted popup") +
                         " " + dateFormatter.string(from: determination?.deliverAt ?? Date())
                 }
             }()
@@ -1406,8 +1407,10 @@ extension Home {
             dateFormatter.timeStyle = .short
 
             // Check if the determination is from suggested or enacted source
+            let algo = state.useSwiftOref ? "Swift" : "JS"
             if state.determinationsFromSuggestion.first?.objectID == determination?.objectID {
-                statusTitlePopup = String(localized: "Algorithm suggested at", comment: "Headline in suggested popup") +
+                statusTitlePopup = "\(algo) " +
+                    String(localized: "Algorithm suggested at", comment: "Headline in suggested popup") +
                     " " + dateFormatter.string(from: determination?.deliverAt ?? Date())
 
                 // Add warning if the loop is not closed or if it's a manual temp basal
@@ -1415,7 +1418,7 @@ extension Home {
                     statusTitlePopup += " - not enacted!"
                 }
             } else {
-                statusTitlePopup = String(localized: "Algorithm enacted at", comment: "Headline in enacted popup") +
+                statusTitlePopup = "\(algo) " + String(localized: "Algorithm enacted at", comment: "Headline in enacted popup") +
                     " " + dateFormatter.string(from: determination?.deliverAt ?? Date())
             }
 
