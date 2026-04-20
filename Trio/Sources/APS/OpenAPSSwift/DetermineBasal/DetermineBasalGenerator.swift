@@ -339,10 +339,24 @@ enum DeterminationGenerator {
             glucoseImpact: currentGlucoseImpact
         )
 
-        // Build isfReason: "Autosens ratio: X, ISF: Y→Z"
+        // Build isfReason: autoISF reason or "Autosens ratio: X, ISF: Y→Z"
         let originalSensitivity = profile.profileSensitivity(at: currentTime, trioCustomOrefVaribales: trioCustomOrefVariables)
-        let isfReason =
-            "Autosens ratio: \(sensitivityRatio.jsRounded(scale: 2)), ISF: \(originalSensitivity.jsRounded())→\(adjustedSensitivity.jsRounded())"
+        let isfReason: String
+        if let autoISFResult = autoISFAdjustResult {
+            var parabolaStr = ""
+            if let status = autoISFStatus, status.a_2 > 0 {
+                let tMin = -(status.a_1 / (2 * status.a_2))
+                if tMin < 0 {
+                    let minsAgo = (-tMin * 5).jsRounded(scale: 1)
+                    let minBG = (status.a_0 - status.a_1 * status.a_1 / (4 * status.a_2)).jsRounded()
+                    parabolaStr = "Parabolic Fit: saw Min of \(minBG), about \(minsAgo)min ago, "
+                }
+            }
+            isfReason = "\(parabolaStr)\(autoISFResult.reason), Standard"
+        } else {
+            isfReason =
+                "Autosens ratio: \(sensitivityRatio.jsRounded(scale: 2)), ISF: \(originalSensitivity.jsRounded())→\(adjustedSensitivity.jsRounded())"
+        }
 
         // Build targetLog: "X" or "X→Y" or "X→Y→Z" if target was adjusted
         let profileTarget = profile.profileTarget(trioCustomOrefVariables: trioCustomOrefVariables) ?? 100
