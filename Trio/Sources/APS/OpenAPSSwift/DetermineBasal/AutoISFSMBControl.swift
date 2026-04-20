@@ -28,6 +28,7 @@ struct AutoISFSMBResult {
 enum AutoISFSMBControl {
     static func evaluate(
         profile: Profile,
+        targetBG: Decimal,
         microBolusAllowed: Bool,
         iob: Decimal,
         b30IsActive: Bool,
@@ -67,12 +68,11 @@ enum AutoISFSMBControl {
             return AutoISFSMBResult(loopMode: .oref, iobTHEffective: iobThEffective, reason: "")
         }
 
-        let target = profile.minBg ?? 100
         let evenTarget: Bool
         if profile.targetUnits == .mmolL {
-            evenTarget = Int(NSDecimalNumber(decimal: (target * 10).jsRounded()).doubleValue) % 2 == 0
+            evenTarget = Int(NSDecimalNumber(decimal: (targetBG * 10).jsRounded()).doubleValue) % 2 == 0
         } else {
-            evenTarget = Int(NSDecimalNumber(decimal: target).doubleValue) % 2 == 0
+            evenTarget = Int(NSDecimalNumber(decimal: targetBG).doubleValue) % 2 == 0
         }
 
         guard evenTarget else {
@@ -92,7 +92,7 @@ enum AutoISFSMBControl {
         }
 
         // Below-100 min_bg signals a temp target → full-loop power
-        if (profile.minBg ?? 100) < 100 {
+        if targetBG < 100 {
             return AutoISFSMBResult(
                 loopMode: .fullLoop,
                 iobTHEffective: iobThEffective,

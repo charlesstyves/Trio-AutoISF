@@ -241,7 +241,7 @@ enum DeterminationGenerator {
             profile: profile,
             dynamicIsfActive: dynamicIsfResult != nil,
             adjustedSensitivity: adjustedSensitivity,
-            profileSens: profile.sens ?? profile.sensitivityFor(time: currentTime),
+            profileSens: originalSensitivity,
             targetBG: adjustedGlucoseTargets.targetGlucose,
             sensitivityRatio: sensitivityRatio,
             originalSensitivity: originalSensitivity,
@@ -412,6 +412,7 @@ enum DeterminationGenerator {
         if let override = autoISFResult.smbEnabled {
             smbIsEnabled = override
         }
+        if trioCustomOrefVariables.smbIsOff { smbIsEnabled = false }
 
         var reason = dosingInputs.reason
         if let smbReason = smbDecision.reason {

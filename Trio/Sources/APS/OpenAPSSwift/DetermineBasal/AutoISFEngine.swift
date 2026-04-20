@@ -46,6 +46,7 @@ enum AutoISFEngine {
         // SMB control: runs whenever autoISF is enabled, independent of dynISF
         let smbResult = AutoISFSMBControl.evaluate(
             profile: profile,
+            targetBG: targetBG,
             microBolusAllowed: microBolusAllowed,
             iob: iob,
             b30IsActive: b30IsActive,
