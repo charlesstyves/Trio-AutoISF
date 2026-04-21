@@ -233,6 +233,7 @@
     </entity>
     <entity name="ProfileStored" representedClassName="ProfileStored" syncable="YES">
         <attribute name="activatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="appliedPercent" optional="YES" attributeType="Decimal" defaultValueString="100"/>
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="expiresAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
@@ -241,6 +242,7 @@
         <attribute name="orderPosition" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="preferencesJSON" optional="YES" attributeType="Binary"/>
         <attribute name="previousProfileID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="sourceProfileID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="therapyJSON" optional="YES" attributeType="Binary"/>
         <fetchIndex name="byCreatedAt">
             <fetchIndexElement property="createdAt" type="Binary" order="descending"/>

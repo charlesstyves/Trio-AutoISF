@@ -1,23 +1,10 @@
-import Combine
-import CoreData
+import Foundation
 import Observation
 import SwiftUI
 
 extension AdaptProfile {
-    /// One entry in the basal review: original live rate, percentage-adjusted raw target, and the
-    /// pump-rounded rate the user can still tweak.
-    struct BasalReviewItem: Identifiable, Hashable {
-        let id: Int // minutes since midnight
-        let timeLabel: String
-        let minutes: Int
-        let originalRate: Decimal
-        let adjustedRate: Decimal
-        var selectedRate: Decimal
-        var wasRounded: Bool
-    }
-
-    /// In-memory draft for a new profile being created. Populated by `buildDraft` and mutated by
-    /// the review UI before being saved.
+    /// In-memory draft handed from `NewProfileForm` → `DraftEditorRootView`. Holds the source
+    /// profile's values plus the percent-adjusted therapy values, ready for further editing.
     struct NewProfileDraft {
         var name: String = ""
         /// Single therapy percentage. Higher = more aggressive (more insulin): basal scales up,
@@ -27,8 +14,8 @@ extension AdaptProfile {
         var preferencesSource = Preferences()
 
         var originalBasal: [BasalProfileEntry] = []
-        var basalItems: [BasalReviewItem] = []
-        var supportedRates: [Decimal] = []
+        /// Basal rates after `% / 100` scaling and pump-supported rounding.
+        var finalBasal: [BasalProfileEntry] = []
 
         var originalSensitivities: InsulinSensitivities = .init(
             units: .mgdL, userPreferredUnits: .mgdL, sensitivities: []
@@ -41,29 +28,6 @@ extension AdaptProfile {
         var adjustedCarbRatios: CarbRatios = .init(units: .grams, schedule: [])
 
         var bgTargets: BGTargets = .init(units: .mgdL, userPreferredUnits: .mgdL, targets: [])
-
-        var hasRoundingAdjustments: Bool {
-            basalItems.contains { $0.wasRounded }
-        }
-
-        var finalBasal: [BasalProfileEntry] {
-            basalItems.map {
-                let formatter = DateFormatter()
-                formatter.timeZone = TimeZone(secondsFromGMT: 0)
-                formatter.dateFormat = "HH:mm:ss"
-                let date = Date(timeIntervalSince1970: TimeInterval($0.minutes * 60))
-                return BasalProfileEntry(start: formatter.string(from: date), minutes: $0.minutes, rate: $0.selectedRate)
-            }
-        }
-
-        var therapyBundle: TherapyBundle {
-            TherapyBundle(
-                basalProfile: finalBasal,
-                sensitivities: adjustedSensitivities,
-                carbRatios: adjustedCarbRatios,
-                bgTargets: bgTargets
-            )
-        }
     }
 
     @Observable final class StateModel: BaseStateModel<Provider> {
@@ -94,6 +58,18 @@ extension AdaptProfile {
                 await provider.delete(id: item.id)
                 await refresh()
             }
+        }
+
+        @MainActor func activate(id: UUID, durationHours: Int?, confirmedPumpSync: Bool) async -> ActivationOutcome {
+            let outcome = await provider.activate(
+                id: id,
+                durationHours: durationHours,
+                confirmedPumpSync: confirmedPumpSync
+            )
+            if outcome == .success {
+                await refresh()
+            }
+            return outcome
         }
 
         @MainActor func reorder(from source: IndexSet, to destination: Int) {
@@ -133,32 +109,23 @@ extension AdaptProfile {
             draft = d
         }
 
-        /// Applies the draft's current percentages to the source data and recomputes basal review
-        /// entries (with pump-supported rounding).
+        /// Applies the draft's current percentage to the source therapy values: basal is scaled
+        /// and rounded down to a pump-supported rate, ISF/CR are scaled and quantized to the
+        /// picker step sizes. Targets are not percentage-adjusted.
         func applyPercentagesToDraft() {
             let concentration = settingsManager.settings.insulinConcentration
             let supportedRaw = provider.supportedBasalRates ?? Self.fallbackBasalRates(pumpIncrement: 0.05)
             let supported = supportedRaw.map { $0 * concentration }.sorted()
-            draft.supportedRates = supported
 
             let basalFactor = draft.adjustPercent / 100
             let isfFactor = 100 / draft.adjustPercent
             let crFactor = 100 / draft.adjustPercent
 
-            // Basal — apply percentage, then round down to nearest supported rate
-            draft.basalItems = draft.originalBasal.map { entry in
+            // Basal — apply percentage, then round down to nearest pump-supported rate
+            draft.finalBasal = draft.originalBasal.map { entry in
                 let adjusted = entry.rate * basalFactor
                 let rounded = supported.last(where: { $0 <= adjusted }) ?? (supported.first ?? adjusted)
-                let relativeDiff = abs(adjusted - rounded) / max(abs(adjusted), 0.001)
-                return BasalReviewItem(
-                    id: entry.minutes,
-                    timeLabel: String(entry.start.prefix(5)),
-                    minutes: entry.minutes,
-                    originalRate: entry.rate,
-                    adjustedRate: adjusted,
-                    selectedRate: rounded,
-                    wasRounded: relativeDiff > 0.001
-                )
+                return BasalProfileEntry(start: entry.start, minutes: entry.minutes, rate: rounded)
             }
 
             // ISF — scale each sensitivity, then quantize to the ISF picker step (1 mg/dL)
@@ -196,19 +163,6 @@ extension AdaptProfile {
             var rounded = Decimal()
             NSDecimalRound(&rounded, &divided, 0, .plain)
             return rounded * step
-        }
-
-        /// Persist the draft as a new (non-active) profile. Returns success.
-        func saveDraft() async -> Bool {
-            let preferences = draft.preferencesSource
-            let therapy = draft.therapyBundle
-            let id = await provider.saveNewProfile(
-                name: draft.name,
-                preferences: preferences,
-                therapy: therapy
-            )
-            await refresh()
-            return id != nil
         }
 
         private static func fallbackBasalRates(pumpIncrement: Decimal) -> [Decimal] {

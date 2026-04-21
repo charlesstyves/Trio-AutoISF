@@ -1,8 +1,11 @@
 import CoreData
 import Foundation
+import LoopKit
 
 extension AdaptProfile {
     final class Provider: BaseProvider, AdaptProfileProvider {
+        @Injected() private var apsManager: APSManager!
+        @Injected() private var settingsManager: SettingsManager!
         private let coreDataStack = CoreDataStack.shared
 
         func fetchAll() async -> [AdaptProfileListItem] {
@@ -15,15 +18,47 @@ extension AdaptProfile {
                 ]
                 do {
                     let rows = try context.fetch(request)
+                    // Build a lookup of id → (name, preferences, bgTargets) so each row can
+                    // reference its source profile without triggering repeated fetches.
+                    struct SourceSnapshot {
+                        let name: String
+                        let preferences: Preferences?
+                        let bgTargets: BGTargets?
+                    }
+                    let byID: [UUID: SourceSnapshot] = rows.reduce(into: [:]) { dict, p in
+                        guard let id = p.id else { return }
+                        dict[id] = SourceSnapshot(
+                            name: p.name ?? "Unnamed",
+                            preferences: p.preferences,
+                            bgTargets: p.therapy?.bgTargets
+                        )
+                    }
+
                     return rows.compactMap { profile -> AdaptProfileListItem? in
                         guard let id = profile.id else { return nil }
+                        let source = profile.sourceProfileID.flatMap { byID[$0] }
+                        let profilePrefs = profile.preferences
+                        let profileTargets = profile.therapy?.bgTargets
+                        let algoChanged: Bool = {
+                            guard let source = source else { return false }
+                            let prefsDiffer = source.preferences != profilePrefs
+                            let targetsDiffer = source.bgTargets.map { src in
+                                profileTargets.map { cur in cur.targets != src.targets } ?? true
+                            } ?? (profileTargets != nil)
+                            return prefsDiffer || targetsDiffer
+                        }()
+                        let applied = profile.appliedPercent?.decimalValue ?? 100
                         return AdaptProfileListItem(
                             id: id,
                             name: profile.name ?? "Unnamed",
                             createdAt: profile.createdAt ?? .distantPast,
                             isActive: profile.isActive,
                             expiresAt: profile.expiresAt,
-                            orderPosition: profile.orderPosition
+                            orderPosition: profile.orderPosition,
+                            sourceProfileName: source?.name,
+                            appliedPercent: applied,
+                            algoChangedFromSource: algoChanged,
+                            previousProfileID: profile.previousProfileID
                         )
                     }
                 } catch {
@@ -94,7 +129,122 @@ extension AdaptProfile {
             deviceManager.pumpManager?.supportedBasalRates.map { Decimal($0) }
         }
 
-        func saveNewProfile(name: String, preferences: Preferences, therapy: TherapyBundle) async -> UUID? {
+        func activate(id: UUID, durationHours: Int?, confirmedPumpSync: Bool) async -> ActivationOutcome {
+            let context = coreDataStack.newTaskContext()
+            context.name = "AdaptProfileActivateContext"
+            context.transactionAuthor = "AdaptProfileActivate"
+
+            // Step 1: load target profile's decoded snapshot + previous-active id (all on the
+            // context queue — we don't carry the NSManagedObject outside).
+            let loaded: (preferences: Preferences, therapy: TherapyBundle, oldActiveID: UUID?)? = await context
+                .perform { () -> (Preferences, TherapyBundle, UUID?)? in
+                    let req = ProfileStored.fetch(.profileByID(id), fetchLimit: 1)
+                    guard let target = try? context.fetch(req).first,
+                          let prefs = target.preferences,
+                          let therapy = target.therapy
+                    else {
+                        return nil
+                    }
+                    let activeReq = ProfileStored.fetch(.activeProfile, fetchLimit: 1)
+                    let oldActive = try? context.fetch(activeReq).first
+                    return (prefs, therapy, oldActive?.id)
+                }
+
+            guard let loaded = loaded else {
+                return .failed(String(localized: "Profile not found."))
+            }
+
+            // Step 2: pump-sync decision. Only indefinite activations that would change the basal
+            // schedule require a pump write; timed activations keep the pump schedule untouched.
+            let isIndefinite = (durationHours == nil)
+            let basalDiffers = scope.basalProfile != loaded.therapy.basalProfile
+            let needsPumpSync = isIndefinite && basalDiffers
+
+            if needsPumpSync, !confirmedPumpSync {
+                return .needsPumpConfirm
+            }
+
+            // Step 3: pump sync (indefinite + basal changed + user confirmed).
+            if needsPumpSync {
+                guard let pump = deviceManager?.pumpManager else {
+                    return .pumpSyncFailed(String(localized: "No pump manager available."))
+                }
+                let concentration = settingsManager.settings.insulinConcentration
+                let syncValues = loaded.therapy.basalProfile.map {
+                    RepeatingScheduleValue(
+                        startTime: TimeInterval($0.minutes * 60),
+                        value: Double($0.rate) / Double(concentration)
+                    )
+                }
+                do {
+                    try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+                        pump.syncBasalRateSchedule(items: syncValues) { result in
+                            switch result {
+                            case .success: cont.resume()
+                            case let .failure(error): cont.resume(throwing: error)
+                            }
+                        }
+                    }
+                } catch {
+                    return .pumpSyncFailed(error.localizedDescription)
+                }
+            }
+
+            // Step 4: flip Core Data. Deactivate any currently active profile (should be exactly
+            // one, but iterate defensively) and activate the target.
+            let flipped: Bool = await context.perform { () -> Bool in
+                do {
+                    let activeReq = ProfileStored.fetch(.activeProfile)
+                    let actives = try context.fetch(activeReq)
+                    for p in actives where p.id != id {
+                        p.isActive = false
+                        p.activatedAt = nil
+                        p.expiresAt = nil
+                    }
+                    let targetReq = ProfileStored.fetch(.profileByID(id), fetchLimit: 1)
+                    guard let target = try context.fetch(targetReq).first else { return false }
+                    target.isActive = true
+                    target.activatedAt = Date()
+                    target.expiresAt = durationHours.map { Date().addingTimeInterval(TimeInterval($0) * 3600) }
+                    target.previousProfileID = loaded.oldActiveID
+                    try context.save()
+                    return true
+                } catch {
+                    debug(.coreData, "AdaptProfileProvider.activate CoreData flip failed: \(error)")
+                    return false
+                }
+            }
+
+            guard flipped else {
+                return .failed(String(localized: "Failed to update profile state."))
+            }
+
+            // Step 5: write live settings. Order: preferences first, then therapy. The mirror will
+            // re-write the same data into the now-active profile — harmless no-op.
+            scope.preferences = loaded.preferences
+            scope.basalProfile = loaded.therapy.basalProfile
+            scope.sensitivities = loaded.therapy.sensitivities
+            scope.carbRatios = loaded.therapy.carbRatios
+            scope.bgTargets = loaded.therapy.bgTargets
+
+            // Step 6: trigger a loop iteration so the algorithm picks up the new profile.
+            do {
+                try await apsManager.determineBasalSync()
+            } catch {
+                debug(.default, "AdaptProfileProvider.activate loop trigger failed: \(error)")
+                // non-fatal — activation itself succeeded
+            }
+
+            return .success
+        }
+
+        func saveNewProfile(
+            name: String,
+            preferences: Preferences,
+            therapy: TherapyBundle,
+            sourceProfileID: UUID?,
+            appliedPercent: Decimal
+        ) async -> UUID? {
             let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty else { return nil }
             let context = coreDataStack.newTaskContext()
@@ -115,6 +265,8 @@ extension AdaptProfile {
                     profile.expiresAt = nil
                     profile.previousProfileID = nil
                     profile.orderPosition = maxOrder + 1
+                    profile.sourceProfileID = sourceProfileID
+                    profile.appliedPercent = NSDecimalNumber(decimal: appliedPercent)
                     profile.preferences = preferences
                     profile.therapy = therapy
                     try context.save()

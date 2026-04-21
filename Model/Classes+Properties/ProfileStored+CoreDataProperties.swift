@@ -7,6 +7,7 @@ public extension ProfileStored {
     }
 
     @NSManaged var activatedAt: Date?
+    @NSManaged var appliedPercent: NSDecimalNumber?
     @NSManaged var createdAt: Date?
     @NSManaged var expiresAt: Date?
     @NSManaged var id: UUID?
@@ -15,6 +16,7 @@ public extension ProfileStored {
     @NSManaged var orderPosition: Int16
     @NSManaged var preferencesJSON: Data?
     @NSManaged var previousProfileID: UUID?
+    @NSManaged var sourceProfileID: UUID?
     @NSManaged var therapyJSON: Data?
 }
 

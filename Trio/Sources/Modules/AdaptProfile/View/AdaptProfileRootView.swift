@@ -10,6 +10,7 @@ extension AdaptProfile {
         @State private var selectedProfile: AdaptProfileListItem?
         @State private var isConfirmDeletePresented = false
         @State private var showEditSheet = false
+        @State private var activationTarget: AdaptProfileListItem?
 
         @Environment(\.colorScheme) var colorScheme
         @Environment(AppState.self) var appState
@@ -29,15 +30,34 @@ extension AdaptProfile {
             state.items.filter { !$0.isActive }
         }
 
+        /// The profile that will become active when a timed activation expires. Pinned to the top
+        /// of the inactive list so the user can see (and easily switch back to) the fallback.
+        private var pinnedRevertItem: AdaptProfileListItem? {
+            guard let active = activeItem,
+                  active.expiresAt != nil,
+                  let prevID = active.previousProfileID
+            else { return nil }
+            return inactiveItems.first(where: { $0.id == prevID })
+        }
+
+        private var otherInactiveItems: [AdaptProfileListItem] {
+            guard let pinned = pinnedRevertItem else { return inactiveItems }
+            return inactiveItems.filter { $0.id != pinned.id }
+        }
+
         var body: some View {
             List {
                 if let active = activeItem {
                     currentActiveProfile(active)
                 }
 
-                if inactiveItems.isEmpty, !state.isLoading {
+                if let pinned = pinnedRevertItem, let active = activeItem, let expiresAt = active.expiresAt {
+                    revertToSection(pinned, activatesAt: expiresAt)
+                }
+
+                if otherInactiveItems.isEmpty, !state.isLoading, pinnedRevertItem == nil {
                     defaultText
-                } else {
+                } else if !otherInactiveItems.isEmpty {
                     profilesSection
                 }
             }
@@ -73,6 +93,13 @@ extension AdaptProfile {
                     )
                 }
             }
+            .sheet(item: $activationTarget) { item in
+                ActivateProfileView(
+                    profile: item,
+                    state: state,
+                    onDismiss: { activationTarget = nil }
+                )
+            }
         }
 
         private var newProfileSheet: some View {
@@ -86,6 +113,7 @@ extension AdaptProfile {
                             insulinConcentration: state.settingsManager.settings.insulinConcentration,
                             units: state.settingsManager.settings.units,
                             sourceProfileName: activeItem?.name ?? String(localized: "Current"),
+                            sourceProfileID: activeItem?.id,
                             from: state.draft
                         )
                     }
@@ -117,11 +145,21 @@ extension AdaptProfile {
 
         private func currentActiveProfile(_ item: AdaptProfileListItem) -> some View {
             Section {
-                HStack {
-                    Text("\(item.name) is active")
-                    Spacer()
-                    Image(systemName: "square.and.pencil")
-                        .foregroundStyle(Color.primary)
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("\(item.name) is active")
+                        Spacer()
+                        Image(systemName: "square.and.pencil")
+                            .foregroundStyle(Color.primary)
+                    }
+                    if let expiresAt = item.expiresAt {
+                        HStack(spacing: 4) {
+                            Text("expires")
+                            Text(expiresAt, style: .relative)
+                        }
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    }
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -132,15 +170,38 @@ extension AdaptProfile {
             .listRowBackground(Color.tabBar.opacity(0.8))
         }
 
+        private func revertToSection(_ item: AdaptProfileListItem, activatesAt: Date) -> some View {
+            Section {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(item.name)
+                        Text("activates at \(activatesAt, style: .time)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "arrow.uturn.backward.circle")
+                        .foregroundStyle(.secondary)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    activationTarget = item
+                }
+            } header: {
+                Text("Reverts to")
+            }
+            .listRowBackground(Color.chart)
+        }
+
         private var profilesSection: some View {
             Section {
-                ForEach(inactiveItems) { item in
+                ForEach(otherInactiveItems) { item in
                     profileRow(for: item)
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                             swipeActions(for: item)
                         }
                 }
-                .onMove(perform: state.reorderInactive)
+                .onMove(perform: reorderOtherInactive)
                 .confirmationDialog(
                     "Delete the Profile \"\(selectedProfile?.name ?? "")\"?",
                     isPresented: $isConfirmDeletePresented,
@@ -208,15 +269,40 @@ extension AdaptProfile {
                     .imageScale(.medium)
                     .foregroundStyle(.secondary)
             }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                activationTarget = item
+            }
         }
 
         private func labels(for item: AdaptProfileListItem) -> [String] {
             var out: [String] = []
-            out.append("Created \(Self.dateFormatter.string(from: item.createdAt))")
-            if let expiresAt = item.expiresAt {
-                out.append("Expires \(Self.dateFormatter.string(from: expiresAt))")
+            if let source = item.sourceProfileName {
+                let percent = item.appliedPercent.formatted(.number.precision(.fractionLength(0)))
+                out.append("from \(source) · \(percent) %")
+            }
+            if item.algoChangedFromSource {
+                out.append(String(localized: "algo/targets changed"))
             }
             return out
+        }
+
+        /// Reorder only the non-pinned subset. Preserves the pinned revert-profile's position at
+        /// the top of the inactive list when rewriting orderPositions.
+        private func reorderOtherInactive(from source: IndexSet, to destination: Int) {
+            var reorderedOthers = otherInactiveItems
+            reorderedOthers.move(fromOffsets: source, toOffset: destination)
+
+            var newItems: [AdaptProfileListItem] = []
+            if let active = activeItem { newItems.append(active) }
+            if let pinned = pinnedRevertItem { newItems.append(pinned) }
+            newItems.append(contentsOf: reorderedOthers)
+            state.items = newItems
+            let ids = newItems.map(\.id)
+            Task {
+                await state.provider.applyOrdering(ids)
+                await state.refresh()
+            }
         }
     }
 }

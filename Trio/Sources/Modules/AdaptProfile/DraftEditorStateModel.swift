@@ -1,6 +1,5 @@
-import Combine
+import Foundation
 import Observation
-import SwiftUI
 
 extension AdaptProfile {
     /// State for the draft editor hub that is entered after the percentage-adjustment form.
@@ -16,6 +15,8 @@ extension AdaptProfile {
 
         /// Name of the profile this draft was seeded from (shown in the hub).
         let sourceProfileName: String
+        /// Persisted on the new profile so the list can show "From <source> <percent> %".
+        let sourceProfileID: UUID?
 
         var name: String = ""
         var appliedPercent: Decimal = 100
@@ -72,12 +73,14 @@ extension AdaptProfile {
             insulinConcentration: Decimal,
             units: GlucoseUnits,
             sourceProfileName: String,
+            sourceProfileID: UUID?,
             from source: NewProfileDraft
         ) {
             self.provider = provider
             self.insulinConcentration = insulinConcentration
             self.units = units
             self.sourceProfileName = sourceProfileName
+            self.sourceProfileID = sourceProfileID
 
             name = source.name
             appliedPercent = source.adjustPercent
@@ -161,7 +164,9 @@ extension AdaptProfile {
             let id = await provider.saveNewProfile(
                 name: name,
                 preferences: preferences,
-                therapy: therapyBundle()
+                therapy: therapyBundle(),
+                sourceProfileID: sourceProfileID,
+                appliedPercent: appliedPercent
             )
             return id != nil
         }

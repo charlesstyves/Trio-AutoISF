@@ -15,6 +15,26 @@ struct AdaptProfileListItem: Identifiable, Hashable {
     let isActive: Bool
     let expiresAt: Date?
     let orderPosition: Int16
+    /// Name of the profile this one was created from. `nil` for the seeded Default profile.
+    let sourceProfileName: String?
+    /// Therapy percentage applied at creation. 100 = unchanged.
+    let appliedPercent: Decimal
+    /// `true` when the profile's algorithm settings or glucose targets differ from the current
+    /// state of its source profile. Ignored when `sourceProfileName` is nil.
+    let algoChangedFromSource: Bool
+    /// Profile that will become active when a timed activation expires. Only meaningful on the
+    /// currently-active item while `expiresAt != nil`.
+    let previousProfileID: UUID?
+}
+
+/// Outcome of `AdaptProfileProvider.activate`. The `.needsPumpConfirm` case is returned when an
+/// indefinite activation would change the pump's scheduled basal; the caller should present a
+/// confirmation dialog and retry with `confirmedPumpSync: true`.
+enum ActivationOutcome: Equatable {
+    case success
+    case needsPumpConfirm
+    case pumpSyncFailed(String)
+    case failed(String)
 }
 
 protocol AdaptProfileProvider: Provider {
@@ -30,5 +50,16 @@ protocol AdaptProfileProvider: Provider {
     var supportedBasalRates: [Decimal]? { get }
 
     /// Persist a new profile snapshot. Returns the new id, or nil on failure.
-    func saveNewProfile(name: String, preferences: Preferences, therapy: TherapyBundle) async -> UUID?
+    func saveNewProfile(
+        name: String,
+        preferences: Preferences,
+        therapy: TherapyBundle,
+        sourceProfileID: UUID?,
+        appliedPercent: Decimal
+    ) async -> UUID?
+
+    /// Activate a stored profile. `durationHours == nil` means indefinite. When indefinite and the
+    /// target basal differs from live, pump sync is required — set `confirmedPumpSync = true` after
+    /// the user approves the "Save to pump" dialog.
+    func activate(id: UUID, durationHours: Int?, confirmedPumpSync: Bool) async -> ActivationOutcome
 }
