@@ -142,6 +142,7 @@
 		38AEE75225F022080013F05B /* SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38AEE75125F022080013F05B /* SettingsManager.swift */; };
 		ADA10008ADA10008ADA10008 /* SettingsScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10007ADA10007ADA10007 /* SettingsScope.swift */; };
 		ADA1000AADA1000AADA1000A /* ActiveProfileMirror.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10009ADA10009ADA10009 /* ActiveProfileMirror.swift */; };
+		ADA1000CADA1000CADA1000C /* ProfileSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA1000BADA1000BADA1000B /* ProfileSeeder.swift */; };
 		38AEE75725F0F18E0013F05B /* CarbsStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38AEE75625F0F18E0013F05B /* CarbsStorage.swift */; };
 		38B17B6625DD90E0005CAE3D /* SwiftDate in Frameworks */ = {isa = PBXBuildFile; productRef = 38B17B6525DD90E0005CAE3D /* SwiftDate */; };
 		38B4F3AF25E2979F00E76A18 /* IndexedCollection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38B4F3AE25E2979F00E76A18 /* IndexedCollection.swift */; };
@@ -1169,6 +1170,7 @@
 		38AEE75125F022080013F05B /* SettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManager.swift; sourceTree = "<group>"; };
 		ADA10007ADA10007ADA10007 /* SettingsScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScope.swift; sourceTree = "<group>"; };
 		ADA10009ADA10009ADA10009 /* ActiveProfileMirror.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveProfileMirror.swift; sourceTree = "<group>"; };
+		ADA1000BADA1000BADA1000B /* ProfileSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSeeder.swift; sourceTree = "<group>"; };
 		38AEE75625F0F18E0013F05B /* CarbsStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarbsStorage.swift; sourceTree = "<group>"; };
 		38B4F3AE25E2979F00E76A18 /* IndexedCollection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndexedCollection.swift; sourceTree = "<group>"; };
 		38B4F3C225E2A20B00E76A18 /* PumpSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PumpSetupView.swift; sourceTree = "<group>"; };
@@ -2872,6 +2874,7 @@
 				38AEE75125F022080013F05B /* SettingsManager.swift */,
 				ADA10007ADA10007ADA10007 /* SettingsScope.swift */,
 				ADA10009ADA10009ADA10009 /* ActiveProfileMirror.swift */,
+				ADA1000BADA1000BADA1000B /* ProfileSeeder.swift */,
 			);
 			path = SettingsManager;
 			sourceTree = "<group>";
@@ -4965,6 +4968,7 @@
 				38AEE75225F022080013F05B /* SettingsManager.swift in Sources */,
 				ADA10008ADA10008ADA10008 /* SettingsScope.swift in Sources */,
 				ADA1000AADA1000AADA1000A /* ActiveProfileMirror.swift in Sources */,
+				ADA1000CADA1000CADA1000C /* ProfileSeeder.swift in Sources */,
 				3894873A2614928B004DF424 /* DispatchTimer.swift in Sources */,
 				3895E4C625B9E00D00214B37 /* Preferences.swift in Sources */,
 				CE94598429E9E3E60047C9C6 /* WatchConfigStateModel.swift in Sources */,

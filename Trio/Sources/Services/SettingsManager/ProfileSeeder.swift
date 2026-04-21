@@ -1,0 +1,64 @@
+import CoreData
+import Foundation
+
+/// Seeds an implicit "Default" `ProfileStored` from the current live settings on first launch.
+///
+/// Runs once after Core Data is ready. If any profile already exists, no-op. The seeded profile is
+/// marked active so subsequent live-settings writes mirror into it via `ActiveProfileMirror`.
+enum ProfileSeeder {
+    static func seedDefaultIfNeeded(storage: FileStorage) async {
+        let context = CoreDataStack.shared.newTaskContext()
+        context.name = "ProfileSeederContext"
+        context.transactionAuthor = "ProfileSeeder"
+
+        await context.perform {
+            do {
+                let request: NSFetchRequest<ProfileStored> = ProfileStored.fetchRequest()
+                request.fetchLimit = 1
+                let existing = try context.count(for: request)
+                guard existing == 0 else { return }
+
+                let preferences = storage.retrieve(OpenAPS.Settings.preferences, as: Preferences.self)
+                    ?? Preferences(from: OpenAPS.defaults(for: OpenAPS.Settings.preferences))
+                    ?? Preferences()
+
+                let basalProfile = storage.retrieve(OpenAPS.Settings.basalProfile, as: [BasalProfileEntry].self)
+                    ?? [BasalProfileEntry](from: OpenAPS.defaults(for: OpenAPS.Settings.basalProfile))
+                    ?? []
+
+                let sensitivities = storage.retrieve(OpenAPS.Settings.insulinSensitivities, as: InsulinSensitivities.self)
+                    ?? InsulinSensitivities(from: OpenAPS.defaults(for: OpenAPS.Settings.insulinSensitivities))
+                    ?? InsulinSensitivities(units: .mgdL, userPreferredUnits: .mgdL, sensitivities: [])
+
+                let carbRatios = storage.retrieve(OpenAPS.Settings.carbRatios, as: CarbRatios.self)
+                    ?? CarbRatios(from: OpenAPS.defaults(for: OpenAPS.Settings.carbRatios))
+                    ?? CarbRatios(units: .grams, schedule: [])
+
+                let bgTargets = storage.retrieve(OpenAPS.Settings.bgTargets, as: BGTargets.self)
+                    ?? BGTargets(from: OpenAPS.defaults(for: OpenAPS.Settings.bgTargets))
+                    ?? BGTargets(units: .mgdL, userPreferredUnits: .mgdL, targets: [])
+
+                let profile = ProfileStored(context: context)
+                profile.id = UUID()
+                profile.name = "Default"
+                profile.createdAt = Date()
+                profile.isActive = true
+                profile.activatedAt = Date()
+                profile.expiresAt = nil
+                profile.previousProfileID = nil
+                profile.preferences = preferences
+                profile.therapy = TherapyBundle(
+                    basalProfile: basalProfile,
+                    sensitivities: sensitivities,
+                    carbRatios: carbRatios,
+                    bgTargets: bgTargets
+                )
+
+                try context.save()
+                debug(.coreData, "ProfileSeeder: created Default profile from live settings")
+            } catch {
+                debug(.coreData, "ProfileSeeder failed: \(error)")
+            }
+        }
+    }
+}

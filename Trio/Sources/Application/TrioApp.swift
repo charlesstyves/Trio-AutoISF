@@ -154,6 +154,10 @@ extension Notification.Name {
                 // TODO: possibly wrap this in a UserDefault / TinyStorage flag check, so we do not even attempt to fetch files unnecessary, but early exit the import
                 await performJsonToCoreDataMigrationIfNeeded()
 
+                if let storage = resolver.resolve(FileStorage.self) {
+                    await ProfileSeeder.seedDefaultIfNeeded(storage: storage)
+                }
+
                 await Task { @MainActor in
                     // Only load services after successful Core Data initialization
                     loadServices()
