@@ -86,7 +86,7 @@ enum AutoISF {
                 smbStr = "\(smbResult.reason), "
             }
             var parabolaStr = ""
-            if status.a_2 != 0, status.r_squ >= Decimal(0.9) {
+            if profile.enableBGacceleration, status.a_2 != 0, status.r_squ >= Decimal(0.9) {
                 let tVertex = -(status.a_1 / (2 * status.a_2))
                 let minsDelta = (abs(tVertex) * 5).jsRounded(scale: 1)
                 let extremumBG = (status.a_0 - status.a_1 * status.a_1 / (4 * status.a_2)).jsRounded(scale: 1)
