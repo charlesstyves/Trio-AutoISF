@@ -19,12 +19,25 @@ struct AdaptProfileListItem: Identifiable, Hashable {
     let sourceProfileName: String?
     /// Therapy percentage applied at creation. 100 = unchanged.
     let appliedPercent: Decimal
-    /// `true` when the profile's algorithm settings or glucose targets differ from the current
-    /// state of its source profile. Ignored when `sourceProfileName` is nil.
-    let algoChangedFromSource: Bool
+    /// `true` when the profile's algorithm preferences differ from its source profile.
+    /// Ignored when `sourceProfileName` is nil.
+    let preferencesChangedFromSource: Bool
+    /// `true` when the profile's glucose targets differ from its source profile.
+    let targetsChangedFromSource: Bool
     /// Profile that will become active when a timed activation expires. Only meaningful on the
     /// currently-active item while `expiresAt != nil`.
     let previousProfileID: UUID?
+}
+
+/// Full decoded content of a stored profile, used to seed the draft editor in edit mode.
+struct LoadedProfileContent {
+    let id: UUID
+    let name: String
+    let preferences: Preferences
+    let therapy: TherapyBundle
+    let sourceProfileID: UUID?
+    let sourceProfileName: String?
+    let appliedPercent: Decimal
 }
 
 /// Outcome of `AdaptProfileProvider.activate`. The `.needsPumpConfirm` case is returned when an
@@ -57,6 +70,19 @@ protocol AdaptProfileProvider: Provider {
         sourceProfileID: UUID?,
         appliedPercent: Decimal
     ) async -> UUID?
+
+    /// Update an existing profile's name, preferences, and therapy. If the profile is the active
+    /// one, `ActiveProfileMirror` will pick up the subsequent scope writes — we only persist to
+    /// the snapshot here.
+    func updateProfile(
+        id: UUID,
+        name: String,
+        preferences: Preferences,
+        therapy: TherapyBundle
+    ) async -> Bool
+
+    /// Load a profile's editable content for the draft editor hub.
+    func loadProfileContent(id: UUID) async -> LoadedProfileContent?
 
     /// Activate a stored profile. `durationHours == nil` means indefinite. When indefinite and the
     /// target basal differs from live, pump sync is required — set `confirmedPumpSync = true` after

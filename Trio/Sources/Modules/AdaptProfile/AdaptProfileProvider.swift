@@ -39,14 +39,16 @@ extension AdaptProfile {
                         let source = profile.sourceProfileID.flatMap { byID[$0] }
                         let profilePrefs = profile.preferences
                         let profileTargets = profile.therapy?.bgTargets
-                        let algoChanged: Bool = {
-                            guard let source = source else { return false }
-                            let prefsDiffer = source.preferences != profilePrefs
-                            let targetsDiffer = source.bgTargets.map { src in
-                                profileTargets.map { cur in cur.targets != src.targets } ?? true
-                            } ?? (profileTargets != nil)
-                            return prefsDiffer || targetsDiffer
+
+                        let prefsChanged: Bool = {
+                            guard let source = source, let sp = source.preferences else { return false }
+                            return profilePrefs != sp
                         }()
+                        let targetsChanged: Bool = {
+                            guard let source = source, let st = source.bgTargets else { return false }
+                            return profileTargets?.targets != st.targets
+                        }()
+
                         let applied = profile.appliedPercent?.decimalValue ?? 100
                         return AdaptProfileListItem(
                             id: id,
@@ -57,7 +59,8 @@ extension AdaptProfile {
                             orderPosition: profile.orderPosition,
                             sourceProfileName: source?.name,
                             appliedPercent: applied,
-                            algoChangedFromSource: algoChanged,
+                            preferencesChangedFromSource: prefsChanged,
+                            targetsChangedFromSource: targetsChanged,
                             previousProfileID: profile.previousProfileID
                         )
                     }
@@ -236,6 +239,60 @@ extension AdaptProfile {
             }
 
             return .success
+        }
+
+        func updateProfile(
+            id: UUID,
+            name: String,
+            preferences: Preferences,
+            therapy: TherapyBundle
+        ) async -> Bool {
+            let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { return false }
+            let context = coreDataStack.newTaskContext()
+            context.name = "AdaptProfileUpdateContext"
+            return await context.perform {
+                do {
+                    let req = ProfileStored.fetch(.profileByID(id), fetchLimit: 1)
+                    guard let profile = try context.fetch(req).first else { return false }
+                    profile.name = trimmed
+                    profile.preferences = preferences
+                    profile.therapy = therapy
+                    try context.save()
+                    return true
+                } catch {
+                    debug(.coreData, "AdaptProfileProvider.updateProfile failed: \(error)")
+                    return false
+                }
+            }
+        }
+
+        func loadProfileContent(id: UUID) async -> LoadedProfileContent? {
+            let context = coreDataStack.newTaskContext()
+            return await context.perform { () -> LoadedProfileContent? in
+                let req = ProfileStored.fetch(.profileByID(id), fetchLimit: 1)
+                guard let profile = try? context.fetch(req).first,
+                      let profileID = profile.id,
+                      let prefs = profile.preferences,
+                      let therapy = profile.therapy
+                else { return nil }
+
+                var sourceName: String?
+                if let sourceID = profile.sourceProfileID {
+                    let srcReq = ProfileStored.fetch(.profileByID(sourceID), fetchLimit: 1)
+                    sourceName = (try? context.fetch(srcReq).first)?.name
+                }
+
+                return LoadedProfileContent(
+                    id: profileID,
+                    name: profile.name ?? "",
+                    preferences: prefs,
+                    therapy: therapy,
+                    sourceProfileID: profile.sourceProfileID,
+                    sourceProfileName: sourceName,
+                    appliedPercent: profile.appliedPercent?.decimalValue ?? 100
+                )
+            }
         }
 
         func saveNewProfile(

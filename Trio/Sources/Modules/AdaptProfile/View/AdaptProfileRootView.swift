@@ -6,10 +6,10 @@ extension AdaptProfile {
         let resolver: Resolver
         @State var state = StateModel()
         @State private var showNewProfile = false
+        @State private var showEditor = false
         @State private var draftEditorState: DraftEditorStateModel?
         @State private var selectedProfile: AdaptProfileListItem?
         @State private var isConfirmDeletePresented = false
-        @State private var showEditSheet = false
         @State private var activationTarget: AdaptProfileListItem?
 
         @Environment(\.colorScheme) var colorScheme
@@ -84,13 +84,22 @@ extension AdaptProfile {
             .sheet(isPresented: $showNewProfile, onDismiss: { draftEditorState = nil }) {
                 newProfileSheet
             }
-            .sheet(isPresented: $showEditSheet, onDismiss: { selectedProfile = nil }) {
-                if let profile = selectedProfile {
-                    EditProfileForm(
-                        state: state,
-                        item: profile,
-                        onDismiss: { showEditSheet = false }
-                    )
+            .sheet(isPresented: $showEditor, onDismiss: { draftEditorState = nil }) {
+                NavigationStack {
+                    if let draftState = draftEditorState {
+                        DraftEditorRootView(
+                            state: draftState,
+                            onSaved: {
+                                showEditor = false
+                                Task { await state.refresh() }
+                            }
+                        )
+                        .toolbar {
+                            ToolbarItem(placement: .topBarLeading) {
+                                Button("Cancel") { showEditor = false }
+                            }
+                        }
+                    }
                 }
             }
             .sheet(item: $activationTarget) { item in
@@ -154,7 +163,7 @@ extension AdaptProfile {
                     }
                     if let expiresAt = item.expiresAt {
                         HStack(spacing: 4) {
-                            Text("expires")
+                            Text("Expires")
                             Text(expiresAt, style: .relative)
                         }
                         .font(.caption)
@@ -163,8 +172,7 @@ extension AdaptProfile {
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    selectedProfile = item
-                    showEditSheet = true
+                    openEditor(for: item)
                 }
             }
             .listRowBackground(Color.tabBar.opacity(0.8))
@@ -175,7 +183,7 @@ extension AdaptProfile {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(item.name)
-                        Text("activates at \(activatesAt, style: .time)")
+                        Text("Activates at \(activatesAt, style: .time)")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -228,6 +236,19 @@ extension AdaptProfile {
             }
         }
 
+        private func openEditor(for item: AdaptProfileListItem) {
+            Task { @MainActor in
+                guard let content = await state.provider.loadProfileContent(id: item.id) else { return }
+                draftEditorState = DraftEditorStateModel(
+                    provider: state.provider,
+                    insulinConcentration: state.settingsManager.settings.insulinConcentration,
+                    units: state.settingsManager.settings.units,
+                    editing: content
+                )
+                showEditor = true
+            }
+        }
+
         @ViewBuilder private func swipeActions(for item: AdaptProfileListItem) -> some View {
             Button(role: .none) {
                 selectedProfile = item
@@ -237,10 +258,9 @@ extension AdaptProfile {
                     .tint(.red)
             }
             Button {
-                selectedProfile = item
-                showEditSheet = true
+                openEditor(for: item)
             } label: {
-                Label("Rename", systemImage: "pencil")
+                Label("Edit", systemImage: "pencil")
                     .tint(.blue)
             }
         }
@@ -279,10 +299,13 @@ extension AdaptProfile {
             var out: [String] = []
             if let source = item.sourceProfileName {
                 let percent = item.appliedPercent.formatted(.number.precision(.fractionLength(0)))
-                out.append("from \(source) · \(percent) %")
+                out.append("\(source) · \(percent) %")
             }
-            if item.algoChangedFromSource {
-                out.append(String(localized: "algo/targets changed"))
+            switch (item.preferencesChangedFromSource, item.targetsChangedFromSource) {
+            case (true, true): out.append(String(localized: "Algorithm Settings & Glucose Targets tuned"))
+            case (true, false): out.append(String(localized: "Algorithm Settings tuned"))
+            case (false, true): out.append(String(localized: "Glucose Targets tuned"))
+            case (false, false): break
             }
             return out
         }

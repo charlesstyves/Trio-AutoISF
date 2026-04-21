@@ -17,6 +17,11 @@ extension AdaptProfile {
         let sourceProfileName: String
         /// Persisted on the new profile so the list can show "From <source> <percent> %".
         let sourceProfileID: UUID?
+        /// When non-nil, the hub operates in "edit" mode: `save()` updates the existing profile
+        /// instead of creating a new one.
+        let editingProfileID: UUID?
+
+        var isEditing: Bool { editingProfileID != nil }
 
         var name: String = ""
         var appliedPercent: Decimal = 100
@@ -81,6 +86,7 @@ extension AdaptProfile {
             self.units = units
             self.sourceProfileName = sourceProfileName
             self.sourceProfileID = sourceProfileID
+            editingProfileID = nil
 
             name = source.name
             appliedPercent = source.adjustPercent
@@ -137,6 +143,51 @@ extension AdaptProfile {
             preferences[keyPath: keyPath] = originalPreferences[keyPath: keyPath]
         }
 
+        /// Edit-mode init: seed from an already-persisted profile. `original*` fields capture the
+        /// profile's saved state at session open, so blue "changed" markers show only unsaved
+        /// edits made during this session.
+        init(
+            provider: AdaptProfileProvider,
+            insulinConcentration: Decimal,
+            units: GlucoseUnits,
+            editing content: LoadedProfileContent
+        ) {
+            self.provider = provider
+            self.insulinConcentration = insulinConcentration
+            self.units = units
+            sourceProfileName = content.sourceProfileName ?? ""
+            sourceProfileID = content.sourceProfileID
+            editingProfileID = content.id
+
+            name = content.name
+            appliedPercent = content.appliedPercent
+            preferences = content.preferences
+            originalPreferences = content.preferences
+
+            let basalItems = content.therapy.basalProfile.map {
+                TherapySettingItem(time: TimeInterval($0.minutes * 60), value: $0.rate)
+            }
+            let isfItems = content.therapy.sensitivities.sensitivities.map {
+                TherapySettingItem(time: TimeInterval($0.offset * 60), value: $0.sensitivity)
+            }
+            let crItems = content.therapy.carbRatios.schedule.map {
+                TherapySettingItem(time: TimeInterval($0.offset * 60), value: $0.ratio)
+            }
+            let targetItems = content.therapy.bgTargets.targets.map {
+                TherapySettingItem(time: TimeInterval($0.offset * 60), value: $0.low)
+            }
+            self.basalItems = basalItems
+            self.isfItems = isfItems
+            self.crItems = crItems
+            self.targetItems = targetItems
+
+            // Baseline = session-open state. Blue marks unsaved edits this session.
+            originalBasalItems = basalItems
+            originalISFItems = isfItems
+            originalCRItems = crItems
+            originalTargetItems = targetItems
+        }
+
         // MARK: - Persistence
 
         func therapyBundle() -> TherapyBundle {
@@ -159,8 +210,17 @@ extension AdaptProfile {
             )
         }
 
-        /// Persist the draft as a new, non-active profile. Returns `true` on success.
+        /// Persist the draft — create a new profile or update the existing one, depending on
+        /// `editingProfileID`. Returns `true` on success.
         func save() async -> Bool {
+            if let editingID = editingProfileID {
+                return await provider.updateProfile(
+                    id: editingID,
+                    name: name,
+                    preferences: preferences,
+                    therapy: therapyBundle()
+                )
+            }
             let id = await provider.saveNewProfile(
                 name: name,
                 preferences: preferences,

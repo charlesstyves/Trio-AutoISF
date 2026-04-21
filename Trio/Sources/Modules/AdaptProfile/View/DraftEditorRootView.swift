@@ -32,7 +32,7 @@ extension AdaptProfile {
             .listSectionSpacing(10)
             .scrollContentBackground(.hidden)
             .background(appState.trioBackgroundColor(for: colorScheme))
-            .navigationTitle("Add Profile")
+            .navigationTitle(state.isEditing ? "Edit Profile" : "Add Profile")
             .navigationBarTitleDisplayMode(.inline)
             .alert("Save failed", isPresented: $saveError) {
                 Button("OK") { saveError = false }
@@ -396,7 +396,7 @@ extension AdaptProfile {
                 Button {
                     Task { await save() }
                 } label: {
-                    Text("Save Profile")
+                    Text(state.isEditing ? "Save Changes" : "Save Profile")
                 }
                 .disabled(!canSave || isSaving)
                 .frame(maxWidth: .infinity, alignment: .center)

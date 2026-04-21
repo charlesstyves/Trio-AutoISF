@@ -148,7 +148,6 @@
 		ADA10012ADA10012ADA10012 /* AdaptProfileStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA1000FADA1000FADA1000F /* AdaptProfileStateModel.swift */; };
 		ADA10014ADA10014ADA10014 /* AdaptProfileRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10013ADA10013ADA10013 /* AdaptProfileRootView.swift */; };
 		ADA10018ADA10018ADA10018 /* NewProfileForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10017ADA10017ADA10017 /* NewProfileForm.swift */; };
-		ADA1001CADA1001CADA1001C /* EditProfileForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA1001BADA1001BADA1001B /* EditProfileForm.swift */; };
 		ADA1001EADA1001EADA1001E /* DraftEditorStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA1001DADA1001DADA1001D /* DraftEditorStateModel.swift */; };
 		ADA10020ADA10020ADA10020 /* DraftEditorRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA1001FADA1001FADA1001F /* DraftEditorRootView.swift */; };
 		ADA10022ADA10022ADA10022 /* DraftTherapyEditors.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10021ADA10021ADA10021 /* DraftTherapyEditors.swift */; };
@@ -1187,7 +1186,6 @@
 		ADA1000FADA1000FADA1000F /* AdaptProfileStateModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptProfileStateModel.swift; sourceTree = "<group>"; };
 		ADA10013ADA10013ADA10013 /* AdaptProfileRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptProfileRootView.swift; sourceTree = "<group>"; };
 		ADA10017ADA10017ADA10017 /* NewProfileForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewProfileForm.swift; sourceTree = "<group>"; };
-		ADA1001BADA1001BADA1001B /* EditProfileForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileForm.swift; sourceTree = "<group>"; };
 		ADA1001DADA1001DADA1001D /* DraftEditorStateModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftEditorStateModel.swift; sourceTree = "<group>"; };
 		ADA1001FADA1001FADA1001F /* DraftEditorRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftEditorRootView.swift; sourceTree = "<group>"; };
 		ADA10021ADA10021ADA10021 /* DraftTherapyEditors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftTherapyEditors.swift; sourceTree = "<group>"; };
@@ -2278,7 +2276,6 @@
 			children = (
 				ADA10013ADA10013ADA10013 /* AdaptProfileRootView.swift */,
 				ADA10017ADA10017ADA10017 /* NewProfileForm.swift */,
-				ADA1001BADA1001BADA1001B /* EditProfileForm.swift */,
 				ADA1001FADA1001FADA1001F /* DraftEditorRootView.swift */,
 				ADA10021ADA10021ADA10021 /* DraftTherapyEditors.swift */,
 				ADA10023ADA10023ADA10023 /* DraftAlgorithmEditors.swift */,
@@ -5023,7 +5020,6 @@
 				ADA10012ADA10012ADA10012 /* AdaptProfileStateModel.swift in Sources */,
 				ADA10014ADA10014ADA10014 /* AdaptProfileRootView.swift in Sources */,
 				ADA10018ADA10018ADA10018 /* NewProfileForm.swift in Sources */,
-				ADA1001CADA1001CADA1001C /* EditProfileForm.swift in Sources */,
 				ADA1001EADA1001EADA1001E /* DraftEditorStateModel.swift in Sources */,
 				ADA10020ADA10020ADA10020 /* DraftEditorRootView.swift in Sources */,
 				ADA10022ADA10022ADA10022 /* DraftTherapyEditors.swift in Sources */,
