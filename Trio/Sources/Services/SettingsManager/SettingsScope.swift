@@ -79,3 +79,68 @@ final class LiveScope: SettingsScope {
         }
     }
 }
+
+/// Scope that keeps edits in memory without touching live settings, Core Data, or the pump.
+///
+/// Used when editing a profile draft during creation — seed it from a live source or a stored
+/// profile, mutate via the same editor views used for live settings, then persist explicitly
+/// (e.g. serialize into a new `ProfileStored`). Discarding the draft is just dropping the instance.
+final class DraftScope: SettingsScope {
+    var preferences: Preferences
+    var basalProfile: [BasalProfileEntry]
+    var sensitivities: InsulinSensitivities
+    var carbRatios: CarbRatios
+    var bgTargets: BGTargets
+
+    init(
+        preferences: Preferences,
+        basalProfile: [BasalProfileEntry],
+        sensitivities: InsulinSensitivities,
+        carbRatios: CarbRatios,
+        bgTargets: BGTargets
+    ) {
+        self.preferences = preferences
+        self.basalProfile = basalProfile
+        self.sensitivities = sensitivities
+        self.carbRatios = carbRatios
+        self.bgTargets = bgTargets
+    }
+
+    /// Seed a draft by copying from any live source (typically a `LiveScope`).
+    convenience init(copying source: SettingsScope) {
+        self.init(
+            preferences: source.preferences,
+            basalProfile: source.basalProfile,
+            sensitivities: source.sensitivities,
+            carbRatios: source.carbRatios,
+            bgTargets: source.bgTargets
+        )
+    }
+
+    /// Seed a draft from a stored profile snapshot. Any missing fields fall back to defaults.
+    convenience init(from profile: ProfileStored) {
+        let therapy = profile.therapy ?? TherapyBundle(
+            basalProfile: [],
+            sensitivities: InsulinSensitivities(units: .mgdL, userPreferredUnits: .mgdL, sensitivities: []),
+            carbRatios: CarbRatios(units: .grams, schedule: []),
+            bgTargets: BGTargets(units: .mgdL, userPreferredUnits: .mgdL, targets: [])
+        )
+        self.init(
+            preferences: profile.preferences ?? Preferences(),
+            basalProfile: therapy.basalProfile,
+            sensitivities: therapy.sensitivities,
+            carbRatios: therapy.carbRatios,
+            bgTargets: therapy.bgTargets
+        )
+    }
+
+    /// Serialize the current draft state into a `TherapyBundle` (for saving into a `ProfileStored`).
+    var therapyBundle: TherapyBundle {
+        TherapyBundle(
+            basalProfile: basalProfile,
+            sensitivities: sensitivities,
+            carbRatios: carbRatios,
+            bgTargets: bgTargets
+        )
+    }
+}

@@ -143,6 +143,10 @@
 		ADA10008ADA10008ADA10008 /* SettingsScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10007ADA10007ADA10007 /* SettingsScope.swift */; };
 		ADA1000AADA1000AADA1000A /* ActiveProfileMirror.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10009ADA10009ADA10009 /* ActiveProfileMirror.swift */; };
 		ADA1000CADA1000CADA1000C /* ProfileSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA1000BADA1000BADA1000B /* ProfileSeeder.swift */; };
+		ADA10010ADA10010ADA10010 /* AdaptProfileDataFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA1000DADA1000DADA1000D /* AdaptProfileDataFlow.swift */; };
+		ADA10011ADA10011ADA10011 /* AdaptProfileProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA1000EADA1000EADA1000E /* AdaptProfileProvider.swift */; };
+		ADA10012ADA10012ADA10012 /* AdaptProfileStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA1000FADA1000FADA1000F /* AdaptProfileStateModel.swift */; };
+		ADA10014ADA10014ADA10014 /* AdaptProfileRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10013ADA10013ADA10013 /* AdaptProfileRootView.swift */; };
 		38AEE75725F0F18E0013F05B /* CarbsStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38AEE75625F0F18E0013F05B /* CarbsStorage.swift */; };
 		38B17B6625DD90E0005CAE3D /* SwiftDate in Frameworks */ = {isa = PBXBuildFile; productRef = 38B17B6525DD90E0005CAE3D /* SwiftDate */; };
 		38B4F3AF25E2979F00E76A18 /* IndexedCollection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38B4F3AE25E2979F00E76A18 /* IndexedCollection.swift */; };
@@ -1171,6 +1175,10 @@
 		ADA10007ADA10007ADA10007 /* SettingsScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScope.swift; sourceTree = "<group>"; };
 		ADA10009ADA10009ADA10009 /* ActiveProfileMirror.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveProfileMirror.swift; sourceTree = "<group>"; };
 		ADA1000BADA1000BADA1000B /* ProfileSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSeeder.swift; sourceTree = "<group>"; };
+		ADA1000DADA1000DADA1000D /* AdaptProfileDataFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptProfileDataFlow.swift; sourceTree = "<group>"; };
+		ADA1000EADA1000EADA1000E /* AdaptProfileProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptProfileProvider.swift; sourceTree = "<group>"; };
+		ADA1000FADA1000FADA1000F /* AdaptProfileStateModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptProfileStateModel.swift; sourceTree = "<group>"; };
+		ADA10013ADA10013ADA10013 /* AdaptProfileRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptProfileRootView.swift; sourceTree = "<group>"; };
 		38AEE75625F0F18E0013F05B /* CarbsStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarbsStorage.swift; sourceTree = "<group>"; };
 		38B4F3AE25E2979F00E76A18 /* IndexedCollection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndexedCollection.swift; sourceTree = "<group>"; };
 		38B4F3C225E2A20B00E76A18 /* PumpSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PumpSetupView.swift; sourceTree = "<group>"; };
@@ -2239,9 +2247,29 @@
 			path = View;
 			sourceTree = "<group>";
 		};
+		ADA10015ADA10015ADA10015 /* AdaptProfile */ = {
+			isa = PBXGroup;
+			children = (
+				ADA1000DADA1000DADA1000D /* AdaptProfileDataFlow.swift */,
+				ADA1000EADA1000EADA1000E /* AdaptProfileProvider.swift */,
+				ADA1000FADA1000FADA1000F /* AdaptProfileStateModel.swift */,
+				ADA10016ADA10016ADA10016 /* View */,
+			);
+			path = AdaptProfile;
+			sourceTree = "<group>";
+		};
+		ADA10016ADA10016ADA10016 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				ADA10013ADA10013ADA10013 /* AdaptProfileRootView.swift */,
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
 		3811DE0325C9D31700A708ED /* Modules */ = {
 			isa = PBXGroup;
 			children = (
+				ADA10015ADA10015ADA10015 /* AdaptProfile */,
 				DDD163032C4C67B400CD525A /* Adjustments */,
 				DD1745382C55BF8B00211FAC /* AlgorithmAdvancedSettings */,
 				DDF690FE2DA2C9EE008BF16C /* AppDiagnostics */,
@@ -4969,6 +4997,10 @@
 				ADA10008ADA10008ADA10008 /* SettingsScope.swift in Sources */,
 				ADA1000AADA1000AADA1000A /* ActiveProfileMirror.swift in Sources */,
 				ADA1000CADA1000CADA1000C /* ProfileSeeder.swift in Sources */,
+				ADA10010ADA10010ADA10010 /* AdaptProfileDataFlow.swift in Sources */,
+				ADA10011ADA10011ADA10011 /* AdaptProfileProvider.swift in Sources */,
+				ADA10012ADA10012ADA10012 /* AdaptProfileStateModel.swift in Sources */,
+				ADA10014ADA10014ADA10014 /* AdaptProfileRootView.swift in Sources */,
 				3894873A2614928B004DF424 /* DispatchTimer.swift in Sources */,
 				3895E4C625B9E00D00214B37 /* Preferences.swift in Sources */,
 				CE94598429E9E3E60047C9C6 /* WatchConfigStateModel.swift in Sources */,
