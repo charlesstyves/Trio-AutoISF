@@ -7,8 +7,14 @@ extension AdaptProfile {
         @State var state = StateModel()
         @State private var renameTarget: AdaptProfileListItem?
         @State private var renameText: String = ""
+        @State private var showNewProfile = false
+        @State private var newProfileRoute: NewProfileRoute? = nil
 
         @Environment(AppState.self) var appState
+
+        private enum NewProfileRoute: Hashable {
+            case review
+        }
 
         private static let dateFormatter: DateFormatter = {
             let f = DateFormatter()
@@ -38,8 +44,21 @@ extension AdaptProfile {
             .navigationBarTitleDisplayMode(.large)
             .refreshable { await state.refresh() }
             .onAppear(perform: configureView)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        state.startNewDraft()
+                        showNewProfile = true
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                }
+            }
             .sheet(item: $renameTarget) { item in
                 renameSheet(for: item)
+            }
+            .sheet(isPresented: $showNewProfile) {
+                newProfileSheet
             }
         }
 
@@ -113,6 +132,32 @@ extension AdaptProfile {
                 }
             }
             .presentationDetents([.medium])
+        }
+
+        private var newProfileSheet: some View {
+            NavigationStack {
+                NewProfileForm(
+                    state: state,
+                    onCancel: { showNewProfile = false },
+                    onReview: {
+                        state.applyPercentagesToDraft()
+                        newProfileRoute = .review
+                    }
+                )
+                .navigationDestination(item: $newProfileRoute) { route in
+                    switch route {
+                    case .review:
+                        BasalReviewView(
+                            state: state,
+                            onBack: { newProfileRoute = nil },
+                            onSaved: {
+                                showNewProfile = false
+                                newProfileRoute = nil
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 }

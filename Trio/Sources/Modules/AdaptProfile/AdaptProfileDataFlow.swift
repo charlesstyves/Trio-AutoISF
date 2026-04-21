@@ -20,4 +20,11 @@ protocol AdaptProfileProvider: Provider {
     func fetchAll() async -> [AdaptProfileListItem]
     func rename(id: UUID, to newName: String) async
     func delete(id: UUID) async
+
+    /// Pump-supported basal rates (concentration-adjusted). nil when no pump manager is active —
+    /// caller should fall back to rounding to a default increment.
+    var supportedBasalRates: [Decimal]? { get }
+
+    /// Persist a new profile snapshot. Returns the new id, or nil on failure.
+    func saveNewProfile(name: String, preferences: Preferences, therapy: TherapyBundle) async -> UUID?
 }

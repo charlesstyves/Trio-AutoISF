@@ -65,5 +65,35 @@ extension AdaptProfile {
                 }
             }
         }
+
+        var supportedBasalRates: [Decimal]? {
+            deviceManager.pumpManager?.supportedBasalRates.map { Decimal($0) }
+        }
+
+        func saveNewProfile(name: String, preferences: Preferences, therapy: TherapyBundle) async -> UUID? {
+            let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { return nil }
+            let context = coreDataStack.newTaskContext()
+            return await context.perform { () -> UUID? in
+                do {
+                    let newID = UUID()
+                    let profile = ProfileStored(context: context)
+                    profile.id = newID
+                    profile.name = trimmed
+                    profile.createdAt = Date()
+                    profile.isActive = false
+                    profile.activatedAt = nil
+                    profile.expiresAt = nil
+                    profile.previousProfileID = nil
+                    profile.preferences = preferences
+                    profile.therapy = therapy
+                    try context.save()
+                    return newID
+                } catch {
+                    debug(.coreData, "AdaptProfileProvider.saveNewProfile failed: \(error)")
+                    return nil
+                }
+            }
+        }
     }
 }
