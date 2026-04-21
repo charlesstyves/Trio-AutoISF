@@ -14,12 +14,16 @@ struct AdaptProfileListItem: Identifiable, Hashable {
     let createdAt: Date
     let isActive: Bool
     let expiresAt: Date?
+    let orderPosition: Int16
 }
 
 protocol AdaptProfileProvider: Provider {
     func fetchAll() async -> [AdaptProfileListItem]
     func rename(id: UUID, to newName: String) async
     func delete(id: UUID) async
+
+    /// Persist the ordered list's `orderPosition` back to Core Data.
+    func applyOrdering(_ orderedIDs: [UUID]) async
 
     /// Pump-supported basal rates (concentration-adjusted). nil when no pump manager is active —
     /// caller should fall back to rounding to a default increment.

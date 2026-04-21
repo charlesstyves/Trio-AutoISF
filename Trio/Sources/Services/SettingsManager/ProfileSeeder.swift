@@ -46,6 +46,7 @@ enum ProfileSeeder {
                 profile.activatedAt = Date()
                 profile.expiresAt = nil
                 profile.previousProfileID = nil
+                profile.orderPosition = 1
                 profile.preferences = preferences
                 profile.therapy = TherapyBundle(
                     basalProfile: basalProfile,

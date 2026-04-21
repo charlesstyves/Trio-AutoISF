@@ -12,6 +12,7 @@ public extension ProfileStored {
     @NSManaged var id: UUID?
     @NSManaged var isActive: Bool
     @NSManaged var name: String?
+    @NSManaged var orderPosition: Int16
     @NSManaged var preferencesJSON: Data?
     @NSManaged var previousProfileID: UUID?
     @NSManaged var therapyJSON: Data?

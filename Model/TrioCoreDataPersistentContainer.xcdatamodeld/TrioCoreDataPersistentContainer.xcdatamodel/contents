@@ -238,6 +238,7 @@
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="isActive" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="orderPosition" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="preferencesJSON" optional="YES" attributeType="Binary"/>
         <attribute name="previousProfileID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="therapyJSON" optional="YES" attributeType="Binary"/>
@@ -246,6 +247,9 @@
         </fetchIndex>
         <fetchIndex name="byIsActive">
             <fetchIndexElement property="isActive" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="byOrderPosition">
+            <fetchIndexElement property="orderPosition" type="Binary" order="ascending"/>
         </fetchIndex>
     </entity>
     <entity name="PumpEventStored" representedClassName="PumpEventStored" syncable="YES">

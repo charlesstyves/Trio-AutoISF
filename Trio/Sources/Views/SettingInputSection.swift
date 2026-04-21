@@ -221,6 +221,8 @@ struct SettingInputSection<VerboseHint: View>: View {
             return pickerSettingsProvider.settings.ketoProtectBasalPercent
         case "ketoProtectBasalAbsolut":
             return pickerSettingsProvider.settings.ketoProtectBasalAbsolut
+        case "therapyAdjustment":
+            return pickerSettingsProvider.settings.therapyAdjustment
         default:
             return nil
         }
@@ -274,6 +276,8 @@ struct SettingInputSection<VerboseHint: View>: View {
             return Text("\(decimalValue) \(String(localized: "min", comment: "Minutes abbreviation"))")
         case .hour:
             return Text("\(decimalValue) \(String(localized: "hr", comment: "Hours abbreviation"))")
+        case .percent:
+            return Text("\(decimalValue) \(String(localized: "%", comment: "Percentage symbol"))")
         }
     }
 

@@ -20,11 +20,11 @@ extension AdaptProfile {
     /// the review UI before being saved.
     struct NewProfileDraft {
         var name: String = ""
-        var isfPercent: Decimal = 100
-        var basalPercent: Decimal = 100
-        var crPercent: Decimal = 100
+        /// Single therapy percentage. Higher = more aggressive (more insulin): basal scales up,
+        /// ISF and CR scale down proportionally.
+        var adjustPercent: Decimal = 100
 
-        var preferencesSource: Preferences = Preferences()
+        var preferencesSource = Preferences()
 
         var originalBasal: [BasalProfileEntry] = []
         var basalItems: [BasalReviewItem] = []
@@ -70,7 +70,7 @@ extension AdaptProfile {
         var items: [AdaptProfileListItem] = []
         var isLoading: Bool = false
 
-        var draft: NewProfileDraft = NewProfileDraft()
+        var draft = NewProfileDraft()
 
         override func subscribe() {
             Task { await refresh() }
@@ -96,6 +96,30 @@ extension AdaptProfile {
             }
         }
 
+        @MainActor func reorder(from source: IndexSet, to destination: Int) {
+            items.move(fromOffsets: source, toOffset: destination)
+            let ids = items.map(\.id)
+            Task {
+                await provider.applyOrdering(ids)
+                await refresh()
+            }
+        }
+
+        /// Reorder the inactive subset of `items` while keeping the active profile pinned at the
+        /// top. The active profile is rendered in its own section so it shouldn't participate in
+        /// the draggable list.
+        @MainActor func reorderInactive(from source: IndexSet, to destination: Int) {
+            let active = items.filter(\.isActive)
+            var inactive = items.filter { !$0.isActive }
+            inactive.move(fromOffsets: source, toOffset: destination)
+            items = active + inactive
+            let ids = items.map(\.id)
+            Task {
+                await provider.applyOrdering(ids)
+                await refresh()
+            }
+        }
+
         /// Resets the draft to reflect current live settings with neutral (100%) percentages.
         func startNewDraft() {
             var d = NewProfileDraft()
@@ -117,9 +141,9 @@ extension AdaptProfile {
             let supported = supportedRaw.map { $0 * concentration }.sorted()
             draft.supportedRates = supported
 
-            let basalFactor = draft.basalPercent / 100
-            let isfFactor = 100 / draft.isfPercent
-            let crFactor = 100 / draft.crPercent
+            let basalFactor = draft.adjustPercent / 100
+            let isfFactor = 100 / draft.adjustPercent
+            let crFactor = 100 / draft.adjustPercent
 
             // Basal — apply percentage, then round down to nearest supported rate
             draft.basalItems = draft.originalBasal.map { entry in
@@ -137,10 +161,10 @@ extension AdaptProfile {
                 )
             }
 
-            // ISF — scale each sensitivity
+            // ISF — scale each sensitivity, then quantize to the ISF picker step (1 mg/dL)
             let scaledSensitivities = draft.originalSensitivities.sensitivities.map { entry in
                 InsulinSensitivityEntry(
-                    sensitivity: entry.sensitivity * isfFactor,
+                    sensitivity: Self.roundToStep(entry.sensitivity * isfFactor, step: 1),
                     offset: entry.offset,
                     start: entry.start
                 )
@@ -151,18 +175,27 @@ extension AdaptProfile {
                 sensitivities: scaledSensitivities
             )
 
-            // CR — scale each ratio
+            // CR — scale each ratio, then quantize to the CR picker step (0.1 g/U)
             let scaledRatios = draft.originalCarbRatios.schedule.map { entry in
                 CarbRatioEntry(
                     start: entry.start,
                     offset: entry.offset,
-                    ratio: entry.ratio * crFactor
+                    ratio: Self.roundToStep(entry.ratio * crFactor, step: 0.1)
                 )
             }
             draft.adjustedCarbRatios = CarbRatios(
                 units: draft.originalCarbRatios.units,
                 schedule: scaledRatios
             )
+        }
+
+        /// Round `value` to the nearest multiple of `step` (plain rounding, half-up).
+        private static func roundToStep(_ value: Decimal, step: Decimal) -> Decimal {
+            guard step > 0 else { return value }
+            var divided = value / step
+            var rounded = Decimal()
+            NSDecimalRound(&rounded, &divided, 0, .plain)
+            return rounded * step
         }
 
         /// Persist the draft as a new (non-active) profile. Returns success.

@@ -252,6 +252,14 @@ struct DecimalPickerSettings {
     var B30upperLimit = PickerSetting(value: 130, step: 5, min: 110, max: 180, type: PickerSetting.PickerSettingType.glucose)
     var B30upperDelta = PickerSetting(value: 8, step: 1, min: 5, max: 15, type: PickerSetting.PickerSettingType.glucose)
     var B30basalFactor = PickerSetting(value: 5, step: 0.5, min: 1.5, max: 10, type: PickerSetting.PickerSettingType.factorRaw)
+    // AdaptProfile — therapy percentage adjustment (like override %)
+    var therapyAdjustment = PickerSetting(
+        value: 100,
+        step: 5,
+        min: 40,
+        max: 250,
+        type: PickerSetting.PickerSettingType.percent
+    )
     // KetoProtect
     var ketoProtectBasalPercent = PickerSetting(
         value: 0.2,
@@ -318,5 +326,6 @@ struct PickerSetting {
         case insulinUnitPerHour
         case minute
         case hour
+        case percent
     }
 }

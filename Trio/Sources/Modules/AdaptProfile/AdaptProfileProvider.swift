@@ -10,7 +10,7 @@ extension AdaptProfile {
             return await context.perform {
                 let request: NSFetchRequest<ProfileStored> = ProfileStored.fetchRequest()
                 request.sortDescriptors = [
-                    NSSortDescriptor(key: "isActive", ascending: false),
+                    NSSortDescriptor(key: "orderPosition", ascending: true),
                     NSSortDescriptor(key: "createdAt", ascending: false)
                 ]
                 do {
@@ -22,12 +22,36 @@ extension AdaptProfile {
                             name: profile.name ?? "Unnamed",
                             createdAt: profile.createdAt ?? .distantPast,
                             isActive: profile.isActive,
-                            expiresAt: profile.expiresAt
+                            expiresAt: profile.expiresAt,
+                            orderPosition: profile.orderPosition
                         )
                     }
                 } catch {
                     debug(.coreData, "AdaptProfileProvider.fetchAll failed: \(error)")
                     return []
+                }
+            }
+        }
+
+        func applyOrdering(_ orderedIDs: [UUID]) async {
+            let context = coreDataStack.newTaskContext()
+            await context.perform {
+                do {
+                    let request: NSFetchRequest<ProfileStored> = ProfileStored.fetchRequest()
+                    request.predicate = NSPredicate(format: "id IN %@", orderedIDs)
+                    let rows = try context.fetch(request)
+                    let byID = Dictionary(uniqueKeysWithValues: rows.compactMap { row -> (UUID, ProfileStored)? in
+                        guard let id = row.id else { return nil }
+                        return (id, row)
+                    })
+                    for (index, id) in orderedIDs.enumerated() {
+                        byID[id]?.orderPosition = Int16(index + 1)
+                    }
+                    if context.hasChanges {
+                        try context.save()
+                    }
+                } catch {
+                    debug(.coreData, "AdaptProfileProvider.applyOrdering failed: \(error)")
                 }
             }
         }
@@ -76,6 +100,11 @@ extension AdaptProfile {
             let context = coreDataStack.newTaskContext()
             return await context.perform { () -> UUID? in
                 do {
+                    let request: NSFetchRequest<ProfileStored> = ProfileStored.fetchRequest()
+                    request.sortDescriptors = [NSSortDescriptor(key: "orderPosition", ascending: false)]
+                    request.fetchLimit = 1
+                    let maxOrder = (try? context.fetch(request).first?.orderPosition) ?? 0
+
                     let newID = UUID()
                     let profile = ProfileStored(context: context)
                     profile.id = newID
@@ -85,6 +114,7 @@ extension AdaptProfile {
                     profile.activatedAt = nil
                     profile.expiresAt = nil
                     profile.previousProfileID = nil
+                    profile.orderPosition = maxOrder + 1
                     profile.preferences = preferences
                     profile.therapy = therapy
                     try context.save()
