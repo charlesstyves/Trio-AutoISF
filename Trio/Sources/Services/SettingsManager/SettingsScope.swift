@@ -37,7 +37,10 @@ final class LiveScope: SettingsScope {
                 ?? [BasalProfileEntry](from: OpenAPS.defaults(for: OpenAPS.Settings.basalProfile))
                 ?? []
         }
-        set { storage.save(newValue, as: OpenAPS.Settings.basalProfile) }
+        set {
+            storage.save(newValue, as: OpenAPS.Settings.basalProfile)
+            ActiveProfileMirror.shared.updateBasalProfile(newValue)
+        }
     }
 
     var sensitivities: InsulinSensitivities {
@@ -46,7 +49,10 @@ final class LiveScope: SettingsScope {
                 ?? InsulinSensitivities(from: OpenAPS.defaults(for: OpenAPS.Settings.insulinSensitivities))
                 ?? InsulinSensitivities(units: .mgdL, userPreferredUnits: .mgdL, sensitivities: [])
         }
-        set { storage.save(newValue, as: OpenAPS.Settings.insulinSensitivities) }
+        set {
+            storage.save(newValue, as: OpenAPS.Settings.insulinSensitivities)
+            ActiveProfileMirror.shared.updateSensitivities(newValue)
+        }
     }
 
     var carbRatios: CarbRatios {
@@ -55,7 +61,10 @@ final class LiveScope: SettingsScope {
                 ?? CarbRatios(from: OpenAPS.defaults(for: OpenAPS.Settings.carbRatios))
                 ?? CarbRatios(units: .grams, schedule: [])
         }
-        set { storage.save(newValue, as: OpenAPS.Settings.carbRatios) }
+        set {
+            storage.save(newValue, as: OpenAPS.Settings.carbRatios)
+            ActiveProfileMirror.shared.updateCarbRatios(newValue)
+        }
     }
 
     var bgTargets: BGTargets {
@@ -64,6 +73,9 @@ final class LiveScope: SettingsScope {
                 ?? BGTargets(from: OpenAPS.defaults(for: OpenAPS.Settings.bgTargets))
                 ?? BGTargets(units: .mgdL, userPreferredUnits: .mgdL, targets: [])
         }
-        set { storage.save(newValue, as: OpenAPS.Settings.bgTargets) }
+        set {
+            storage.save(newValue, as: OpenAPS.Settings.bgTargets)
+            ActiveProfileMirror.shared.updateBGTargets(newValue)
+        }
     }
 }
