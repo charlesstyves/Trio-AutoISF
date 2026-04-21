@@ -194,6 +194,7 @@ enum ForecastGenerator {
             carbImpact: carbImpact,
             remainingCarbImpactPeak: carbImpactParams.remainingCarbImpactPeak,
             adjustedCarbRatio: adjustedCarbRatio,
+            profileCarbRatio: profileCarbRatio,
             carbSensitivityFactor: carbSensitivityFactor
         )
     }

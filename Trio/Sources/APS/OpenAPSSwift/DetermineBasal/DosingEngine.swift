@@ -165,8 +165,12 @@ enum DosingEngine {
         let lastCOBpredBG = forecast.cob?.last?.jsRounded()
         let lastUAMpredBG = forecast.uam?.last?.jsRounded()
 
+        let adjustedCR = forecast.adjustedCarbRatio.jsRounded(scale: 1)
+        let profileCR = forecast.profileCarbRatio.jsRounded(scale: 1)
+        let crLog = adjustedCR != profileCR ? "\(profileCR)\u{2192}\(adjustedCR)" : "\(adjustedCR)"
+
         var reason =
-            "\(isfReason), COB: \(mealData.mealCOB.jsRounded()), Dev: \(deviation.jsRounded()), BGI: \(glucoseImpact.jsRounded()), CR: \(forecast.adjustedCarbRatio.jsRounded(scale: 1)), Target: \(targetLog), minPredBG \(forecast.minForecastedGlucose.jsRounded()), minGuardBG \(forecast.minGuardGlucose.jsRounded()), IOBpredBG \(lastIOBpredBG)"
+            "\(isfReason), COB: \(mealData.mealCOB.jsRounded()), Dev: \(deviation.jsRounded()), BGI: \(glucoseImpact.jsRounded()), CR: \(crLog), Target: \(targetLog), minPredBG \(forecast.minForecastedGlucose.jsRounded()), minGuardBG \(forecast.minGuardGlucose.jsRounded()), IOBpredBG \(lastIOBpredBG)"
 
         if let lastCOB = lastCOBpredBG {
             reason += ", COBpredBG \(lastCOB)"
