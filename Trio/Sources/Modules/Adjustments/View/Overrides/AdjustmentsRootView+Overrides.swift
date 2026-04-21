@@ -6,11 +6,26 @@ extension Adjustments.RootView {
         if state.isOverrideEnabled, state.activeOverrideName.isNotEmpty {
             currentActiveAdjustment
         }
+        if !state.useSwiftOref {
+            jsOrefOverrideHint
+        }
         if state.overridePresets.isNotEmpty {
             overridePresets
         } else {
             defaultText
         }
+    }
+
+    var jsOrefOverrideHint: some View {
+        Section {
+            Text(
+                "Overrides have no effect when the JS oref algorithm is active. Enable Swift oref in Algorithm Advanced Settings to use overrides."
+            )
+            .font(.body)
+            .bold()
+            .foregroundColor(.primary)
+        }
+        .listRowBackground(Color.tabBar)
     }
 
     var overridePresets: some View {

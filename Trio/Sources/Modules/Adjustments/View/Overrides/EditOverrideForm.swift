@@ -460,7 +460,9 @@ struct EditOverrideForm: View {
                 .listRowBackground(Color.chart)
             }
 
-            autoISFSection()
+            if state.useAutoISF, state.useSwiftOref {
+                autoISFSection()
+            }
 
             Section {
                 Toggle(isOn: $indefinite) { Text("Enable Indefinitely") }

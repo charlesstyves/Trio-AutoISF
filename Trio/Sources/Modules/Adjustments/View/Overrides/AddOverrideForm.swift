@@ -335,7 +335,9 @@ struct AddOverrideForm: View {
                 .listRowBackground(Color.chart)
             }
 
-            autoISFSection()
+            if state.useAutoISF, state.useSwiftOref {
+                autoISFSection()
+            }
 
             Section {
                 Toggle(isOn: $state.indefinite) {
