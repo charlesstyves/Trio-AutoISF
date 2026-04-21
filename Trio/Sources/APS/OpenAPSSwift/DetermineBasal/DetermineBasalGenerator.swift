@@ -394,6 +394,7 @@ enum DeterminationGenerator {
             dynamicIsfResult: dynamicIsfResult,
             targetGlucose: adjustedGlucoseTargets.targetGlucose,
             adjustedSensitivity: adjustedSensitivity,
+            profileSensitivity: originalSensitivity,
             sensitivityRatio: sensitivityRatio,
             naiveEventualGlucose: naiveEventualGlucose,
             eventualGlucose: eventualGlucose,

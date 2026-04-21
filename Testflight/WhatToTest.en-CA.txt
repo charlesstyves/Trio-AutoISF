@@ -1,4 +1,5 @@
 Trio dev 0.7.0
 orefswift with all fixes
 overrides with autoISF & SMB Dell.Ratio settings
+stable CSF toggle (CR changes with ISF)
 

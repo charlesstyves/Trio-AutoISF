@@ -189,7 +189,8 @@ enum DosingEngine {
             currentBasal: currentBasal,
             overrideFactor: overrideFactor,
             adjustedSensitivity: adjustedSensitivity,
-            adjustedCarbRatio: forecast.adjustedCarbRatio
+            adjustedCarbRatio: forecast.adjustedCarbRatio,
+            carbSensitivityFactor: forecast.carbSensitivityFactor
         )
 
         var carbsRequired: (carbs: Decimal, minutes: Decimal)?
@@ -216,7 +217,8 @@ enum DosingEngine {
         currentBasal: Decimal,
         overrideFactor: Decimal,
         adjustedSensitivity: Decimal,
-        adjustedCarbRatio: Decimal
+        adjustedCarbRatio: Decimal,
+        carbSensitivityFactor: Decimal
     ) -> (carbs: Decimal, minutes: Decimal) {
         var carbsRequiredGlucose = naiveEventualGlucose
         if naiveEventualGlucose < 40 {
@@ -245,7 +247,6 @@ enum DosingEngine {
         let cobForCarbsRequired = max(0, mealData.mealCOB - (Decimal(0.25) * mealCarbs))
 
         guard adjustedCarbRatio > 0 else { return (carbs: 0, minutes: minutesAboveThreshold) }
-        let carbSensitivityFactor = adjustedSensitivity / adjustedCarbRatio
         guard carbSensitivityFactor > 0 else { return (carbs: 0, minutes: minutesAboveThreshold) }
 
         var carbsRequired = (glucoseUndershoot - zeroTempEffect) / carbSensitivityFactor - cobForCarbsRequired

@@ -14,6 +14,7 @@ struct ForecastResult {
     public let carbImpact: Decimal
     public let remainingCarbImpactPeak: Decimal
     public let adjustedCarbRatio: Decimal
+    public let carbSensitivityFactor: Decimal
 }
 
 struct ForecastSelectionResult {

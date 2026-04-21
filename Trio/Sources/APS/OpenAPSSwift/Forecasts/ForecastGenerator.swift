@@ -16,6 +16,7 @@ enum ForecastGenerator {
         dynamicIsfResult: DynamicISFResult?,
         targetGlucose: Decimal,
         adjustedSensitivity: Decimal,
+        profileSensitivity: Decimal,
         sensitivityRatio: Decimal,
         naiveEventualGlucose _: Decimal,
         eventualGlucose: Decimal,
@@ -23,7 +24,7 @@ enum ForecastGenerator {
         currentTime: Date
     ) -> ForecastResult {
         let profileCarbRatio = profile.carbRatio ?? profile.carbRatioFor(time: currentTime)
-        let adjustedCarbRatio: Decimal
+        var adjustedCarbRatio: Decimal
         if trioCustomOrefVariables.useOverride, trioCustomOrefVariables.cr || trioCustomOrefVariables.isfAndCr {
             let overrideFactor = trioCustomOrefVariables.overridePercentage / 100
             adjustedCarbRatio = profileCarbRatio / overrideFactor
@@ -31,7 +32,46 @@ enum ForecastGenerator {
             adjustedCarbRatio = profileCarbRatio
         }
 
-        let carbSensitivityFactor = adjustedSensitivity / adjustedCarbRatio
+        // When an override is active, its CR-intent decides the behavior and the user's
+        // useProfileCSF toggle is ignored: any override touching CR forces stable-CSF + variable-CR,
+        // an ISF-only override forces the legacy dynamic-CSF + stable-CR path.
+        let effectiveUseProfileCSF: Bool
+        if trioCustomOrefVariables.useOverride {
+            if trioCustomOrefVariables.cr || trioCustomOrefVariables.isfAndCr {
+                effectiveUseProfileCSF = true
+            } else if trioCustomOrefVariables.isf {
+                effectiveUseProfileCSF = false
+            } else {
+                effectiveUseProfileCSF = profile.useProfileCSF
+            }
+        } else {
+            effectiveUseProfileCSF = profile.useProfileCSF
+        }
+
+        // Scale CR by the autosens+autoISF ratio so dosing reflects adjusted ISF while CSF stays
+        // at the stable profile value. The ratio uses profileSensitivity (override-adjusted), so
+        // any override sens factor cancels and only the autosens+autoISF component scales CR.
+        if effectiveUseProfileCSF, profileSensitivity > 0, adjustedSensitivity != profileSensitivity {
+            let previousCR = adjustedCarbRatio
+            adjustedCarbRatio = (adjustedCarbRatio * adjustedSensitivity / profileSensitivity).jsRounded(scale: 2)
+            debug(
+                .openAPSSwift,
+                "CR: adjusted from \(previousCR.jsRounded(scale: 1)) to \(adjustedCarbRatio.jsRounded(scale: 1)) as ISF changed (sensRatio \((profileSensitivity / adjustedSensitivity).jsRounded(scale: 2)))"
+            )
+        }
+
+        // CSF: when effectiveUseProfileCSF, pin to raw profile values so it's stable against autosens/autoISF.
+        let rawProfileSens = profile.sens ?? profile.sensitivityFor(time: currentTime)
+        let carbSensitivityFactor: Decimal
+        if effectiveUseProfileCSF, rawProfileSens > 0, profileCarbRatio > 0 {
+            carbSensitivityFactor = rawProfileSens / profileCarbRatio
+            debug(
+                .openAPSSwift,
+                "Using profile.sens for CSF calculation: \(rawProfileSens.jsRounded()) / \(profileCarbRatio.jsRounded(scale: 1)) = \(carbSensitivityFactor.jsRounded(scale: 1))"
+            )
+        } else {
+            carbSensitivityFactor = adjustedSensitivity / adjustedCarbRatio
+        }
         let minDelta = min(glucoseStatus.delta, glucoseStatus.shortAvgDelta)
         // this carbImpact is `ci` in JS
         var carbImpact = (minDelta - currentGlucoseImpact).jsRounded(scale: 1)
@@ -153,7 +193,8 @@ enum ForecastGenerator {
             minGuardGlucose: blendedForecasts.minGuardGlucose,
             carbImpact: carbImpact,
             remainingCarbImpactPeak: carbImpactParams.remainingCarbImpactPeak,
-            adjustedCarbRatio: adjustedCarbRatio
+            adjustedCarbRatio: adjustedCarbRatio,
+            carbSensitivityFactor: carbSensitivityFactor
         )
     }
 
