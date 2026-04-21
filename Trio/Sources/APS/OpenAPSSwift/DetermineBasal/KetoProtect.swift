@@ -51,8 +51,8 @@ enum KetoProtect {
                     finalRate = floor
                     reason = "KetoVarProt:, \(floor)U/hr, "
                 }
-            } else {
-                // Variable mode conditions not met — log state, do not enforce floor.
+            } else if netIOB < 0 || iobActivity < 0 {
+                // Variable mode conditions not met but IOB/activity state is relevant — log state, do not enforce floor.
                 reason =
                     "KetoVarProt:, not active, IOB \(netIOB.jsRounded(scale: 2)) ?< \((-currentBasal).jsRounded(scale: 2)), iobActivity: \(iobActivity.jsRounded(scale: 3)) ?< 0, "
             }
