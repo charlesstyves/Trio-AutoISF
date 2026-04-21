@@ -26,21 +26,50 @@ enum DeterminationGenerator {
         trioCustomOrefVariables: TrioCustomOrefVariables,
         currentTime: Date
     ) throws -> Determination? {
-        let profile = profile.applying(trioCustomOrefVariables.useOverride ? OverrideProfile(
-            autoISFmin: trioCustomOrefVariables.overrideAutoISFmin,
-            autoISFmax: trioCustomOrefVariables.overrideAutoISFmax,
-            autoISFhourlyChange: trioCustomOrefVariables.overrideAutoISFhourlyChange,
-            higherISFrangeWeight: trioCustomOrefVariables.overrideHigherISFrangeWeight,
-            lowerISFrangeWeight: trioCustomOrefVariables.overrideLowerISFrangeWeight,
-            postMealISFweight: trioCustomOrefVariables.overridePostMealISFweight,
-            bgAccelISFweight: trioCustomOrefVariables.overrideBgAccelISFweight,
-            bgBrakeISFweight: trioCustomOrefVariables.overrideBgBrakeISFweight,
-            iobThresholdPercent: trioCustomOrefVariables.overrideIobThresholdPercent,
-            smbDeliveryRatioBGrange: trioCustomOrefVariables.overrideSmbDeliveryRatioBGrange,
-            smbDeliveryRatioMin: trioCustomOrefVariables.overrideSmbDeliveryRatioMin,
-            smbDeliveryRatioMax: trioCustomOrefVariables.overrideSmbDeliveryRatioMax,
-            enableBGacceleration: trioCustomOrefVariables.overrideEnableBGacceleration
-        ) : nil)
+        var profile = profile
+
+        // Apply override parameters if enabled
+        if trioCustomOrefVariables.useOverride {
+            if let override = trioCustomOrefVariables.overrideAutoISFmin {
+                profile.autoISFmin = override
+            }
+            if let override = trioCustomOrefVariables.overrideAutoISFmax {
+                profile.autoISFmax = override
+            }
+            if let override = trioCustomOrefVariables.overrideAutoISFhourlyChange {
+                profile.autoISFhourlyChange = override
+            }
+            if let override = trioCustomOrefVariables.overrideHigherISFrangeWeight {
+                profile.higherISFrangeWeight = override
+            }
+            if let override = trioCustomOrefVariables.overrideLowerISFrangeWeight {
+                profile.lowerISFrangeWeight = override
+            }
+            if let override = trioCustomOrefVariables.overridePostMealISFweight {
+                profile.postMealISFweight = override
+            }
+            if let override = trioCustomOrefVariables.overrideBgAccelISFweight {
+                profile.bgAccelISFweight = override
+            }
+            if let override = trioCustomOrefVariables.overrideBgBrakeISFweight {
+                profile.bgBrakeISFweight = override
+            }
+            if let override = trioCustomOrefVariables.overrideIobThresholdPercent {
+                profile.iobThresholdPercent = override
+            }
+            if let override = trioCustomOrefVariables.overrideSmbDeliveryRatioBGrange {
+                profile.smbDeliveryRatioBGrange = override
+            }
+            if let override = trioCustomOrefVariables.overrideSmbDeliveryRatioMin {
+                profile.smbDeliveryRatioMin = override
+            }
+            if let override = trioCustomOrefVariables.overrideSmbDeliveryRatioMax {
+                profile.smbDeliveryRatioMax = override
+            }
+            if let override = trioCustomOrefVariables.overrideEnableBGacceleration {
+                profile.enableBGacceleration = override
+            }
+        }
 
         let glucoseStatus = try Self.getGlucoseStatus(glucoseReadings: glucose)
         guard let glucoseStatus = glucoseStatus else { throw DeterminationError.missingInputs }
