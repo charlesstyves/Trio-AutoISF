@@ -32,7 +32,8 @@ enum AutoISFSMBControl {
         microBolusAllowed: Bool,
         iob: Decimal,
         b30IsActive: Bool,
-        exerciseModeActive _: Bool
+        exerciseModeActive _: Bool,
+        overrideSmbIsOff: Bool
     ) -> AutoISFSMBResult? {
         guard profile.autoisf else { return nil }
 
@@ -40,6 +41,15 @@ enum AutoISFSMBControl {
         let useIobTH = profile.iobThresholdPercent != 1
         // iobTH_reduction_ratio = 1.0 in normal mode (exercise_ratio not yet ported)
         let iobThEffective = (profile.iobThresholdPercent * profile.maxIob).jsRounded(scale: 1)
+
+        // Override disabling SMB wins over all autoISF SMB logic
+        if overrideSmbIsOff {
+            return AutoISFSMBResult(
+                loopMode: .blocked,
+                iobTHEffective: iobThEffective,
+                reason: "SMB disabled:, Override"
+            )
+        }
 
         // B30 basal active → SMB off (placeholder until B30 module is ported)
         if b30IsActive {

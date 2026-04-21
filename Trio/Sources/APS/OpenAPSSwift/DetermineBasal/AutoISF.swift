@@ -38,7 +38,8 @@ enum AutoISF {
         microBolusAllowed: Bool,
         iob: Decimal,
         b30IsActive: Bool,
-        autoISFStatus: AutoISFGlucoseStatus?
+        autoISFStatus: AutoISFGlucoseStatus?,
+        overrideSmbIsOff: Bool
     ) -> AutoISFEngineResult {
         let autosensReason =
             "autosens:, \(sensitivityRatio.jsRounded(scale: 2)), ISF: \(originalSensitivity.jsRounded())→\(adjustedSensitivity.jsRounded())"
@@ -50,7 +51,8 @@ enum AutoISF {
             microBolusAllowed: microBolusAllowed,
             iob: iob,
             b30IsActive: b30IsActive,
-            exerciseModeActive: exerciseModeActive
+            exerciseModeActive: exerciseModeActive,
+            overrideSmbIsOff: overrideSmbIsOff
         )
         let smbEnabled: Bool? = smbResult.flatMap { $0.loopMode != .oref ? $0.smbEnabled : nil }
 

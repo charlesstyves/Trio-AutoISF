@@ -295,6 +295,12 @@ enum DeterminationGenerator {
         )
 
         let originalSensitivity = profile.profileSensitivity(at: currentTime, trioCustomOrefVaribales: trioCustomOrefVariables)
+        // Override disables SMB either flat (smbIsOff) or via schedule window (smbIsScheduledOff + clock).
+        let overrideDisablesSmb = trioCustomOrefVariables.smbIsOff ||
+            ((try? DosingEngine.isSmbScheduledOff(
+                trioCustomOrefVariables: trioCustomOrefVariables,
+                clock: currentTime
+            )) ?? false)
         let autoISFResult = AutoISF.run(
             profile: profile,
             dynamicIsfActive: dynamicIsfResult != nil,
@@ -308,7 +314,8 @@ enum DeterminationGenerator {
             microBolusAllowed: microBolusAllowed,
             iob: iobData.first?.iob ?? 0,
             b30IsActive: b30Result.isActive,
-            autoISFStatus: autoISFStatus
+            autoISFStatus: autoISFStatus,
+            overrideSmbIsOff: overrideDisablesSmb
         )
         if let adjusted = autoISFResult.adjustedSensitivity {
             adjustedSensitivity = adjusted
@@ -470,9 +477,16 @@ enum DeterminationGenerator {
         if let override = autoISFResult.smbEnabled {
             smbIsEnabled = override
         }
-        if trioCustomOrefVariables.smbIsOff { smbIsEnabled = false }
+        if overrideDisablesSmb { smbIsEnabled = false }
 
         var reason = dosingInputs.reason
+        // autoISF path injects its own "SMB disabled:, Override" tag via AutoISFSMBControl;
+        // inject here only for the non-autoISF path so the override shows up as a tag either way.
+        if overrideDisablesSmb, !profile.autoisf,
+           let separatorRange = reason.range(of: "; ", options: .backwards)
+        {
+            reason.replaceSubrange(separatorRange, with: ", SMB disabled:, Override; ")
+        }
         if let smbReason = smbDecision.reason {
             reason += smbReason
         }
