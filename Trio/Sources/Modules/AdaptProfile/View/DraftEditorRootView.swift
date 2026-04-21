@@ -6,7 +6,6 @@ extension AdaptProfile {
     /// User can accept everything as-is ("Save") or drill into any section to tweak first.
     struct DraftEditorRootView: View {
         @Bindable var state: DraftEditorStateModel
-        let onCancel: () -> Void
         let onSaved: () -> Void
 
         @State private var isSaving = false
@@ -35,11 +34,6 @@ extension AdaptProfile {
             .background(appState.trioBackgroundColor(for: colorScheme))
             .navigationTitle("Add Profile")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel", action: onCancel)
-                }
-            }
             .alert("Save failed", isPresented: $saveError) {
                 Button("OK") { saveError = false }
             } message: {
@@ -98,7 +92,7 @@ extension AdaptProfile {
                     DraftISFEditor(state: state)
                 } label: {
                     therapyRow(
-                        title: String(localized: "Insulin Sensitivity (ISF)"),
+                        title: String(localized: "Insulin Sensitivities"),
                         summary: isfSummary,
                         changed: state.isfIsChanged
                     )
@@ -108,7 +102,7 @@ extension AdaptProfile {
                     DraftCREditor(state: state)
                 } label: {
                     therapyRow(
-                        title: String(localized: "Carb Ratio (CR)"),
+                        title: String(localized: "Carb Ratios"),
                         summary: crSummary,
                         changed: state.crIsChanged
                     )
@@ -130,52 +124,100 @@ extension AdaptProfile {
         }
 
         private var algorithmSection: some View {
+            // Order and page names mirror Algorithm settings (see SettingItems.algorithmItems).
             Section {
                 NavigationLink {
                     DraftAutosensEditor(state: state)
                 } label: {
-                    algorithmRow(title: String(localized: "Autosens"), summary: autosensSummary, changed: autosensChanged)
+                    algorithmRow(
+                        title: String(localized: "Autosens"),
+                        changed: autosensChanged,
+                        onReset: resetAutosens
+                    )
+                }
+                NavigationLink {
+                    DraftSMBEditor(state: state)
+                } label: {
+                    algorithmRow(
+                        title: String(localized: "Super Micro Bolus (SMB)"),
+                        changed: smbChanged,
+                        onReset: resetSMB
+                    )
+                }
+                NavigationLink {
+                    DraftDynamicISFEditor(state: state)
+                } label: {
+                    algorithmRow(
+                        title: String(localized: "Dynamic Settings"),
+                        changed: dynISFChanged,
+                        onReset: resetDynISF
+                    )
                 }
                 NavigationLink {
                     DraftTargetBehaviorEditor(state: state)
                 } label: {
                     algorithmRow(
                         title: String(localized: "Target Behavior"),
-                        summary: targetBehaviorSummary,
-                        changed: targetBehaviorChanged
+                        changed: targetBehaviorChanged,
+                        onReset: resetTargetBehavior
                     )
                 }
                 NavigationLink {
-                    DraftSMBEditor(state: state)
+                    DraftAdvancedEditor(state: state)
                 } label: {
-                    algorithmRow(title: String(localized: "SMB"), summary: smbSummary, changed: smbChanged)
-                }
-                NavigationLink {
-                    DraftDynamicISFEditor(state: state)
-                } label: {
-                    algorithmRow(title: String(localized: "Dynamic ISF"), summary: dynISFSummary, changed: dynISFChanged)
+                    algorithmRow(
+                        title: String(localized: "Additionals"),
+                        changed: advancedChanged,
+                        onReset: resetAdvanced
+                    )
                 }
                 NavigationLink {
                     DraftAutoISFEditor(state: state)
                 } label: {
-                    algorithmRow(title: String(localized: "autoISF"), summary: autoISFSummary, changed: autoISFChanged)
+                    algorithmRow(
+                        title: String(localized: "autoISF"),
+                        changed: autoISFChanged,
+                        onReset: resetAutoISF
+                    )
+                }
+                NavigationLink {
+                    DraftB30Editor(state: state)
+                } label: {
+                    algorithmRow(
+                        title: String(localized: "AIMI B30"),
+                        changed: b30Changed,
+                        onReset: resetB30
+                    )
+                }
+                NavigationLink {
+                    DraftKetoProtectEditor(state: state)
+                } label: {
+                    algorithmRow(
+                        title: String(localized: "Keto Protection"),
+                        changed: ketoChanged,
+                        onReset: resetKeto
+                    )
                 }
             } header: {
                 Text("Algorithm")
             } footer: {
-                Text("Algorithm settings inherit from the source profile.")
+                Text("Blue rows differ from the source profile. Tap the reset icon to discard a section's changes.")
             }
             .listRowBackground(Color.chart)
         }
 
-        private func algorithmRow(title: String, summary: String, changed: Bool) -> some View {
+        private func algorithmRow(title: String, changed: Bool, onReset: @escaping () -> Void) -> some View {
             HStack {
                 Text(title)
+                    .foregroundColor(changed ? .accentColor : .primary)
                 Spacer()
-                Text(summary)
-                    .foregroundColor(changed ? .accentColor : .secondary)
-                    .font(.callout)
-                    .lineLimit(1)
+                if changed {
+                    Button(action: onReset) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(BorderlessButtonStyle())
+                }
             }
         }
 
@@ -233,36 +275,120 @@ extension AdaptProfile {
                 || p.iobThresholdPercent != o.iobThresholdPercent
         }
 
-        // MARK: - Algorithm summaries
-
-        private var autosensSummary: String {
-            "\(state.preferences.autosensMin.formatted())–\(state.preferences.autosensMax.formatted())"
+        private var advancedChanged: Bool {
+            let p = state.preferences, o = state.originalPreferences
+            return p.useProfileCSF != o.useProfileCSF
+                || p.maxDailySafetyMultiplier != o.maxDailySafetyMultiplier
+                || p.currentBasalSafetyMultiplier != o.currentBasalSafetyMultiplier
+                || p.skipNeutralTemps != o.skipNeutralTemps
+                || p.unsuspendIfNoTemp != o.unsuspendIfNoTemp
+                || p.min5mCarbimpact != o.min5mCarbimpact
+                || p.remainingCarbsFraction != o.remainingCarbsFraction
+                || p.remainingCarbsCap != o.remainingCarbsCap
+                || p.noisyCGMTargetMultiplier != o.noisyCGMTargetMultiplier
         }
 
-        private var targetBehaviorSummary: String {
-            var flags: [String] = []
-            if state.preferences.highTemptargetRaisesSensitivity { flags.append("HighTT↑") }
-            if state.preferences.lowTemptargetLowersSensitivity { flags.append("LowTT↓") }
-            if state.preferences.sensitivityRaisesTarget { flags.append("Sens↑T") }
-            if state.preferences.resistanceLowersTarget { flags.append("Res↓T") }
-            return flags.isEmpty ? String(localized: "Off") : flags.joined(separator: " ")
+        private var b30Changed: Bool {
+            let p = state.preferences, o = state.originalPreferences
+            return p.enableB30 != o.enableB30
+                || p.B30iTimeStartBolus != o.B30iTimeStartBolus
+                || p.B30iTime != o.B30iTime
+                || p.B30iTimeTarget != o.B30iTimeTarget
+                || p.B30upperLimit != o.B30upperLimit
+                || p.B30upperDelta != o.B30upperDelta
+                || p.B30basalFactor != o.B30basalFactor
         }
 
-        private var smbSummary: String {
-            var parts: [String] = []
-            if state.preferences.enableSMBAlways { parts.append("Always") }
-            if state.preferences.enableUAM { parts.append("UAM") }
-            if parts.isEmpty { parts.append(String(localized: "Off")) }
-            return parts.joined(separator: " · ")
+        private var ketoChanged: Bool {
+            let p = state.preferences, o = state.originalPreferences
+            return p.ketoProtect != o.ketoProtect
+                || p.variableKetoProtect != o.variableKetoProtect
+                || p.ketoProtectBasalPercent != o.ketoProtectBasalPercent
+                || p.ketoProtectAbsolut != o.ketoProtectAbsolut
+                || p.ketoProtectBasalAbsolut != o.ketoProtectBasalAbsolut
         }
 
-        private var dynISFSummary: String {
-            if !state.preferences.useNewFormula { return String(localized: "Off") }
-            return state.preferences.sigmoid ? String(localized: "Sigmoid") : String(localized: "Logarithmic")
+        // MARK: - Per-section reset helpers
+
+        private func resetAutosens() {
+            state.resetField(\.autosensMin)
+            state.resetField(\.autosensMax)
+            state.resetField(\.rewindResetsAutosens)
         }
 
-        private var autoISFSummary: String {
-            state.preferences.autoisf ? String(localized: "On") : String(localized: "Off")
+        private func resetTargetBehavior() {
+            state.resetField(\.highTemptargetRaisesSensitivity)
+            state.resetField(\.lowTemptargetLowersSensitivity)
+            state.resetField(\.sensitivityRaisesTarget)
+            state.resetField(\.resistanceLowersTarget)
+            state.resetField(\.halfBasalExerciseTarget)
+        }
+
+        private func resetSMB() {
+            state.resetField(\.enableSMBAlways)
+            state.resetField(\.enableSMBWithCOB)
+            state.resetField(\.enableSMBWithTemptarget)
+            state.resetField(\.enableSMBAfterCarbs)
+            state.resetField(\.enableSMB_high_bg)
+            state.resetField(\.enableSMB_high_bg_target)
+            state.resetField(\.allowSMBWithHighTemptarget)
+            state.resetField(\.enableUAM)
+            state.resetField(\.maxSMBBasalMinutes)
+            state.resetField(\.maxUAMSMBBasalMinutes)
+            state.resetField(\.smbInterval)
+        }
+
+        private func resetDynISF() {
+            state.resetField(\.useNewFormula)
+            state.resetField(\.sigmoid)
+            state.resetField(\.adjustmentFactor)
+            state.resetField(\.adjustmentFactorSigmoid)
+            state.resetField(\.weightPercentage)
+            state.resetField(\.tddAdjBasal)
+        }
+
+        private func resetAutoISF() {
+            state.resetField(\.autoisf)
+            state.resetField(\.autoISFmax)
+            state.resetField(\.autoISFmin)
+            state.resetField(\.smbDeliveryRatio)
+            state.resetField(\.higherISFrangeWeight)
+            state.resetField(\.lowerISFrangeWeight)
+            state.resetField(\.enableBGacceleration)
+            state.resetField(\.bgAccelISFweight)
+            state.resetField(\.bgBrakeISFweight)
+            state.resetField(\.postMealISFweight)
+            state.resetField(\.iobThresholdPercent)
+        }
+
+        private func resetAdvanced() {
+            state.resetField(\.useProfileCSF)
+            state.resetField(\.maxDailySafetyMultiplier)
+            state.resetField(\.currentBasalSafetyMultiplier)
+            state.resetField(\.skipNeutralTemps)
+            state.resetField(\.unsuspendIfNoTemp)
+            state.resetField(\.min5mCarbimpact)
+            state.resetField(\.remainingCarbsFraction)
+            state.resetField(\.remainingCarbsCap)
+            state.resetField(\.noisyCGMTargetMultiplier)
+        }
+
+        private func resetB30() {
+            state.resetField(\.enableB30)
+            state.resetField(\.B30iTimeStartBolus)
+            state.resetField(\.B30iTime)
+            state.resetField(\.B30iTimeTarget)
+            state.resetField(\.B30upperLimit)
+            state.resetField(\.B30upperDelta)
+            state.resetField(\.B30basalFactor)
+        }
+
+        private func resetKeto() {
+            state.resetField(\.ketoProtect)
+            state.resetField(\.variableKetoProtect)
+            state.resetField(\.ketoProtectBasalPercent)
+            state.resetField(\.ketoProtectAbsolut)
+            state.resetField(\.ketoProtectBasalAbsolut)
         }
 
         private var saveSection: some View {

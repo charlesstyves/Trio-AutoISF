@@ -368,7 +368,7 @@ extension AdaptProfile {
             .listSectionSpacing(10)
             .scrollContentBackground(.hidden)
             .background(appState.trioBackgroundColor(for: colorScheme))
-            .navigationTitle("SMB")
+            .navigationTitle("Super Micro Bolus (SMB)")
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $shouldDisplayHint) { hintSheet }
         }
@@ -500,7 +500,7 @@ extension AdaptProfile {
             .listSectionSpacing(10)
             .scrollContentBackground(.hidden)
             .background(appState.trioBackgroundColor(for: colorScheme))
-            .navigationTitle("Dynamic ISF")
+            .navigationTitle("Dynamic Settings")
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $shouldDisplayHint) { hintSheet }
         }
@@ -701,6 +701,435 @@ extension AdaptProfile {
             .scrollContentBackground(.hidden)
             .background(appState.trioBackgroundColor(for: colorScheme))
             .navigationTitle("autoISF")
+            .navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: $shouldDisplayHint) { hintSheet }
+        }
+
+        private var hintSheet: some View {
+            SettingInputHintView(
+                hintDetent: $hintDetent,
+                shouldDisplayHint: $shouldDisplayHint,
+                hintLabel: hintLabel ?? "",
+                hintText: selectedVerboseHint ?? AnyView(EmptyView()),
+                sheetTitle: String(localized: "Help")
+            )
+        }
+
+        private func verboseHintBinding(_ label: String) -> Binding<(any View)?> {
+            Binding(
+                get: { selectedVerboseHint },
+                set: { newValue in
+                    selectedVerboseHint = newValue.map { AnyView($0) }
+                    hintLabel = label
+                }
+            )
+        }
+    }
+
+    // MARK: - Additionals (Advanced)
+
+    struct DraftAdvancedEditor: View {
+        @Bindable var state: DraftEditorStateModel
+        @State private var shouldDisplayHint = false
+        @State private var hintLabel: String?
+        @State private var selectedVerboseHint: AnyView?
+        @State private var hintDetent = PresentationDetent.large
+
+        @Environment(\.colorScheme) var colorScheme
+        @Environment(AppState.self) var appState
+
+        var body: some View {
+            List {
+                SettingInputSection(
+                    decimalValue: .constant(0),
+                    booleanValue: $state.preferences.useProfileCSF,
+                    shouldDisplayHint: $shouldDisplayHint,
+                    selectedVerboseHint: verboseHintBinding("Use Profile CSF"),
+                    units: state.units,
+                    type: .boolean,
+                    label: String(localized: "Use Profile CSF"),
+                    miniHint: String(localized: "Derive carb ratio dynamically from the CSF profile."),
+                    verboseHint: Text("Default OFF."),
+                    isChanged: state.isChanged(\.useProfileCSF),
+                    onReset: { state.resetField(\.useProfileCSF) }
+                )
+
+                SettingInputSection(
+                    decimalValue: $state.preferences.maxDailySafetyMultiplier,
+                    booleanValue: .constant(false),
+                    shouldDisplayHint: $shouldDisplayHint,
+                    selectedVerboseHint: verboseHintBinding("Max Daily Safety Multiplier"),
+                    units: state.units,
+                    type: .decimal("maxDailySafetyMultiplier"),
+                    label: String(localized: "Max Daily Safety Multiplier"),
+                    miniHint: String(localized: "Cap on temp basal vs. max scheduled daily basal."),
+                    verboseHint: Text("Default 3."),
+                    isChanged: state.isChanged(\.maxDailySafetyMultiplier),
+                    onReset: { state.resetField(\.maxDailySafetyMultiplier) }
+                )
+
+                SettingInputSection(
+                    decimalValue: $state.preferences.currentBasalSafetyMultiplier,
+                    booleanValue: .constant(false),
+                    shouldDisplayHint: $shouldDisplayHint,
+                    selectedVerboseHint: verboseHintBinding("Current Basal Safety Multiplier"),
+                    units: state.units,
+                    type: .decimal("currentBasalSafetyMultiplier"),
+                    label: String(localized: "Current Basal Safety Multiplier"),
+                    miniHint: String(localized: "Cap on temp basal vs. current scheduled basal."),
+                    verboseHint: Text("Default 4."),
+                    isChanged: state.isChanged(\.currentBasalSafetyMultiplier),
+                    onReset: { state.resetField(\.currentBasalSafetyMultiplier) }
+                )
+
+                SettingInputSection(
+                    decimalValue: .constant(0),
+                    booleanValue: $state.preferences.skipNeutralTemps,
+                    shouldDisplayHint: $shouldDisplayHint,
+                    selectedVerboseHint: verboseHintBinding("Skip Neutral Temps"),
+                    units: state.units,
+                    type: .boolean,
+                    label: String(localized: "Skip Neutral Temps"),
+                    miniHint: String(localized: "Don't issue temp basals equal to scheduled rate."),
+                    verboseHint: Text("Default OFF."),
+                    isChanged: state.isChanged(\.skipNeutralTemps),
+                    onReset: { state.resetField(\.skipNeutralTemps) }
+                )
+
+                SettingInputSection(
+                    decimalValue: .constant(0),
+                    booleanValue: $state.preferences.unsuspendIfNoTemp,
+                    shouldDisplayHint: $shouldDisplayHint,
+                    selectedVerboseHint: verboseHintBinding("Unsuspend If No Temp"),
+                    units: state.units,
+                    type: .boolean,
+                    label: String(localized: "Unsuspend If No Temp"),
+                    miniHint: String(localized: "Auto-unsuspend pump if no temp basal is running."),
+                    verboseHint: Text("Default OFF."),
+                    isChanged: state.isChanged(\.unsuspendIfNoTemp),
+                    onReset: { state.resetField(\.unsuspendIfNoTemp) }
+                )
+
+                SettingInputSection(
+                    decimalValue: $state.preferences.min5mCarbimpact,
+                    booleanValue: .constant(false),
+                    shouldDisplayHint: $shouldDisplayHint,
+                    selectedVerboseHint: verboseHintBinding("Min 5m Carb Impact"),
+                    units: state.units,
+                    type: .decimal("min5mCarbimpact"),
+                    label: String(localized: "Min 5m Carb Impact"),
+                    miniHint: String(localized: "Minimum assumed carb impact per 5 min (mg/dL)."),
+                    verboseHint: Text("Default 8."),
+                    isChanged: state.isChanged(\.min5mCarbimpact),
+                    onReset: { state.resetField(\.min5mCarbimpact) }
+                )
+
+                SettingInputSection(
+                    decimalValue: $state.preferences.remainingCarbsFraction,
+                    booleanValue: .constant(false),
+                    shouldDisplayHint: $shouldDisplayHint,
+                    selectedVerboseHint: verboseHintBinding("Remaining Carbs Fraction"),
+                    units: state.units,
+                    type: .decimal("remainingCarbsFraction"),
+                    label: String(localized: "Remaining Carbs Fraction"),
+                    miniHint: String(localized: "Fraction of uncovered carbs to expect absorbing."),
+                    verboseHint: Text("Default 1.0."),
+                    isChanged: state.isChanged(\.remainingCarbsFraction),
+                    onReset: { state.resetField(\.remainingCarbsFraction) }
+                )
+
+                SettingInputSection(
+                    decimalValue: $state.preferences.remainingCarbsCap,
+                    booleanValue: .constant(false),
+                    shouldDisplayHint: $shouldDisplayHint,
+                    selectedVerboseHint: verboseHintBinding("Remaining Carbs Cap"),
+                    units: state.units,
+                    type: .decimal("remainingCarbsCap"),
+                    label: String(localized: "Remaining Carbs Cap"),
+                    miniHint: String(localized: "Cap on uncovered carbs carried forward."),
+                    verboseHint: Text("Default 90 g."),
+                    isChanged: state.isChanged(\.remainingCarbsCap),
+                    onReset: { state.resetField(\.remainingCarbsCap) }
+                )
+
+                SettingInputSection(
+                    decimalValue: $state.preferences.noisyCGMTargetMultiplier,
+                    booleanValue: .constant(false),
+                    shouldDisplayHint: $shouldDisplayHint,
+                    selectedVerboseHint: verboseHintBinding("Noisy CGM Target Multiplier"),
+                    units: state.units,
+                    type: .decimal("noisyCGMTargetMultiplier"),
+                    label: String(localized: "Noisy CGM Target Multiplier"),
+                    miniHint: String(localized: "Raise target when CGM is flagged noisy."),
+                    verboseHint: Text("Default 1.3."),
+                    isChanged: state.isChanged(\.noisyCGMTargetMultiplier),
+                    onReset: { state.resetField(\.noisyCGMTargetMultiplier) }
+                )
+            }
+            .listSectionSpacing(10)
+            .scrollContentBackground(.hidden)
+            .background(appState.trioBackgroundColor(for: colorScheme))
+            .navigationTitle("Additionals")
+            .navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: $shouldDisplayHint) { hintSheet }
+        }
+
+        private var hintSheet: some View {
+            SettingInputHintView(
+                hintDetent: $hintDetent,
+                shouldDisplayHint: $shouldDisplayHint,
+                hintLabel: hintLabel ?? "",
+                hintText: selectedVerboseHint ?? AnyView(EmptyView()),
+                sheetTitle: String(localized: "Help")
+            )
+        }
+
+        private func verboseHintBinding(_ label: String) -> Binding<(any View)?> {
+            Binding(
+                get: { selectedVerboseHint },
+                set: { newValue in
+                    selectedVerboseHint = newValue.map { AnyView($0) }
+                    hintLabel = label
+                }
+            )
+        }
+    }
+
+    // MARK: - AIMI B30
+
+    struct DraftB30Editor: View {
+        @Bindable var state: DraftEditorStateModel
+        @State private var shouldDisplayHint = false
+        @State private var hintLabel: String?
+        @State private var selectedVerboseHint: AnyView?
+        @State private var hintDetent = PresentationDetent.large
+
+        @Environment(\.colorScheme) var colorScheme
+        @Environment(AppState.self) var appState
+
+        var body: some View {
+            List {
+                SettingInputSection(
+                    decimalValue: .constant(0),
+                    booleanValue: $state.preferences.enableB30,
+                    shouldDisplayHint: $shouldDisplayHint,
+                    selectedVerboseHint: verboseHintBinding("Enable B30"),
+                    units: state.units,
+                    type: .boolean,
+                    label: String(localized: "Enable B30"),
+                    miniHint: String(localized: "Eating-soon high-basal window after a small manual bolus."),
+                    verboseHint: Text("Default ON."),
+                    isChanged: state.isChanged(\.enableB30),
+                    onReset: { state.resetField(\.enableB30) }
+                )
+
+                if state.preferences.enableB30 {
+                    SettingInputSection(
+                        decimalValue: $state.preferences.B30iTimeStartBolus,
+                        booleanValue: .constant(false),
+                        shouldDisplayHint: $shouldDisplayHint,
+                        selectedVerboseHint: verboseHintBinding("B30 Start Bolus"),
+                        units: state.units,
+                        type: .decimal("B30iTimeStartBolus"),
+                        label: String(localized: "B30 Start Bolus"),
+                        miniHint: String(localized: "Minimum manual bolus to trigger the B30 window."),
+                        verboseHint: Text("Default 1 U."),
+                        isChanged: state.isChanged(\.B30iTimeStartBolus),
+                        onReset: { state.resetField(\.B30iTimeStartBolus) }
+                    )
+
+                    SettingInputSection(
+                        decimalValue: $state.preferences.B30iTime,
+                        booleanValue: .constant(false),
+                        shouldDisplayHint: $shouldDisplayHint,
+                        selectedVerboseHint: verboseHintBinding("B30 Duration"),
+                        units: state.units,
+                        type: .decimal("B30iTime"),
+                        label: String(localized: "B30 Duration"),
+                        miniHint: String(localized: "How long the high-basal window runs."),
+                        verboseHint: Text("Default 30 min."),
+                        isChanged: state.isChanged(\.B30iTime),
+                        onReset: { state.resetField(\.B30iTime) }
+                    )
+
+                    SettingInputSection(
+                        decimalValue: $state.preferences.B30iTimeTarget,
+                        booleanValue: .constant(false),
+                        shouldDisplayHint: $shouldDisplayHint,
+                        selectedVerboseHint: verboseHintBinding("B30 Target"),
+                        units: state.units,
+                        type: .decimal("B30iTimeTarget"),
+                        label: String(localized: "B30 Target"),
+                        miniHint: String(localized: "Target glucose below which B30 activates."),
+                        verboseHint: Text("Default 90 mg/dL."),
+                        isChanged: state.isChanged(\.B30iTimeTarget),
+                        onReset: { state.resetField(\.B30iTimeTarget) }
+                    )
+
+                    SettingInputSection(
+                        decimalValue: $state.preferences.B30upperLimit,
+                        booleanValue: .constant(false),
+                        shouldDisplayHint: $shouldDisplayHint,
+                        selectedVerboseHint: verboseHintBinding("B30 Upper Limit"),
+                        units: state.units,
+                        type: .decimal("B30upperLimit"),
+                        label: String(localized: "B30 Upper Limit"),
+                        miniHint: String(localized: "Upper glucose limit cancelling B30."),
+                        verboseHint: Text("Default 130 mg/dL."),
+                        isChanged: state.isChanged(\.B30upperLimit),
+                        onReset: { state.resetField(\.B30upperLimit) }
+                    )
+
+                    SettingInputSection(
+                        decimalValue: $state.preferences.B30upperDelta,
+                        booleanValue: .constant(false),
+                        shouldDisplayHint: $shouldDisplayHint,
+                        selectedVerboseHint: verboseHintBinding("B30 Upper Delta"),
+                        units: state.units,
+                        type: .decimal("B30upperDelta"),
+                        label: String(localized: "B30 Upper Delta"),
+                        miniHint: String(localized: "Delta that cancels B30 (rising BG)."),
+                        verboseHint: Text("Default 8 mg/dL."),
+                        isChanged: state.isChanged(\.B30upperDelta),
+                        onReset: { state.resetField(\.B30upperDelta) }
+                    )
+
+                    SettingInputSection(
+                        decimalValue: $state.preferences.B30basalFactor,
+                        booleanValue: .constant(false),
+                        shouldDisplayHint: $shouldDisplayHint,
+                        selectedVerboseHint: verboseHintBinding("B30 Basal Factor"),
+                        units: state.units,
+                        type: .decimal("B30basalFactor"),
+                        label: String(localized: "B30 Basal Factor"),
+                        miniHint: String(localized: "Multiplier applied to basal during B30 window."),
+                        verboseHint: Text("Default 5×."),
+                        isChanged: state.isChanged(\.B30basalFactor),
+                        onReset: { state.resetField(\.B30basalFactor) }
+                    )
+                }
+            }
+            .listSectionSpacing(10)
+            .scrollContentBackground(.hidden)
+            .background(appState.trioBackgroundColor(for: colorScheme))
+            .navigationTitle("AIMI B30")
+            .navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: $shouldDisplayHint) { hintSheet }
+        }
+
+        private var hintSheet: some View {
+            SettingInputHintView(
+                hintDetent: $hintDetent,
+                shouldDisplayHint: $shouldDisplayHint,
+                hintLabel: hintLabel ?? "",
+                hintText: selectedVerboseHint ?? AnyView(EmptyView()),
+                sheetTitle: String(localized: "Help")
+            )
+        }
+
+        private func verboseHintBinding(_ label: String) -> Binding<(any View)?> {
+            Binding(
+                get: { selectedVerboseHint },
+                set: { newValue in
+                    selectedVerboseHint = newValue.map { AnyView($0) }
+                    hintLabel = label
+                }
+            )
+        }
+    }
+
+    // MARK: - Keto Protection
+
+    struct DraftKetoProtectEditor: View {
+        @Bindable var state: DraftEditorStateModel
+        @State private var shouldDisplayHint = false
+        @State private var hintLabel: String?
+        @State private var selectedVerboseHint: AnyView?
+        @State private var hintDetent = PresentationDetent.large
+
+        @Environment(\.colorScheme) var colorScheme
+        @Environment(AppState.self) var appState
+
+        var body: some View {
+            List {
+                SettingInputSection(
+                    decimalValue: .constant(0),
+                    booleanValue: $state.preferences.ketoProtect,
+                    shouldDisplayHint: $shouldDisplayHint,
+                    selectedVerboseHint: verboseHintBinding("Keto Protect"),
+                    units: state.units,
+                    type: .boolean,
+                    label: String(localized: "Keto Protect"),
+                    miniHint: String(localized: "Maintain a minimum basal to avoid ketoacidosis."),
+                    verboseHint: Text("Default OFF."),
+                    isChanged: state.isChanged(\.ketoProtect),
+                    onReset: { state.resetField(\.ketoProtect) }
+                )
+
+                if state.preferences.ketoProtect {
+                    SettingInputSection(
+                        decimalValue: .constant(0),
+                        booleanValue: $state.preferences.variableKetoProtect,
+                        shouldDisplayHint: $shouldDisplayHint,
+                        selectedVerboseHint: verboseHintBinding("Variable Keto Protect"),
+                        units: state.units,
+                        type: .boolean,
+                        label: String(localized: "Variable Keto Protect"),
+                        miniHint: String(localized: "Scale the protective basal with the scheduled basal rate."),
+                        verboseHint: Text("Default OFF."),
+                        isChanged: state.isChanged(\.variableKetoProtect),
+                        onReset: { state.resetField(\.variableKetoProtect) }
+                    )
+
+                    SettingInputSection(
+                        decimalValue: $state.preferences.ketoProtectBasalPercent,
+                        booleanValue: .constant(false),
+                        shouldDisplayHint: $shouldDisplayHint,
+                        selectedVerboseHint: verboseHintBinding("Keto Protect Basal Percent"),
+                        units: state.units,
+                        type: .decimal("ketoProtectBasalPercent"),
+                        label: String(localized: "Keto Protect Basal Percent"),
+                        miniHint: String(localized: "Percent of scheduled basal used as floor."),
+                        verboseHint: Text("Default 20 %."),
+                        isChanged: state.isChanged(\.ketoProtectBasalPercent),
+                        onReset: { state.resetField(\.ketoProtectBasalPercent) }
+                    )
+
+                    SettingInputSection(
+                        decimalValue: .constant(0),
+                        booleanValue: $state.preferences.ketoProtectAbsolut,
+                        shouldDisplayHint: $shouldDisplayHint,
+                        selectedVerboseHint: verboseHintBinding("Keto Protect Absolute"),
+                        units: state.units,
+                        type: .boolean,
+                        label: String(localized: "Keto Protect Absolute"),
+                        miniHint: String(localized: "Use a fixed U/hr floor instead of a percentage."),
+                        verboseHint: Text("Default OFF."),
+                        isChanged: state.isChanged(\.ketoProtectAbsolut),
+                        onReset: { state.resetField(\.ketoProtectAbsolut) }
+                    )
+
+                    if state.preferences.ketoProtectAbsolut {
+                        SettingInputSection(
+                            decimalValue: $state.preferences.ketoProtectBasalAbsolut,
+                            booleanValue: .constant(false),
+                            shouldDisplayHint: $shouldDisplayHint,
+                            selectedVerboseHint: verboseHintBinding("Keto Protect Absolute Basal"),
+                            units: state.units,
+                            type: .decimal("ketoProtectBasalAbsolut"),
+                            label: String(localized: "Keto Protect Absolute Basal"),
+                            miniHint: String(localized: "Minimum basal rate used as floor."),
+                            verboseHint: Text("Default 0.1 U/hr."),
+                            isChanged: state.isChanged(\.ketoProtectBasalAbsolut),
+                            onReset: { state.resetField(\.ketoProtectBasalAbsolut) }
+                        )
+                    }
+                }
+            }
+            .listSectionSpacing(10)
+            .scrollContentBackground(.hidden)
+            .background(appState.trioBackgroundColor(for: colorScheme))
+            .navigationTitle("Keto Protection")
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $shouldDisplayHint) { hintSheet }
         }

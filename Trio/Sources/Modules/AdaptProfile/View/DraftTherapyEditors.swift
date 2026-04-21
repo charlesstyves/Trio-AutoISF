@@ -162,7 +162,7 @@ extension AdaptProfile {
             }
             .scrollContentBackground(.hidden)
             .background(appState.trioBackgroundColor(for: colorScheme))
-            .navigationTitle("Insulin Sensitivity")
+            .navigationTitle("Insulin Sensitivities")
             .navigationBarTitleDisplayMode(.inline)
         }
     }
@@ -192,7 +192,7 @@ extension AdaptProfile {
             }
             .scrollContentBackground(.hidden)
             .background(appState.trioBackgroundColor(for: colorScheme))
-            .navigationTitle("Carb Ratio")
+            .navigationTitle("Carb Ratios")
             .navigationBarTitleDisplayMode(.inline)
         }
     }

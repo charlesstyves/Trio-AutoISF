@@ -97,7 +97,6 @@ extension AdaptProfile {
                     if let draftState = draftEditorState {
                         DraftEditorRootView(
                             state: draftState,
-                            onCancel: { showNewProfile = false },
                             onSaved: {
                                 showNewProfile = false
                                 Task { await state.refresh() }
