@@ -6,8 +6,8 @@ extension AdaptProfile {
         let resolver: Resolver
         @State var state = StateModel()
         @State private var showNewProfile = false
-        @State private var showEditor = false
         @State private var draftEditorState: DraftEditorStateModel?
+        @State private var editDraftState: DraftEditorStateModel?
         @State private var selectedProfile: AdaptProfileListItem?
         @State private var isConfirmDeletePresented = false
         @State private var activationTarget: AdaptProfileListItem?
@@ -84,20 +84,18 @@ extension AdaptProfile {
             .sheet(isPresented: $showNewProfile, onDismiss: { draftEditorState = nil }) {
                 newProfileSheet
             }
-            .sheet(isPresented: $showEditor, onDismiss: { draftEditorState = nil }) {
+            .sheet(item: $editDraftState) { draftState in
                 NavigationStack {
-                    if let draftState = draftEditorState {
-                        DraftEditorRootView(
-                            state: draftState,
-                            onSaved: {
-                                showEditor = false
-                                Task { await state.refresh() }
-                            }
-                        )
-                        .toolbar {
-                            ToolbarItem(placement: .topBarLeading) {
-                                Button("Cancel") { showEditor = false }
-                            }
+                    DraftEditorRootView(
+                        state: draftState,
+                        onSaved: {
+                            editDraftState = nil
+                            Task { await state.refresh() }
+                        }
+                    )
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button("Cancel") { editDraftState = nil }
                         }
                     }
                 }
@@ -239,13 +237,12 @@ extension AdaptProfile {
         private func openEditor(for item: AdaptProfileListItem) {
             Task { @MainActor in
                 guard let content = await state.provider.loadProfileContent(id: item.id) else { return }
-                draftEditorState = DraftEditorStateModel(
+                editDraftState = DraftEditorStateModel(
                     provider: state.provider,
                     insulinConcentration: state.settingsManager.settings.insulinConcentration,
                     units: state.settingsManager.settings.units,
                     editing: content
                 )
-                showEditor = true
             }
         }
 
@@ -302,7 +299,7 @@ extension AdaptProfile {
                 out.append("\(source) · \(percent) %")
             }
             switch (item.preferencesChangedFromSource, item.targetsChangedFromSource) {
-            case (true, true): out.append(String(localized: "Algorithm Settings & Glucose Targets tuned"))
+            case (true, true): out.append(String(localized: "Algo & Targets tuned"))
             case (true, false): out.append(String(localized: "Algorithm Settings tuned"))
             case (false, true): out.append(String(localized: "Glucose Targets tuned"))
             case (false, false): break

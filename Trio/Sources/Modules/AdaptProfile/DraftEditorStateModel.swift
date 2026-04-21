@@ -8,7 +8,11 @@ extension AdaptProfile {
     /// (`TherapySettingEditorView`, `SettingInputSection`) can bind to them directly, without any
     /// dependency on `SettingsManager`, `FileStorage`, pump, or Nightscout. Constructed from the
     /// list view (which has the resolved services) and disposed when the hub closes.
-    @Observable final class DraftEditorStateModel {
+    @Observable final class DraftEditorStateModel: Identifiable {
+        /// Stable identity for SwiftUI's `.sheet(item:)` presentation — each hub invocation gets
+        /// a fresh state model, so a fresh UUID is fine.
+        let id = UUID()
+
         let provider: AdaptProfileProvider
         let insulinConcentration: Decimal
         let units: GlucoseUnits

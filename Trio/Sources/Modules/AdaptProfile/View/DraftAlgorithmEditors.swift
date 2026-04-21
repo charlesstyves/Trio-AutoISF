@@ -410,13 +410,21 @@ extension AdaptProfile {
             List {
                 SettingInputSection(
                     decimalValue: .constant(0),
-                    booleanValue: $state.preferences.useNewFormula,
+                    booleanValue: Binding(
+                        get: { state.preferences.useNewFormula },
+                        set: { newValue in
+                            state.preferences.useNewFormula = newValue
+                            // dynISF and autoISF are mutually exclusive: enabling one disables
+                            // the other.
+                            if newValue { state.preferences.autoisf = false }
+                        }
+                    ),
                     shouldDisplayHint: $shouldDisplayHint,
                     selectedVerboseHint: verboseHintBinding("Use Dynamic ISF"),
                     units: state.units,
                     type: .boolean,
                     label: String(localized: "Use Dynamic ISF"),
-                    miniHint: String(localized: "Enable logarithmic or sigmoid dynamic ISF."),
+                    miniHint: String(localized: "Enable logarithmic or sigmoid dynamic ISF. Disables autoISF."),
                     verboseHint: Text("Default OFF."),
                     isChanged: state.isChanged(\.useNewFormula),
                     onReset: { state.resetField(\.useNewFormula) }
@@ -542,13 +550,23 @@ extension AdaptProfile {
             List {
                 SettingInputSection(
                     decimalValue: .constant(0),
-                    booleanValue: $state.preferences.autoisf,
+                    booleanValue: Binding(
+                        get: { state.preferences.autoisf },
+                        set: { newValue in
+                            state.preferences.autoisf = newValue
+                            // dynISF and autoISF are mutually exclusive: enabling one disables
+                            // the other.
+                            if newValue { state.preferences.useNewFormula = false }
+                        }
+                    ),
                     shouldDisplayHint: $shouldDisplayHint,
                     selectedVerboseHint: verboseHintBinding("Enable autoISF"),
                     units: state.units,
                     type: .boolean,
                     label: String(localized: "Enable autoISF"),
-                    miniHint: String(localized: "Dynamically scales ISF based on BG acceleration and duration."),
+                    miniHint: String(
+                        localized: "Dynamically scales ISF based on BG acceleration and duration. Disables Dynamic ISF."
+                    ),
                     verboseHint: Text("Default ON."),
                     isChanged: state.isChanged(\.autoisf),
                     onReset: { state.resetField(\.autoisf) }
