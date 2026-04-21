@@ -6,6 +6,7 @@ extension AdaptProfile {
         let resolver: Resolver
         @State var state = StateModel()
         @State private var showNewProfile = false
+        @State private var draftEditorState: DraftEditorStateModel?
         @State private var selectedProfile: AdaptProfileListItem?
         @State private var isConfirmDeletePresented = false
         @State private var showEditSheet = false
@@ -70,12 +71,8 @@ extension AdaptProfile {
                     })
                 }
             }
-            .sheet(isPresented: $showNewProfile) {
-                NewProfileForm(
-                    state: state,
-                    onCancel: { showNewProfile = false },
-                    onSaved: { showNewProfile = false }
-                )
+            .sheet(isPresented: $showNewProfile, onDismiss: { draftEditorState = nil }) {
+                newProfileSheet
             }
             .sheet(isPresented: $showEditSheet, onDismiss: { selectedProfile = nil }) {
                 if let profile = selectedProfile {
@@ -84,6 +81,38 @@ extension AdaptProfile {
                         item: profile,
                         onDismiss: { showEditSheet = false }
                     )
+                }
+            }
+        }
+
+        private var newProfileSheet: some View {
+            NavigationStack {
+                NewProfileForm(
+                    state: state,
+                    onCancel: { showNewProfile = false },
+                    onNext: {
+                        draftEditorState = DraftEditorStateModel(
+                            provider: state.provider,
+                            insulinConcentration: state.settingsManager.settings.insulinConcentration,
+                            units: state.settingsManager.settings.units,
+                            from: state.draft
+                        )
+                    }
+                )
+                .navigationDestination(isPresented: Binding(
+                    get: { draftEditorState != nil },
+                    set: { if !$0 { draftEditorState = nil } }
+                )) {
+                    if let draftState = draftEditorState {
+                        DraftEditorRootView(
+                            state: draftState,
+                            onCancel: { showNewProfile = false },
+                            onSaved: {
+                                showNewProfile = false
+                                Task { await state.refresh() }
+                            }
+                        )
+                    }
                 }
             }
         }

@@ -13,6 +13,10 @@ protocol SettingsScope: AnyObject {
     var sensitivities: InsulinSensitivities { get set }
     var carbRatios: CarbRatios { get set }
     var bgTargets: BGTargets { get set }
+
+    /// `true` when edits are directed at an in-memory profile draft — editors MUST NOT sync to the
+    /// pump, upload to Nightscout, or broadcast global observer notifications in this mode.
+    var isDraft: Bool { get }
 }
 
 /// Scope that reads and writes the live (currently-active) settings via the existing
@@ -20,6 +24,8 @@ protocol SettingsScope: AnyObject {
 final class LiveScope: SettingsScope {
     private let settingsManager: SettingsManager
     private let storage: FileStorage
+
+    var isDraft: Bool { false }
 
     init(settingsManager: SettingsManager, storage: FileStorage) {
         self.settingsManager = settingsManager
@@ -91,6 +97,8 @@ final class DraftScope: SettingsScope {
     var sensitivities: InsulinSensitivities
     var carbRatios: CarbRatios
     var bgTargets: BGTargets
+
+    var isDraft: Bool { true }
 
     init(
         preferences: Preferences,

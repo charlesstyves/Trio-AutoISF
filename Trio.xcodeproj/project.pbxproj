@@ -149,6 +149,9 @@
 		ADA10014ADA10014ADA10014 /* AdaptProfileRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10013ADA10013ADA10013 /* AdaptProfileRootView.swift */; };
 		ADA10018ADA10018ADA10018 /* NewProfileForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10017ADA10017ADA10017 /* NewProfileForm.swift */; };
 		ADA1001CADA1001CADA1001C /* EditProfileForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA1001BADA1001BADA1001B /* EditProfileForm.swift */; };
+		ADA1001EADA1001EADA1001E /* DraftEditorStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA1001DADA1001DADA1001D /* DraftEditorStateModel.swift */; };
+		ADA10020ADA10020ADA10020 /* DraftEditorRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA1001FADA1001FADA1001F /* DraftEditorRootView.swift */; };
+		ADA10022ADA10022ADA10022 /* DraftTherapyEditors.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10021ADA10021ADA10021 /* DraftTherapyEditors.swift */; };
 		38AEE75725F0F18E0013F05B /* CarbsStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38AEE75625F0F18E0013F05B /* CarbsStorage.swift */; };
 		38B17B6625DD90E0005CAE3D /* SwiftDate in Frameworks */ = {isa = PBXBuildFile; productRef = 38B17B6525DD90E0005CAE3D /* SwiftDate */; };
 		38B4F3AF25E2979F00E76A18 /* IndexedCollection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38B4F3AE25E2979F00E76A18 /* IndexedCollection.swift */; };
@@ -1183,6 +1186,9 @@
 		ADA10013ADA10013ADA10013 /* AdaptProfileRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptProfileRootView.swift; sourceTree = "<group>"; };
 		ADA10017ADA10017ADA10017 /* NewProfileForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewProfileForm.swift; sourceTree = "<group>"; };
 		ADA1001BADA1001BADA1001B /* EditProfileForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileForm.swift; sourceTree = "<group>"; };
+		ADA1001DADA1001DADA1001D /* DraftEditorStateModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftEditorStateModel.swift; sourceTree = "<group>"; };
+		ADA1001FADA1001FADA1001F /* DraftEditorRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftEditorRootView.swift; sourceTree = "<group>"; };
+		ADA10021ADA10021ADA10021 /* DraftTherapyEditors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftTherapyEditors.swift; sourceTree = "<group>"; };
 		38AEE75625F0F18E0013F05B /* CarbsStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarbsStorage.swift; sourceTree = "<group>"; };
 		38B4F3AE25E2979F00E76A18 /* IndexedCollection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndexedCollection.swift; sourceTree = "<group>"; };
 		38B4F3C225E2A20B00E76A18 /* PumpSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PumpSetupView.swift; sourceTree = "<group>"; };
@@ -2257,6 +2263,7 @@
 				ADA1000DADA1000DADA1000D /* AdaptProfileDataFlow.swift */,
 				ADA1000EADA1000EADA1000E /* AdaptProfileProvider.swift */,
 				ADA1000FADA1000FADA1000F /* AdaptProfileStateModel.swift */,
+				ADA1001DADA1001DADA1001D /* DraftEditorStateModel.swift */,
 				ADA10016ADA10016ADA10016 /* View */,
 			);
 			path = AdaptProfile;
@@ -2268,6 +2275,8 @@
 				ADA10013ADA10013ADA10013 /* AdaptProfileRootView.swift */,
 				ADA10017ADA10017ADA10017 /* NewProfileForm.swift */,
 				ADA1001BADA1001BADA1001B /* EditProfileForm.swift */,
+				ADA1001FADA1001FADA1001F /* DraftEditorRootView.swift */,
+				ADA10021ADA10021ADA10021 /* DraftTherapyEditors.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -5009,6 +5018,9 @@
 				ADA10014ADA10014ADA10014 /* AdaptProfileRootView.swift in Sources */,
 				ADA10018ADA10018ADA10018 /* NewProfileForm.swift in Sources */,
 				ADA1001CADA1001CADA1001C /* EditProfileForm.swift in Sources */,
+				ADA1001EADA1001EADA1001E /* DraftEditorStateModel.swift in Sources */,
+				ADA10020ADA10020ADA10020 /* DraftEditorRootView.swift in Sources */,
+				ADA10022ADA10022ADA10022 /* DraftTherapyEditors.swift in Sources */,
 				3894873A2614928B004DF424 /* DispatchTimer.swift in Sources */,
 				3895E4C625B9E00D00214B37 /* Preferences.swift in Sources */,
 				CE94598429E9E3E60047C9C6 /* WatchConfigStateModel.swift in Sources */,

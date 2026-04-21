@@ -1,16 +1,16 @@
 import SwiftUI
 
 extension AdaptProfile {
-    /// Single-step new-profile creation: name + therapy percentage. On Save the draft is applied
-    /// (basal floored to pump-supported rates, ISF and CR quantized to their picker step sizes)
-    /// and persisted as a non-active profile. Styling mirrors `AddTempTargetForm`.
+    /// Step 1 of new-profile creation: name + therapy percentage.
+    ///
+    /// On "Next" the percentage is applied (basal floored to pump-supported rates, ISF and CR
+    /// quantized to picker steps) and the parent transitions to the draft editor hub. Saving
+    /// happens from the hub, not here.
     struct NewProfileForm: View {
         @Bindable var state: StateModel
         let onCancel: () -> Void
-        let onSaved: () -> Void
+        let onNext: () -> Void
 
-        @State private var isSaving = false
-        @State private var saveError = false
         @State private var shouldDisplayHint: Bool = false
         @State private var hintDetent = PresentationDetent.large
         @State private var selectedVerboseHint: (any View)?
@@ -19,29 +19,21 @@ extension AdaptProfile {
 
         @Environment(\.colorScheme) var colorScheme
         @Environment(AppState.self) var appState
-        @Environment(\.dismiss) var dismiss
 
         var body: some View {
-            NavigationView {
-                List {
-                    nameSection
-                    percentSection
-                    saveSection
-                }
-                .listSectionSpacing(10)
-                .scrollContentBackground(.hidden)
-                .background(appState.trioBackgroundColor(for: colorScheme))
-                .navigationTitle("Add Profile")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button("Cancel", action: onCancel)
-                    }
-                }
-                .alert("Save failed", isPresented: $saveError) {
-                    Button("OK") { saveError = false }
-                } message: {
-                    Text("The profile couldn't be saved. Check the name and try again.")
+            List {
+                nameSection
+                percentSection
+                nextSection
+            }
+            .listSectionSpacing(10)
+            .scrollContentBackground(.hidden)
+            .background(appState.trioBackgroundColor(for: colorScheme))
+            .navigationTitle("Add Profile")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancel", action: onCancel)
                 }
             }
         }
@@ -94,34 +86,28 @@ extension AdaptProfile {
             )
         }
 
-        private var saveSection: some View {
+        private var nextSection: some View {
             Section {
                 Button {
-                    Task { await save() }
+                    state.applyPercentagesToDraft()
+                    onNext()
                 } label: {
-                    Text("Add Profile")
+                    HStack {
+                        Text("Next")
+                        Image(systemName: "chevron.right")
+                    }
                 }
-                .disabled(!canProceed || isSaving)
+                .disabled(!canProceed)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .tint(.white)
+            } footer: {
+                Text("Review the pre-filled therapy and algorithm values on the next screen, then save.")
             }
-            .listRowBackground(!canProceed || isSaving ? Color(.systemGray4) : Color(.systemBlue))
+            .listRowBackground(!canProceed ? Color(.systemGray4) : Color(.systemBlue))
         }
 
         private var canProceed: Bool {
             !state.draft.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        }
-
-        @MainActor private func save() async {
-            isSaving = true
-            state.applyPercentagesToDraft()
-            let ok = await state.saveDraft()
-            isSaving = false
-            if ok {
-                onSaved()
-            } else {
-                saveError = true
-            }
         }
     }
 }
