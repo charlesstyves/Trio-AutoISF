@@ -14,18 +14,28 @@ extension AdaptProfile {
         let insulinConcentration: Decimal
         let units: GlucoseUnits
 
+        /// Name of the profile this draft was seeded from (shown in the hub).
+        let sourceProfileName: String
+
         var name: String = ""
         var appliedPercent: Decimal = 100
 
-        /// TherapySettingItem lists for the four schedule-based therapy values. For BG targets we
-        /// treat low == high (single value per time slot).
+        /// Editable TherapySettingItem lists. BG targets use low == high (single value / slot).
         var basalItems: [TherapySettingItem] = []
         var isfItems: [TherapySettingItem] = []
         var crItems: [TherapySettingItem] = []
         var targetItems: [TherapySettingItem] = []
 
-        /// Full algorithm preferences snapshot, mutated by SettingInputSection bindings later.
-        var preferences: Preferences = Preferences()
+        /// Snapshots of the source (active) profile BEFORE the % adjustment, used purely for
+        /// "changed" indicators in the hub.
+        let originalBasalItems: [TherapySettingItem]
+        let originalISFItems: [TherapySettingItem]
+        let originalCRItems: [TherapySettingItem]
+        let originalTargetItems: [TherapySettingItem]
+        let originalPreferences: Preferences
+
+        /// Full algorithm preferences snapshot, mutated by SettingInputSection bindings.
+        var preferences = Preferences()
 
         // MARK: - Picker option arrays
 
@@ -61,28 +71,67 @@ extension AdaptProfile {
             provider: AdaptProfileProvider,
             insulinConcentration: Decimal,
             units: GlucoseUnits,
+            sourceProfileName: String,
             from source: NewProfileDraft
         ) {
             self.provider = provider
             self.insulinConcentration = insulinConcentration
             self.units = units
+            self.sourceProfileName = sourceProfileName
 
             name = source.name
             appliedPercent = source.adjustPercent
             preferences = source.preferencesSource
+            originalPreferences = source.preferencesSource
 
-            basalItems = source.finalBasal.map {
+            let basalItems = source.finalBasal.map {
                 TherapySettingItem(time: TimeInterval($0.minutes * 60), value: $0.rate)
             }
-            isfItems = source.adjustedSensitivities.sensitivities.map {
+            let isfItems = source.adjustedSensitivities.sensitivities.map {
                 TherapySettingItem(time: TimeInterval($0.offset * 60), value: $0.sensitivity)
             }
-            crItems = source.adjustedCarbRatios.schedule.map {
+            let crItems = source.adjustedCarbRatios.schedule.map {
                 TherapySettingItem(time: TimeInterval($0.offset * 60), value: $0.ratio)
             }
-            targetItems = source.bgTargets.targets.map {
+            let targetItems = source.bgTargets.targets.map {
                 TherapySettingItem(time: TimeInterval($0.offset * 60), value: $0.low)
             }
+            self.basalItems = basalItems
+            self.isfItems = isfItems
+            self.crItems = crItems
+            self.targetItems = targetItems
+
+            // Originals for "changed" markers — convert from the pre-% adjustment source values.
+            originalBasalItems = source.originalBasal.map {
+                TherapySettingItem(time: TimeInterval($0.minutes * 60), value: $0.rate)
+            }
+            originalISFItems = source.originalSensitivities.sensitivities.map {
+                TherapySettingItem(time: TimeInterval($0.offset * 60), value: $0.sensitivity)
+            }
+            originalCRItems = source.originalCarbRatios.schedule.map {
+                TherapySettingItem(time: TimeInterval($0.offset * 60), value: $0.ratio)
+            }
+            originalTargetItems = source.bgTargets.targets.map {
+                TherapySettingItem(time: TimeInterval($0.offset * 60), value: $0.low)
+            }
+        }
+
+        // MARK: - Change detection (for hub "changed" indicators)
+
+        var basalIsChanged: Bool { basalItems != originalBasalItems }
+        var isfIsChanged: Bool { isfItems != originalISFItems }
+        var crIsChanged: Bool { crItems != originalCRItems }
+        var targetsAreChanged: Bool { targetItems != originalTargetItems }
+        var preferencesChanged: Bool { preferences != originalPreferences }
+
+        /// True when a single preferences field differs from the source profile's value.
+        func isChanged<T: Equatable>(_ keyPath: KeyPath<Preferences, T>) -> Bool {
+            preferences[keyPath: keyPath] != originalPreferences[keyPath: keyPath]
+        }
+
+        /// Resets a single preferences field back to the source profile's value.
+        func resetField<T>(_ keyPath: WritableKeyPath<Preferences, T>) {
+            preferences[keyPath: keyPath] = originalPreferences[keyPath: keyPath]
         }
 
         // MARK: - Persistence

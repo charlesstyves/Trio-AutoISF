@@ -35,20 +35,10 @@ extension AdaptProfile {
                     currentActiveProfile(active)
                 }
 
-                if inactiveItems.isEmpty, !state.isLoading, activeItem != nil {
-                    Section {
-                        Text("No other profiles. Tap Add Profile to create one.")
-                            .foregroundColor(.secondary)
-                    }
-                    .listRowBackground(Color.chart)
-                } else if !inactiveItems.isEmpty {
+                if inactiveItems.isEmpty, !state.isLoading {
+                    defaultText
+                } else {
                     profilesSection
-                } else if state.items.isEmpty, !state.isLoading {
-                    Section {
-                        Text("No profiles yet. Tap Add Profile to create one.")
-                            .foregroundColor(.secondary)
-                    }
-                    .listRowBackground(Color.chart)
                 }
             }
             .listSectionSpacing(10)
@@ -95,6 +85,7 @@ extension AdaptProfile {
                             provider: state.provider,
                             insulinConcentration: state.settingsManager.settings.insulinConcentration,
                             units: state.settingsManager.settings.units,
+                            sourceProfileName: activeItem?.name ?? String(localized: "Current"),
                             from: state.draft
                         )
                     }
@@ -114,6 +105,14 @@ extension AdaptProfile {
                         )
                     }
                 }
+            }
+        }
+
+        private var defaultText: some View {
+            Section {} header: {
+                Text("Add a Profile by tapping 'Add Profile +' in the top right-hand corner of the screen.")
+                    .textCase(nil)
+                    .foregroundStyle(.secondary)
             }
         }
 

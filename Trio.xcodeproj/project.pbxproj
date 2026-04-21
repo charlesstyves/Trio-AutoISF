@@ -152,6 +152,7 @@
 		ADA1001EADA1001EADA1001E /* DraftEditorStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA1001DADA1001DADA1001D /* DraftEditorStateModel.swift */; };
 		ADA10020ADA10020ADA10020 /* DraftEditorRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA1001FADA1001FADA1001F /* DraftEditorRootView.swift */; };
 		ADA10022ADA10022ADA10022 /* DraftTherapyEditors.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10021ADA10021ADA10021 /* DraftTherapyEditors.swift */; };
+		ADA10024ADA10024ADA10024 /* DraftAlgorithmEditors.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10023ADA10023ADA10023 /* DraftAlgorithmEditors.swift */; };
 		38AEE75725F0F18E0013F05B /* CarbsStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38AEE75625F0F18E0013F05B /* CarbsStorage.swift */; };
 		38B17B6625DD90E0005CAE3D /* SwiftDate in Frameworks */ = {isa = PBXBuildFile; productRef = 38B17B6525DD90E0005CAE3D /* SwiftDate */; };
 		38B4F3AF25E2979F00E76A18 /* IndexedCollection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38B4F3AE25E2979F00E76A18 /* IndexedCollection.swift */; };
@@ -1189,6 +1190,7 @@
 		ADA1001DADA1001DADA1001D /* DraftEditorStateModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftEditorStateModel.swift; sourceTree = "<group>"; };
 		ADA1001FADA1001FADA1001F /* DraftEditorRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftEditorRootView.swift; sourceTree = "<group>"; };
 		ADA10021ADA10021ADA10021 /* DraftTherapyEditors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftTherapyEditors.swift; sourceTree = "<group>"; };
+		ADA10023ADA10023ADA10023 /* DraftAlgorithmEditors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftAlgorithmEditors.swift; sourceTree = "<group>"; };
 		38AEE75625F0F18E0013F05B /* CarbsStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarbsStorage.swift; sourceTree = "<group>"; };
 		38B4F3AE25E2979F00E76A18 /* IndexedCollection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndexedCollection.swift; sourceTree = "<group>"; };
 		38B4F3C225E2A20B00E76A18 /* PumpSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PumpSetupView.swift; sourceTree = "<group>"; };
@@ -2277,6 +2279,7 @@
 				ADA1001BADA1001BADA1001B /* EditProfileForm.swift */,
 				ADA1001FADA1001FADA1001F /* DraftEditorRootView.swift */,
 				ADA10021ADA10021ADA10021 /* DraftTherapyEditors.swift */,
+				ADA10023ADA10023ADA10023 /* DraftAlgorithmEditors.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -5021,6 +5024,7 @@
 				ADA1001EADA1001EADA1001E /* DraftEditorStateModel.swift in Sources */,
 				ADA10020ADA10020ADA10020 /* DraftEditorRootView.swift in Sources */,
 				ADA10022ADA10022ADA10022 /* DraftTherapyEditors.swift in Sources */,
+				ADA10024ADA10024ADA10024 /* DraftAlgorithmEditors.swift in Sources */,
 				3894873A2614928B004DF424 /* DispatchTimer.swift in Sources */,
 				3895E4C625B9E00D00214B37 /* Preferences.swift in Sources */,
 				CE94598429E9E3E60047C9C6 /* WatchConfigStateModel.swift in Sources */,

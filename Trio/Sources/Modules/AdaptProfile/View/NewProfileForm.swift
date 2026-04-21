@@ -13,7 +13,7 @@ extension AdaptProfile {
 
         @State private var shouldDisplayHint: Bool = false
         @State private var hintDetent = PresentationDetent.large
-        @State private var selectedVerboseHint: (any View)?
+        @State private var selectedVerboseHint: AnyView?
         @State private var hintLabel: String?
         @State private var booleanPlaceholder = false
 
