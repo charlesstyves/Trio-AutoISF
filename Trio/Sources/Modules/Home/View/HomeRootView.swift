@@ -187,7 +187,11 @@ extension Home {
                 timerDate: state.timerDate,
                 pumpStatusHighlightMessage: state.pumpStatusHighlightMessage,
                 battery: state.batteryFromPersistence,
-                autoISFratio: (state.enactedAndNonEnactedDeterminations.first?.autoISFratio ?? 1) as Decimal,
+                autoISFratio: (
+                    state.autoisfEnabled
+                        ? (state.enactedAndNonEnactedDeterminations.first?.autoISFratio ?? 1)
+                        : (state.enactedAndNonEnactedDeterminations.first?.sensitivityRatio ?? 1)
+                ) as Decimal,
                 totalDaily: state.fetchedTDDs.first?.totalDailyDose ?? 0,
                 autoisfEnabled: state.autoisfEnabled,
                 showPumpSelection: $showPumpSelection,
