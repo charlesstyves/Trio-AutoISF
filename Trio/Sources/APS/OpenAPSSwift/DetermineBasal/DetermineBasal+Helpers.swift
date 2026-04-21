@@ -142,8 +142,8 @@ extension DeterminationGenerator {
                 ratio = c / (c + targetGlucose - normalTarget)
             }
             ratio = min(ratio, profile.autosensMax).jsRounded(scale: 2)
-        } else if let autosens = autosens {
-            // Use autosens if present
+        } else if profile.enableAutosens, let autosens = autosens {
+            // Use autosens if present and enabled
             ratio = autosens.ratio
         }
 
