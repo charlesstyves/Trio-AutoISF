@@ -58,14 +58,14 @@ extension AutosensSettings {
 
         var AutosensView: some View {
             Section(
-                header: !state.settingsManager.preferences
+                header: !state.scope.preferences
                     .useNewFormula ? Text("Autosens") : Text("Dynamic Sensitivity")
             ) {
                 VStack {
                     let dynamicRatio = state.determinationsFromPersistence.first?.sensitivityRatio
                     let dynamicISF = state.determinationsFromPersistence.first?.insulinSensitivity
                     let newISF = state.autosensISF
-                    let decimalValue = !state.settingsManager.preferences.useNewFormula ? state
+                    let decimalValue = !state.scope.preferences.useNewFormula ? state
                         .autosensRatio as NSDecimalNumber : dynamicRatio ?? 1
                     let decimalValueText = rateFormatter
                         .string(from: ((decimalValue as Decimal) * Decimal(100)) as NSNumber) ?? "100"
@@ -80,12 +80,12 @@ extension AutosensSettings {
                         Spacer()
                         if state.units == .mgdL {
                             Text(
-                                !state.settingsManager.preferences
+                                !state.scope.preferences
                                     .useNewFormula ? newISF!.description : (dynamicISF ?? 0).description
                             )
                         } else {
                             Text((
-                                !state.settingsManager.preferences
+                                !state.scope.preferences
                                     .useNewFormula ? newISF!.formattedAsMmolL : dynamicISF?.decimalValue.formattedAsMmolL
                             ) ?? "0")
                         }

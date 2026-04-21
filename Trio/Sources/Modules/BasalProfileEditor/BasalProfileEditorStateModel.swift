@@ -36,8 +36,8 @@ extension BasalProfileEditor {
         }
 
         var preferences: Preferences {
-            get { settingsManager.preferences }
-            set { settingsManager.preferences = newValue }
+            get { scope.preferences }
+            set { scope.preferences = newValue }
         }
 
         var roundingHint: Bool = false

@@ -15,7 +15,7 @@ extension TargetBehavoir {
 
         override func subscribe() {
             units = settingsManager.settings.units
-            autosensMax = settingsManager.preferences.autosensMax
+            autosensMax = scope.preferences.autosensMax
             subscribePreferencesSetting(\.highTemptargetRaisesSensitivity, on: $highTemptargetRaisesSensitivity) {
                 highTemptargetRaisesSensitivity = $0 }
             subscribePreferencesSetting(\.lowTemptargetLowersSensitivity, on: $lowTemptargetLowersSensitivity) {
