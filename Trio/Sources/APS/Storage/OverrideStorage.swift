@@ -172,6 +172,7 @@ final class BaseOverrideStorage: @preconcurrency OverrideStorage, Injectable {
             newOverride.bgAccelISFweight = override.bgAccelISFweight.map { NSDecimalNumber(decimal: $0) }
             newOverride.bgBrakeISFweight = override.bgBrakeISFweight.map { NSDecimalNumber(decimal: $0) }
             newOverride.iobThresholdPercent = override.iobThresholdPercent.map { NSDecimalNumber(decimal: $0) }
+            newOverride.smbDeliveryRatio = override.smbDeliveryRatio.map { NSDecimalNumber(decimal: $0) }
             newOverride.smbDeliveryRatioBGrange = override.smbDeliveryRatioBGrange.map { NSDecimalNumber(decimal: $0) }
             newOverride.smbDeliveryRatioMin = override.smbDeliveryRatioMin.map { NSDecimalNumber(decimal: $0) }
             newOverride.smbDeliveryRatioMax = override.smbDeliveryRatioMax.map { NSDecimalNumber(decimal: $0) }
@@ -218,6 +219,7 @@ final class BaseOverrideStorage: @preconcurrency OverrideStorage, Injectable {
         newOverride.bgAccelISFweight = override.bgAccelISFweight
         newOverride.bgBrakeISFweight = override.bgBrakeISFweight
         newOverride.iobThresholdPercent = override.iobThresholdPercent
+        newOverride.smbDeliveryRatio = override.smbDeliveryRatio
         newOverride.smbDeliveryRatioBGrange = override.smbDeliveryRatioBGrange
         newOverride.smbDeliveryRatioMin = override.smbDeliveryRatioMin
         newOverride.smbDeliveryRatioMax = override.smbDeliveryRatioMax

@@ -31,6 +31,7 @@ struct Override {
     let bgAccelISFweight: Decimal?
     let bgBrakeISFweight: Decimal?
     let iobThresholdPercent: Decimal?
+    let smbDeliveryRatio: Decimal?
     let smbDeliveryRatioBGrange: Decimal?
     let smbDeliveryRatioMin: Decimal?
     let smbDeliveryRatioMax: Decimal?

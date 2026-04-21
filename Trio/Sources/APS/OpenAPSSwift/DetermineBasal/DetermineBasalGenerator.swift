@@ -57,6 +57,9 @@ enum DeterminationGenerator {
             if let override = trioCustomOrefVariables.overrideIobThresholdPercent {
                 profile.iobThresholdPercent = override
             }
+            if let override = trioCustomOrefVariables.overrideSmbDeliveryRatio {
+                profile.smbDeliveryRatio = override
+            }
             if let override = trioCustomOrefVariables.overrideSmbDeliveryRatioBGrange {
                 profile.smbDeliveryRatioBGrange = override
             }

@@ -50,6 +50,7 @@ extension Adjustments {
         var overrideBgAccelISFweight: Decimal?
         var overrideBgBrakeISFweight: Decimal?
         var overrideIobThresholdPercent: Decimal?
+        var overrideSmbDeliveryRatio: Decimal?
         var overrideSmbDeliveryRatioBGrange: Decimal?
         var overrideSmbDeliveryRatioMin: Decimal?
         var overrideSmbDeliveryRatioMax: Decimal?
@@ -64,6 +65,7 @@ extension Adjustments {
         var profileBgAccelISFweight: Decimal = 0.15
         var profileBgBrakeISFweight: Decimal = 0.15
         var profileIobThresholdPercent: Decimal = 1
+        var profileSmbDeliveryRatio: Decimal = 0.5
         var profileSmbDeliveryRatioBGrange: Decimal = 0
         var profileSmbDeliveryRatioMin: Decimal = 0.5
         var profileSmbDeliveryRatioMax: Decimal = 0.8
@@ -210,6 +212,7 @@ extension Adjustments {
             profileBgAccelISFweight = prefs.bgAccelISFweight
             profileBgBrakeISFweight = prefs.bgBrakeISFweight
             profileIobThresholdPercent = prefs.iobThresholdPercent
+            profileSmbDeliveryRatio = prefs.smbDeliveryRatio
             profileSmbDeliveryRatioBGrange = prefs.smbDeliveryRatioBGrange
             profileSmbDeliveryRatioMin = prefs.smbDeliveryRatioMin
             profileSmbDeliveryRatioMax = prefs.smbDeliveryRatioMax

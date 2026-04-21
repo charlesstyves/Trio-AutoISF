@@ -31,6 +31,7 @@ struct TrioCustomOrefVariables: JSON, Equatable {
     var overrideBgAccelISFweight: Decimal?
     var overrideBgBrakeISFweight: Decimal?
     var overrideIobThresholdPercent: Decimal?
+    var overrideSmbDeliveryRatio: Decimal?
     var overrideSmbDeliveryRatioBGrange: Decimal?
     var overrideSmbDeliveryRatioMin: Decimal?
     var overrideSmbDeliveryRatioMax: Decimal?
@@ -66,6 +67,7 @@ struct TrioCustomOrefVariables: JSON, Equatable {
         overrideBgAccelISFweight: Decimal? = nil,
         overrideBgBrakeISFweight: Decimal? = nil,
         overrideIobThresholdPercent: Decimal? = nil,
+        overrideSmbDeliveryRatio: Decimal? = nil,
         overrideSmbDeliveryRatioBGrange: Decimal? = nil,
         overrideSmbDeliveryRatioMin: Decimal? = nil,
         overrideSmbDeliveryRatioMax: Decimal? = nil,
@@ -100,6 +102,7 @@ struct TrioCustomOrefVariables: JSON, Equatable {
         self.overrideBgAccelISFweight = overrideBgAccelISFweight
         self.overrideBgBrakeISFweight = overrideBgBrakeISFweight
         self.overrideIobThresholdPercent = overrideIobThresholdPercent
+        self.overrideSmbDeliveryRatio = overrideSmbDeliveryRatio
         self.overrideSmbDeliveryRatioBGrange = overrideSmbDeliveryRatioBGrange
         self.overrideSmbDeliveryRatioMin = overrideSmbDeliveryRatioMin
         self.overrideSmbDeliveryRatioMax = overrideSmbDeliveryRatioMax
@@ -138,6 +141,7 @@ extension TrioCustomOrefVariables {
         case overrideBgAccelISFweight
         case overrideBgBrakeISFweight
         case overrideIobThresholdPercent
+        case overrideSmbDeliveryRatio
         case overrideSmbDeliveryRatioBGrange
         case overrideSmbDeliveryRatioMin
         case overrideSmbDeliveryRatioMax

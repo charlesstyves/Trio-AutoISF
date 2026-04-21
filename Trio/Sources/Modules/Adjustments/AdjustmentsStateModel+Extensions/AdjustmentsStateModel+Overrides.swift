@@ -117,6 +117,7 @@ extension Adjustments.StateModel {
                 bgAccelISFweight: overrideBgAccelISFweight,
                 bgBrakeISFweight: overrideBgBrakeISFweight,
                 iobThresholdPercent: overrideIobThresholdPercent,
+                smbDeliveryRatio: overrideSmbDeliveryRatio,
                 smbDeliveryRatioBGrange: overrideSmbDeliveryRatioBGrange,
                 smbDeliveryRatioMin: overrideSmbDeliveryRatioMin,
                 smbDeliveryRatioMax: overrideSmbDeliveryRatioMax,
@@ -177,6 +178,7 @@ extension Adjustments.StateModel {
                 bgAccelISFweight: overrideBgAccelISFweight,
                 bgBrakeISFweight: overrideBgBrakeISFweight,
                 iobThresholdPercent: overrideIobThresholdPercent,
+                smbDeliveryRatio: overrideSmbDeliveryRatio,
                 smbDeliveryRatioBGrange: overrideSmbDeliveryRatioBGrange,
                 smbDeliveryRatioMin: overrideSmbDeliveryRatioMin,
                 smbDeliveryRatioMax: overrideSmbDeliveryRatioMax,
@@ -359,6 +361,7 @@ extension Adjustments.StateModel {
         overrideBgAccelISFweight = nil
         overrideBgBrakeISFweight = nil
         overrideIobThresholdPercent = nil
+        overrideSmbDeliveryRatio = nil
         overrideSmbDeliveryRatioBGrange = nil
         overrideSmbDeliveryRatioMin = nil
         overrideSmbDeliveryRatioMax = nil

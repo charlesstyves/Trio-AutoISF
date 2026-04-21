@@ -586,6 +586,7 @@ final class OpenAPS {
                 overrideBgAccelISFweight: activeOverride?.bgAccelISFweight?.decimalValue,
                 overrideBgBrakeISFweight: activeOverride?.bgBrakeISFweight?.decimalValue,
                 overrideIobThresholdPercent: activeOverride?.iobThresholdPercent?.decimalValue,
+                overrideSmbDeliveryRatio: activeOverride?.smbDeliveryRatio?.decimalValue,
                 overrideSmbDeliveryRatioBGrange: activeOverride?.smbDeliveryRatioBGrange?.decimalValue,
                 overrideSmbDeliveryRatioMin: activeOverride?.smbDeliveryRatioMin?.decimalValue,
                 overrideSmbDeliveryRatioMax: activeOverride?.smbDeliveryRatioMax?.decimalValue,

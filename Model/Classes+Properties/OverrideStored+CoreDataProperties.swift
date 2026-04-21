@@ -31,6 +31,7 @@ public extension OverrideStored {
     @NSManaged var orderPosition: Int16
     @NSManaged var percentage: Double
     @NSManaged var postMealISFweight: NSDecimalNumber?
+    @NSManaged var smbDeliveryRatio: NSDecimalNumber?
     @NSManaged var smbDeliveryRatioBGrange: NSDecimalNumber?
     @NSManaged var smbDeliveryRatioMax: NSDecimalNumber?
     @NSManaged var smbDeliveryRatioMin: NSDecimalNumber?

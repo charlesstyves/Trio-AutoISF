@@ -36,6 +36,8 @@ struct EditOverrideForm: View {
     @State private var displayPickerDisableSmbSchedule: Bool = false
     @State private var displayPickerSmbMinutes: Bool = false
     @State private var showAutoISFSection = false
+    @State private var showSmbSection = false
+    @State private var showVariableSmbRatio = false
     // AutoISF overrides (nil = use profile default)
     @State private var aiAutoISFmin: Decimal?
     @State private var aiAutoISFmax: Decimal?
@@ -46,6 +48,7 @@ struct EditOverrideForm: View {
     @State private var aiBgAccelISFweight: Decimal?
     @State private var aiBgBrakeISFweight: Decimal?
     @State private var aiIobThresholdPercent: Decimal?
+    @State private var aiSmbDeliveryRatio: Decimal?
     @State private var aiSmbDeliveryRatioBGrange: Decimal?
     @State private var aiSmbDeliveryRatioMin: Decimal?
     @State private var aiSmbDeliveryRatioMax: Decimal?
@@ -87,6 +90,7 @@ struct EditOverrideForm: View {
         _aiBgAccelISFweight = State(initialValue: overrideToEdit.bgAccelISFweight?.decimalValue)
         _aiBgBrakeISFweight = State(initialValue: overrideToEdit.bgBrakeISFweight?.decimalValue)
         _aiIobThresholdPercent = State(initialValue: overrideToEdit.iobThresholdPercent?.decimalValue)
+        _aiSmbDeliveryRatio = State(initialValue: overrideToEdit.smbDeliveryRatio?.decimalValue)
         _aiSmbDeliveryRatioBGrange = State(initialValue: overrideToEdit.smbDeliveryRatioBGrange?.decimalValue)
         _aiSmbDeliveryRatioMin = State(initialValue: overrideToEdit.smbDeliveryRatioMin?.decimalValue)
         _aiSmbDeliveryRatioMax = State(initialValue: overrideToEdit.smbDeliveryRatioMax?.decimalValue)
@@ -462,6 +466,7 @@ struct EditOverrideForm: View {
 
             if state.useAutoISF, state.useSwiftOref {
                 autoISFSection()
+                smbSection()
             }
 
             Section {
@@ -616,6 +621,19 @@ struct EditOverrideForm: View {
                 isExpanded: $showAutoISFSection,
                 content: {
                     editAutoISFRow(
+                        label: "IOB Threshold %",
+                        value: Binding(
+                            get: { aiIobThresholdPercent ?? state.profileIobThresholdPercent },
+                            set: { aiIobThresholdPercent = $0 == state.profileIobThresholdPercent ? nil : $0
+                                hasChanges = true }
+                        ),
+                        profileValue: state.profileIobThresholdPercent,
+                        isModified: aiIobThresholdPercent != nil,
+                        range: Array(stride(from: Decimal(0.5), through: Decimal(1.5), by: Decimal(0.05))),
+                        onReset: { aiIobThresholdPercent = nil
+                            hasChanges = true }
+                    )
+                    editAutoISFRow(
                         label: "autoISF Min",
                         value: Binding(get: { aiAutoISFmin ?? profileMin }, set: { aiAutoISFmin = $0 == profileMin ? nil : $0
                             hasChanges = true }),
@@ -636,7 +654,7 @@ struct EditOverrideForm: View {
                             hasChanges = true }
                     )
                     editAutoISFRow(
-                        label: "Hourly Change",
+                        label: "DuraISF Weight",
                         value: Binding(
                             get: { aiAutoISFhourlyChange ?? state.profileAutoISFhourlyChange },
                             set: { aiAutoISFhourlyChange = $0 == state.profileAutoISFhourlyChange ? nil : $0
@@ -649,7 +667,7 @@ struct EditOverrideForm: View {
                             hasChanges = true }
                     )
                     editAutoISFRow(
-                        label: "Higher ISF Range Weight",
+                        label: "ISF Weight for Higher BGs",
                         value: Binding(
                             get: { aiHigherISFrangeWeight ?? state.profileHigherISFrangeWeight },
                             set: { aiHigherISFrangeWeight = $0 == state.profileHigherISFrangeWeight ? nil : $0
@@ -662,7 +680,7 @@ struct EditOverrideForm: View {
                             hasChanges = true }
                     )
                     editAutoISFRow(
-                        label: "Lower ISF Range Weight",
+                        label: "ISF Weight for Lower BGs",
                         value: Binding(
                             get: { aiLowerISFrangeWeight ?? state.profileLowerISFrangeWeight },
                             set: { aiLowerISFrangeWeight = $0 == state.profileLowerISFrangeWeight ? nil : $0
@@ -675,7 +693,7 @@ struct EditOverrideForm: View {
                             hasChanges = true }
                     )
                     editAutoISFRow(
-                        label: "Post Meal ISF Weight",
+                        label: "ISF Weight for Postprandial BG Rise",
                         value: Binding(
                             get: { aiPostMealISFweight ?? state.profilePostMealISFweight },
                             set: { aiPostMealISFweight = $0 == state.profilePostMealISFweight ? nil : $0
@@ -685,84 +703,6 @@ struct EditOverrideForm: View {
                         isModified: aiPostMealISFweight != nil,
                         range: Array(stride(from: Decimal(0), through: Decimal(0.5), by: Decimal(0.01))),
                         onReset: { aiPostMealISFweight = nil
-                            hasChanges = true }
-                    )
-                    editAutoISFRow(
-                        label: "BG Accel ISF Weight",
-                        value: Binding(
-                            get: { aiBgAccelISFweight ?? state.profileBgAccelISFweight },
-                            set: { aiBgAccelISFweight = $0 == state.profileBgAccelISFweight ? nil : $0
-                                hasChanges = true }
-                        ),
-                        profileValue: state.profileBgAccelISFweight,
-                        isModified: aiBgAccelISFweight != nil,
-                        range: Array(stride(from: Decimal(0), through: Decimal(1.0), by: Decimal(0.05))),
-                        onReset: { aiBgAccelISFweight = nil
-                            hasChanges = true }
-                    )
-                    editAutoISFRow(
-                        label: "BG Brake ISF Weight",
-                        value: Binding(
-                            get: { aiBgBrakeISFweight ?? state.profileBgBrakeISFweight },
-                            set: { aiBgBrakeISFweight = $0 == state.profileBgBrakeISFweight ? nil : $0
-                                hasChanges = true }
-                        ),
-                        profileValue: state.profileBgBrakeISFweight,
-                        isModified: aiBgBrakeISFweight != nil,
-                        range: Array(stride(from: Decimal(0), through: Decimal(1.0), by: Decimal(0.05))),
-                        onReset: { aiBgBrakeISFweight = nil
-                            hasChanges = true }
-                    )
-                    editAutoISFRow(
-                        label: "IOB Threshold %",
-                        value: Binding(
-                            get: { aiIobThresholdPercent ?? state.profileIobThresholdPercent },
-                            set: { aiIobThresholdPercent = $0 == state.profileIobThresholdPercent ? nil : $0
-                                hasChanges = true }
-                        ),
-                        profileValue: state.profileIobThresholdPercent,
-                        isModified: aiIobThresholdPercent != nil,
-                        range: Array(stride(from: Decimal(0.5), through: Decimal(1.5), by: Decimal(0.05))),
-                        onReset: { aiIobThresholdPercent = nil
-                            hasChanges = true }
-                    )
-                    editAutoISFRow(
-                        label: "SMB Delivery Ratio BG Range",
-                        value: Binding(
-                            get: { aiSmbDeliveryRatioBGrange ?? state.profileSmbDeliveryRatioBGrange },
-                            set: { aiSmbDeliveryRatioBGrange = $0 == state.profileSmbDeliveryRatioBGrange ? nil : $0
-                                hasChanges = true }
-                        ),
-                        profileValue: state.profileSmbDeliveryRatioBGrange,
-                        isModified: aiSmbDeliveryRatioBGrange != nil,
-                        range: Array(stride(from: Decimal(0), through: Decimal(100), by: Decimal(5))),
-                        onReset: { aiSmbDeliveryRatioBGrange = nil
-                            hasChanges = true }
-                    )
-                    editAutoISFRow(
-                        label: "SMB Delivery Ratio Min",
-                        value: Binding(
-                            get: { aiSmbDeliveryRatioMin ?? state.profileSmbDeliveryRatioMin },
-                            set: { aiSmbDeliveryRatioMin = $0 == state.profileSmbDeliveryRatioMin ? nil : $0
-                                hasChanges = true }
-                        ),
-                        profileValue: state.profileSmbDeliveryRatioMin,
-                        isModified: aiSmbDeliveryRatioMin != nil,
-                        range: Array(stride(from: Decimal(0.1), through: Decimal(1.0), by: Decimal(0.05))),
-                        onReset: { aiSmbDeliveryRatioMin = nil
-                            hasChanges = true }
-                    )
-                    editAutoISFRow(
-                        label: "SMB Delivery Ratio Max",
-                        value: Binding(
-                            get: { aiSmbDeliveryRatioMax ?? state.profileSmbDeliveryRatioMax },
-                            set: { aiSmbDeliveryRatioMax = $0 == state.profileSmbDeliveryRatioMax ? nil : $0
-                                hasChanges = true }
-                        ),
-                        profileValue: state.profileSmbDeliveryRatioMax,
-                        isModified: aiSmbDeliveryRatioMax != nil,
-                        range: Array(stride(from: Decimal(0.1), through: Decimal(1.0), by: Decimal(0.05))),
-                        onReset: { aiSmbDeliveryRatioMax = nil
                             hasChanges = true }
                     )
                     HStack {
@@ -786,11 +726,130 @@ struct EditOverrideForm: View {
                             }
                         )).labelsHidden()
                     }
+                    editAutoISFRow(
+                        label: "ISF Weight While BG Accelerates",
+                        value: Binding(
+                            get: { aiBgAccelISFweight ?? state.profileBgAccelISFweight },
+                            set: { aiBgAccelISFweight = $0 == state.profileBgAccelISFweight ? nil : $0
+                                hasChanges = true }
+                        ),
+                        profileValue: state.profileBgAccelISFweight,
+                        isModified: aiBgAccelISFweight != nil,
+                        range: Array(stride(from: Decimal(0), through: Decimal(1.0), by: Decimal(0.05))),
+                        onReset: { aiBgAccelISFweight = nil
+                            hasChanges = true }
+                    )
+                    editAutoISFRow(
+                        label: "ISF Weight While BG Decelerates",
+                        value: Binding(
+                            get: { aiBgBrakeISFweight ?? state.profileBgBrakeISFweight },
+                            set: { aiBgBrakeISFweight = $0 == state.profileBgBrakeISFweight ? nil : $0
+                                hasChanges = true }
+                        ),
+                        profileValue: state.profileBgBrakeISFweight,
+                        isModified: aiBgBrakeISFweight != nil,
+                        range: Array(stride(from: Decimal(0), through: Decimal(1.0), by: Decimal(0.05))),
+                        onReset: { aiBgBrakeISFweight = nil
+                            hasChanges = true }
+                    )
                 },
                 label: {
                     HStack {
                         Text("AutoISF Settings")
                         if hasAutoISFOverrides {
+                            Spacer()
+                            Text("Modified")
+                                .font(.caption)
+                                .foregroundColor(.accentColor)
+                        }
+                    }
+                }
+            )
+        }
+        .listRowBackground(Color.chart)
+    }
+
+    @ViewBuilder private func smbSection() -> some View {
+        Section {
+            DisclosureGroup(
+                isExpanded: $showSmbSection,
+                content: {
+                    editAutoISFRow(
+                        label: "SMB Delivery Ratio",
+                        value: Binding(
+                            get: { aiSmbDeliveryRatio ?? state.profileSmbDeliveryRatio },
+                            set: { aiSmbDeliveryRatio = $0 == state.profileSmbDeliveryRatio ? nil : $0
+                                hasChanges = true }
+                        ),
+                        profileValue: state.profileSmbDeliveryRatio,
+                        isModified: aiSmbDeliveryRatio != nil,
+                        range: Array(stride(from: Decimal(0.1), through: Decimal(1.0), by: Decimal(0.05))),
+                        onReset: { aiSmbDeliveryRatio = nil
+                            hasChanges = true }
+                    )
+
+                    DisclosureGroup(
+                        isExpanded: $showVariableSmbRatio,
+                        content: {
+                            editAutoISFRow(
+                                label: "SMB Delivery Ratio BG Range",
+                                value: Binding(
+                                    get: { aiSmbDeliveryRatioBGrange ?? state.profileSmbDeliveryRatioBGrange },
+                                    set: { aiSmbDeliveryRatioBGrange = $0 == state.profileSmbDeliveryRatioBGrange ? nil : $0
+                                        hasChanges = true }
+                                ),
+                                profileValue: state.profileSmbDeliveryRatioBGrange,
+                                isModified: aiSmbDeliveryRatioBGrange != nil,
+                                range: Array(stride(from: Decimal(0), through: Decimal(100), by: Decimal(5))),
+                                onReset: { aiSmbDeliveryRatioBGrange = nil
+                                    hasChanges = true }
+                            )
+                            editAutoISFRow(
+                                label: "SMB Delivery Ratio Min",
+                                value: Binding(
+                                    get: { aiSmbDeliveryRatioMin ?? state.profileSmbDeliveryRatioMin },
+                                    set: { aiSmbDeliveryRatioMin = $0 == state.profileSmbDeliveryRatioMin ? nil : $0
+                                        hasChanges = true }
+                                ),
+                                profileValue: state.profileSmbDeliveryRatioMin,
+                                isModified: aiSmbDeliveryRatioMin != nil,
+                                range: Array(stride(from: Decimal(0.1), through: Decimal(1.0), by: Decimal(0.05))),
+                                onReset: { aiSmbDeliveryRatioMin = nil
+                                    hasChanges = true }
+                            )
+                            editAutoISFRow(
+                                label: "SMB Delivery Ratio Max",
+                                value: Binding(
+                                    get: { aiSmbDeliveryRatioMax ?? state.profileSmbDeliveryRatioMax },
+                                    set: { aiSmbDeliveryRatioMax = $0 == state.profileSmbDeliveryRatioMax ? nil : $0
+                                        hasChanges = true }
+                                ),
+                                profileValue: state.profileSmbDeliveryRatioMax,
+                                isModified: aiSmbDeliveryRatioMax != nil,
+                                range: Array(stride(from: Decimal(0.1), through: Decimal(1.0), by: Decimal(0.05))),
+                                onReset: { aiSmbDeliveryRatioMax = nil
+                                    hasChanges = true }
+                            )
+                        },
+                        label: {
+                            HStack {
+                                Text("Variable SMB DelRatio")
+                                if aiSmbDeliveryRatioBGrange != nil || aiSmbDeliveryRatioMin != nil ||
+                                    aiSmbDeliveryRatioMax != nil
+                                {
+                                    Spacer()
+                                    Text("Modified")
+                                        .font(.caption)
+                                        .foregroundColor(.accentColor)
+                                }
+                            }
+                        }
+                    )
+                },
+                label: {
+                    HStack {
+                        Text("SMB Settings")
+                        if hasSmbOverrides {
                             Spacer()
                             Text("Modified")
                                 .font(.caption)
@@ -840,8 +899,12 @@ struct EditOverrideForm: View {
         aiAutoISFmin != nil || aiAutoISFmax != nil || aiAutoISFhourlyChange != nil ||
             aiHigherISFrangeWeight != nil || aiLowerISFrangeWeight != nil || aiPostMealISFweight != nil ||
             aiBgAccelISFweight != nil || aiBgBrakeISFweight != nil || aiIobThresholdPercent != nil ||
-            aiSmbDeliveryRatioBGrange != nil || aiSmbDeliveryRatioMin != nil || aiSmbDeliveryRatioMax != nil ||
             aiEnableBGacceleration != nil
+    }
+
+    private var hasSmbOverrides: Bool {
+        aiSmbDeliveryRatio != nil || aiSmbDeliveryRatioBGrange != nil ||
+            aiSmbDeliveryRatioMin != nil || aiSmbDeliveryRatioMax != nil
     }
 
     private func saveChanges() {
@@ -873,6 +936,7 @@ struct EditOverrideForm: View {
         override.bgAccelISFweight = aiBgAccelISFweight.map { NSDecimalNumber(decimal: $0) }
         override.bgBrakeISFweight = aiBgBrakeISFweight.map { NSDecimalNumber(decimal: $0) }
         override.iobThresholdPercent = aiIobThresholdPercent.map { NSDecimalNumber(decimal: $0) }
+        override.smbDeliveryRatio = aiSmbDeliveryRatio.map { NSDecimalNumber(decimal: $0) }
         override.smbDeliveryRatioBGrange = aiSmbDeliveryRatioBGrange.map { NSDecimalNumber(decimal: $0) }
         override.smbDeliveryRatioMin = aiSmbDeliveryRatioMin.map { NSDecimalNumber(decimal: $0) }
         override.smbDeliveryRatioMax = aiSmbDeliveryRatioMax.map { NSDecimalNumber(decimal: $0) }
@@ -905,6 +969,7 @@ struct EditOverrideForm: View {
         aiBgAccelISFweight = override.bgAccelISFweight?.decimalValue
         aiBgBrakeISFweight = override.bgBrakeISFweight?.decimalValue
         aiIobThresholdPercent = override.iobThresholdPercent?.decimalValue
+        aiSmbDeliveryRatio = override.smbDeliveryRatio?.decimalValue
         aiSmbDeliveryRatioBGrange = override.smbDeliveryRatioBGrange?.decimalValue
         aiSmbDeliveryRatioMin = override.smbDeliveryRatioMin?.decimalValue
         aiSmbDeliveryRatioMax = override.smbDeliveryRatioMax?.decimalValue
