@@ -588,6 +588,9 @@
 		BDC531182D1062F200088832 /* ContactImageState.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDC531172D1062F200088832 /* ContactImageState.swift */; };
 		BDCAF2382C639F35002DC907 /* SettingItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDCAF2372C639F35002DC907 /* SettingItems.swift */; };
 		BDCD47AF2C1F3F1700F8BCD5 /* OverrideStored+helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDCD47AE2C1F3F1700F8BCD5 /* OverrideStored+helper.swift */; };
+		ADA10002ADA10002ADA10002 /* ProfileStored+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10001ADA10001ADA10001 /* ProfileStored+CoreDataClass.swift */; };
+		ADA10004ADA10004ADA10004 /* ProfileStored+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10003ADA10003ADA10003 /* ProfileStored+CoreDataProperties.swift */; };
+		ADA10006ADA10006ADA10006 /* ProfileStored+Helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10005ADA10005ADA10005 /* ProfileStored+Helper.swift */; };
 		BDDAF9EF2D00554500B34E7A /* SelectionPopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDDAF9EE2D00553E00B34E7A /* SelectionPopoverView.swift */; };
 		BDF34EBE2C0A31D100D51995 /* CustomNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDF34EBD2C0A31D000D51995 /* CustomNotification.swift */; };
 		BDF34F832C10C5B600D51995 /* DataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDF34F822C10C5B600D51995 /* DataManager.swift */; };
@@ -1581,6 +1584,9 @@
 		BDC531172D1062F200088832 /* ContactImageState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactImageState.swift; sourceTree = "<group>"; };
 		BDCAF2372C639F35002DC907 /* SettingItems.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingItems.swift; sourceTree = "<group>"; };
 		BDCD47AE2C1F3F1700F8BCD5 /* OverrideStored+helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OverrideStored+helper.swift"; sourceTree = "<group>"; };
+		ADA10001ADA10001ADA10001 /* ProfileStored+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProfileStored+CoreDataClass.swift"; sourceTree = "<group>"; };
+		ADA10003ADA10003ADA10003 /* ProfileStored+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProfileStored+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		ADA10005ADA10005ADA10005 /* ProfileStored+Helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProfileStored+Helper.swift"; sourceTree = "<group>"; };
 		BDDAF9EE2D00553E00B34E7A /* SelectionPopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionPopoverView.swift; sourceTree = "<group>"; };
 		BDF34EBD2C0A31D000D51995 /* CustomNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNotification.swift; sourceTree = "<group>"; };
 		BDF34F822C10C5B600D51995 /* DataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataManager.swift; sourceTree = "<group>"; };
@@ -3394,6 +3400,7 @@
 				BDF34EBD2C0A31D000D51995 /* CustomNotification.swift */,
 				BDCD47AE2C1F3F1700F8BCD5 /* OverrideStored+helper.swift */,
 				BD793CAF2CE7C60E00D669AC /* OverrideRunStored+helper.swift */,
+				ADA10005ADA10005ADA10005 /* ProfileStored+Helper.swift */,
 				BDB899892C565D0B006F3298 /* CarbsGlucose+helper.swift */,
 				58A3D5432C96DE11003F90FC /* TempTargetStored+Helper.swift */,
 				BD793CB12CE8032E00D669AC /* TempTargetRunStored.swift */,
@@ -4345,6 +4352,8 @@
 				DDE1794D2C910127003CDDB7 /* OverrideRunStored+CoreDataProperties.swift */,
 				DDE179502C910127003CDDB7 /* OverrideStored+CoreDataClass.swift */,
 				DDE179512C910127003CDDB7 /* OverrideStored+CoreDataProperties.swift */,
+				ADA10001ADA10001ADA10001 /* ProfileStored+CoreDataClass.swift */,
+				ADA10003ADA10003ADA10003 /* ProfileStored+CoreDataProperties.swift */,
 				DDE1793E2C910127003CDDB7 /* PumpEventStored+CoreDataClass.swift */,
 				DDE1793F2C910127003CDDB7 /* PumpEventStored+CoreDataProperties.swift */,
 				DDE179402C910127003CDDB7 /* StatsData+CoreDataClass.swift */,
@@ -5590,6 +5599,9 @@
 				DDE1796E2C910127003CDDB7 /* OrefDetermination+CoreDataClass.swift in Sources */,
 				DDE1796F2C910127003CDDB7 /* OrefDetermination+CoreDataProperties.swift in Sources */,
 				DDE179702C910127003CDDB7 /* OverrideStored+CoreDataClass.swift in Sources */,
+				ADA10002ADA10002ADA10002 /* ProfileStored+CoreDataClass.swift in Sources */,
+				ADA10004ADA10004ADA10004 /* ProfileStored+CoreDataProperties.swift in Sources */,
+				ADA10006ADA10006ADA10006 /* ProfileStored+Helper.swift in Sources */,
 				49B21BF52D7F222600D0B6C3 /* DetailPopupView.swift in Sources */,
 				DD9ECB742CA9A0C300AA7C45 /* RemoteControlConfig.swift in Sources */,
 				DD4A00212DAEEED800AB7387 /* OnboardingView+AlgorithmUtil.swift in Sources */,
