@@ -20,6 +20,13 @@ extension AdaptProfile {
             return f
         }
 
+        private var axisFormatter: NumberFormatter {
+            let f = NumberFormatter()
+            f.numberStyle = .decimal
+            f.maximumFractionDigits = 2
+            return f
+        }
+
         var body: some View {
             ScrollView {
                 LazyVStack(spacing: 12) {
@@ -114,8 +121,12 @@ extension AdaptProfile {
                     .addingTimeInterval(60 * 60 * 24)
             )
             .chartYAxis {
-                AxisMarks(values: .automatic(desiredCount: 4)) { _ in
-                    AxisValueLabel()
+                AxisMarks(values: .automatic(desiredCount: 4)) { value in
+                    if let val = value.as(Double.self) {
+                        AxisValueLabel {
+                            Text(axisFormatter.string(from: NSNumber(value: val)) ?? "")
+                        }
+                    }
                     AxisGridLine(centered: true, stroke: StrokeStyle(lineWidth: 1, dash: [2, 4]))
                 }
             }
@@ -147,7 +158,8 @@ extension AdaptProfile {
                             TherapyScheduleChart(
                                 items: state.isfItems,
                                 color: .cyan,
-                                valueTransform: { state.units == .mmolL ? $0.asMmolL : $0 }
+                                valueTransform: { state.units == .mmolL ? $0.asMmolL : $0 },
+                                yAxisDecimals: state.units == .mmolL ? 1 : 0
                             )
                         }
                     }
@@ -178,7 +190,7 @@ extension AdaptProfile {
                 LazyVStack(spacing: 12) {
                     if !state.crItems.isEmpty {
                         chartContainer {
-                            TherapyScheduleChart(items: state.crItems, color: .orange)
+                            TherapyScheduleChart(items: state.crItems, color: .orange, yAxisDecimals: 1)
                         }
                     }
                     TherapySettingEditorView(
@@ -212,7 +224,8 @@ extension AdaptProfile {
                                 items: state.targetItems,
                                 color: .green,
                                 lineOnly: true,
-                                valueTransform: { state.units == .mmolL ? $0.asMmolL : $0 }
+                                valueTransform: { state.units == .mmolL ? $0.asMmolL : $0 },
+                                yAxisDecimals: state.units == .mmolL ? 1 : 0
                             )
                         }
                     }
@@ -261,19 +274,30 @@ struct TherapyScheduleChart: View {
     let color: Color
     let lineOnly: Bool
     let valueTransform: (Decimal) -> Decimal
+    /// Fraction digits for Y-axis tick labels. 0 for mg/dL, 1 for mmol/L / g-per-unit ratios.
+    let yAxisDecimals: Int
 
     @State private var now = Date()
+
+    private var numberFormatter: NumberFormatter {
+        let f = NumberFormatter()
+        f.numberStyle = .decimal
+        f.maximumFractionDigits = yAxisDecimals
+        return f
+    }
 
     init(
         items: [TherapySettingItem],
         color: Color,
         lineOnly: Bool = false,
-        valueTransform: @escaping (Decimal) -> Decimal = { $0 }
+        valueTransform: @escaping (Decimal) -> Decimal = { $0 },
+        yAxisDecimals: Int = 0
     ) {
         self.items = items
         self.color = color
         self.lineOnly = lineOnly
         self.valueTransform = valueTransform
+        self.yAxisDecimals = yAxisDecimals
     }
 
     var body: some View {
@@ -320,8 +344,12 @@ struct TherapyScheduleChart: View {
                 .addingTimeInterval(60 * 60 * 24)
         )
         .chartYAxis {
-            AxisMarks(values: .automatic(desiredCount: 4)) { _ in
-                AxisValueLabel()
+            AxisMarks(values: .automatic(desiredCount: 4)) { value in
+                if let val = value.as(Double.self) {
+                    AxisValueLabel {
+                        Text(numberFormatter.string(from: NSNumber(value: val)) ?? "")
+                    }
+                }
                 AxisGridLine(centered: true, stroke: StrokeStyle(lineWidth: 1, dash: [2, 4]))
             }
         }
