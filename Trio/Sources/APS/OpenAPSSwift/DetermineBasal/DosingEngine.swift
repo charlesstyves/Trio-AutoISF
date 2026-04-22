@@ -723,15 +723,19 @@ enum DosingEngine {
             uamMinutesSetting = trioCustomOrefVariables.uamMinutes
         }
 
+        // smbMaxRangeExtension (JS: smb_max_range_extension) lets autoISF users extend the
+        // SMB basal-minutes cap beyond the default 30 min. Ignored when autoISF is off.
+        let smbMaxRange: Decimal = profile.autoisf ? profile.smbMaxRangeExtension : 1
+
         if currentIob > mealInsulinRequired, currentIob > 0 {
             if uamMinutesSetting > 0 {
-                return (currentBasal * overrideFactor * uamMinutesSetting / 60).jsRounded(scale: 1)
+                return (smbMaxRange * currentBasal * overrideFactor * uamMinutesSetting / 60).jsRounded(scale: 1)
             } else {
                 // Note: It should be impossible to have uamMinutesSetting of 0 so this shouldn't execute
-                return (currentBasal * overrideFactor * 30 / 60).jsRounded(scale: 1)
+                return (smbMaxRange * currentBasal * overrideFactor * 30 / 60).jsRounded(scale: 1)
             }
         } else {
-            return (currentBasal * overrideFactor * smbMinutesSetting / 60).jsRounded(scale: 1)
+            return (smbMaxRange * currentBasal * overrideFactor * smbMinutesSetting / 60).jsRounded(scale: 1)
         }
     }
 
@@ -757,6 +761,7 @@ enum DosingEngine {
         adjustedSensitivity: Decimal,
         adjustedCarbRatio: Decimal,
         basal: Decimal,
+        smbDeliveryRatio: Decimal,
         determination: Determination
     ) throws -> (shouldSetTempBasal: Bool, determination: Determination) {
         var newDetermination = determination
@@ -782,7 +787,6 @@ enum DosingEngine {
             trioCustomOrefVariables: trioCustomOrefVariables
         )
 
-        let smbDeliveryRatio = min(profile.smbDeliveryRatio, 1)
         let roundSmbTo = 1 / profile.bolusIncrement
         let microBolusWithoutRounding = min(insulinRequired * smbDeliveryRatio, maxBolus)
         let microBolus = (microBolusWithoutRounding * roundSmbTo).floor() / roundSmbTo

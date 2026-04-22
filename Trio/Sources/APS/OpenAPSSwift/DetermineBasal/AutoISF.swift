@@ -1,5 +1,18 @@
 import Foundation
 
+/// The SMB loop-mode an autoISF evaluation resolves to. Consumed by
+/// `AutoISFsmb.variableSMBRatio` and by the SMB dosing path in
+/// `DosingEngine.determineSMBDelivery` to decide whether the `max(fixed, ramp)`
+/// full-loop floor applies.
+enum AutoISFLoopMode {
+    case oref // fall through to standard SMB enabling logic
+    case enforced // SMB on — even target at normal BG
+    case fullLoop // SMB on — even temp-target below 100
+    case blocked // SMB off — odd target
+    case iobTHExceeded // SMB off — IOB exceeds threshold
+    case b30Running // SMB off — B30 basal active
+}
+
 /// Consolidated result from  autoISF  for one loop iteration.
 struct AutoISFEngineResult {
     /// Adjusted ISF — replaces the caller's `adjustedSensitivity` when non-nil.
@@ -8,10 +21,13 @@ struct AutoISFEngineResult {
     let smbEnabled: Bool?
     /// Full ISF reason string, always populated.
     let isfReason: String
+    /// Effective SMB delivery ratio (ramped or fixed), already clamped to `[0, 1]`.
+    /// DosingEngine uses this for the microbolus amount; also stored in Determination.
+    let smbRatio: Decimal
     /// ISF sub-module result (for Determination ratio fields).
     let adjustResult: AutoISFAdjustResult?
     /// SMB sub-module result (for iobTH field).
-    let smbResult: AutoISFSMBResult?
+    let smbResult: AutoISFsmbResult?
     /// AutoISF glucose status (for Determination parabola / dura / acce fields).
     let glucoseStatus: AutoISFGlucoseStatus?
 }
@@ -31,6 +47,7 @@ enum AutoISF {
         adjustedSensitivity: Decimal,
         profileSens: Decimal,
         targetBG: Decimal,
+        currentGlucose: Decimal,
         sensitivityRatio: Decimal,
         originalSensitivity: Decimal,
         exerciseModeActive: Bool,
@@ -41,11 +58,14 @@ enum AutoISF {
         autoISFStatus: AutoISFGlucoseStatus?,
         overrideSmbIsOff: Bool
     ) -> AutoISFEngineResult {
-        let autosensReason =
-            "autosens:, \(sensitivityRatio.jsRounded(scale: 2)), ISF: \(originalSensitivity.jsRounded())→\(adjustedSensitivity.jsRounded())"
+        let autosensReason = AutoISFReason.autosensOnlyReason(
+            ratio: sensitivityRatio,
+            originalSensitivity: originalSensitivity,
+            adjustedSensitivity: adjustedSensitivity
+        )
 
         // SMB control: runs whenever autoISF is enabled, independent of dynISF
-        let smbResult = AutoISFSMBControl.evaluate(
+        let smbResult = AutoISFsmb.evaluate(
             profile: profile,
             targetBG: targetBG,
             microBolusAllowed: microBolusAllowed,
@@ -56,12 +76,25 @@ enum AutoISF {
         )
         let smbEnabled: Bool? = smbResult.flatMap { $0.loopMode != .oref ? $0.smbEnabled : nil }
 
+        // Effective SMB delivery ratio (fixed or BG-range-ramped), pre-computed once so
+        // DosingEngine and Determination can read the same value.
+        let smbRatio = min(
+            AutoISFsmb.variableSMBRatio(
+                profile: profile,
+                currentGlucose: currentGlucose,
+                targetGlucose: targetBG,
+                loopMode: smbResult?.loopMode ?? .oref
+            ),
+            1
+        )
+
         // ISF adjustment: only when dynISF is inactive and glucose status is available
         guard !dynamicIsfActive, let status = autoISFStatus else {
             return AutoISFEngineResult(
                 adjustedSensitivity: nil,
                 smbEnabled: smbEnabled,
                 isfReason: autosensReason,
+                smbRatio: smbRatio,
                 adjustResult: nil,
                 smbResult: smbResult,
                 glucoseStatus: autoISFStatus
@@ -81,40 +114,17 @@ enum AutoISF {
 
         let isfReason: String
         if let adjustResult = adjustResult {
-            var smbStr = ""
-            if let smbResult = smbResult, !smbResult.reason.isEmpty {
-                smbStr = "\(smbResult.reason), "
-            }
-            var parabolaStr = ""
-            // Show Parabolic Fit tag only when:
-            // - acceleration is actually adjusting ISF (acceISFratio != 1)
-            // - fit is reliable (r_squ >= 0.9)
-            // - extremum BG is within a sensible range (-200 to 400 mg/dL)
-            // - time delta is within a useful window (<= 300 min past or future)
-            if profile.enableBGacceleration,
-               adjustResult.acceISFratio != 1,
-               status.a_2 != 0,
-               status.r_squ >= Decimal(0.9)
-            {
-                let tVertex = -(status.a_1 / (2 * status.a_2))
-                let minsDelta = (abs(tVertex) * 5).jsRounded(scale: 1)
-                let extremumBG = (status.a_0 - status.a_1 * status.a_1 / (4 * status.a_2)).jsRounded(scale: 1)
-                let bgInRange = extremumBG >= -200 && extremumBG <= 400
-                let timeInRange = minsDelta <= 300
-                if bgInRange, timeInRange {
-                    if tVertex > 0 {
-                        parabolaStr = status.bg_acceleration < 0
-                            ? "Parabolic Fit:, predicts Max of \(extremumBG), in about \(minsDelta)min, "
-                            : "Parabolic Fit:, predicts Min of \(extremumBG), in about \(minsDelta)min, "
-                    } else {
-                        parabolaStr = status.bg_acceleration < 0
-                            ? "Parabolic Fit:, saw Max of \(extremumBG), about \(minsDelta)min ago, "
-                            : "Parabolic Fit:, saw Min of \(extremumBG), about \(minsDelta)min ago, "
-                    }
-                }
-            }
-            let autosensStr = profile.enableAutosens ? "autosens:, \(sensitivityRatio.jsRounded(scale: 2)), " : ""
-            isfReason = "\(autosensStr)\(smbStr)\(parabolaStr)\(adjustResult.reason), Standard"
+            isfReason = AutoISFReason.isfReason(
+                autosensEnabled: profile.enableAutosens,
+                sensitivityRatio: sensitivityRatio,
+                smbFragment: smbResult?.reason ?? "",
+                parabolaFragment: AutoISFReason.parabolaFitTag(
+                    enabled: profile.enableBGacceleration,
+                    acceISFratio: adjustResult.acceISFratio,
+                    status: status
+                ),
+                adjustReason: adjustResult.reason
+            )
         } else {
             isfReason = autosensReason
         }
@@ -123,6 +133,7 @@ enum AutoISF {
             adjustedSensitivity: adjustResult?.adjustedSens,
             smbEnabled: smbEnabled,
             isfReason: isfReason,
+            smbRatio: smbRatio,
             adjustResult: adjustResult,
             smbResult: smbResult,
             glucoseStatus: status

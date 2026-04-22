@@ -332,6 +332,30 @@ enum AlgorithmSettingHints {
         }
     }
 
+    static let smbThresholdRatioLabel = String(localized: "SMB Threshold Ratio", comment: "SMB Threshold Ratio")
+    static let smbThresholdRatioMini = String(
+        localized: "Raises the glucose floor below which SMBs are blocked. 0.5 keeps default behaviour, 1.0 blocks SMBs until above target."
+    )
+
+    @ViewBuilder static func smbThresholdRatioVerbose() -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Default: 0.5 — valid range (0.5, 1.0]").bold()
+            Text(
+                "A safety knob that controls how close to your low-target SMBs are still allowed. It shifts the SMB cutoff (\"threshold\") along the line between your low-target and 40 mg/dL."
+            )
+            Text("Formula:").bold()
+            Text("threshold = minBG − (1 − ratio) × (minBG − 40)")
+            Text("Examples (minBG = 100 mg/dL):").bold()
+            Text("• 0.5 — threshold 70 mg/dL (midway between target and 40)")
+            Text("• 0.7 — threshold 82 mg/dL (SMBs cut off sooner)")
+            Text("• 1.0 — threshold 100 mg/dL (no SMBs below target)")
+            Text(
+                "Higher = more conservative. Useful if you find the default cuts SMBs off too late for your comfort. Values at or below 0.5 fall back to the default; values above 1.0 are ignored (clamped to (0.5, 1.0])."
+            )
+            Text("Note: the threshold is also clamped to at least 60 mg/dL and at most 120 mg/dL.")
+        }
+    }
+
     static let maxUAMBasalMinutesLabel = String(localized: "Max UAM Basal Minutes", comment: "Max UAM Basal Minutes")
     static let maxUAMBasalMinutesMini = String(localized: "Limits the size of a single Unannounced Meal (UAM) SMB dose.")
 

@@ -109,10 +109,13 @@ enum AutoISFAdjust {
                 ppISFratio: 1,
                 duraISFratio: 1,
                 autoISFratio: autoISFratio,
-                reason: (acceISF != 1 ? "acce-ISF Ratio:, \(acceISF.jsRounded(scale: 2)), " : "") +
-                    "autoISF, bg-ISF Ratio: \(bgISF.jsRounded(scale: 2))" +
-                    ", final Ratio:, \(finalISF.jsRounded(scale: 2))" +
-                    ", final ISF:, \(profileSens.jsRounded())→\(adjustedSens.jsRounded())"
+                reason: AutoISFReason.adjustDeceleratingReason(
+                    acceISFratio: acceISF.jsRounded(scale: 2),
+                    bgISFratio: bgISF,
+                    finalISF: finalISF,
+                    profileSens: profileSens,
+                    adjustedSens: adjustedSens
+                )
             )
         }
 
@@ -141,7 +144,7 @@ enum AutoISFAdjust {
                 ppISFratio: 1,
                 duraISFratio: 1,
                 autoISFratio: 1,
-                reason: "autoISF: not modified"
+                reason: AutoISFReason.adjustNotModified
             )
         }
 
@@ -163,22 +166,6 @@ enum AutoISFAdjust {
         let adjustedSens = (profileSens / finalISF).jsRounded()
         let autoISFratio = adjustedSens > 0 ? (profileSens / adjustedSens).jsRounded(scale: 2) : 1
 
-        var parts: [String] = []
-        if acceISF != 1 { parts.append("acce-ISF Ratio:, \(acceISF.jsRounded(scale: 2))") }
-        parts.append("autoISF")
-        if bgISF != 1 { parts.append("bg-ISF Ratio: \(bgISF.jsRounded(scale: 2))") }
-        if ppISF != 1 { parts.append("pp-ISF Ratio: \(ppISF.jsRounded(scale: 2))") }
-        if duraISF != 1 {
-            parts
-                .append(
-                    "Duration: \(dura05.jsRounded()), Avg: \(avg05.jsRounded()), dura-ISF Ratio: \(duraISF.jsRounded(scale: 2))"
-                )
-        }
-        parts
-            .append(
-                "final Ratio:, \(finalISF.jsRounded(scale: 2)), final ISF:, \(profileSens.jsRounded())→\(adjustedSens.jsRounded())"
-            )
-
         return AutoISFAdjustResult(
             adjustedSens: adjustedSens,
             acceISFratio: acceISF.jsRounded(scale: 2),
@@ -186,7 +173,17 @@ enum AutoISFAdjust {
             ppISFratio: ppISF.jsRounded(scale: 2),
             duraISFratio: duraISF.jsRounded(scale: 2),
             autoISFratio: autoISFratio,
-            reason: parts.joined(separator: ", ")
+            reason: AutoISFReason.adjustFullReason(
+                acceISFratio: acceISF,
+                bgISFratio: bgISF,
+                ppISFratio: ppISF,
+                duraISFratio: duraISF,
+                dura05: dura05,
+                avg05: avg05,
+                finalISF: finalISF,
+                profileSens: profileSens,
+                adjustedSens: adjustedSens
+            )
         )
     }
 

@@ -20,6 +20,7 @@ extension SMBSettings {
         @Published var bolusIncrement: Decimal = 0.1 // get this from pump, dafuq?: Bool = false
         @Published var enableUAM: Bool = false
         @Published var maxUAMSMBBasalMinutes: Decimal = 30
+        @Published var smbThresholdRatio: Decimal = 0.5
 
         override func subscribe() {
             units = settingsManager.settings.units
@@ -38,6 +39,7 @@ extension SMBSettings {
             subscribePreferencesSetting(\.bolusIncrement, on: $bolusIncrement) { bolusIncrement = $0 }
             subscribePreferencesSetting(\.enableUAM, on: $enableUAM) { enableUAM = $0 }
             subscribePreferencesSetting(\.maxUAMSMBBasalMinutes, on: $maxUAMSMBBasalMinutes) { maxUAMSMBBasalMinutes = $0 }
+            subscribePreferencesSetting(\.smbThresholdRatio, on: $smbThresholdRatio) { smbThresholdRatio = $0 }
         }
     }
 }
