@@ -338,6 +338,20 @@ extension AdaptProfile {
                 )
 
                 SettingInputSection(
+                    decimalValue: $state.preferences.smbThresholdRatio,
+                    booleanValue: .constant(false),
+                    shouldDisplayHint: $shouldDisplayHint,
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.smbThresholdRatioLabel),
+                    units: state.units,
+                    type: .decimal("smbThresholdRatio"),
+                    label: AlgorithmSettingHints.smbThresholdRatioLabel,
+                    miniHint: AlgorithmSettingHints.smbThresholdRatioMini,
+                    verboseHint: AlgorithmSettingHints.smbThresholdRatioVerbose(),
+                    isChanged: state.isChanged(\.smbThresholdRatio),
+                    onReset: { state.resetField(\.smbThresholdRatio) }
+                )
+
+                SettingInputSection(
                     decimalValue: $state.preferences.maxUAMSMBBasalMinutes,
                     booleanValue: .constant(false),
                     shouldDisplayHint: $shouldDisplayHint,
