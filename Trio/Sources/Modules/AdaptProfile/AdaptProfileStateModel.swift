@@ -60,10 +60,10 @@ extension AdaptProfile {
             }
         }
 
-        @MainActor func activate(id: UUID, durationHours: Int?, confirmedPumpSync: Bool) async -> ActivationOutcome {
+        @MainActor func activate(id: UUID, durationMinutes: Int?, confirmedPumpSync: Bool) async -> ActivationOutcome {
             let outcome = await provider.activate(
                 id: id,
-                durationHours: durationHours,
+                durationMinutes: durationMinutes,
                 confirmedPumpSync: confirmedPumpSync
             )
             if outcome == .success {

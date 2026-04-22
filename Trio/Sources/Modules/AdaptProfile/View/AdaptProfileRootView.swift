@@ -253,7 +253,7 @@ extension AdaptProfile {
                                 Task {
                                     _ = await state.activate(
                                         id: prevID,
-                                        durationHours: nil,
+                                        durationMinutes: nil,
                                         confirmedPumpSync: true
                                     )
                                 }

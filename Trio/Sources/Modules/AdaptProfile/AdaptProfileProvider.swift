@@ -132,7 +132,7 @@ extension AdaptProfile {
             deviceManager.pumpManager?.supportedBasalRates.map { Decimal($0) }
         }
 
-        func activate(id: UUID, durationHours: Int?, confirmedPumpSync: Bool) async -> ActivationOutcome {
+        func activate(id: UUID, durationMinutes: Int?, confirmedPumpSync: Bool) async -> ActivationOutcome {
             let context = coreDataStack.newTaskContext()
             context.name = "AdaptProfileActivateContext"
             context.transactionAuthor = "AdaptProfileActivate"
@@ -163,7 +163,7 @@ extension AdaptProfile {
 
             // Step 2: pump-sync decision. Only indefinite activations that would change the basal
             // schedule require a pump write; timed activations keep the pump schedule untouched.
-            let isIndefinite = (durationHours == nil)
+            let isIndefinite = (durationMinutes == nil)
             let basalDiffers = scope.basalProfile != loaded.therapy.basalProfile
             let needsPumpSync = isIndefinite && basalDiffers
 
@@ -212,7 +212,7 @@ extension AdaptProfile {
                     guard let target = try context.fetch(targetReq).first else { return false }
                     target.isActive = true
                     target.activatedAt = Date()
-                    target.expiresAt = durationHours.map { Date().addingTimeInterval(TimeInterval($0) * 3600) }
+                    target.expiresAt = durationMinutes.map { Date().addingTimeInterval(TimeInterval($0) * 60) }
                     // Anchor rule: indefinite activations clear previousProfileID (this profile
                     // is now the pump baseline). Timed activations inherit the outgoing profile's
                     // anchor, or fall back to the outgoing profile's id if it didn't have one.

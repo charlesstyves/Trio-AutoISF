@@ -84,8 +84,8 @@ protocol AdaptProfileProvider: Provider {
     /// Load a profile's editable content for the draft editor hub.
     func loadProfileContent(id: UUID) async -> LoadedProfileContent?
 
-    /// Activate a stored profile. `durationHours == nil` means indefinite. When indefinite and the
+    /// Activate a stored profile. `durationMinutes == nil` means indefinite. When indefinite and the
     /// target basal differs from live, pump sync is required — set `confirmedPumpSync = true` after
     /// the user approves the "Save to pump" dialog.
-    func activate(id: UUID, durationHours: Int?, confirmedPumpSync: Bool) async -> ActivationOutcome
+    func activate(id: UUID, durationMinutes: Int?, confirmedPumpSync: Bool) async -> ActivationOutcome
 }

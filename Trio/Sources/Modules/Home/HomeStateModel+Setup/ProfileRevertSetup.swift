@@ -17,6 +17,6 @@ extension Home.StateModel {
         guard let previousID = previousID else { return }
 
         let provider = AdaptProfile.Provider(resolver: resolver)
-        _ = await provider.activate(id: previousID, durationHours: nil, confirmedPumpSync: true)
+        _ = await provider.activate(id: previousID, durationMinutes: nil, confirmedPumpSync: true)
     }
 }

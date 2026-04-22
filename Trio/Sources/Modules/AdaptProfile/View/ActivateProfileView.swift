@@ -179,12 +179,10 @@ extension AdaptProfile {
 
         private func performActivation(confirmedPumpSync: Bool) async {
             isActivating = true
-            // Provider uses whole-hours granularity for expiresAt. Round fractional minutes up to
-            // keep the timed activation from expiring early.
-            let hoursArg: Int? = indefinite ? nil : max(1, Int(ceil(Double(totalMinutes) / 60)))
+            let minutesArg: Int? = indefinite ? nil : totalMinutes
             let outcome = await state.activate(
                 id: profile.id,
-                durationHours: hoursArg,
+                durationMinutes: minutesArg,
                 confirmedPumpSync: confirmedPumpSync
             )
             isActivating = false

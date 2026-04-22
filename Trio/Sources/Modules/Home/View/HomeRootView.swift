@@ -754,7 +754,7 @@ extension Home {
                     Image(systemName: "person.2.arrow.trianglehead.counterclockwise")
                         .font(.system(size: 26))
                         .symbolRenderingMode(.palette)
-                        .foregroundStyle(Color.blue, Color.purple)
+                        .foregroundStyle(Color.primary, Color.blue)
                 } else {
                     Image(systemName: "person.2", variableValue: 0.58)
                         .symbolRenderingMode(.palette)
@@ -770,7 +770,7 @@ extension Home {
                     Text(profile.name ?? String(localized: "Active Profile"))
                         .font(.subheadline)
                         .frame(alignment: .leading)
-                    let subtitle = profileSubtitle(profile)
+                    let subtitle = profileSubtitle(profile, now: state.timerDate)
                     if !subtitle.isEmpty {
                         Text(subtitle)
                             .font(.caption)
@@ -783,9 +783,12 @@ extension Home {
             }
         }
 
-        private func profileSubtitle(_ profile: ProfileStored) -> String {
+        /// Subtitle is recomputed against `state.timerDate` — the 5-second tick from
+        /// HomeStateModel — so the countdown stays live without an ad-hoc timer.
+        /// Same mechanism PumpView / LoopView use for their remaining-time displays.
+        private func profileSubtitle(_ profile: ProfileStored, now: Date) -> String {
             guard let expires = profile.expiresAt else { return "" }
-            let minutesLeft = Int(expires.timeIntervalSinceNow / 60)
+            let minutesLeft = Int(expires.timeIntervalSince(now) / 60)
             guard minutesLeft > 0 else { return String(localized: "Expiring") }
             return formatHrMin(minutesLeft)
         }

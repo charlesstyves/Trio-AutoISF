@@ -10,6 +10,16 @@ struct TherapyBundle: Codable {
 }
 
 extension NSPredicate {
+    /// Active profile: `isActive == true`. Kept deliberately simple (same shape as
+    /// `enabled == true` on Override / TempTarget) because callers such as
+    /// `AdaptProfileProvider.activate` rely on this predicate to locate the
+    /// outgoing profile — including ones whose timer has just elapsed — so the
+    /// deactivation/anchor bookkeeping stays correct.
+    ///
+    /// Display-side freshness is handled by the 5-second `timerDate` tick in
+    /// HomeStateModel, which (a) re-renders the chip so the countdown stays
+    /// live and (b) runs `checkExpiredProfileAndAutoRevert()` to flip
+    /// `isActive` / re-activate the anchor within a sweep cycle.
     static var activeProfile: NSPredicate {
         NSPredicate(format: "isActive == %@", true as NSNumber)
     }
