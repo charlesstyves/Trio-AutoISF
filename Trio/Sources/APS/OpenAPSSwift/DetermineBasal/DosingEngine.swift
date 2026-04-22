@@ -761,7 +761,7 @@ enum DosingEngine {
         adjustedSensitivity: Decimal,
         adjustedCarbRatio: Decimal,
         basal: Decimal,
-        autoISFLoopMode: AutoISFLoopMode,
+        smbDeliveryRatio: Decimal,
         determination: Determination
     ) throws -> (shouldSetTempBasal: Bool, determination: Determination) {
         var newDetermination = determination
@@ -787,13 +787,6 @@ enum DosingEngine {
             trioCustomOrefVariables: trioCustomOrefVariables
         )
 
-        let rampedSMBRatio = AutoISFsmb.variableSMBRatio(
-            profile: profile,
-            currentGlucose: currentGlucose,
-            targetGlucose: targetGlucose,
-            loopMode: autoISFLoopMode
-        )
-        let smbDeliveryRatio = min(rampedSMBRatio, 1)
         let roundSmbTo = 1 / profile.bolusIncrement
         let microBolusWithoutRounding = min(insulinRequired * smbDeliveryRatio, maxBolus)
         let microBolus = (microBolusWithoutRounding * roundSmbTo).floor() / roundSmbTo

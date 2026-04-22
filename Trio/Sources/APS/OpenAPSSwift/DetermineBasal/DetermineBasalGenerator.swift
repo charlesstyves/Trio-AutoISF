@@ -310,6 +310,7 @@ enum DeterminationGenerator {
             adjustedSensitivity: adjustedSensitivity,
             profileSens: originalSensitivity,
             targetBG: adjustedGlucoseTargets.targetGlucose,
+            currentGlucose: currentGlucose,
             sensitivityRatio: sensitivityRatio,
             originalSensitivity: originalSensitivity,
             exerciseModeActive: exerciseModeActive,
@@ -409,16 +410,7 @@ enum DeterminationGenerator {
             glucoseImpact: currentGlucoseImpact
         )
 
-        let effectiveSmbRatio = min(
-            AutoISFsmb.variableSMBRatio(
-                profile: profile,
-                currentGlucose: currentGlucose,
-                targetGlucose: adjustedGlucoseTargets.targetGlucose,
-                loopMode: autoISFResult.smbResult?.loopMode ?? .oref
-            ),
-            1
-        )
-        let isfReason = AutoISFReason.smbDeliveryRatioTag(effectiveSmbRatio) + autoISFResult.isfReason
+        let isfReason = AutoISFReason.smbDeliveryRatioTag(autoISFResult.smbRatio) + autoISFResult.isfReason
 
         // Build targetLog: "X" or "X→Y" or "X→Y→Z" if target was adjusted
         let profileTarget = profile.profileTarget(trioCustomOrefVariables: trioCustomOrefVariables) ?? 100
@@ -538,16 +530,7 @@ enum DeterminationGenerator {
             threshold: threshold.jsRounded(),
             carbRatio: forecastResult.adjustedCarbRatio.jsRounded(scale: 1),
             received: false,
-            // autoISF — nil when autoISF is disabled or dynISF is active instead
-            smbRatio: min(
-                AutoISFsmb.variableSMBRatio(
-                    profile: profile,
-                    currentGlucose: currentGlucose,
-                    targetGlucose: adjustedGlucoseTargets.targetGlucose,
-                    loopMode: autoISFResult.smbResult?.loopMode ?? .oref
-                ),
-                1
-            ),
+            smbRatio: autoISFResult.smbRatio,
             duraISFratio: autoISFResult.adjustResult?.duraISFratio,
             bgISFratio: autoISFResult.adjustResult?.bgISFratio,
             ppISFratio: autoISFResult.adjustResult?.ppISFratio,
@@ -753,7 +736,7 @@ enum DeterminationGenerator {
             adjustedSensitivity: adjustedSensitivity,
             adjustedCarbRatio: forecastResult.adjustedCarbRatio,
             basal: basal,
-            autoISFLoopMode: autoISFResult.smbResult?.loopMode ?? .oref,
+            smbDeliveryRatio: autoISFResult.smbRatio,
             determination: determination
         )
         determination = smbDetermination

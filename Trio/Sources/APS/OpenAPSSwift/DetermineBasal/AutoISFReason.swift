@@ -10,8 +10,11 @@ enum AutoISFReason {
 
     /// "Ins.Req:, <amount>, " — matches JS `determine-basal.js:1801`. Emitted on the
     /// aggressive-dosing path (SMB and high-temp) after the required insulin is known.
+    /// Returns the reason unchanged when `insulinRequired` is zero or negative —
+    /// nothing useful to highlight in the popup header.
     static func prependingInsulinRequired(_ insulinRequired: Decimal, to reason: String) -> String {
-        "Ins.Req:, \(insulinRequired), " + reason
+        guard insulinRequired > 0 else { return reason }
+        return "Ins.Req:, \(insulinRequired), " + reason
     }
 
     // MARK: - Tags

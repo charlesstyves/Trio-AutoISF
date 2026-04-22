@@ -21,6 +21,9 @@ struct AutoISFEngineResult {
     let smbEnabled: Bool?
     /// Full ISF reason string, always populated.
     let isfReason: String
+    /// Effective SMB delivery ratio (ramped or fixed), already clamped to `[0, 1]`.
+    /// DosingEngine uses this for the microbolus amount; also stored in Determination.
+    let smbRatio: Decimal
     /// ISF sub-module result (for Determination ratio fields).
     let adjustResult: AutoISFAdjustResult?
     /// SMB sub-module result (for iobTH field).
@@ -44,6 +47,7 @@ enum AutoISF {
         adjustedSensitivity: Decimal,
         profileSens: Decimal,
         targetBG: Decimal,
+        currentGlucose: Decimal,
         sensitivityRatio: Decimal,
         originalSensitivity: Decimal,
         exerciseModeActive: Bool,
@@ -72,12 +76,25 @@ enum AutoISF {
         )
         let smbEnabled: Bool? = smbResult.flatMap { $0.loopMode != .oref ? $0.smbEnabled : nil }
 
+        // Effective SMB delivery ratio (fixed or BG-range-ramped), pre-computed once so
+        // DosingEngine and Determination can read the same value.
+        let smbRatio = min(
+            AutoISFsmb.variableSMBRatio(
+                profile: profile,
+                currentGlucose: currentGlucose,
+                targetGlucose: targetBG,
+                loopMode: smbResult?.loopMode ?? .oref
+            ),
+            1
+        )
+
         // ISF adjustment: only when dynISF is inactive and glucose status is available
         guard !dynamicIsfActive, let status = autoISFStatus else {
             return AutoISFEngineResult(
                 adjustedSensitivity: nil,
                 smbEnabled: smbEnabled,
                 isfReason: autosensReason,
+                smbRatio: smbRatio,
                 adjustResult: nil,
                 smbResult: smbResult,
                 glucoseStatus: autoISFStatus
@@ -116,6 +133,7 @@ enum AutoISF {
             adjustedSensitivity: adjustResult?.adjustedSens,
             smbEnabled: smbEnabled,
             isfReason: isfReason,
+            smbRatio: smbRatio,
             adjustResult: adjustResult,
             smbResult: smbResult,
             glucoseStatus: status
