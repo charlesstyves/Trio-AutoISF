@@ -713,6 +713,7 @@ enum DeterminationGenerator {
             adjustedSensitivity: adjustedSensitivity,
             maxIob: profile.maxIob,
             currentIob: currentIob,
+            profile: profile,
             determination: determination
         )
         determination = insulinReqDetermination

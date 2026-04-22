@@ -684,6 +684,7 @@ enum DosingEngine {
         adjustedSensitivity: Decimal,
         maxIob: Decimal,
         currentIob: Decimal,
+        profile: Profile,
         determination: Determination
     ) -> (insulinRequired: Decimal, determination: Determination) {
         var newDetermination = determination
@@ -697,6 +698,9 @@ enum DosingEngine {
             // to three decimal places, not 2 like on the default path
             insulinRequired = (maxIob - currentIob).jsRounded(scale: 3)
         }
+        // Round to the pump's bolus increment — matches JS determine-basal.js line 1792
+        // (round_basal(insulinReq, profile)).
+        insulinRequired = TempBasalFunctions.roundBasal(profile: profile, basalRate: insulinRequired)
         newDetermination.insulinReq = insulinRequired
         return (insulinRequired, newDetermination)
     }
