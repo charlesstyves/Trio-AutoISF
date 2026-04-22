@@ -1,5 +1,5 @@
 Trio dev 0.7.0
-orefswift with all fixes
+orefswift algo and toggle
 overrides with autoISF & SMB Dell.Ratio settings
 stable CSF toggle (CR changes with ISF)
 popup tags and graphs in mmol/L
