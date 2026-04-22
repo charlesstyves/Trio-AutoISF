@@ -36,7 +36,6 @@ extension Treatments {
         var maxCOB: Decimal = 0
         var errorString: Decimal = 0
         var evBG: Decimal = 0
-        var insulin: Decimal = 0
         var isf: Decimal = 0
         var error: Bool = false
         var minGuardBG: Decimal = 0
@@ -930,7 +929,6 @@ extension Treatments.StateModel {
             evBG = (mostRecentDetermination.eventualBG ?? 0) as Decimal
             minPredBG = (mostRecentDetermination.minPredBG ?? 0) as Decimal
             lastLoopDate = apsManager.lastLoopDate as Date?
-            insulin = (mostRecentDetermination.insulinForManualBolus ?? 0) as Decimal
             target = (mostRecentDetermination.currentTarget ?? currentBGTarget as NSDecimalNumber) as Decimal
             isf = (mostRecentDetermination.insulinSensitivity ?? currentISF as NSDecimalNumber) as Decimal
             cob = mostRecentDetermination.cob as Int16
