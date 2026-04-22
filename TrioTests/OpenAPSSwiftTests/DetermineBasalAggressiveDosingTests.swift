@@ -48,6 +48,7 @@ import Testing
             adjustedSensitivity: adjustedSensitivity,
             maxIob: maxIob,
             currentIob: currentIob,
+            profile: Profile(),
             determination: determination
         )
     }
