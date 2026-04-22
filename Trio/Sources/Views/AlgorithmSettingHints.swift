@@ -582,6 +582,11 @@ enum AlgorithmSettingHints {
                 ],
                 listItemSpacing: 10
             )
+            Divider()
+            Text("Full-Loop mode").bold()
+            Text(
+                "When the even/odd target toggle is enabled, setting an even-numbered temp target below 100 mg/dL (e.g. 80 or 90) puts autoISF into full-loop mode — a signal that you want maximum SMB power. In that mode the SMB delivery ratio is forced to at least the fixed SMB DeliveryRatio, even when the BG-range ramp would otherwise give a lower value."
+            )
         }
     }
 
@@ -612,6 +617,14 @@ enum AlgorithmSettingHints {
         VStack(alignment: .leading, spacing: 10) {
             Text(
                 "Very neat feature that allows the use of profile and temporary targets to trigger SMB's being enabled or disabled. So a profile target at 3:00 am of \(units == .mgdL ? "121" : 121.formattedAsMmolL) \(units.rawValue) will prevent any SMB's in that time window. Schedule a TT of \(units == .mgdL ? "100" : 100.formattedAsMmolL) \(units.rawValue) at 3:20 am and from then on SMB's can be enacted."
+            )
+            Divider()
+            Text("Full-Loop mode").bold()
+            Text(
+                "A special case: setting an even-numbered temp target below \(units == .mgdL ? "100" : 100.formattedAsMmolL) \(units.rawValue) (e.g. \(units == .mgdL ? "80 or 90" : "\(80.formattedAsMmolL) or \(90.formattedAsMmolL)") \(units.rawValue)) signals that you want maximum SMB aggression — autoISF calls this full-loop mode."
+            )
+            Text(
+                "In full-loop mode, the SMB delivery ratio becomes the greater of the fixed SMB DeliveryRatio and the linearly-rising ramp value — so the fixed ratio acts as a floor the ramp can only raise, never lower."
             )
         }
     }
@@ -908,7 +921,7 @@ enum AlgorithmSettingHints {
     )
     static func smbDeliveryRatioBGrangeMini(units: GlucoseUnits) -> String {
         String(
-            localized: "Sensible is between \(units == .mgdL ? "40" : 40.formattedAsMmolL) \(units.rawValue) and \(units == .mgdL ? "120" : 120.formattedAsMmolL) \(units.rawValue). The linearly increasing SMB delivery ratio is mapped to the glucose range [target_bg, target_bg+bg_range]. If set to 0 the SMB DeliveryRatio (fixed) is used instead.",
+            localized: "How far above your BG target the delivery ratio ramps up. Sensible values are \(units == .mgdL ? "40" : 40.formattedAsMmolL)–\(units == .mgdL ? "120" : 120.formattedAsMmolL) \(units.rawValue). Set to 0 to disable the ramp and use the fixed SMB DeliveryRatio instead.",
             comment: "SMB DeliveryRatio BG Range miniHint"
         )
     }
@@ -918,7 +931,14 @@ enum AlgorithmSettingHints {
             Text("Typical: \(units == .mgdL ? "90" : 90.formattedAsMmolL) \(units.rawValue)")
                 .bold()
             Text(
-                "Alternatively to a higher but fixed ratio you can use a linearly rising ratio, starting cautiously with smb_delivery_ratio_min at target_bg and rising to a more ambitious smb_delivery_ratio_max at target_bg+smb_delivery_ratio_bg_range."
+                "Instead of a single fixed ratio, the delivery ratio can rise linearly with glucose: starting cautiously at SMB DeliveryRatio BG Minimum when glucose is at your BG target, and reaching the more ambitious SMB DeliveryRatio BG Maximum once glucose is this many points above target."
+            )
+            Text(
+                "A wider range makes SMBs ramp up more gradually; a narrower range makes them reach full aggression sooner."
+            )
+            Text("Set to 0 to disable the ramp — the fixed SMB DeliveryRatio is used instead.")
+            Text(
+                "Full-Loop exception: when autoISF's full-loop mode is active (an even-numbered temp target below 100 mg/dL, e.g. 80 or 90, signalling you want maximum SMB power), the delivery ratio becomes the greater of the fixed ratio and the ramp value — so the fixed ratio acts as a floor and the ramp can only raise it further."
             )
         }
     }
