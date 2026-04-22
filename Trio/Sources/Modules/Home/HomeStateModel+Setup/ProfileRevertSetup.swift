@@ -3,8 +3,10 @@ import Foundation
 
 extension Home.StateModel {
     /// Reverts the currently-active timed AdaptProfile to its `previousProfileID`.
-    /// Timed activations keep the pump untouched, so reverting to an indefinite
-    /// predecessor typically skips pump sync (basal already matches).
+    /// Under the anchor rule (see AdaptProfileProvider.activate) `previousProfileID`
+    /// always points at the last indefinite profile — i.e. the basal schedule already
+    /// on the pump. The pump sync that follows is therefore a redundant write of the
+    /// same values, so we pre-confirm it rather than prompting the user.
     @MainActor func revertActiveProfile() async {
         guard let resolver = resolver else { return }
         let context = CoreDataStack.shared.newTaskContext()

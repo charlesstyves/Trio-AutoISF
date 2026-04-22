@@ -12,6 +12,8 @@ extension AdaptProfile {
         @State private var isConfirmDeletePresented = false
         @State private var activationTarget: AdaptProfileListItem?
         @State private var isConfirmRevertPresented = false
+        @State private var showProfileHint = false
+        @State private var profileHintDetent = PresentationDetent.large
 
         @Environment(\.colorScheme) var colorScheme
         @Environment(AppState.self) var appState
@@ -81,6 +83,20 @@ extension AdaptProfile {
                         }
                     })
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(action: { showProfileHint = true }) {
+                        Image(systemName: "info.circle")
+                    }
+                }
+            }
+            .sheet(isPresented: $showProfileHint) {
+                SettingInputHintView(
+                    hintDetent: $profileHintDetent,
+                    shouldDisplayHint: $showProfileHint,
+                    hintLabel: String(localized: "About Profiles"),
+                    hintText: AnyView(profileAbstractHint),
+                    sheetTitle: String(localized: "Help", comment: "Help sheet title")
+                )
             }
             .sheet(isPresented: $showNewProfile, onDismiss: { draftEditorState = nil }) {
                 newProfileSheet
@@ -198,7 +214,7 @@ extension AdaptProfile {
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    activationTarget = item
+                    isConfirmRevertPresented = true
                 }
             } header: {
                 Text("Reverts to")
@@ -246,9 +262,36 @@ extension AdaptProfile {
                         Button("Cancel", role: .cancel) {}
                     } message: {
                         Text(
-                            "Restores the previous profile's settings. The pump's basal schedule is not changed — timed profiles never wrote to it."
+                            "Restores the previous indefinite profile — the one whose basal schedule is already on the pump. No pump change needed."
                         )
                     }
+            }
+        }
+
+        @ViewBuilder private var profileAbstractHint: some View {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("What is a Profile?").bold()
+                Text(
+                    "A Profile is a named snapshot of your full therapy and algorithm setup — basal rate, ISF, CR, BG targets, plus every Algorithm Settings toggle. You keep one baseline profile and build alternates (sick day, exercise, menstrual cycle, travel, test modes) from it. Switching profiles swaps the entire setup in one tap."
+                )
+
+                Text("Activation modes").bold()
+                Text(
+                    "Indefinite: becomes your new baseline. The basal schedule is written to the pump and everything else is applied immediately."
+                )
+                Text(
+                    "Timed (up to 24 h): applied until the duration expires, then auto-reverts to the indefinite baseline. The pump's scheduled basal is NOT changed; the algorithm compensates in-the-loop via temp basals — just like an override. This means you can safely experiment without touching the pump."
+                )
+
+                Text("Reverting").bold()
+                Text(
+                    "Stopping a temp profile (or waiting for it to expire) returns you to the indefinite profile whose basal is already on the pump. Revert always targets that anchor — chains of temps can never leave the pump in an unfamiliar state."
+                )
+
+                Text("Creating a new profile").bold()
+                Text(
+                    "Tap \"Add Profile\" to start from the currently active profile's settings. First pick a percentage to scale Basal, ISF and CR in one step, then fine-tune any individual setting in the editor that follows."
+                )
             }
         }
 

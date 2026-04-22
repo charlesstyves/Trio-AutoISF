@@ -137,21 +137,25 @@ extension AdaptProfile {
             context.name = "AdaptProfileActivateContext"
             context.transactionAuthor = "AdaptProfileActivate"
 
-            // Step 1: load target profile's decoded snapshot + previous-active id (all on the
+            // Step 1: load target profile's decoded snapshot + active-profile metadata (all on the
             // context queue — we don't carry the NSManagedObject outside).
-            let loaded: (preferences: Preferences, therapy: TherapyBundle, oldActiveID: UUID?)? = await context
-                .perform { () -> (Preferences, TherapyBundle, UUID?)? in
-                    let req = ProfileStored.fetch(.profileByID(id), fetchLimit: 1)
-                    guard let target = try? context.fetch(req).first,
-                          let prefs = target.preferences,
-                          let therapy = target.therapy
-                    else {
-                        return nil
-                    }
-                    let activeReq = ProfileStored.fetch(.activeProfile, fetchLimit: 1)
-                    let oldActive = try? context.fetch(activeReq).first
-                    return (prefs, therapy, oldActive?.id)
+            let loaded: (
+                preferences: Preferences,
+                therapy: TherapyBundle,
+                oldActiveID: UUID?,
+                oldAnchorID: UUID?
+            )? = await context.perform { () -> (Preferences, TherapyBundle, UUID?, UUID?)? in
+                let req = ProfileStored.fetch(.profileByID(id), fetchLimit: 1)
+                guard let target = try? context.fetch(req).first,
+                      let prefs = target.preferences,
+                      let therapy = target.therapy
+                else {
+                    return nil
                 }
+                let activeReq = ProfileStored.fetch(.activeProfile, fetchLimit: 1)
+                let oldActive = try? context.fetch(activeReq).first
+                return (prefs, therapy, oldActive?.id, oldActive?.previousProfileID)
+            }
 
             guard let loaded = loaded else {
                 return .failed(String(localized: "Profile not found."))
@@ -209,7 +213,17 @@ extension AdaptProfile {
                     target.isActive = true
                     target.activatedAt = Date()
                     target.expiresAt = durationHours.map { Date().addingTimeInterval(TimeInterval($0) * 3600) }
-                    target.previousProfileID = loaded.oldActiveID
+                    // Anchor rule: indefinite activations clear previousProfileID (this profile
+                    // is now the pump baseline). Timed activations inherit the outgoing profile's
+                    // anchor, or fall back to the outgoing profile's id if it didn't have one.
+                    // This guarantees reverting/stopping any temp always returns to the profile
+                    // whose basal is on the pump — chains of temps can't sneak unfamiliar basal
+                    // onto the pump.
+                    if isIndefinite {
+                        target.previousProfileID = nil
+                    } else {
+                        target.previousProfileID = loaded.oldAnchorID ?? loaded.oldActiveID
+                    }
                     try context.save()
                     return true
                 } catch {

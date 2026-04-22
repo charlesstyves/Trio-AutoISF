@@ -36,6 +36,15 @@ extension AdaptProfile {
                     Button("Cancel", action: onCancel)
                 }
             }
+            .sheet(isPresented: $shouldDisplayHint) {
+                SettingInputHintView(
+                    hintDetent: $hintDetent,
+                    shouldDisplayHint: $shouldDisplayHint,
+                    hintLabel: hintLabel ?? "",
+                    hintText: selectedVerboseHint ?? AnyView(EmptyView()),
+                    sheetTitle: String(localized: "Help", comment: "Help sheet title")
+                )
+            }
         }
 
         private var nameSection: some View {
@@ -60,26 +69,32 @@ extension AdaptProfile {
                     get: { selectedVerboseHint },
                     set: {
                         selectedVerboseHint = $0.map { AnyView($0) }
-                        hintLabel = String(localized: "Adjust Therapy")
+                        hintLabel = String(localized: "Adjust current Therapy Setting")
                     }
                 ),
                 units: .mgdL,
                 type: .decimal("therapyAdjustment"),
-                label: String(localized: "Adjust Therapy"),
+                label: String(localized: "Adjust current Therapy Settings"),
                 miniHint: String(
-                    localized: "100 % keeps current values. Higher % = more insulin: basal goes up, ISF and CR go down."
+                    localized: "Values >100% = less sensitive, more insulin nedded, Basal Rates profile is lifted, ISF and CR profiles decrease. 100% preserves current Therapy Settings."
                 ),
                 verboseHint:
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Default: 100 %").bold()
                     Text(
-                        "A single percentage adjusts all therapy values proportionally, the same way an override does."
+                        "This percentage rescales the three therapy profiles — Basal Rate, Insulin Sensitivity (ISF) and Carb Ratio (CR) — in one step. It's the same mechanism an override uses, baked into the profile so every loop cycle sees the adjusted values."
                     )
-                    Text("• Basal rate scales up with the percentage (× p / 100).")
-                    Text("• Insulin Sensitivity (ISF) scales down (× 100 / p) — the algorithm will deliver more insulin.")
-                    Text("• Carb Ratio (CR) scales down (× 100 / p) — more insulin per carb.")
                     Text(
-                        "Adjusted basal rates are rounded down to the nearest pump-supported rate. ISF is rounded to 1 mg/dL steps, CR to 0.1 g/U."
+                        "Keep at 100 % if you want the new profile to share the active profile's therapy values and only differ in algorithm toggles or BG targets."
+                    )
+                    Text(
+                        ">100 % = more insulin overall (less sensitive). Basal rises, ISF drops, CR drops."
+                    )
+                    Text(
+                        "<100 % = less insulin (more sensitive). Basal drops, ISF rises, CR rises."
+                    )
+                    Text(
+                        "Adjusted basal rates are rounded down to the nearest pump-supported rate. ISF is rounded to 1 mg/dL steps, CR to 0.1 g/U. You can fine-tune each value manually in the editor after tapping Next."
                     )
                 },
                 headerText: String(localized: "Therapy Adjustment")
