@@ -49,15 +49,31 @@ enum AutoISFReason {
         acceISFratio: Decimal,
         status: AutoISFGlucoseStatus
     ) -> String {
+        // Preconditions: autoISF acceleration is active, parabola has curvature, fit is
+        // reliable, and |bg_acceleration| is meaningful (a near-linear parabola extrapolates
+        // a distant, unreliable vertex — e.g. a "max hrs ago" over a BG curve that was
+        // actually flat back then).
         guard enabled,
               acceISFratio != 1,
               status.a_2 != 0,
-              status.r_squ >= Decimal(0.9)
+              status.r_squ >= Decimal(0.9),
+              abs(status.bg_acceleration) >= Decimal(0.3)
         else { return "" }
+
         let tVertex = -(status.a_1 / (2 * status.a_2))
         let minsDelta = (abs(tVertex) * 5).jsRounded(scale: 1)
         let extremumBG = (status.a_0 - status.a_1 * status.a_1 / (4 * status.a_2)).jsRounded(scale: 1)
-        guard extremumBG >= -200, extremumBG <= 400, minsDelta <= 300 else { return "" }
+
+        // Sanity bounds on extremum BG and time, plus: reject a past-extrapolation whose
+        // predicted slope contradicts a historically stable long-term average delta.
+        let pastInconsistentWithHistory =
+            tVertex < 0 && minsDelta > 60 && abs(status.glucoseStatus.longAvgDelta) < 1
+        guard extremumBG >= -200,
+              extremumBG <= 400,
+              minsDelta <= 300,
+              !pastInconsistentWithHistory
+        else { return "" }
+
         if tVertex > 0 {
             return status.bg_acceleration < 0
                 ? "Parabolic Fit:, predicts Max of \(extremumBG), in about \(minsDelta)min, "
