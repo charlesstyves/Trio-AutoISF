@@ -253,6 +253,7 @@ import Testing
             adjustedSensitivity: profile.sens ?? 40,
             adjustedCarbRatio: adjustedCarbRatio,
             basal: basal,
+            autoISFLoopMode: .oref,
             determination: determination
         )
     }

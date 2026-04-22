@@ -1,17 +1,17 @@
 import Foundation
 
+enum AutoISFLoopMode {
+    case oref // fall through to standard SMB enabling logic
+    case enforced // SMB on — even target at normal BG
+    case fullLoop // SMB on — even temp-target below 100
+    case blocked // SMB off — odd target
+    case iobTHExceeded // SMB off — IOB exceeds threshold
+    case b30Running // SMB off — B30 basal active
+}
+
 /// Output of the autoISF SMB-activation decision.
 struct AutoISFSMBResult {
-    enum LoopMode {
-        case oref // fall through to standard SMB enabling logic
-        case enforced // SMB on — even target at normal BG
-        case fullLoop // SMB on — even temp-target below 100
-        case blocked // SMB off — odd target
-        case iobTHExceeded // SMB off — IOB exceeds threshold
-        case b30Running // SMB off — B30 basal active
-    }
-
-    let loopMode: LoopMode
+    let loopMode: AutoISFLoopMode
     /// Effective IOB threshold value (for logging).
     let iobTHEffective: Decimal
     /// Reason fragment to prepend to the determination reason string.
@@ -114,5 +114,48 @@ enum AutoISFSMBControl {
             iobTHEffective: iobThEffective,
             reason: "autoISF-SMB enabled:, even Target, eff.iobTH:, \(iobThEffective)"
         )
+    }
+
+    /// Ports `determine_varSMBratio()` from determine-basal.js (autoISF 3.01).
+    ///
+    /// Produces the SMB delivery ratio to use for the microbolus calculation. When
+    /// `smbDeliveryRatioBGrange > 0` the ratio ramps linearly from `smbDeliveryRatioMin`
+    /// at BG target to `smbDeliveryRatioMax` at `target + bgRange`. With `bgRange == 0`
+    /// the fixed `smbDeliveryRatio` is returned. In fullLoop mode the result is
+    /// `max(fixed, ramp)` so the fixed ratio acts as a floor.
+    static func variableSMBRatio(
+        profile: Profile,
+        currentGlucose: Decimal,
+        targetGlucose: Decimal,
+        loopMode: AutoISFLoopMode
+    ) -> Decimal {
+        // JS: if (bg_range < 10) bg_range /= 0.0555  → treat small values as mmol/L
+        var bgRange = profile.smbDeliveryRatioBGrange
+        if bgRange < 10 {
+            bgRange /= Decimal(0.0555)
+        }
+        let fixSMB = profile.smbDeliveryRatio
+        let lowerSMB = min(profile.smbDeliveryRatioMin, profile.smbDeliveryRatioMax)
+        let higherSMB = max(profile.smbDeliveryRatioMin, profile.smbDeliveryRatioMax)
+        let higherBG = targetGlucose + bgRange
+        var newSMB = fixSMB
+
+        if bgRange > 0 {
+            newSMB = lowerSMB + (higherSMB - lowerSMB) * (currentGlucose - targetGlucose) / bgRange
+            newSMB = max(lowerSMB, min(higherSMB, newSMB))
+        }
+        if loopMode == .fullLoop {
+            return max(fixSMB, newSMB)
+        }
+        if bgRange == 0 {
+            return fixSMB
+        }
+        if currentGlucose <= targetGlucose {
+            return lowerSMB
+        }
+        if currentGlucose >= higherBG {
+            return higherSMB
+        }
+        return newSMB
     }
 }
