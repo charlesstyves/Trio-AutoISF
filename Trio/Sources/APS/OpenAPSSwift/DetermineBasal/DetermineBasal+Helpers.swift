@@ -257,7 +257,12 @@ extension DeterminationGenerator {
         }
 
         // Calculate threshold: minGlucose thresholds: 80->60, 90->65, etc.
-        var threshold = minGlucose - 0.5 * (minGlucose - 40)
+        // smbThresholdRatio (JS: smb_threshold_ratio) lets users raise the threshold above
+        // the default midpoint. JS clamps it to (0.5, 1.0]; values outside fall back to 0.5.
+        let thresholdRatio: Decimal = (profile.smbThresholdRatio > 0.5 && profile.smbThresholdRatio <= 1)
+            ? profile.smbThresholdRatio
+            : 0.5
+        var threshold = minGlucose - (1 - thresholdRatio) * (minGlucose - 40)
         threshold = min(max(profile.thresholdSetting, threshold, 60), 120)
 
         return (AdjustedGlucoseTargets(minGlucose: minGlucose, maxGlucose: maxGlucose, targetGlucose: targetGlucose), threshold)
