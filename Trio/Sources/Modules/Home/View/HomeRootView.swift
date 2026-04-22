@@ -32,6 +32,7 @@ extension Home {
         @State var isConfirmStopOverrideShown = false
         @State var isConfirmStopOverridePresented = false
         @State var isConfirmStopTempTargetShown = false
+        @State var isConfirmRevertProfilePresented = false
         @State var isMenuPresented = false
         @State var showTreatments = false
         @State var selectedTab: Int = 0
@@ -59,6 +60,12 @@ extension Home {
             ascending: false,
             fetchLimit: 1
         )) var latestTempTarget: FetchedResults<TempTargetStored>
+
+        @FetchRequest(fetchRequest: ProfileStored.fetch(
+            NSPredicate.activeProfile,
+            ascending: false,
+            fetchLimit: 1
+        )) var activeProfile: FetchedResults<ProfileStored>
 
         var bolusProgressFormatter: NumberFormatter {
             let fractionDigits: Int = switch state.settingsManager.preferences.bolusIncrement {
@@ -741,6 +748,64 @@ extension Home {
             }
         }
 
+        @ViewBuilder func adjustmentsProfileView(_ profile: ProfileStored) -> some View {
+            Group {
+                Image(systemName: "person.crop.rectangle.stack")
+                    .font(.title2)
+                    .foregroundStyle(Color.primary, Color.blue)
+                VStack(alignment: .leading) {
+                    Text(profile.name ?? String(localized: "Active Profile"))
+                        .font(.subheadline)
+                        .frame(alignment: .leading)
+                    let subtitle = profileSubtitle(profile)
+                    if !subtitle.isEmpty {
+                        Text(subtitle)
+                            .font(.caption)
+                            .frame(alignment: .leading)
+                    }
+                }
+            }
+            .onTapGesture {
+                selectedTab = 2
+            }
+        }
+
+        private func profileSubtitle(_ profile: ProfileStored) -> String {
+            guard let expires = profile.expiresAt else { return "" }
+            let minutesLeft = Int(expires.timeIntervalSinceNow / 60)
+            if minutesLeft <= 0 {
+                return String(localized: "Expiring")
+            }
+            let hours = minutesLeft / 60
+            let mins = minutesLeft % 60
+            if hours > 0, mins > 0 {
+                return String(localized: "for \(hours) hr \(mins) min")
+            }
+            if hours > 0 {
+                return String(localized: "for \(hours) hr")
+            }
+            return String(localized: "for \(mins) min")
+        }
+
+        @ViewBuilder func adjustmentsRevertProfileView() -> some View {
+            Image(systemName: "xmark.app")
+                .font(.system(size: 24))
+                .foregroundStyle(Color.primary, Color.blue)
+                .confirmationDialog(
+                    "Revert to previous profile?",
+                    isPresented: $isConfirmRevertProfilePresented,
+                    titleVisibility: .visible
+                ) {
+                    Button("Revert", role: .destructive) {
+                        Task { await state.revertActiveProfile() }
+                    }
+                    Button("Cancel", role: .cancel) {}
+                }
+                .onTapGesture {
+                    isConfirmRevertProfilePresented = true
+                }
+        }
+
         @ViewBuilder func adjustmentsCancelView(_ cancelAction: @escaping () -> Void) -> some View {
             Image(systemName: "xmark.app")
                 .font(.system(size: 24))
@@ -827,11 +892,16 @@ extension Home {
         @ViewBuilder func adjustmentView(geo: GeometryProxy) -> some View {
 //            let background = colorScheme == .dark ? Material.ultraThinMaterial.opacity(0.5) : Color.black.opacity(0.2)
 
+            let profileToShow: ProfileStored? = {
+                guard overrideString == nil, tempTargetString == nil else { return nil }
+                return activeProfile.first
+            }()
+
             ZStack {
                 /// rectangle as background
                 RoundedRectangle(cornerRadius: 15)
                     .fill(
-                        (overrideString != nil || tempTargetString != nil) ?
+                        (overrideString != nil || tempTargetString != nil || profileToShow != nil) ?
                             (
                                 colorScheme == .dark ?
                                     Color(red: 0.03921568627, green: 0.133333333, blue: 0.2156862745) :
@@ -842,7 +912,7 @@ extension Home {
                     .clipShape(RoundedRectangle(cornerRadius: 15))
                     .frame(height: geo.size.height * 0.06)
                     .shadow(
-                        color: (overrideString != nil || tempTargetString != nil) ?
+                        color: (overrideString != nil || tempTargetString != nil || profileToShow != nil) ?
                             (
                                 colorScheme == .dark ? Color(red: 0.02745098039, green: 0.1098039216, blue: 0.1411764706) :
                                     Color.black.opacity(0.33)
@@ -884,6 +954,14 @@ extension Home {
                             adjustmentsTempTargetView(tempTargetString)
                             Spacer()
                             adjustmentsCancelTempTargetView()
+                        }
+                    } else if let profile = profileToShow {
+                        HStack {
+                            adjustmentsProfileView(profile)
+                            Spacer()
+                            if profile.expiresAt != nil, profile.previousProfileID != nil {
+                                adjustmentsRevertProfileView()
+                            }
                         }
                     } else {
                         noActiveAdjustmentsView()
@@ -1101,7 +1179,7 @@ extension Home {
                 if let progress = state.bolusProgress {
                     bolusProgressView(geo: geo, progress)
                         .padding(.bottom, UIDevice.adjustPadding(min: 0, max: 6))
-                } else if overrideString != nil || tempTargetString != nil {
+                } else if overrideString != nil || tempTargetString != nil || activeProfile.first != nil {
                     adjustmentView(geo: geo)
                         .padding(.bottom, UIDevice.adjustPadding(min: 0, max: 6))
                 }

@@ -443,6 +443,7 @@
 		58645B9D2CA2D275008AFCE7 /* DeterminationSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58645B9C2CA2D275008AFCE7 /* DeterminationSetup.swift */; };
 		58645B9F2CA2D2BE008AFCE7 /* PumpHistorySetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58645B9E2CA2D2BE008AFCE7 /* PumpHistorySetup.swift */; };
 		58645BA12CA2D2F8008AFCE7 /* OverrideSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58645BA02CA2D2F8008AFCE7 /* OverrideSetup.swift */; };
+		ADA10030ADA10030ADA10030 /* ProfileRevertSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA1002FADA1002FADA1002F /* ProfileRevertSetup.swift */; };
 		58645BA32CA2D325008AFCE7 /* BatterySetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58645BA22CA2D325008AFCE7 /* BatterySetup.swift */; };
 		58645BA52CA2D347008AFCE7 /* ForecastSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58645BA42CA2D347008AFCE7 /* ForecastSetup.swift */; };
 		58645BA72CA2D390008AFCE7 /* ChartAxisSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58645BA62CA2D390008AFCE7 /* ChartAxisSetup.swift */; };
@@ -1458,6 +1459,7 @@
 		58645B9C2CA2D275008AFCE7 /* DeterminationSetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeterminationSetup.swift; sourceTree = "<group>"; };
 		58645B9E2CA2D2BE008AFCE7 /* PumpHistorySetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PumpHistorySetup.swift; sourceTree = "<group>"; };
 		58645BA02CA2D2F8008AFCE7 /* OverrideSetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverrideSetup.swift; sourceTree = "<group>"; };
+		ADA1002FADA1002FADA1002F /* ProfileRevertSetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRevertSetup.swift; sourceTree = "<group>"; };
 		58645BA22CA2D325008AFCE7 /* BatterySetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatterySetup.swift; sourceTree = "<group>"; };
 		58645BA42CA2D347008AFCE7 /* ForecastSetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastSetup.swift; sourceTree = "<group>"; };
 		58645BA62CA2D390008AFCE7 /* ChartAxisSetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartAxisSetup.swift; sourceTree = "<group>"; };
@@ -3453,6 +3455,7 @@
 				58645B9C2CA2D275008AFCE7 /* DeterminationSetup.swift */,
 				58645B9E2CA2D2BE008AFCE7 /* PumpHistorySetup.swift */,
 				58645BA02CA2D2F8008AFCE7 /* OverrideSetup.swift */,
+				ADA1002FADA1002FADA1002F /* ProfileRevertSetup.swift */,
 				58645BA22CA2D325008AFCE7 /* BatterySetup.swift */,
 				58645BA42CA2D347008AFCE7 /* ForecastSetup.swift */,
 				58645BA62CA2D390008AFCE7 /* ChartAxisSetup.swift */,
@@ -5347,6 +5350,7 @@
 				BDB899882C564509006F3298 /* ForecastChart.swift in Sources */,
 				110AEDE32C5193D200615CC9 /* BolusIntent.swift in Sources */,
 				58645BA12CA2D2F8008AFCE7 /* OverrideSetup.swift in Sources */,
+				ADA10030ADA10030ADA10030 /* ProfileRevertSetup.swift in Sources */,
 				DDD1631A2C4C695E00CD525A /* EditOverrideForm.swift in Sources */,
 				CE1856F72ADC4869007E39C7 /* CarbPresetIntentRequest.swift in Sources */,
 				CE1F6DDB2BAE08B60064EB8D /* TidepoolManager.swift in Sources */,

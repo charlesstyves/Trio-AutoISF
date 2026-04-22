@@ -11,6 +11,7 @@ extension AdaptProfile {
         @State private var selectedProfile: AdaptProfileListItem?
         @State private var isConfirmDeletePresented = false
         @State private var activationTarget: AdaptProfileListItem?
+        @State private var isConfirmRevertPresented = false
 
         @Environment(\.colorScheme) var colorScheme
         @Environment(AppState.self) var appState
@@ -107,6 +108,14 @@ extension AdaptProfile {
                     onDismiss: { activationTarget = nil }
                 )
             }
+            .safeAreaInset(edge: .bottom) {
+                if let active = activeItem,
+                   active.expiresAt != nil,
+                   active.previousProfileID != nil
+                {
+                    stickyStopTempProfileButton
+                }
+            }
         }
 
         private var newProfileSheet: some View {
@@ -197,6 +206,52 @@ extension AdaptProfile {
                 Text("Reverts to")
             }
             .listRowBackground(Color.chart)
+        }
+
+        private var stickyStopTempProfileButton: some View {
+            ZStack {
+                Rectangle()
+                    .frame(width: UIScreen.main.bounds.width, height: 65)
+                    .foregroundStyle(colorScheme == .dark ? Color.bgDarkerDarkBlue : Color.white)
+                    .background(.thinMaterial)
+                    .opacity(0.8)
+                    .clipShape(Rectangle())
+
+                Button(action: {
+                    isConfirmRevertPresented = true
+                }, label: {
+                    Text("Stop Temp Profile")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(10)
+                })
+                    .frame(width: UIScreen.main.bounds.width * 0.9, height: 40, alignment: .center)
+                    .background(Color(.systemRed))
+                    .tint(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .padding(5)
+                    .confirmationDialog(
+                        "Stop the temporary profile?",
+                        isPresented: $isConfirmRevertPresented,
+                        titleVisibility: .visible
+                    ) {
+                        if let prevID = activeItem?.previousProfileID {
+                            Button("Stop", role: .destructive) {
+                                Task {
+                                    _ = await state.activate(
+                                        id: prevID,
+                                        durationHours: nil,
+                                        confirmedPumpSync: true
+                                    )
+                                }
+                            }
+                        }
+                        Button("Cancel", role: .cancel) {}
+                    } message: {
+                        Text(
+                            "Restores the previous profile's settings. The pump's basal schedule is not changed — timed profiles never wrote to it."
+                        )
+                    }
+            }
         }
 
         private var profilesSection: some View {
