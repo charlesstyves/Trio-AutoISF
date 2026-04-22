@@ -750,9 +750,22 @@ extension Home {
 
         @ViewBuilder func adjustmentsProfileView(_ profile: ProfileStored) -> some View {
             Group {
-                Image(systemName: "person.crop.rectangle.stack")
-                    .font(.title2)
-                    .foregroundStyle(Color.primary, Color.blue)
+                if profile.expiresAt != nil {
+                    Image(systemName: "person.2.arrow.trianglehead.counterclockwise")
+                        .font(.system(size: 26))
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(Color.blue, Color.purple)
+                } else {
+                    Image(systemName: "person.2", variableValue: 0.58)
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(Color.blue, Color.white, Color.white)
+                        .font(.system(size: 13, weight: .regular))
+                        .frame(width: 22, height: 22)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4)
+                                .stroke(Color.blue, lineWidth: 1.5)
+                        )
+                }
                 VStack(alignment: .leading) {
                     Text(profile.name ?? String(localized: "Active Profile"))
                         .font(.subheadline)
@@ -773,18 +786,8 @@ extension Home {
         private func profileSubtitle(_ profile: ProfileStored) -> String {
             guard let expires = profile.expiresAt else { return "" }
             let minutesLeft = Int(expires.timeIntervalSinceNow / 60)
-            if minutesLeft <= 0 {
-                return String(localized: "Expiring")
-            }
-            let hours = minutesLeft / 60
-            let mins = minutesLeft % 60
-            if hours > 0, mins > 0 {
-                return String(localized: "for \(hours) hr \(mins) min")
-            }
-            if hours > 0 {
-                return String(localized: "for \(hours) hr")
-            }
-            return String(localized: "for \(mins) min")
+            guard minutesLeft > 0 else { return String(localized: "Expiring") }
+            return formatHrMin(minutesLeft)
         }
 
         @ViewBuilder func adjustmentsRevertProfileView() -> some View {

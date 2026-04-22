@@ -169,12 +169,10 @@ extension AdaptProfile {
                             .foregroundStyle(Color.primary)
                     }
                     if let expiresAt = item.expiresAt {
-                        HStack(spacing: 4) {
-                            Text("Expires")
-                            Text(expiresAt, style: .relative)
-                        }
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        let minutesLeft = max(0, Int(expiresAt.timeIntervalSinceNow / 60))
+                        Text(minutesLeft > 0 ? formatHrMin(minutesLeft) : String(localized: "Expiring"))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 }
                 .contentShape(Rectangle())

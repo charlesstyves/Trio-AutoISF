@@ -32,8 +32,11 @@ extension Adjustments.RootView {
         Section {
             ForEach(state.overridePresets) { preset in
                 overridesView(for: preset, showCheckMark: showOverrideCheckmark) {
-                    enactOverridePreset(preset)
+                    if state.useSwiftOref {
+                        enactOverridePreset(preset)
+                    }
                 }
+                .opacity(state.useSwiftOref ? 1.0 : 0.5)
                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                     swipeActionsForOverrides(for: preset)
                 }
