@@ -418,8 +418,7 @@ enum DeterminationGenerator {
             ),
             1
         )
-        let smbDelRatio = "SMB Del.Ratio:, \(effectiveSmbRatio.jsRounded(scale: 2)), "
-        let isfReason = smbDelRatio + autoISFResult.isfReason
+        let isfReason = AutoISFReason.smbDeliveryRatioTag(effectiveSmbRatio) + autoISFResult.isfReason
 
         // Build targetLog: "X" or "X→Y" or "X→Y→Z" if target was adjusted
         let profileTarget = profile.profileTarget(trioCustomOrefVariables: trioCustomOrefVariables) ?? 100
@@ -734,6 +733,7 @@ enum DeterminationGenerator {
             determination: determination
         )
         determination = insulinReqDetermination
+        determination.reason = AutoISFReason.prependingInsulinRequired(insulinRequired, to: determination.reason)
 
         // SMB Delivery
         let (shouldSetTempBasalForSMB, smbDetermination) = try DosingEngine.determineSMBDelivery(

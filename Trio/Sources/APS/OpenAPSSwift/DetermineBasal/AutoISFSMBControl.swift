@@ -47,7 +47,7 @@ enum AutoISFSMBControl {
             return AutoISFSMBResult(
                 loopMode: .blocked,
                 iobTHEffective: iobThEffective,
-                reason: "SMB disabled:, Override"
+                reason: AutoISFReason.smbBlockedOverride
             )
         }
 
@@ -56,7 +56,7 @@ enum AutoISFSMBControl {
             return AutoISFSMBResult(
                 loopMode: .b30Running,
                 iobTHEffective: iobThEffective,
-                reason: "SMB disabled:, B30 running"
+                reason: AutoISFReason.smbBlockedB30Running
             )
         }
 
@@ -69,7 +69,7 @@ enum AutoISFSMBControl {
             return AutoISFSMBResult(
                 loopMode: .iobTHExceeded,
                 iobTHEffective: iobThEffective,
-                reason: "autoISF-SMB disabled:, iobTH exceeded"
+                reason: AutoISFReason.smbBlockedIobTHExceeded
             )
         }
 
@@ -89,7 +89,7 @@ enum AutoISFSMBControl {
             return AutoISFSMBResult(
                 loopMode: .blocked,
                 iobTHEffective: iobThEffective,
-                reason: "autoISF-SMB disabled:, odd Target"
+                reason: AutoISFReason.smbBlockedOddTarget
             )
         }
 
@@ -97,7 +97,7 @@ enum AutoISFSMBControl {
             return AutoISFSMBResult(
                 loopMode: .blocked,
                 iobTHEffective: iobThEffective,
-                reason: "autoISF-SMB disabled:, maxIOB=0"
+                reason: AutoISFReason.smbBlockedMaxIobZero
             )
         }
 
@@ -106,13 +106,13 @@ enum AutoISFSMBControl {
             return AutoISFSMBResult(
                 loopMode: .fullLoop,
                 iobTHEffective: iobThEffective,
-                reason: "autoISF-SMB enabled:, even TT, eff.iobTH:, \(iobThEffective)"
+                reason: AutoISFReason.smbEnabledFullLoop(iobThEffective: iobThEffective)
             )
         }
         return AutoISFSMBResult(
             loopMode: .enforced,
             iobTHEffective: iobThEffective,
-            reason: "autoISF-SMB enabled:, even Target, eff.iobTH:, \(iobThEffective)"
+            reason: AutoISFReason.smbEnabledEnforced(iobThEffective: iobThEffective)
         )
     }
 

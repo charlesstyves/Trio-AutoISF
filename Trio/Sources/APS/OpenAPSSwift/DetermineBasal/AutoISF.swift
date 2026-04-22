@@ -41,8 +41,11 @@ enum AutoISF {
         autoISFStatus: AutoISFGlucoseStatus?,
         overrideSmbIsOff: Bool
     ) -> AutoISFEngineResult {
-        let autosensReason =
-            "autosens:, \(sensitivityRatio.jsRounded(scale: 2)), ISF: \(originalSensitivity.jsRounded())→\(adjustedSensitivity.jsRounded())"
+        let autosensReason = AutoISFReason.autosensOnlyReason(
+            ratio: sensitivityRatio,
+            originalSensitivity: originalSensitivity,
+            adjustedSensitivity: adjustedSensitivity
+        )
 
         // SMB control: runs whenever autoISF is enabled, independent of dynISF
         let smbResult = AutoISFSMBControl.evaluate(
@@ -81,40 +84,17 @@ enum AutoISF {
 
         let isfReason: String
         if let adjustResult = adjustResult {
-            var smbStr = ""
-            if let smbResult = smbResult, !smbResult.reason.isEmpty {
-                smbStr = "\(smbResult.reason), "
-            }
-            var parabolaStr = ""
-            // Show Parabolic Fit tag only when:
-            // - acceleration is actually adjusting ISF (acceISFratio != 1)
-            // - fit is reliable (r_squ >= 0.9)
-            // - extremum BG is within a sensible range (-200 to 400 mg/dL)
-            // - time delta is within a useful window (<= 300 min past or future)
-            if profile.enableBGacceleration,
-               adjustResult.acceISFratio != 1,
-               status.a_2 != 0,
-               status.r_squ >= Decimal(0.9)
-            {
-                let tVertex = -(status.a_1 / (2 * status.a_2))
-                let minsDelta = (abs(tVertex) * 5).jsRounded(scale: 1)
-                let extremumBG = (status.a_0 - status.a_1 * status.a_1 / (4 * status.a_2)).jsRounded(scale: 1)
-                let bgInRange = extremumBG >= -200 && extremumBG <= 400
-                let timeInRange = minsDelta <= 300
-                if bgInRange, timeInRange {
-                    if tVertex > 0 {
-                        parabolaStr = status.bg_acceleration < 0
-                            ? "Parabolic Fit:, predicts Max of \(extremumBG), in about \(minsDelta)min, "
-                            : "Parabolic Fit:, predicts Min of \(extremumBG), in about \(minsDelta)min, "
-                    } else {
-                        parabolaStr = status.bg_acceleration < 0
-                            ? "Parabolic Fit:, saw Max of \(extremumBG), about \(minsDelta)min ago, "
-                            : "Parabolic Fit:, saw Min of \(extremumBG), about \(minsDelta)min ago, "
-                    }
-                }
-            }
-            let autosensStr = profile.enableAutosens ? "autosens:, \(sensitivityRatio.jsRounded(scale: 2)), " : ""
-            isfReason = "\(autosensStr)\(smbStr)\(parabolaStr)\(adjustResult.reason), Standard"
+            isfReason = AutoISFReason.isfReason(
+                autosensEnabled: profile.enableAutosens,
+                sensitivityRatio: sensitivityRatio,
+                smbFragment: smbResult?.reason ?? "",
+                parabolaFragment: AutoISFReason.parabolaFitTag(
+                    enabled: profile.enableBGacceleration,
+                    acceISFratio: adjustResult.acceISFratio,
+                    status: status
+                ),
+                adjustReason: adjustResult.reason
+            )
         } else {
             isfReason = autosensReason
         }
