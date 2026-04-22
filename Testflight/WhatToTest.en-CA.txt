@@ -3,4 +3,5 @@ orefswift with all fixes
 overrides with autoISF & SMB Dell.Ratio settings
 stable CSF toggle (CR changes with ISF)
 popup tags in mmol/L and more UI fixes
+high SMBdelRatio
 
