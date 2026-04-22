@@ -123,8 +123,9 @@ extension AdaptProfile {
             .listRowBackground(Color.chart)
         }
 
-        private var algorithmSection: some View {
-            // Order and page names mirror Algorithm settings (see SettingItems.algorithmItems).
+        @ViewBuilder private var algorithmSection: some View {
+            // Page names mirror Algorithm settings (see SettingItems.algorithmItems). Core oref
+            // behaviors are grouped separately from the Extensions that layer on top.
             Section {
                 NavigationLink {
                     DraftAutosensEditor(state: state)
@@ -145,15 +146,6 @@ extension AdaptProfile {
                     )
                 }
                 NavigationLink {
-                    DraftDynamicISFEditor(state: state)
-                } label: {
-                    algorithmRow(
-                        title: String(localized: "Dynamic Settings"),
-                        changed: dynISFChanged,
-                        onReset: resetDynISF
-                    )
-                }
-                NavigationLink {
                     DraftTargetBehaviorEditor(state: state)
                 } label: {
                     algorithmRow(
@@ -169,6 +161,21 @@ extension AdaptProfile {
                         title: String(localized: "Additionals"),
                         changed: advancedChanged,
                         onReset: resetAdvanced
+                    )
+                }
+            } header: {
+                Text("Oref Algorithm")
+            }
+            .listRowBackground(Color.chart)
+
+            Section {
+                NavigationLink {
+                    DraftDynamicISFEditor(state: state)
+                } label: {
+                    algorithmRow(
+                        title: String(localized: "Dynamic Settings"),
+                        changed: dynISFChanged,
+                        onReset: resetDynISF
                     )
                 }
                 NavigationLink {
@@ -199,9 +206,7 @@ extension AdaptProfile {
                     )
                 }
             } header: {
-                Text("Algorithm")
-            } footer: {
-                Text("Blue rows differ from the source profile. Tap the reset icon to discard a section's changes.")
+                Text("Extensions")
             }
             .listRowBackground(Color.chart)
         }

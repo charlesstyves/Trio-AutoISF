@@ -557,6 +557,9 @@ extension AdaptProfile {
                             // dynISF and autoISF are mutually exclusive: enabling one disables
                             // the other.
                             if newValue { state.preferences.useNewFormula = false }
+                            // When autoISF is off, autosens must be on — oref relies on at least
+                            // one of autosens / autoISF to scale ISF dynamically.
+                            if !newValue { state.preferences.enableAutosens = true }
                         }
                     ),
                     shouldDisplayHint: $shouldDisplayHint,
@@ -574,6 +577,20 @@ extension AdaptProfile {
 
                 // autoISF sub-settings are hidden when the master toggle is off.
                 if state.preferences.autoisf {
+                    SettingInputSection(
+                        decimalValue: .constant(0),
+                        booleanValue: $state.preferences.enableAutosens,
+                        shouldDisplayHint: $shouldDisplayHint,
+                        selectedVerboseHint: verboseHintBinding("Enable Autosens"),
+                        units: state.units,
+                        type: .boolean,
+                        label: String(localized: "Enable Autosens"),
+                        miniHint: String(localized: "Let autosens continue to scale ISF alongside autoISF."),
+                        verboseHint: Text("Default ON."),
+                        isChanged: state.isChanged(\.enableAutosens),
+                        onReset: { state.resetField(\.enableAutosens) }
+                    )
+
                     SettingInputSection(
                         decimalValue: $state.preferences.autoISFmax,
                         booleanValue: .constant(false),
