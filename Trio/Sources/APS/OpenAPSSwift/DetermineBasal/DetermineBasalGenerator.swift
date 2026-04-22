@@ -410,7 +410,7 @@ enum DeterminationGenerator {
         )
 
         let effectiveSmbRatio = min(
-            AutoISFSMBControl.variableSMBRatio(
+            AutoISFsmb.variableSMBRatio(
                 profile: profile,
                 currentGlucose: currentGlucose,
                 targetGlucose: adjustedGlucoseTargets.targetGlucose,
@@ -490,7 +490,7 @@ enum DeterminationGenerator {
         if overrideDisablesSmb { smbIsEnabled = false }
 
         var reason = dosingInputs.reason
-        // autoISF path injects its own "SMB disabled:, Override" tag via AutoISFSMBControl;
+        // autoISF path injects its own "SMB disabled:, Override" tag via AutoISFsmb;
         // inject here only for the non-autoISF path so the override shows up as a tag either way.
         if overrideDisablesSmb, !profile.autoisf,
            let separatorRange = reason.range(of: "; ", options: .backwards)
@@ -540,7 +540,7 @@ enum DeterminationGenerator {
             received: false,
             // autoISF — nil when autoISF is disabled or dynISF is active instead
             smbRatio: min(
-                AutoISFSMBControl.variableSMBRatio(
+                AutoISFsmb.variableSMBRatio(
                     profile: profile,
                     currentGlucose: currentGlucose,
                     targetGlucose: adjustedGlucoseTargets.targetGlucose,

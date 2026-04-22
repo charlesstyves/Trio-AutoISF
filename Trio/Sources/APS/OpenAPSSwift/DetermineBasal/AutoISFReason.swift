@@ -79,7 +79,7 @@ enum AutoISFReason {
         return "\(autosensStr)\(smbStr)\(parabolaFragment)\(adjustReason), Standard"
     }
 
-    // MARK: - SMB control fragments (AutoISFSMBControl outputs)
+    // MARK: - SMB control fragments (AutoISFsmb outputs)
 
     static let smbBlockedOverride = "SMB disabled:, Override"
     static let smbBlockedB30Running = "SMB disabled:, B30 running"

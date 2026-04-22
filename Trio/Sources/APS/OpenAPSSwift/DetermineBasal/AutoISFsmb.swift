@@ -1,16 +1,7 @@
 import Foundation
 
-enum AutoISFLoopMode {
-    case oref // fall through to standard SMB enabling logic
-    case enforced // SMB on — even target at normal BG
-    case fullLoop // SMB on — even temp-target below 100
-    case blocked // SMB off — odd target
-    case iobTHExceeded // SMB off — IOB exceeds threshold
-    case b30Running // SMB off — B30 basal active
-}
-
 /// Output of the autoISF SMB-activation decision.
-struct AutoISFSMBResult {
+struct AutoISFsmbResult {
     let loopMode: AutoISFLoopMode
     /// Effective IOB threshold value (for logging).
     let iobTHEffective: Decimal
@@ -20,12 +11,14 @@ struct AutoISFSMBResult {
     var smbEnabled: Bool { loopMode == .enforced || loopMode == .fullLoop }
 }
 
-/// Ports the `loop_smb()` function from determine-basal.js (autoISF 3.01).
+/// autoISF-specific SMB logic: ports `loop_smb()` (enable/disable decision) and
+/// `determine_varSMBratio()` (variable delivery-ratio ramp) from
+/// determine-basal.js (autoISF 3.01).
 ///
-/// Determines SMB activation via even/odd target and IOB-threshold checks.
-/// Returns `nil` when autoISF is disabled (caller falls back to standard SMB logic).
-/// Returns a result with `.oref` when autoISF provides no override (same fallback).
-enum AutoISFSMBControl {
+/// `evaluate` returns `nil` when autoISF is disabled (caller falls back to
+/// standard SMB logic) and `.oref` when autoISF defers to oref's own SMB
+/// enabling logic (same fallback).
+enum AutoISFsmb {
     static func evaluate(
         profile: Profile,
         targetBG: Decimal,
@@ -34,7 +27,7 @@ enum AutoISFSMBControl {
         b30IsActive: Bool,
         exerciseModeActive _: Bool,
         overrideSmbIsOff: Bool
-    ) -> AutoISFSMBResult? {
+    ) -> AutoISFsmbResult? {
         guard profile.autoisf else { return nil }
 
         // iob_threshold_percent == 1 (100 %) disables the iobTH method
@@ -44,7 +37,7 @@ enum AutoISFSMBControl {
 
         // Override disabling SMB wins over all autoISF SMB logic
         if overrideSmbIsOff {
-            return AutoISFSMBResult(
+            return AutoISFsmbResult(
                 loopMode: .blocked,
                 iobTHEffective: iobThEffective,
                 reason: AutoISFReason.smbBlockedOverride
@@ -53,7 +46,7 @@ enum AutoISFSMBControl {
 
         // B30 basal active → SMB off (placeholder until B30 module is ported)
         if b30IsActive {
-            return AutoISFSMBResult(
+            return AutoISFsmbResult(
                 loopMode: .b30Running,
                 iobTHEffective: iobThEffective,
                 reason: AutoISFReason.smbBlockedB30Running
@@ -61,12 +54,12 @@ enum AutoISFSMBControl {
         }
 
         guard microBolusAllowed else {
-            return AutoISFSMBResult(loopMode: .oref, iobTHEffective: iobThEffective, reason: "")
+            return AutoISFsmbResult(loopMode: .oref, iobTHEffective: iobThEffective, reason: "")
         }
 
         // IOB threshold: disable SMB if IOB exceeds effective threshold
         if useIobTH, iobThEffective < iob {
-            return AutoISFSMBResult(
+            return AutoISFsmbResult(
                 loopMode: .iobTHExceeded,
                 iobTHEffective: iobThEffective,
                 reason: AutoISFReason.smbBlockedIobTHExceeded
@@ -75,7 +68,7 @@ enum AutoISFSMBControl {
 
         // Even/odd target override — only active when setting is enabled
         guard profile.enableSMBEvenOnOddOffAlways else {
-            return AutoISFSMBResult(loopMode: .oref, iobTHEffective: iobThEffective, reason: "")
+            return AutoISFsmbResult(loopMode: .oref, iobTHEffective: iobThEffective, reason: "")
         }
 
         let evenTarget: Bool
@@ -86,7 +79,7 @@ enum AutoISFSMBControl {
         }
 
         guard evenTarget else {
-            return AutoISFSMBResult(
+            return AutoISFsmbResult(
                 loopMode: .blocked,
                 iobTHEffective: iobThEffective,
                 reason: AutoISFReason.smbBlockedOddTarget
@@ -94,7 +87,7 @@ enum AutoISFSMBControl {
         }
 
         guard profile.maxIob > 0 else {
-            return AutoISFSMBResult(
+            return AutoISFsmbResult(
                 loopMode: .blocked,
                 iobTHEffective: iobThEffective,
                 reason: AutoISFReason.smbBlockedMaxIobZero
@@ -103,13 +96,13 @@ enum AutoISFSMBControl {
 
         // Below-100 min_bg signals a temp target → full-loop power
         if targetBG < 100 {
-            return AutoISFSMBResult(
+            return AutoISFsmbResult(
                 loopMode: .fullLoop,
                 iobTHEffective: iobThEffective,
                 reason: AutoISFReason.smbEnabledFullLoop(iobThEffective: iobThEffective)
             )
         }
-        return AutoISFSMBResult(
+        return AutoISFsmbResult(
             loopMode: .enforced,
             iobTHEffective: iobThEffective,
             reason: AutoISFReason.smbEnabledEnforced(iobThEffective: iobThEffective)

@@ -405,7 +405,7 @@
 		49E464D92E7BF8850037EC26 /* tai.icon in Resources */ = {isa = PBXBuildFile; fileRef = 49E464D82E7BF8850037EC26 /* tai.icon */; };
 		49E464DA2E7BF8850037EC26 /* tai.icon in Resources */ = {isa = PBXBuildFile; fileRef = 49E464D82E7BF8850037EC26 /* tai.icon */; };
 		49ED6D852F9613850088D53D /* AutoISFAdjust.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49ED6D842F9613850088D53D /* AutoISFAdjust.swift */; };
-		49ED6D872F9619680088D53D /* AutoISFSMBControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49ED6D862F9619680088D53D /* AutoISFSMBControl.swift */; };
+		49ED6D872F9619680088D53D /* AutoISFsmb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49ED6D862F9619680088D53D /* AutoISFsmb.swift */; };
 		49ED6D902F9619680088D53E /* AutoISFReason.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49ED6D902F9619680088D53F /* AutoISFReason.swift */; };
 		49ED6D8E2F9688D60088D53D /* AimiB30.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49ED6D8C2F9688D60088D53D /* AimiB30.swift */; };
 		49ED6D8F2F9688D60088D53D /* AutoISF.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49ED6D8D2F9688D60088D53D /* AutoISF.swift */; };
@@ -1404,7 +1404,7 @@
 		49D659712F3737EA00CF5074 /* PeakPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeakPicker.swift; sourceTree = "<group>"; };
 		49E464D82E7BF8850037EC26 /* tai.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = tai.icon; sourceTree = "<group>"; };
 		49ED6D842F9613850088D53D /* AutoISFAdjust.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFAdjust.swift; sourceTree = "<group>"; };
-		49ED6D862F9619680088D53D /* AutoISFSMBControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFSMBControl.swift; sourceTree = "<group>"; };
+		49ED6D862F9619680088D53D /* AutoISFsmb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFsmb.swift; sourceTree = "<group>"; };
 		49ED6D902F9619680088D53F /* AutoISFReason.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISFReason.swift; sourceTree = "<group>"; };
 		49ED6D8C2F9688D60088D53D /* AimiB30.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AimiB30.swift; sourceTree = "<group>"; };
 		49ED6D8D2F9688D60088D53D /* AutoISF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoISF.swift; sourceTree = "<group>"; };
@@ -4064,7 +4064,7 @@
 				49ED6D902F9688F70088D53D /* KetoProtect.swift */,
 				49ED6D8C2F9688D60088D53D /* AimiB30.swift */,
 				49ED6D8D2F9688D60088D53D /* AutoISF.swift */,
-				49ED6D862F9619680088D53D /* AutoISFSMBControl.swift */,
+				49ED6D862F9619680088D53D /* AutoISFsmb.swift */,
 				49ED6D902F9619680088D53F /* AutoISFReason.swift */,
 				49ED6D842F9613850088D53D /* AutoISFAdjust.swift */,
 				49C7B1BC2ECC53720092ABD0 /* AutoISFGlucose+Helpers.swift */,
@@ -5447,7 +5447,7 @@
 				BD2FF1A02AE29D43005D1C5D /* ToggleStyles.swift in Sources */,
 				49F299342D2D82EA00E4C00D /* B30SettingsDataFlow.swift in Sources */,
 				49F299352D2D82EA00E4C00D /* B30SettingsProvider.swift in Sources */,
-				49ED6D872F9619680088D53D /* AutoISFSMBControl.swift in Sources */,
+				49ED6D872F9619680088D53D /* AutoISFsmb.swift in Sources */,
 				49ED6D902F9619680088D53E /* AutoISFReason.swift in Sources */,
 				49F299362D2D82EA00E4C00D /* B30SettingsStateModel.swift in Sources */,
 				49F299372D2D82EA00E4C00D /* B30SettingsRootView.swift in Sources */,

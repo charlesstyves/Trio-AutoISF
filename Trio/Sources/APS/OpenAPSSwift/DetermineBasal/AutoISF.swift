@@ -1,5 +1,18 @@
 import Foundation
 
+/// The SMB loop-mode an autoISF evaluation resolves to. Consumed by
+/// `AutoISFsmb.variableSMBRatio` and by the SMB dosing path in
+/// `DosingEngine.determineSMBDelivery` to decide whether the `max(fixed, ramp)`
+/// full-loop floor applies.
+enum AutoISFLoopMode {
+    case oref // fall through to standard SMB enabling logic
+    case enforced // SMB on — even target at normal BG
+    case fullLoop // SMB on — even temp-target below 100
+    case blocked // SMB off — odd target
+    case iobTHExceeded // SMB off — IOB exceeds threshold
+    case b30Running // SMB off — B30 basal active
+}
+
 /// Consolidated result from  autoISF  for one loop iteration.
 struct AutoISFEngineResult {
     /// Adjusted ISF — replaces the caller's `adjustedSensitivity` when non-nil.
@@ -11,7 +24,7 @@ struct AutoISFEngineResult {
     /// ISF sub-module result (for Determination ratio fields).
     let adjustResult: AutoISFAdjustResult?
     /// SMB sub-module result (for iobTH field).
-    let smbResult: AutoISFSMBResult?
+    let smbResult: AutoISFsmbResult?
     /// AutoISF glucose status (for Determination parabola / dura / acce fields).
     let glucoseStatus: AutoISFGlucoseStatus?
 }
@@ -48,7 +61,7 @@ enum AutoISF {
         )
 
         // SMB control: runs whenever autoISF is enabled, independent of dynISF
-        let smbResult = AutoISFSMBControl.evaluate(
+        let smbResult = AutoISFsmb.evaluate(
             profile: profile,
             targetBG: targetBG,
             microBolusAllowed: microBolusAllowed,

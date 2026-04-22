@@ -787,7 +787,7 @@ enum DosingEngine {
             trioCustomOrefVariables: trioCustomOrefVariables
         )
 
-        let rampedSMBRatio = AutoISFSMBControl.variableSMBRatio(
+        let rampedSMBRatio = AutoISFsmb.variableSMBRatio(
             profile: profile,
             currentGlucose: currentGlucose,
             targetGlucose: targetGlucose,
