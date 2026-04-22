@@ -141,19 +141,7 @@ extension AdaptProfile {
         private var slideSection: some View {
             Section {
                 SlideButton(
-                    styling: .init(
-                        indicatorSize: 50,
-                        indicatorSpacing: 4,
-                        indicatorColor: .accentColor,
-                        backgroundColor: Color(.systemGray5),
-                        textColor: canActivate ? .primary : .secondary,
-                        indicatorSystemName: "chevron.right",
-                        indicatorDisabledSystemName: "xmark",
-                        textAlignment: .center,
-                        textFadesOpacity: true,
-                        textHiddenBehindIndicator: true,
-                        textShimmers: canActivate
-                    ),
+                    styling: .init(textShimmers: canActivate),
                     action: {
                         await performActivation(confirmedPumpSync: false)
                     }
