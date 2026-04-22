@@ -131,26 +131,14 @@ extension AutosensSettings {
                         get: { selectedVerboseHint },
                         set: {
                             selectedVerboseHint = $0.map { AnyView($0) }
-                            hintLabel = String(localized: "Autosens Max", comment: "Autosens Max")
+                            hintLabel = AlgorithmSettingHints.autosensMaxLabel
                         }
                     ),
                     units: state.units,
                     type: .decimal("autosensMax"),
-                    label: String(localized: "Autosens Max", comment: "Autosens Max"),
-                    miniHint: String(localized: "Upper limit of the Sensitivity Ratio."),
-                    verboseHint:
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Default: 120%").bold()
-                        Text(
-                            "Autosens Max sets the maximum Sensitivity Ratio used by Autosens, Dynamic ISF, and Sigmoid Formula."
-                        )
-                        Text(
-                            "The Sensitivity Ratio is used to calculate the amount of adjustment needed to basal rates and ISF."
-                        )
-                        Text(
-                            "Tip: Increasing this value allows automatic adjustments of basal rates to be higher and ISF to be lower."
-                        )
-                    },
+                    label: AlgorithmSettingHints.autosensMaxLabel,
+                    miniHint: AlgorithmSettingHints.autosensMaxMini,
+                    verboseHint: AlgorithmSettingHints.autosensMaxVerbose(),
                     headerText: String(localized: "Glucose Deviations Algorithm")
                 )
 
@@ -162,26 +150,14 @@ extension AutosensSettings {
                         get: { selectedVerboseHint },
                         set: {
                             selectedVerboseHint = $0.map { AnyView($0) }
-                            hintLabel = String(localized: "Autosens Min", comment: "Autosens Min")
+                            hintLabel = AlgorithmSettingHints.autosensMinLabel
                         }
                     ),
                     units: state.units,
                     type: .decimal("autosensMin"),
-                    label: String(localized: "Autosens Min", comment: "Autosens Min"),
-                    miniHint: String(localized: "Lower limit of the Sensitivity Ratio."),
-                    verboseHint:
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Default: 70%").bold()
-                        Text(
-                            "Autosens Min sets the minimum Sensitivity Ratio used by Autosens, Dynamic ISF, and Sigmoid Formula."
-                        )
-                        Text(
-                            "The Sensitivity Ratio is used to calculate the amount of adjustment needed to basal rates and ISF."
-                        )
-                        Text(
-                            "Tip: Decreasing this value allows automatic adjustments of basal rates to be lower and ISF to be higher."
-                        )
-                    }
+                    label: AlgorithmSettingHints.autosensMinLabel,
+                    miniHint: AlgorithmSettingHints.autosensMinMini,
+                    verboseHint: AlgorithmSettingHints.autosensMinVerbose()
                 )
 
                 SettingInputSection(
@@ -192,28 +168,14 @@ extension AutosensSettings {
                         get: { selectedVerboseHint },
                         set: {
                             selectedVerboseHint = $0.map { AnyView($0) }
-                            hintLabel = String(localized: "Rewind Resets Autosens", comment: "Rewind Resets Autosens")
+                            hintLabel = AlgorithmSettingHints.rewindResetsAutosensLabel
                         }
                     ),
                     units: state.units,
                     type: .boolean,
-                    label: String(localized: "Rewind Resets Autosens", comment: "Rewind Resets Autosens"),
-                    miniHint: String(localized: "Pump rewind initiates a reset in Sensitivity Ratio."),
-                    verboseHint: VStack(alignment: .leading, spacing: 5) {
-                        Text("Default: ON").bold()
-                        Text("Medtronic and Dana Users Only").bold()
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text(
-                                "This feature resets the Sensitivity Ratio to neutral when you rewind your pump on the assumption that this corresponds to a site change."
-                            )
-                            Text(
-                                "Autosens will begin learning sensitivity anew from the time of the rewind, which may take up to 6 hours."
-                            )
-                            Text(
-                                "Tip: If you usually rewind your pump independently of site changes, you may want to consider disabling this feature."
-                            )
-                        }
-                    }
+                    label: AlgorithmSettingHints.rewindResetsAutosensLabel,
+                    miniHint: AlgorithmSettingHints.rewindResetsAutosensMini,
+                    verboseHint: AlgorithmSettingHints.rewindResetsAutosensVerbose()
                 )
             }
             .listSectionSpacing(sectionSpacing)

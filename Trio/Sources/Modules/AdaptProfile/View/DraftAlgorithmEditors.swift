@@ -22,12 +22,12 @@ extension AdaptProfile {
                     decimalValue: $state.preferences.autosensMax,
                     booleanValue: .constant(false),
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Autosens Max"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.autosensMaxLabel),
                     units: state.units,
                     type: .decimal("autosensMax"),
-                    label: String(localized: "Autosens Max"),
-                    miniHint: String(localized: "Upper bound on the autosens ratio (reduces insulin resistance scaling)."),
-                    verboseHint: Text("Default 1.2. Caps how aggressive autosens can be."),
+                    label: AlgorithmSettingHints.autosensMaxLabel,
+                    miniHint: AlgorithmSettingHints.autosensMaxMini,
+                    verboseHint: AlgorithmSettingHints.autosensMaxVerbose(),
                     isChanged: state.isChanged(\.autosensMax),
                     onReset: { state.resetField(\.autosensMax) }
                 )
@@ -36,12 +36,12 @@ extension AdaptProfile {
                     decimalValue: $state.preferences.autosensMin,
                     booleanValue: .constant(false),
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Autosens Min"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.autosensMinLabel),
                     units: state.units,
                     type: .decimal("autosensMin"),
-                    label: String(localized: "Autosens Min"),
-                    miniHint: String(localized: "Lower bound on the autosens ratio (reduces sensitivity scaling)."),
-                    verboseHint: Text("Default 0.7."),
+                    label: AlgorithmSettingHints.autosensMinLabel,
+                    miniHint: AlgorithmSettingHints.autosensMinMini,
+                    verboseHint: AlgorithmSettingHints.autosensMinVerbose(),
                     isChanged: state.isChanged(\.autosensMin),
                     onReset: { state.resetField(\.autosensMin) }
                 )
@@ -50,12 +50,12 @@ extension AdaptProfile {
                     decimalValue: .constant(0),
                     booleanValue: $state.preferences.rewindResetsAutosens,
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Rewind Resets Autosens"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.rewindResetsAutosensLabel),
                     units: state.units,
                     type: .boolean,
-                    label: String(localized: "Rewind Resets Autosens"),
-                    miniHint: String(localized: "Pump rewinds reset the autosens ratio to 1."),
-                    verboseHint: Text("Default ON."),
+                    label: AlgorithmSettingHints.rewindResetsAutosensLabel,
+                    miniHint: AlgorithmSettingHints.rewindResetsAutosensMini,
+                    verboseHint: AlgorithmSettingHints.rewindResetsAutosensVerbose(),
                     isChanged: state.isChanged(\.rewindResetsAutosens),
                     onReset: { state.resetField(\.rewindResetsAutosens) }
                 )
@@ -107,12 +107,12 @@ extension AdaptProfile {
                     decimalValue: .constant(0),
                     booleanValue: $state.preferences.highTemptargetRaisesSensitivity,
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("High Temp Target Raises Sensitivity"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.highTempTargetRaisesSensitivityLabel),
                     units: state.units,
                     type: .boolean,
-                    label: String(localized: "High Temp Target Raises Sensitivity"),
-                    miniHint: String(localized: "Manual temp target above 100 mg/dL increases sensitivity."),
-                    verboseHint: Text("Default OFF."),
+                    label: AlgorithmSettingHints.highTempTargetRaisesSensitivityLabel,
+                    miniHint: AlgorithmSettingHints.highTempTargetRaisesSensitivityMini(units: state.units),
+                    verboseHint: AlgorithmSettingHints.highTempTargetRaisesSensitivityVerbose(units: state.units),
                     isChanged: state.isChanged(\.highTemptargetRaisesSensitivity),
                     onReset: { state.resetField(\.highTemptargetRaisesSensitivity) }
                 )
@@ -121,12 +121,12 @@ extension AdaptProfile {
                     decimalValue: .constant(0),
                     booleanValue: $state.preferences.lowTemptargetLowersSensitivity,
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Low Temp Target Lowers Sensitivity"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.lowTempTargetLowersSensitivityLabel),
                     units: state.units,
                     type: .boolean,
-                    label: String(localized: "Low Temp Target Lowers Sensitivity"),
-                    miniHint: String(localized: "Manual temp target below 100 mg/dL reduces sensitivity."),
-                    verboseHint: Text("Default OFF. Requires Autosens Max > 1."),
+                    label: AlgorithmSettingHints.lowTempTargetLowersSensitivityLabel,
+                    miniHint: AlgorithmSettingHints.lowTempTargetLowersSensitivityMini(units: state.units),
+                    verboseHint: AlgorithmSettingHints.lowTempTargetLowersSensitivityVerbose(units: state.units),
                     isChanged: state.isChanged(\.lowTemptargetLowersSensitivity),
                     onReset: { state.resetField(\.lowTemptargetLowersSensitivity) }
                 )
@@ -135,12 +135,12 @@ extension AdaptProfile {
                     decimalValue: .constant(0),
                     booleanValue: $state.preferences.sensitivityRaisesTarget,
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Sensitivity Raises Target"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.sensitivityRaisesTargetLabel),
                     units: state.units,
                     type: .boolean,
-                    label: String(localized: "Sensitivity Raises Target"),
-                    miniHint: String(localized: "Automatically raise target when autosens < 1."),
-                    verboseHint: Text("Default OFF."),
+                    label: AlgorithmSettingHints.sensitivityRaisesTargetLabel,
+                    miniHint: AlgorithmSettingHints.sensitivityRaisesTargetMini,
+                    verboseHint: AlgorithmSettingHints.sensitivityRaisesTargetVerbose(),
                     isChanged: state.isChanged(\.sensitivityRaisesTarget),
                     onReset: { state.resetField(\.sensitivityRaisesTarget) }
                 )
@@ -149,12 +149,12 @@ extension AdaptProfile {
                     decimalValue: .constant(0),
                     booleanValue: $state.preferences.resistanceLowersTarget,
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Resistance Lowers Target"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.resistanceLowersTargetLabel),
                     units: state.units,
                     type: .boolean,
-                    label: String(localized: "Resistance Lowers Target"),
-                    miniHint: String(localized: "Automatically lower target when autosens > 1."),
-                    verboseHint: Text("Default OFF."),
+                    label: AlgorithmSettingHints.resistanceLowersTargetLabel,
+                    miniHint: AlgorithmSettingHints.resistanceLowersTargetMini,
+                    verboseHint: AlgorithmSettingHints.resistanceLowersTargetVerbose(),
                     isChanged: state.isChanged(\.resistanceLowersTarget),
                     onReset: { state.resetField(\.resistanceLowersTarget) }
                 )
@@ -163,12 +163,12 @@ extension AdaptProfile {
                     decimalValue: $state.preferences.halfBasalExerciseTarget,
                     booleanValue: .constant(false),
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Half Basal Exercise Target"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.halfBasalExerciseTargetLabel),
                     units: state.units,
                     type: .decimal("halfBasalExerciseTarget"),
-                    label: String(localized: "Half Basal Exercise Target"),
-                    miniHint: String(localized: "Target at which basal is scaled to 50 %."),
-                    verboseHint: Text("Default 160 mg/dL."),
+                    label: AlgorithmSettingHints.halfBasalExerciseTargetLabel,
+                    miniHint: AlgorithmSettingHints.halfBasalExerciseTargetMini,
+                    verboseHint: AlgorithmSettingHints.halfBasalExerciseTargetVerbose(units: state.units),
                     isChanged: state.isChanged(\.halfBasalExerciseTarget),
                     onReset: { state.resetField(\.halfBasalExerciseTarget) }
                 )
@@ -220,12 +220,12 @@ extension AdaptProfile {
                     decimalValue: .constant(0),
                     booleanValue: $state.preferences.enableSMBAlways,
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Enable SMB Always"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.enableSMBAlwaysLabel),
                     units: state.units,
                     type: .boolean,
-                    label: String(localized: "Enable SMB Always"),
-                    miniHint: String(localized: "Deliver SMBs regardless of COB or target."),
-                    verboseHint: Text("Default ON."),
+                    label: AlgorithmSettingHints.enableSMBAlwaysLabel,
+                    miniHint: AlgorithmSettingHints.enableSMBAlwaysMini,
+                    verboseHint: AlgorithmSettingHints.enableSMBAlwaysVerbose(),
                     isChanged: state.isChanged(\.enableSMBAlways),
                     onReset: { state.resetField(\.enableSMBAlways) }
                 )
@@ -237,12 +237,12 @@ extension AdaptProfile {
                         decimalValue: .constant(0),
                         booleanValue: $state.preferences.enableSMBWithCOB,
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("Enable SMB With COB"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.enableSMBWithCOBLabel),
                         units: state.units,
                         type: .boolean,
-                        label: String(localized: "Enable SMB With COB"),
-                        miniHint: String(localized: "Deliver SMBs when carbs are on board."),
-                        verboseHint: Text("Default ON."),
+                        label: AlgorithmSettingHints.enableSMBWithCOBLabel,
+                        miniHint: AlgorithmSettingHints.enableSMBWithCOBMini,
+                        verboseHint: AlgorithmSettingHints.enableSMBWithCOBVerbose(),
                         isChanged: state.isChanged(\.enableSMBWithCOB),
                         onReset: { state.resetField(\.enableSMBWithCOB) }
                     )
@@ -251,12 +251,12 @@ extension AdaptProfile {
                         decimalValue: .constant(0),
                         booleanValue: $state.preferences.enableSMBWithTemptarget,
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("Enable SMB With Temp Target"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.enableSMBWithTemptargetLabel),
                         units: state.units,
                         type: .boolean,
-                        label: String(localized: "Enable SMB With Temp Target"),
-                        miniHint: String(localized: "Deliver SMBs with a low temp target active."),
-                        verboseHint: Text("Default ON."),
+                        label: AlgorithmSettingHints.enableSMBWithTemptargetLabel,
+                        miniHint: AlgorithmSettingHints.enableSMBWithTemptargetMini(units: state.units),
+                        verboseHint: AlgorithmSettingHints.enableSMBWithTemptargetVerbose(units: state.units),
                         isChanged: state.isChanged(\.enableSMBWithTemptarget),
                         onReset: { state.resetField(\.enableSMBWithTemptarget) }
                     )
@@ -265,12 +265,12 @@ extension AdaptProfile {
                         decimalValue: .constant(0),
                         booleanValue: $state.preferences.enableSMBAfterCarbs,
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("Enable SMB After Carbs"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.enableSMBAfterCarbsLabel),
                         units: state.units,
                         type: .boolean,
-                        label: String(localized: "Enable SMB After Carbs"),
-                        miniHint: String(localized: "Deliver SMBs for 6 h after carbs."),
-                        verboseHint: Text("Default ON."),
+                        label: AlgorithmSettingHints.enableSMBAfterCarbsLabel,
+                        miniHint: AlgorithmSettingHints.enableSMBAfterCarbsMini,
+                        verboseHint: AlgorithmSettingHints.enableSMBAfterCarbsVerbose(),
                         isChanged: state.isChanged(\.enableSMBAfterCarbs),
                         onReset: { state.resetField(\.enableSMBAfterCarbs) }
                     )
@@ -279,13 +279,13 @@ extension AdaptProfile {
                         decimalValue: $state.preferences.enableSMB_high_bg_target,
                         booleanValue: $state.preferences.enableSMB_high_bg,
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("Enable SMB With High Glucose"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.enableSMBWithHighGlucoseLabel),
                         units: state.units,
                         type: .conditionalDecimal("enableSMB_high_bg_target"),
-                        label: String(localized: "Enable SMB With High Glucose"),
-                        conditionalLabel: String(localized: "High Glucose Target"),
-                        miniHint: String(localized: "Allow SMB when glucose is above the High Glucose Target."),
-                        verboseHint: Text("Default OFF."),
+                        label: AlgorithmSettingHints.enableSMBWithHighGlucoseLabel,
+                        conditionalLabel: AlgorithmSettingHints.enableSMBWithHighGlucoseConditionalLabel,
+                        miniHint: AlgorithmSettingHints.enableSMBWithHighGlucoseMini,
+                        verboseHint: AlgorithmSettingHints.enableSMBWithHighGlucoseVerbose(),
                         isChanged: state.isChanged(\.enableSMB_high_bg)
                             || state.isChanged(\.enableSMB_high_bg_target),
                         onReset: {
@@ -299,12 +299,12 @@ extension AdaptProfile {
                     decimalValue: .constant(0),
                     booleanValue: $state.preferences.allowSMBWithHighTemptarget,
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Allow SMB With High Temp Target"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.allowSMBWithHighTemptargetLabel),
                     units: state.units,
                     type: .boolean,
-                    label: String(localized: "Allow SMB With High Temp Target"),
-                    miniHint: String(localized: "Allow SMBs even if a high temp target is set."),
-                    verboseHint: Text("Default OFF."),
+                    label: AlgorithmSettingHints.allowSMBWithHighTemptargetLabel,
+                    miniHint: AlgorithmSettingHints.allowSMBWithHighTemptargetMini(units: state.units),
+                    verboseHint: AlgorithmSettingHints.allowSMBWithHighTemptargetVerbose(units: state.units),
                     isChanged: state.isChanged(\.allowSMBWithHighTemptarget),
                     onReset: { state.resetField(\.allowSMBWithHighTemptarget) }
                 )
@@ -313,12 +313,12 @@ extension AdaptProfile {
                     decimalValue: .constant(0),
                     booleanValue: $state.preferences.enableUAM,
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Enable UAM"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.enableUAMLabel),
                     units: state.units,
                     type: .boolean,
-                    label: String(localized: "Enable UAM"),
-                    miniHint: String(localized: "Unannounced meal detection for aggressive dosing."),
-                    verboseHint: Text("Default ON."),
+                    label: AlgorithmSettingHints.enableUAMLabel,
+                    miniHint: AlgorithmSettingHints.enableUAMMini,
+                    verboseHint: AlgorithmSettingHints.enableUAMVerbose(),
                     isChanged: state.isChanged(\.enableUAM),
                     onReset: { state.resetField(\.enableUAM) }
                 )
@@ -327,12 +327,12 @@ extension AdaptProfile {
                     decimalValue: $state.preferences.maxSMBBasalMinutes,
                     booleanValue: .constant(false),
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Max SMB Basal Minutes"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.maxSMBBasalMinutesLabel),
                     units: state.units,
                     type: .decimal("maxSMBBasalMinutes"),
-                    label: String(localized: "Max SMB Basal Minutes"),
-                    miniHint: String(localized: "Largest SMB expressed as minutes of basal."),
-                    verboseHint: Text("Default 30 min."),
+                    label: AlgorithmSettingHints.maxSMBBasalMinutesLabel,
+                    miniHint: AlgorithmSettingHints.maxSMBBasalMinutesMini,
+                    verboseHint: AlgorithmSettingHints.maxSMBBasalMinutesVerbose(),
                     isChanged: state.isChanged(\.maxSMBBasalMinutes),
                     onReset: { state.resetField(\.maxSMBBasalMinutes) }
                 )
@@ -341,12 +341,12 @@ extension AdaptProfile {
                     decimalValue: $state.preferences.maxUAMSMBBasalMinutes,
                     booleanValue: .constant(false),
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Max UAM SMB Basal Minutes"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.maxUAMBasalMinutesLabel),
                     units: state.units,
                     type: .decimal("maxUAMSMBBasalMinutes"),
-                    label: String(localized: "Max UAM SMB Basal Minutes"),
-                    miniHint: String(localized: "Largest UAM-driven SMB expressed as minutes of basal."),
-                    verboseHint: Text("Default 30 min."),
+                    label: AlgorithmSettingHints.maxUAMBasalMinutesLabel,
+                    miniHint: AlgorithmSettingHints.maxUAMBasalMinutesMini,
+                    verboseHint: AlgorithmSettingHints.maxUAMBasalMinutesVerbose(),
                     isChanged: state.isChanged(\.maxUAMSMBBasalMinutes),
                     onReset: { state.resetField(\.maxUAMSMBBasalMinutes) }
                 )
@@ -355,12 +355,12 @@ extension AdaptProfile {
                     decimalValue: $state.preferences.smbInterval,
                     booleanValue: .constant(false),
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("SMB Interval"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.smbIntervalLabel),
                     units: state.units,
                     type: .decimal("smbInterval"),
-                    label: String(localized: "SMB Interval"),
-                    miniHint: String(localized: "Minimum minutes between SMBs."),
-                    verboseHint: Text("Default 3 min."),
+                    label: AlgorithmSettingHints.smbIntervalLabel,
+                    miniHint: AlgorithmSettingHints.smbIntervalMini,
+                    verboseHint: AlgorithmSettingHints.smbIntervalVerbose(),
                     isChanged: state.isChanged(\.smbInterval),
                     onReset: { state.resetField(\.smbInterval) }
                 )
@@ -420,12 +420,12 @@ extension AdaptProfile {
                         }
                     ),
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Use Dynamic ISF"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.useDynamicISFLabel),
                     units: state.units,
                     type: .boolean,
-                    label: String(localized: "Use Dynamic ISF"),
-                    miniHint: String(localized: "Enable logarithmic or sigmoid dynamic ISF. Disables autoISF."),
-                    verboseHint: Text("Default OFF."),
+                    label: AlgorithmSettingHints.useDynamicISFLabel,
+                    miniHint: AlgorithmSettingHints.useDynamicISFMini,
+                    verboseHint: AlgorithmSettingHints.dynamicISFVerbose(),
                     isChanged: state.isChanged(\.useNewFormula),
                     onReset: { state.resetField(\.useNewFormula) }
                 )
@@ -436,12 +436,12 @@ extension AdaptProfile {
                         decimalValue: .constant(0),
                         booleanValue: $state.preferences.sigmoid,
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("Sigmoid"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.sigmoidLabel),
                         units: state.units,
                         type: .boolean,
-                        label: String(localized: "Sigmoid"),
-                        miniHint: String(localized: "Use the sigmoid dynISF formula instead of logarithmic."),
-                        verboseHint: Text("Default OFF."),
+                        label: AlgorithmSettingHints.sigmoidLabel,
+                        miniHint: AlgorithmSettingHints.sigmoidMini,
+                        verboseHint: AlgorithmSettingHints.dynamicISFVerbose(),
                         isChanged: state.isChanged(\.sigmoid),
                         onReset: { state.resetField(\.sigmoid) }
                     )
@@ -450,12 +450,12 @@ extension AdaptProfile {
                         decimalValue: $state.preferences.adjustmentFactor,
                         booleanValue: .constant(false),
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("Adjustment Factor"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.adjustmentFactorLabel),
                         units: state.units,
                         type: .decimal("adjustmentFactor"),
-                        label: String(localized: "Adjustment Factor"),
-                        miniHint: String(localized: "Scales the logarithmic dynISF curve."),
-                        verboseHint: Text("Default 0.8."),
+                        label: AlgorithmSettingHints.adjustmentFactorLabel,
+                        miniHint: AlgorithmSettingHints.adjustmentFactorMini,
+                        verboseHint: AlgorithmSettingHints.adjustmentFactorVerbose(),
                         isChanged: state.isChanged(\.adjustmentFactor),
                         onReset: { state.resetField(\.adjustmentFactor) }
                     )
@@ -465,12 +465,12 @@ extension AdaptProfile {
                             decimalValue: $state.preferences.adjustmentFactorSigmoid,
                             booleanValue: .constant(false),
                             shouldDisplayHint: $shouldDisplayHint,
-                            selectedVerboseHint: verboseHintBinding("Sigmoid Adjustment Factor"),
+                            selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.adjustmentFactorSigmoidLabel),
                             units: state.units,
                             type: .decimal("adjustmentFactorSigmoid"),
-                            label: String(localized: "Sigmoid Adjustment Factor"),
-                            miniHint: String(localized: "Scales the sigmoid dynISF curve."),
-                            verboseHint: Text("Default 0.5."),
+                            label: AlgorithmSettingHints.adjustmentFactorSigmoidLabel,
+                            miniHint: AlgorithmSettingHints.adjustmentFactorSigmoidMini,
+                            verboseHint: AlgorithmSettingHints.adjustmentFactorSigmoidVerbose(),
                             isChanged: state.isChanged(\.adjustmentFactorSigmoid),
                             onReset: { state.resetField(\.adjustmentFactorSigmoid) }
                         )
@@ -480,12 +480,12 @@ extension AdaptProfile {
                         decimalValue: $state.preferences.weightPercentage,
                         booleanValue: .constant(false),
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("Weighted Average of TDD"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.weightPercentageLabel),
                         units: state.units,
                         type: .decimal("weightPercentage"),
-                        label: String(localized: "Weighted Average of TDD"),
-                        miniHint: String(localized: "Blend between 24 h TDD average and recent 2 h."),
-                        verboseHint: Text("Default 0.35."),
+                        label: AlgorithmSettingHints.weightPercentageLabel,
+                        miniHint: AlgorithmSettingHints.weightPercentageMini,
+                        verboseHint: AlgorithmSettingHints.weightPercentageVerbose(),
                         isChanged: state.isChanged(\.weightPercentage),
                         onReset: { state.resetField(\.weightPercentage) }
                     )
@@ -494,12 +494,12 @@ extension AdaptProfile {
                         decimalValue: .constant(0),
                         booleanValue: $state.preferences.tddAdjBasal,
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("TDD Adjusts Basal"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.tddAdjBasalLabel),
                         units: state.units,
                         type: .boolean,
-                        label: String(localized: "TDD Adjusts Basal"),
-                        miniHint: String(localized: "Scale scheduled basal based on TDD."),
-                        verboseHint: Text("Default OFF."),
+                        label: AlgorithmSettingHints.tddAdjBasalLabel,
+                        miniHint: AlgorithmSettingHints.tddAdjBasalMini,
+                        verboseHint: AlgorithmSettingHints.tddAdjBasalVerbose(),
                         isChanged: state.isChanged(\.tddAdjBasal),
                         onReset: { state.resetField(\.tddAdjBasal) }
                     )
@@ -563,14 +563,12 @@ extension AdaptProfile {
                         }
                     ),
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Enable autoISF"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.activateAutoISFLabel),
                     units: state.units,
                     type: .boolean,
-                    label: String(localized: "Enable autoISF"),
-                    miniHint: String(
-                        localized: "Dynamically scales ISF based on BG acceleration and duration. Disables Dynamic ISF."
-                    ),
-                    verboseHint: Text("Default ON."),
+                    label: AlgorithmSettingHints.activateAutoISFLabel,
+                    miniHint: AlgorithmSettingHints.activateAutoISFMini,
+                    verboseHint: AlgorithmSettingHints.activateAutoISFVerbose(),
                     isChanged: state.isChanged(\.autoisf),
                     onReset: { state.resetField(\.autoisf) }
                 )
@@ -578,15 +576,107 @@ extension AdaptProfile {
                 // autoISF sub-settings are hidden when the master toggle is off.
                 if state.preferences.autoisf {
                     SettingInputSection(
+                        decimalValue: $state.preferences.iobThresholdPercent,
+                        booleanValue: .constant(false),
+                        shouldDisplayHint: $shouldDisplayHint,
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.iobThresholdPercentLabel),
+                        units: state.units,
+                        type: .decimal("iobThresholdPercent"),
+                        label: AlgorithmSettingHints.iobThresholdPercentLabel,
+                        miniHint: AlgorithmSettingHints.iobThresholdPercentMini,
+                        verboseHint: AlgorithmSettingHints.iobThresholdPercentVerbose(),
+                        isChanged: state.isChanged(\.iobThresholdPercent),
+                        onReset: { state.resetField(\.iobThresholdPercent) }
+                    )
+
+                    // MARK: SMB Delivery Ratios group
+
+                    // Placed near the top because users adjust these often per profile.
+
+                    SettingInputSection(
+                        decimalValue: $state.preferences.smbDeliveryRatio,
+                        booleanValue: .constant(false),
+                        shouldDisplayHint: $shouldDisplayHint,
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.smbDeliveryRatioFixedHintLabel),
+                        units: state.units,
+                        type: .decimal("smbDeliveryRatio"),
+                        label: AlgorithmSettingHints.smbDeliveryRatioFixedLabel,
+                        miniHint: AlgorithmSettingHints.smbDeliveryRatioFixedMini,
+                        verboseHint: AlgorithmSettingHints.smbDeliveryRatioFixedVerbose(),
+                        headerText: String(localized: "SMB Delivery Ratios"),
+                        isChanged: state.isChanged(\.smbDeliveryRatio),
+                        onReset: { state.resetField(\.smbDeliveryRatio) }
+                    )
+
+                    SettingInputSection(
+                        decimalValue: $state.preferences.smbDeliveryRatioBGrange,
+                        booleanValue: .constant(false),
+                        shouldDisplayHint: $shouldDisplayHint,
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.smbDeliveryRatioBGrangeLabel),
+                        units: state.units,
+                        type: .decimal("smbDeliveryRatioBGrange"),
+                        label: AlgorithmSettingHints.smbDeliveryRatioBGrangeLabel,
+                        miniHint: AlgorithmSettingHints.smbDeliveryRatioBGrangeMini(units: state.units),
+                        verboseHint: AlgorithmSettingHints.smbDeliveryRatioBGrangeVerbose(units: state.units),
+                        isChanged: state.isChanged(\.smbDeliveryRatioBGrange),
+                        onReset: { state.resetField(\.smbDeliveryRatioBGrange) }
+                    )
+
+                    // Mirror live AutoISF Settings: min/max only appear when the range is non-zero.
+                    if state.preferences.smbDeliveryRatioBGrange != 0 {
+                        SettingInputSection(
+                            decimalValue: $state.preferences.smbDeliveryRatioMin,
+                            booleanValue: .constant(false),
+                            shouldDisplayHint: $shouldDisplayHint,
+                            selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.smbDeliveryRatioMinLabel),
+                            units: state.units,
+                            type: .decimal("smbDeliveryRatioMin"),
+                            label: AlgorithmSettingHints.smbDeliveryRatioMinLabel,
+                            miniHint: AlgorithmSettingHints.smbDeliveryRatioMinMini,
+                            verboseHint: AlgorithmSettingHints.smbDeliveryRatioMinVerbose(),
+                            isChanged: state.isChanged(\.smbDeliveryRatioMin),
+                            onReset: { state.resetField(\.smbDeliveryRatioMin) }
+                        )
+
+                        SettingInputSection(
+                            decimalValue: $state.preferences.smbDeliveryRatioMax,
+                            booleanValue: .constant(false),
+                            shouldDisplayHint: $shouldDisplayHint,
+                            selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.smbDeliveryRatioMaxLabel),
+                            units: state.units,
+                            type: .decimal("smbDeliveryRatioMax"),
+                            label: AlgorithmSettingHints.smbDeliveryRatioMaxLabel,
+                            miniHint: AlgorithmSettingHints.smbDeliveryRatioMaxMini,
+                            verboseHint: AlgorithmSettingHints.smbDeliveryRatioMaxVerbose(),
+                            isChanged: state.isChanged(\.smbDeliveryRatioMax),
+                            onReset: { state.resetField(\.smbDeliveryRatioMax) }
+                        )
+                    }
+
+                    SettingInputSection(
+                        decimalValue: $state.preferences.smbMaxRangeExtension,
+                        booleanValue: .constant(false),
+                        shouldDisplayHint: $shouldDisplayHint,
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.smbMaxRangeExtensionLabel),
+                        units: state.units,
+                        type: .decimal("smbMaxRangeExtension"),
+                        label: AlgorithmSettingHints.smbMaxRangeExtensionLabel,
+                        miniHint: AlgorithmSettingHints.smbMaxRangeExtensionMini,
+                        verboseHint: AlgorithmSettingHints.smbMaxRangeExtensionVerbose(),
+                        isChanged: state.isChanged(\.smbMaxRangeExtension),
+                        onReset: { state.resetField(\.smbMaxRangeExtension) }
+                    )
+
+                    SettingInputSection(
                         decimalValue: .constant(0),
                         booleanValue: $state.preferences.enableAutosens,
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("Enable Autosens"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.enableAutosensAutoISFLabel),
                         units: state.units,
                         type: .boolean,
-                        label: String(localized: "Enable Autosens"),
-                        miniHint: String(localized: "Let autosens continue to scale ISF alongside autoISF."),
-                        verboseHint: Text("Default ON."),
+                        label: AlgorithmSettingHints.enableAutosensAutoISFLabel,
+                        miniHint: AlgorithmSettingHints.enableAutosensAutoISFMini,
+                        verboseHint: AlgorithmSettingHints.enableAutosensAutoISFVerbose(),
                         isChanged: state.isChanged(\.enableAutosens),
                         onReset: { state.resetField(\.enableAutosens) }
                     )
@@ -595,12 +685,12 @@ extension AdaptProfile {
                         decimalValue: $state.preferences.autoISFmax,
                         booleanValue: .constant(false),
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("autoISF Max"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.autoISFmaxLabel),
                         units: state.units,
                         type: .decimal("autoISFmax"),
-                        label: String(localized: "autoISF Max"),
-                        miniHint: String(localized: "Upper cap on autoISF ratio."),
-                        verboseHint: Text("Default 2.0."),
+                        label: AlgorithmSettingHints.autoISFmaxLabel,
+                        miniHint: AlgorithmSettingHints.autoISFmaxMini,
+                        verboseHint: AlgorithmSettingHints.autoISFmaxVerbose(),
                         isChanged: state.isChanged(\.autoISFmax),
                         onReset: { state.resetField(\.autoISFmax) }
                     )
@@ -609,40 +699,26 @@ extension AdaptProfile {
                         decimalValue: $state.preferences.autoISFmin,
                         booleanValue: .constant(false),
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("autoISF Min"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.autoISFminLabel),
                         units: state.units,
                         type: .decimal("autoISFmin"),
-                        label: String(localized: "autoISF Min"),
-                        miniHint: String(localized: "Lower cap on autoISF ratio."),
-                        verboseHint: Text("Default 0.5."),
+                        label: AlgorithmSettingHints.autoISFminLabel,
+                        miniHint: AlgorithmSettingHints.autoISFminMini,
+                        verboseHint: AlgorithmSettingHints.autoISFminVerbose(),
                         isChanged: state.isChanged(\.autoISFmin),
                         onReset: { state.resetField(\.autoISFmin) }
-                    )
-
-                    SettingInputSection(
-                        decimalValue: $state.preferences.smbDeliveryRatio,
-                        booleanValue: .constant(false),
-                        shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("SMB Delivery Ratio"),
-                        units: state.units,
-                        type: .decimal("smbDeliveryRatio"),
-                        label: String(localized: "SMB Delivery Ratio"),
-                        miniHint: String(localized: "Share of insulinReq delivered via SMB."),
-                        verboseHint: Text("Default 0.85."),
-                        isChanged: state.isChanged(\.smbDeliveryRatio),
-                        onReset: { state.resetField(\.smbDeliveryRatio) }
                     )
 
                     SettingInputSection(
                         decimalValue: $state.preferences.higherISFrangeWeight,
                         booleanValue: .constant(false),
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("Higher ISF Range Weight"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.higherISFrangeWeightLabel),
                         units: state.units,
                         type: .decimal("higherISFrangeWeight"),
-                        label: String(localized: "Higher ISF Range Weight"),
-                        miniHint: String(localized: "Weight applied when BG is above target."),
-                        verboseHint: Text("Default 0.3."),
+                        label: AlgorithmSettingHints.higherISFrangeWeightLabel,
+                        miniHint: AlgorithmSettingHints.higherISFrangeWeightMini,
+                        verboseHint: AlgorithmSettingHints.higherISFrangeWeightVerbose(),
                         isChanged: state.isChanged(\.higherISFrangeWeight),
                         onReset: { state.resetField(\.higherISFrangeWeight) }
                     )
@@ -651,12 +727,12 @@ extension AdaptProfile {
                         decimalValue: $state.preferences.lowerISFrangeWeight,
                         booleanValue: .constant(false),
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("Lower ISF Range Weight"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.lowerISFrangeWeightLabel),
                         units: state.units,
                         type: .decimal("lowerISFrangeWeight"),
-                        label: String(localized: "Lower ISF Range Weight"),
-                        miniHint: String(localized: "Weight applied when BG is below target."),
-                        verboseHint: Text("Default 0.7."),
+                        label: AlgorithmSettingHints.lowerISFrangeWeightLabel,
+                        miniHint: AlgorithmSettingHints.lowerISFrangeWeightMini,
+                        verboseHint: AlgorithmSettingHints.lowerISFrangeWeightVerbose(),
                         isChanged: state.isChanged(\.lowerISFrangeWeight),
                         onReset: { state.resetField(\.lowerISFrangeWeight) }
                     )
@@ -665,12 +741,12 @@ extension AdaptProfile {
                         decimalValue: .constant(0),
                         booleanValue: $state.preferences.enableBGacceleration,
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("Enable BG Acceleration"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.enableBGaccelerationLabel),
                         units: state.units,
                         type: .boolean,
-                        label: String(localized: "Enable BG Acceleration"),
-                        miniHint: String(localized: "Scale ISF by glucose acceleration."),
-                        verboseHint: Text("Default ON."),
+                        label: AlgorithmSettingHints.enableBGaccelerationLabel,
+                        miniHint: AlgorithmSettingHints.enableBGaccelerationMini,
+                        verboseHint: AlgorithmSettingHints.enableBGaccelerationVerbose(),
                         isChanged: state.isChanged(\.enableBGacceleration),
                         onReset: { state.resetField(\.enableBGacceleration) }
                     )
@@ -679,12 +755,12 @@ extension AdaptProfile {
                         decimalValue: $state.preferences.bgAccelISFweight,
                         booleanValue: .constant(false),
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("BG Acceleration Weight"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.bgAccelISFweightLabel),
                         units: state.units,
                         type: .decimal("bgAccelISFweight"),
-                        label: String(localized: "BG Acceleration Weight"),
-                        miniHint: String(localized: "Weight applied when BG is accelerating up."),
-                        verboseHint: Text("Default 0.15."),
+                        label: AlgorithmSettingHints.bgAccelISFweightLabel,
+                        miniHint: AlgorithmSettingHints.bgAccelISFweightMini,
+                        verboseHint: AlgorithmSettingHints.bgAccelISFweightVerbose(),
                         isChanged: state.isChanged(\.bgAccelISFweight),
                         onReset: { state.resetField(\.bgAccelISFweight) }
                     )
@@ -693,12 +769,12 @@ extension AdaptProfile {
                         decimalValue: $state.preferences.bgBrakeISFweight,
                         booleanValue: .constant(false),
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("BG Brake Weight"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.bgBrakeISFweightLabel),
                         units: state.units,
                         type: .decimal("bgBrakeISFweight"),
-                        label: String(localized: "BG Brake Weight"),
-                        miniHint: String(localized: "Weight applied when BG decelerates/brakes."),
-                        verboseHint: Text("Default 0.15."),
+                        label: AlgorithmSettingHints.bgBrakeISFweightLabel,
+                        miniHint: AlgorithmSettingHints.bgBrakeISFweightMini,
+                        verboseHint: AlgorithmSettingHints.bgBrakeISFweightVerbose(),
                         isChanged: state.isChanged(\.bgBrakeISFweight),
                         onReset: { state.resetField(\.bgBrakeISFweight) }
                     )
@@ -707,28 +783,14 @@ extension AdaptProfile {
                         decimalValue: $state.preferences.postMealISFweight,
                         booleanValue: .constant(false),
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("Post-Meal ISF Weight"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.postMealISFweightLabel),
                         units: state.units,
                         type: .decimal("postMealISFweight"),
-                        label: String(localized: "Post-Meal ISF Weight"),
-                        miniHint: String(localized: "Weight applied during post-meal window."),
-                        verboseHint: Text("Default 0.02."),
+                        label: AlgorithmSettingHints.postMealISFweightLabel,
+                        miniHint: AlgorithmSettingHints.postMealISFweightMini,
+                        verboseHint: AlgorithmSettingHints.postMealISFweightVerbose(),
                         isChanged: state.isChanged(\.postMealISFweight),
                         onReset: { state.resetField(\.postMealISFweight) }
-                    )
-
-                    SettingInputSection(
-                        decimalValue: $state.preferences.iobThresholdPercent,
-                        booleanValue: .constant(false),
-                        shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("IOB Threshold Percent"),
-                        units: state.units,
-                        type: .decimal("iobThresholdPercent"),
-                        label: String(localized: "IOB Threshold Percent"),
-                        miniHint: String(localized: "Fraction of maxIOB for autoISF gates."),
-                        verboseHint: Text("Default 1.0 (100 % of maxIOB)."),
-                        isChanged: state.isChanged(\.iobThresholdPercent),
-                        onReset: { state.resetField(\.iobThresholdPercent) }
                     )
                 } // if state.preferences.autoisf
             }
@@ -779,12 +841,12 @@ extension AdaptProfile {
                     decimalValue: .constant(0),
                     booleanValue: $state.preferences.useProfileCSF,
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Use Profile CSF"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.useProfileCSFLabel),
                     units: state.units,
                     type: .boolean,
-                    label: String(localized: "Use Profile CSF"),
-                    miniHint: String(localized: "Derive carb ratio dynamically from the CSF profile."),
-                    verboseHint: Text("Default OFF."),
+                    label: AlgorithmSettingHints.useProfileCSFLabel,
+                    miniHint: AlgorithmSettingHints.useProfileCSFMini,
+                    verboseHint: AlgorithmSettingHints.useProfileCSFVerbose(),
                     isChanged: state.isChanged(\.useProfileCSF),
                     onReset: { state.resetField(\.useProfileCSF) }
                 )
@@ -793,12 +855,12 @@ extension AdaptProfile {
                     decimalValue: $state.preferences.maxDailySafetyMultiplier,
                     booleanValue: .constant(false),
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Max Daily Safety Multiplier"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.maxDailySafetyMultiplierLabel),
                     units: state.units,
                     type: .decimal("maxDailySafetyMultiplier"),
-                    label: String(localized: "Max Daily Safety Multiplier"),
-                    miniHint: String(localized: "Cap on temp basal vs. max scheduled daily basal."),
-                    verboseHint: Text("Default 3."),
+                    label: AlgorithmSettingHints.maxDailySafetyMultiplierLabel,
+                    miniHint: AlgorithmSettingHints.maxDailySafetyMultiplierMini,
+                    verboseHint: AlgorithmSettingHints.maxDailySafetyMultiplierVerbose(),
                     isChanged: state.isChanged(\.maxDailySafetyMultiplier),
                     onReset: { state.resetField(\.maxDailySafetyMultiplier) }
                 )
@@ -807,12 +869,12 @@ extension AdaptProfile {
                     decimalValue: $state.preferences.currentBasalSafetyMultiplier,
                     booleanValue: .constant(false),
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Current Basal Safety Multiplier"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.currentBasalSafetyMultiplierLabel),
                     units: state.units,
                     type: .decimal("currentBasalSafetyMultiplier"),
-                    label: String(localized: "Current Basal Safety Multiplier"),
-                    miniHint: String(localized: "Cap on temp basal vs. current scheduled basal."),
-                    verboseHint: Text("Default 4."),
+                    label: AlgorithmSettingHints.currentBasalSafetyMultiplierLabel,
+                    miniHint: AlgorithmSettingHints.currentBasalSafetyMultiplierMini,
+                    verboseHint: AlgorithmSettingHints.currentBasalSafetyMultiplierVerbose(),
                     isChanged: state.isChanged(\.currentBasalSafetyMultiplier),
                     onReset: { state.resetField(\.currentBasalSafetyMultiplier) }
                 )
@@ -821,12 +883,12 @@ extension AdaptProfile {
                     decimalValue: .constant(0),
                     booleanValue: $state.preferences.skipNeutralTemps,
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Skip Neutral Temps"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.skipNeutralTempsLabel),
                     units: state.units,
                     type: .boolean,
-                    label: String(localized: "Skip Neutral Temps"),
-                    miniHint: String(localized: "Don't issue temp basals equal to scheduled rate."),
-                    verboseHint: Text("Default OFF."),
+                    label: AlgorithmSettingHints.skipNeutralTempsLabel,
+                    miniHint: AlgorithmSettingHints.skipNeutralTempsMini,
+                    verboseHint: AlgorithmSettingHints.skipNeutralTempsVerbose(),
                     isChanged: state.isChanged(\.skipNeutralTemps),
                     onReset: { state.resetField(\.skipNeutralTemps) }
                 )
@@ -835,12 +897,12 @@ extension AdaptProfile {
                     decimalValue: .constant(0),
                     booleanValue: $state.preferences.unsuspendIfNoTemp,
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Unsuspend If No Temp"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.unsuspendIfNoTempLabel),
                     units: state.units,
                     type: .boolean,
-                    label: String(localized: "Unsuspend If No Temp"),
-                    miniHint: String(localized: "Auto-unsuspend pump if no temp basal is running."),
-                    verboseHint: Text("Default OFF."),
+                    label: AlgorithmSettingHints.unsuspendIfNoTempLabel,
+                    miniHint: AlgorithmSettingHints.unsuspendIfNoTempMini,
+                    verboseHint: AlgorithmSettingHints.unsuspendIfNoTempVerbose(),
                     isChanged: state.isChanged(\.unsuspendIfNoTemp),
                     onReset: { state.resetField(\.unsuspendIfNoTemp) }
                 )
@@ -849,12 +911,12 @@ extension AdaptProfile {
                     decimalValue: $state.preferences.min5mCarbimpact,
                     booleanValue: .constant(false),
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Min 5m Carb Impact"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.min5mCarbimpactLabel),
                     units: state.units,
                     type: .decimal("min5mCarbimpact"),
-                    label: String(localized: "Min 5m Carb Impact"),
-                    miniHint: String(localized: "Minimum assumed carb impact per 5 min (mg/dL)."),
-                    verboseHint: Text("Default 8."),
+                    label: AlgorithmSettingHints.min5mCarbimpactLabel,
+                    miniHint: AlgorithmSettingHints.min5mCarbimpactMini,
+                    verboseHint: AlgorithmSettingHints.min5mCarbimpactVerbose(units: state.units),
                     isChanged: state.isChanged(\.min5mCarbimpact),
                     onReset: { state.resetField(\.min5mCarbimpact) }
                 )
@@ -863,12 +925,12 @@ extension AdaptProfile {
                     decimalValue: $state.preferences.remainingCarbsFraction,
                     booleanValue: .constant(false),
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Remaining Carbs Fraction"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.remainingCarbsFractionLabel),
                     units: state.units,
                     type: .decimal("remainingCarbsFraction"),
-                    label: String(localized: "Remaining Carbs Fraction"),
-                    miniHint: String(localized: "Fraction of uncovered carbs to expect absorbing."),
-                    verboseHint: Text("Default 1.0."),
+                    label: AlgorithmSettingHints.remainingCarbsFractionLabel,
+                    miniHint: AlgorithmSettingHints.remainingCarbsFractionMini,
+                    verboseHint: AlgorithmSettingHints.remainingCarbsFractionVerbose(),
                     isChanged: state.isChanged(\.remainingCarbsFraction),
                     onReset: { state.resetField(\.remainingCarbsFraction) }
                 )
@@ -877,12 +939,12 @@ extension AdaptProfile {
                     decimalValue: $state.preferences.remainingCarbsCap,
                     booleanValue: .constant(false),
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Remaining Carbs Cap"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.remainingCarbsCapLabel),
                     units: state.units,
                     type: .decimal("remainingCarbsCap"),
-                    label: String(localized: "Remaining Carbs Cap"),
-                    miniHint: String(localized: "Cap on uncovered carbs carried forward."),
-                    verboseHint: Text("Default 90 g."),
+                    label: AlgorithmSettingHints.remainingCarbsCapLabel,
+                    miniHint: AlgorithmSettingHints.remainingCarbsCapMini,
+                    verboseHint: AlgorithmSettingHints.remainingCarbsCapVerbose(),
                     isChanged: state.isChanged(\.remainingCarbsCap),
                     onReset: { state.resetField(\.remainingCarbsCap) }
                 )
@@ -891,12 +953,12 @@ extension AdaptProfile {
                     decimalValue: $state.preferences.noisyCGMTargetMultiplier,
                     booleanValue: .constant(false),
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Noisy CGM Target Multiplier"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.noisyCGMTargetMultiplierHintLabel),
                     units: state.units,
                     type: .decimal("noisyCGMTargetMultiplier"),
-                    label: String(localized: "Noisy CGM Target Multiplier"),
-                    miniHint: String(localized: "Raise target when CGM is flagged noisy."),
-                    verboseHint: Text("Default 1.3."),
+                    label: AlgorithmSettingHints.noisyCGMTargetMultiplierLabel,
+                    miniHint: AlgorithmSettingHints.noisyCGMTargetMultiplierMini,
+                    verboseHint: AlgorithmSettingHints.noisyCGMTargetMultiplierVerbose(),
                     isChanged: state.isChanged(\.noisyCGMTargetMultiplier),
                     onReset: { state.resetField(\.noisyCGMTargetMultiplier) }
                 )
@@ -948,12 +1010,12 @@ extension AdaptProfile {
                     decimalValue: .constant(0),
                     booleanValue: $state.preferences.enableB30,
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Enable B30"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.enableB30Label),
                     units: state.units,
                     type: .boolean,
-                    label: String(localized: "Enable B30"),
-                    miniHint: String(localized: "Eating-soon high-basal window after a small manual bolus."),
-                    verboseHint: Text("Default ON."),
+                    label: AlgorithmSettingHints.enableB30Label,
+                    miniHint: AlgorithmSettingHints.enableB30Mini,
+                    verboseHint: AlgorithmSettingHints.enableB30Verbose(),
                     isChanged: state.isChanged(\.enableB30),
                     onReset: { state.resetField(\.enableB30) }
                 )
@@ -963,12 +1025,12 @@ extension AdaptProfile {
                         decimalValue: $state.preferences.B30iTimeStartBolus,
                         booleanValue: .constant(false),
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("B30 Start Bolus"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.b30iTimeStartBolusLabel),
                         units: state.units,
                         type: .decimal("B30iTimeStartBolus"),
-                        label: String(localized: "B30 Start Bolus"),
-                        miniHint: String(localized: "Minimum manual bolus to trigger the B30 window."),
-                        verboseHint: Text("Default 1 U."),
+                        label: AlgorithmSettingHints.b30iTimeStartBolusLabel,
+                        miniHint: AlgorithmSettingHints.b30iTimeStartBolusMini,
+                        verboseHint: AlgorithmSettingHints.b30iTimeStartBolusVerbose(),
                         isChanged: state.isChanged(\.B30iTimeStartBolus),
                         onReset: { state.resetField(\.B30iTimeStartBolus) }
                     )
@@ -977,12 +1039,12 @@ extension AdaptProfile {
                         decimalValue: $state.preferences.B30iTime,
                         booleanValue: .constant(false),
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("B30 Duration"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.b30iTimeLabel),
                         units: state.units,
                         type: .decimal("B30iTime"),
-                        label: String(localized: "B30 Duration"),
-                        miniHint: String(localized: "How long the high-basal window runs."),
-                        verboseHint: Text("Default 30 min."),
+                        label: AlgorithmSettingHints.b30iTimeLabel,
+                        miniHint: AlgorithmSettingHints.b30iTimeMini,
+                        verboseHint: AlgorithmSettingHints.b30iTimeVerbose(),
                         isChanged: state.isChanged(\.B30iTime),
                         onReset: { state.resetField(\.B30iTime) }
                     )
@@ -991,12 +1053,12 @@ extension AdaptProfile {
                         decimalValue: $state.preferences.B30iTimeTarget,
                         booleanValue: .constant(false),
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("B30 Target"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.b30iTimeTargetLabel),
                         units: state.units,
                         type: .decimal("B30iTimeTarget"),
-                        label: String(localized: "B30 Target"),
-                        miniHint: String(localized: "Target glucose below which B30 activates."),
-                        verboseHint: Text("Default 90 mg/dL."),
+                        label: AlgorithmSettingHints.b30iTimeTargetLabel,
+                        miniHint: AlgorithmSettingHints.b30iTimeTargetMini,
+                        verboseHint: AlgorithmSettingHints.b30iTimeTargetVerbose(units: state.units),
                         isChanged: state.isChanged(\.B30iTimeTarget),
                         onReset: { state.resetField(\.B30iTimeTarget) }
                     )
@@ -1005,12 +1067,12 @@ extension AdaptProfile {
                         decimalValue: $state.preferences.B30upperLimit,
                         booleanValue: .constant(false),
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("B30 Upper Limit"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.b30upperLimitLabel),
                         units: state.units,
                         type: .decimal("B30upperLimit"),
-                        label: String(localized: "B30 Upper Limit"),
-                        miniHint: String(localized: "Upper glucose limit cancelling B30."),
-                        verboseHint: Text("Default 130 mg/dL."),
+                        label: AlgorithmSettingHints.b30upperLimitLabel,
+                        miniHint: AlgorithmSettingHints.b30upperLimitMini(units: state.units),
+                        verboseHint: AlgorithmSettingHints.b30upperLimitVerbose(units: state.units),
                         isChanged: state.isChanged(\.B30upperLimit),
                         onReset: { state.resetField(\.B30upperLimit) }
                     )
@@ -1019,12 +1081,12 @@ extension AdaptProfile {
                         decimalValue: $state.preferences.B30upperDelta,
                         booleanValue: .constant(false),
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("B30 Upper Delta"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.b30upperDeltaLabel),
                         units: state.units,
                         type: .decimal("B30upperDelta"),
-                        label: String(localized: "B30 Upper Delta"),
-                        miniHint: String(localized: "Delta that cancels B30 (rising BG)."),
-                        verboseHint: Text("Default 8 mg/dL."),
+                        label: AlgorithmSettingHints.b30upperDeltaLabel,
+                        miniHint: AlgorithmSettingHints.b30upperDeltaMini(units: state.units),
+                        verboseHint: AlgorithmSettingHints.b30upperDeltaVerbose(units: state.units),
                         isChanged: state.isChanged(\.B30upperDelta),
                         onReset: { state.resetField(\.B30upperDelta) }
                     )
@@ -1033,12 +1095,12 @@ extension AdaptProfile {
                         decimalValue: $state.preferences.B30basalFactor,
                         booleanValue: .constant(false),
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("B30 Basal Factor"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.b30basalFactorLabel),
                         units: state.units,
                         type: .decimal("B30basalFactor"),
-                        label: String(localized: "B30 Basal Factor"),
-                        miniHint: String(localized: "Multiplier applied to basal during B30 window."),
-                        verboseHint: Text("Default 5×."),
+                        label: AlgorithmSettingHints.b30basalFactorLabel,
+                        miniHint: AlgorithmSettingHints.b30basalFactorMini,
+                        verboseHint: AlgorithmSettingHints.b30basalFactorVerbose(),
                         isChanged: state.isChanged(\.B30basalFactor),
                         onReset: { state.resetField(\.B30basalFactor) }
                     )
@@ -1091,12 +1153,12 @@ extension AdaptProfile {
                     decimalValue: .constant(0),
                     booleanValue: $state.preferences.ketoProtect,
                     shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding("Keto Protect"),
+                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.ketoProtectLabel),
                     units: state.units,
                     type: .boolean,
-                    label: String(localized: "Keto Protect"),
-                    miniHint: String(localized: "Maintain a minimum basal to avoid ketoacidosis."),
-                    verboseHint: Text("Default OFF."),
+                    label: AlgorithmSettingHints.ketoProtectLabel,
+                    miniHint: AlgorithmSettingHints.ketoProtectMini,
+                    verboseHint: AlgorithmSettingHints.ketoProtectVerbose(),
                     isChanged: state.isChanged(\.ketoProtect),
                     onReset: { state.resetField(\.ketoProtect) }
                 )
@@ -1106,40 +1168,43 @@ extension AdaptProfile {
                         decimalValue: .constant(0),
                         booleanValue: $state.preferences.variableKetoProtect,
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("Variable Keto Protect"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.variableKetoProtectLabel),
                         units: state.units,
                         type: .boolean,
-                        label: String(localized: "Variable Keto Protect"),
-                        miniHint: String(localized: "Scale the protective basal with the scheduled basal rate."),
-                        verboseHint: Text("Default OFF."),
+                        label: AlgorithmSettingHints.variableKetoProtectLabel,
+                        miniHint: AlgorithmSettingHints.variableKetoProtectMini,
+                        verboseHint: AlgorithmSettingHints.variableKetoProtectVerbose(),
                         isChanged: state.isChanged(\.variableKetoProtect),
                         onReset: { state.resetField(\.variableKetoProtect) }
                     )
 
-                    SettingInputSection(
-                        decimalValue: $state.preferences.ketoProtectBasalPercent,
-                        booleanValue: .constant(false),
-                        shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("Keto Protect Basal Percent"),
-                        units: state.units,
-                        type: .decimal("ketoProtectBasalPercent"),
-                        label: String(localized: "Keto Protect Basal Percent"),
-                        miniHint: String(localized: "Percent of scheduled basal used as floor."),
-                        verboseHint: Text("Default 20 %."),
-                        isChanged: state.isChanged(\.ketoProtectBasalPercent),
-                        onReset: { state.resetField(\.ketoProtectBasalPercent) }
-                    )
+                    // Settings hides the percent field when Absolute is on; mirror that here.
+                    if !state.preferences.ketoProtectAbsolut {
+                        SettingInputSection(
+                            decimalValue: $state.preferences.ketoProtectBasalPercent,
+                            booleanValue: .constant(false),
+                            shouldDisplayHint: $shouldDisplayHint,
+                            selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.ketoProtectBasalPercentLabel),
+                            units: state.units,
+                            type: .decimal("ketoProtectBasalPercent"),
+                            label: AlgorithmSettingHints.ketoProtectBasalPercentLabel,
+                            miniHint: AlgorithmSettingHints.ketoProtectBasalPercentMini,
+                            verboseHint: AlgorithmSettingHints.ketoProtectBasalPercentVerbose(),
+                            isChanged: state.isChanged(\.ketoProtectBasalPercent),
+                            onReset: { state.resetField(\.ketoProtectBasalPercent) }
+                        )
+                    }
 
                     SettingInputSection(
                         decimalValue: .constant(0),
                         booleanValue: $state.preferences.ketoProtectAbsolut,
                         shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding("Keto Protect Absolute"),
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.ketoProtectAbsolutLabel),
                         units: state.units,
                         type: .boolean,
-                        label: String(localized: "Keto Protect Absolute"),
-                        miniHint: String(localized: "Use a fixed U/hr floor instead of a percentage."),
-                        verboseHint: Text("Default OFF."),
+                        label: AlgorithmSettingHints.ketoProtectAbsolutLabel,
+                        miniHint: AlgorithmSettingHints.ketoProtectAbsolutMini,
+                        verboseHint: AlgorithmSettingHints.ketoProtectAbsolutVerbose(),
                         isChanged: state.isChanged(\.ketoProtectAbsolut),
                         onReset: { state.resetField(\.ketoProtectAbsolut) }
                     )
@@ -1149,12 +1214,12 @@ extension AdaptProfile {
                             decimalValue: $state.preferences.ketoProtectBasalAbsolut,
                             booleanValue: .constant(false),
                             shouldDisplayHint: $shouldDisplayHint,
-                            selectedVerboseHint: verboseHintBinding("Keto Protect Absolute Basal"),
+                            selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.ketoProtectBasalAbsolutLabel),
                             units: state.units,
                             type: .decimal("ketoProtectBasalAbsolut"),
-                            label: String(localized: "Keto Protect Absolute Basal"),
-                            miniHint: String(localized: "Minimum basal rate used as floor."),
-                            verboseHint: Text("Default 0.1 U/hr."),
+                            label: AlgorithmSettingHints.ketoProtectBasalAbsolutLabel,
+                            miniHint: AlgorithmSettingHints.ketoProtectBasalAbsolutMini,
+                            verboseHint: AlgorithmSettingHints.ketoProtectBasalAbsolutVerbose(),
                             isChanged: state.isChanged(\.ketoProtectBasalAbsolut),
                             onReset: { state.resetField(\.ketoProtectBasalAbsolut) }
                         )
