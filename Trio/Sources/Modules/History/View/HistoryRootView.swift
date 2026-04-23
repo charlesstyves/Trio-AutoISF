@@ -189,23 +189,6 @@ extension History {
                                 }
                             }
                             Divider().frame(height: textHeight + 4).background(Color.secondary)
-                            HStack {
-                                Text(History.Mode.profiles.name)
-                                    .font(.subheadline)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.5)
-                                    .layoutPriority(1)
-                            }
-                            .padding(.vertical, 6)
-                            .padding(.horizontal, 8)
-                            .background(state.mode == .profiles ? Color.loopGray.opacity(0.4) : Color.clear)
-                            .cornerRadius(8)
-                            .onTapGesture {
-                                withAnimation {
-                                    state.mode = .profiles
-                                }
-                            }
-                            Divider().frame(height: textHeight + 4).background(Color.secondary)
                             HStack(spacing: 2) {
                                 Text("autoISF")
                                     .font(.subheadline)
@@ -248,7 +231,6 @@ extension History {
                         case .glucose: glucoseList
                         case .meals: mealsList
                         case .adjustments: adjustmentsList
-                        case .profiles: profilesList
                         }
                     }.scrollContentBackground(.hidden)
                         .background(appState.trioBackgroundColor(for: colorScheme))
@@ -574,26 +556,6 @@ extension History {
             .listRowBackground(Color.chart)
         }
 
-        private var profilesList: some View {
-            List {
-                HStack {
-                    Text("Profile").foregroundStyle(.secondary)
-                    Spacer()
-                }
-                if !profileRunStored.isEmpty {
-                    ForEach(profileRunStored.map(profileAdjustmentItem)) { item in
-                        adjustmentView(for: item)
-                    }
-                } else {
-                    ContentUnavailableView(
-                        String(localized: "No data."),
-                        systemImage: "person.crop.circle.badge.clock"
-                    )
-                }
-            }
-            .listRowBackground(Color.chart)
-        }
-
         private func profileAdjustmentItem(_ run: ProfileRunStored) -> AdjustmentItem {
             let summary = ProfileSummaryLabel.shortStrings(
                 appliedPercent: run.profile?.appliedPercent?.decimalValue,
@@ -677,7 +639,9 @@ extension History {
                 )
             }
 
-            let combined = overrides + tempTargets
+            let profiles = profileRunStored.map(profileAdjustmentItem)
+
+            let combined = overrides + tempTargets + profiles
             return combined.sorted {
                 if $0.startDate == $1.startDate {
                     return $0.endDate > $1.endDate
