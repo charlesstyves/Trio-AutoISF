@@ -37,6 +37,19 @@ enum ProfileSummaryLabel {
         dailyBasalRate: Decimal?,
         tuning: Tuning
     ) -> [String] {
+        var out = shortStrings(appliedPercent: appliedPercent, dailyBasalRate: dailyBasalRate)
+        if let tunedStr = tuning.text {
+            out.append(tunedStr)
+        }
+        return out
+    }
+
+    /// Compact variant for space-constrained rows (e.g. History profile entries that also
+    /// show duration + time range). Drops the tuned badge.
+    static func shortStrings(
+        appliedPercent: Decimal?,
+        dailyBasalRate: Decimal?
+    ) -> [String] {
         var out: [String] = []
         if let pct = appliedPercent, pct != 100 {
             let pctStr = pct.formatted(.number.precision(.fractionLength(0)))
@@ -47,10 +60,7 @@ enum ProfileSummaryLabel {
             formatter.numberStyle = .decimal
             formatter.maximumFractionDigits = 2
             let brStr = formatter.string(from: br as NSNumber) ?? "\(br)"
-            out.append("Total BR \(brStr) U/day")
-        }
-        if let tunedStr = tuning.text {
-            out.append(tunedStr)
+            out.append("\(brStr) U/day")
         }
         return out
     }

@@ -766,15 +766,14 @@ extension Home {
                                 .stroke(Color.blue, lineWidth: 1.5)
                         )
                 }
-                VStack(alignment: .leading) {
+                HStack(spacing: 6) {
                     Text(profile.name ?? String(localized: "Active Profile"))
                         .font(.subheadline)
-                        .frame(alignment: .leading)
                     let subtitle = profileSubtitle(profile, now: state.timerDate)
                     if !subtitle.isEmpty {
                         Text(subtitle)
                             .font(.caption)
-                            .frame(alignment: .leading)
+                            .foregroundStyle(.secondary)
                     }
                 }
             }

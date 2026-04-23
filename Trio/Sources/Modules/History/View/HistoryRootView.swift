@@ -595,10 +595,9 @@ extension History {
         }
 
         private func profileAdjustmentItem(_ run: ProfileRunStored) -> AdjustmentItem {
-            let summary = ProfileSummaryLabel.strings(
+            let summary = ProfileSummaryLabel.shortStrings(
                 appliedPercent: run.profile?.appliedPercent?.decimalValue,
-                dailyBasalRate: run.profile?.therapy?.basalProfile.totalDailyBasal,
-                tuning: .init(preferencesTuned: run.preferencesTuned, targetsTuned: run.targetsTuned)
+                dailyBasalRate: run.profile?.therapy?.basalProfile.totalDailyBasal
             )
             return AdjustmentItem(
                 id: run.objectID,
