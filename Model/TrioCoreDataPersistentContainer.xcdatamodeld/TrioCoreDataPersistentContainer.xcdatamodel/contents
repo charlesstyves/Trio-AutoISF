@@ -262,6 +262,7 @@
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="lastFiredAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="orderPosition" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="profileID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="repeatRuleJSON" optional="YES" attributeType="Binary"/>
         <fetchIndex name="byCreatedAt">
@@ -269,6 +270,9 @@
         </fetchIndex>
         <fetchIndex name="byEnabled">
             <fetchIndexElement property="enabled" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="byOrderPosition">
+            <fetchIndexElement property="orderPosition" type="Binary" order="ascending"/>
         </fetchIndex>
         <fetchIndex name="byProfileID">
             <fetchIndexElement property="profileID" type="Binary" order="ascending"/>

@@ -13,6 +13,7 @@ public extension ProfileScheduleStored {
     @NSManaged var id: UUID?
     @NSManaged var lastFiredAt: Date?
     @NSManaged var name: String?
+    @NSManaged var orderPosition: Int16
     @NSManaged var profileID: UUID?
     @NSManaged var repeatRuleJSON: Data?
 }

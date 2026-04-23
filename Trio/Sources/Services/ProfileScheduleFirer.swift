@@ -17,15 +17,15 @@ final class ProfileScheduleFirer {
     private let resolver: Resolver
     private let coreDataStack = CoreDataStack.shared
 
-    /// Time between sweeps. 15s gives tight reconciliation on foreground after a missed fire
-    /// without excess CPU / CoreData pressure while idle.
-    private let sweepInterval: TimeInterval = 15
+    /// Time between sweeps. Testing: 5s. Production target: 15s. TODO: restore 15s before ship.
+    private let sweepInterval: TimeInterval = 5
 
     private var loopTask: Task<Void, Never>?
     private var sweepInFlight = false
 
     init(resolver: Resolver) {
         self.resolver = resolver
+        debug(.coreData, "ProfileScheduleFirer init — starting sweep loop")
         startLoop()
     }
 
@@ -44,12 +44,16 @@ final class ProfileScheduleFirer {
     }
 
     private func sweep() async {
-        guard !sweepInFlight else { return }
+        guard !sweepInFlight else {
+            debug(.coreData, "ProfileScheduleFirer: sweep skipped (in flight)")
+            return
+        }
         sweepInFlight = true
         defer { sweepInFlight = false }
 
         let context = coreDataStack.newTaskContext()
         let now = Date()
+        debug(.coreData, "ProfileScheduleFirer: sweep tick @ \(now)")
 
         struct DueFire {
             let scheduleID: UUID
@@ -63,14 +67,23 @@ final class ProfileScheduleFirer {
         let due: [DueFire] = await context.perform {
             let request = ProfileScheduleStored.fetch(.enabledSchedule)
             let rows = (try? context.fetch(request)) ?? []
+            debug(.coreData, "ProfileScheduleFirer: \(rows.count) enabled schedules in store")
             return rows.compactMap { row -> DueFire? in
                 guard let sid = row.id,
                       let pid = row.profileID,
                       let rule = row.rule,
                       let duration = row.duration
-                else { return nil }
+                else {
+                    debug(.coreData, "ProfileScheduleFirer: row decode failed (id/profile/rule/duration)")
+                    return nil
+                }
                 let anchor = row.lastFiredAt ?? row.createdAt ?? .distantPast
-                guard let next = rule.nextFire(after: anchor), next <= now else { return nil }
+                let nextMaybe = rule.nextFire(after: anchor)
+                debug(
+                    .coreData,
+                    "ProfileScheduleFirer: schedule \(sid) anchor=\(anchor) next=\(String(describing: nextMaybe)) now=\(now)"
+                )
+                guard let next = nextMaybe, next <= now else { return nil }
                 let isOnce: Bool = {
                     if case .once = rule.repeatRule { return true }
                     return false
@@ -88,21 +101,21 @@ final class ProfileScheduleFirer {
         }
 
         guard !due.isEmpty else { return }
+        debug(.coreData, "ProfileScheduleFirer: \(due.count) due — firing")
 
         let provider = AdaptProfile.Provider(resolver: resolver)
 
         for fire in due {
             switch fire.duration {
-            case let .hours(h):
+            case let .minutes(m):
+                debug(.coreData, "ProfileScheduleFirer: activating \(fire.profileID) for \(m) min")
                 let outcome = await provider.activate(
                     id: fire.profileID,
-                    durationMinutes: h * 60,
+                    durationMinutes: m,
                     confirmedPumpSync: true
                 )
-                if outcome != .success {
-                    debug(.coreData, "Schedule \(fire.scheduleID) fire failed: \(outcome)")
-                    continue
-                }
+                debug(.coreData, "ProfileScheduleFirer: activate outcome = \(outcome)")
+                if outcome != .success { continue }
             case .indefinite,
                  .untilNext:
                 debug(
@@ -115,12 +128,24 @@ final class ProfileScheduleFirer {
             await context.perform {
                 guard let row = try? context.existingObject(with: fire.objectID) as? ProfileScheduleStored
                 else { return }
-                row.lastFiredAt = fire.occurrence
                 if fire.isOnce {
-                    row.enabled = false
+                    // Once-schedules are not editable; deleting after fire is cleaner than
+                    // leaving a disabled row cluttering the list.
+                    context.delete(row)
+                    debug(.coreData, "ProfileScheduleFirer: deleted one-off \(fire.scheduleID) after fire")
+                } else {
+                    row.lastFiredAt = fire.occurrence
+                    debug(.coreData, "ProfileScheduleFirer: stamped lastFiredAt=\(fire.occurrence) on \(fire.scheduleID)")
                 }
                 try? context.save()
             }
+        }
+
+        // Wake anyone watching the schedule list (Profiles root Upcoming section + Schedules
+        // management screen) so deleted / stamped rows disappear immediately instead of lingering
+        // until the next manual refresh.
+        await MainActor.run {
+            Foundation.NotificationCenter.default.post(name: .didUpdateProfileSchedules, object: nil)
         }
     }
 }

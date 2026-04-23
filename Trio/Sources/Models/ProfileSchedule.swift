@@ -47,8 +47,9 @@ extension ProfileSchedule {
 
     /// How long an activation lasts after the schedule fires.
     enum Duration: Codable, Hashable, Sendable {
-        /// Timed activation. Algorithm compensates via temp basals; pump is not touched.
-        case hours(Int)
+        /// Timed activation expressed in minutes. Algorithm compensates via temp basals; pump
+        /// is not touched.
+        case minutes(Int)
 
         /// Indefinite activation. Target profile becomes the new baseline and is written to pump.
         /// Requires user interaction at fire time (see `requiresPumpInteraction`).
