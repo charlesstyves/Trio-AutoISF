@@ -116,10 +116,16 @@ extension AdaptProfile {
             isLoading = true
             async let itemsTask = provider.fetchAll()
             async let upcomingTask = provider.fetchUpcoming()
+            async let pendingTask = provider.earliestPendingScheduledActivation()
             items = await itemsTask
             upcoming = await upcomingTask
+            let reconciled = await pendingTask
             isLoading = false
             drainPendingTap()
+            // Auto-surface: if no tap-driven request is already showing and a schedule still has
+            // a pendingOccurrence outstanding (user dismissed the notification without acting),
+            // present the Save-to-pump dialog as soon as they land on AdaptProfile.
+            if pendingScheduledActivation == nil { pendingScheduledActivation = reconciled }
         }
 
         /// Pulls any pending schedule-notification tap from the process mailbox and converts it

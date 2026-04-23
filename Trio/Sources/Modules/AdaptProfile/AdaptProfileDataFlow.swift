@@ -121,6 +121,11 @@ protocol AdaptProfileProvider: Provider {
     /// schedule row so the firer doesn't re-post the notification on the next sweep.
     func markScheduleActivated(scheduleID: UUID, occurrence: Date) async
 
+    /// Returns the earliest enabled schedule whose `pendingOccurrence != nil`, joined with the
+    /// target profile name. Used by RootView to auto-surface the Save-to-pump dialog when the
+    /// user arrives on AdaptProfile and a notification is still outstanding.
+    func earliestPendingScheduledActivation() async -> ScheduledActivationRequest?
+
     func rename(id: UUID, to newName: String) async
     func delete(id: UUID) async
 

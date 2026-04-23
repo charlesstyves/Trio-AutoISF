@@ -125,6 +125,30 @@ extension AdaptProfile {
             }
         }
 
+        func earliestPendingScheduledActivation() async -> ScheduledActivationRequest? {
+            let context = coreDataStack.newTaskContext()
+            return await context.perform {
+                let request: NSFetchRequest<ProfileScheduleStored> = ProfileScheduleStored.fetchRequest()
+                request.predicate = NSPredicate(format: "pendingOccurrence != nil AND enabled == %@", true as NSNumber)
+                request.sortDescriptors = [NSSortDescriptor(key: "pendingOccurrence", ascending: true)]
+                request.fetchLimit = 1
+                guard let row = (try? context.fetch(request))?.first,
+                      let sid = row.id,
+                      let pid = row.profileID,
+                      let occurrence = row.pendingOccurrence
+                else { return nil }
+
+                let profileReq = ProfileStored.fetch(.profileByID(pid), fetchLimit: 1)
+                let name = (try? context.fetch(profileReq))?.first?.name ?? "Scheduled profile"
+                return ScheduledActivationRequest(
+                    scheduleID: sid,
+                    profileID: pid,
+                    profileName: name,
+                    occurrence: occurrence
+                )
+            }
+        }
+
         func markScheduleActivated(scheduleID: UUID, occurrence: Date) async {
             let context = coreDataStack.newTaskContext()
             await context.perform {
