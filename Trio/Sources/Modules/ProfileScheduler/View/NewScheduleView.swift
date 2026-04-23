@@ -266,9 +266,11 @@ extension ProfileScheduler {
             } header: {
                 Text("Duration")
             } footer: {
-                Text(durationMode == .untilNext
-                    ? "Runs until another schedule changes the profile, or until changed manually. Indefinite activations write the basal to pump."
-                    : "Timed activations do not touch the pump; the algorithm compensates via temp basals."
+                Text(
+                    durationMode == .untilNext
+                        ?
+                        "Runs until another schedule changes the profile, or until changed manually. Indefinite activations write the basal to pump."
+                        : "Timed activations do not touch the pump; the algorithm compensates via temp basals."
                 )
             }
             .listRowBackground(Color.chart)
