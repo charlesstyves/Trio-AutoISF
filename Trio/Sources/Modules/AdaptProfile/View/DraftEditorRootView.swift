@@ -10,6 +10,7 @@ extension AdaptProfile {
 
         @State private var isSaving = false
         @State private var saveError = false
+        @State private var showRemoveLabelAlert = false
 
         @Environment(\.colorScheme) var colorScheme
         @Environment(AppState.self) var appState
@@ -39,6 +40,7 @@ extension AdaptProfile {
             } message: {
                 Text("The profile couldn't be saved. Check the name and try again.")
             }
+            .task { await state.loadSourceForTuning() }
         }
 
         // MARK: - Sections
@@ -75,13 +77,29 @@ extension AdaptProfile {
                     .foregroundColor(.secondary)
                 }
                 if state.hasLabel {
-                    Button(role: .destructive) {
-                        withAnimation { state.makeDefault() }
-                    } label: {
-                        HStack {
-                            Image(systemName: "tag.slash")
-                            Text("Remove label — make a default")
+                    HStack {
+                        Spacer()
+                        Button("Remove label — make a Default") {
+                            showRemoveLabelAlert.toggle()
                         }
+                        .tint(.orange)
+                        .buttonStyle(.borderless)
+                        .alert(
+                            "Remove the label from this profile?",
+                            isPresented: $showRemoveLabelAlert,
+                            actions: {
+                                Button("No", role: .cancel) {}
+                                Button("Yes", role: .destructive) {
+                                    withAnimation { state.makeDefault() }
+                                }
+                            },
+                            message: {
+                                Text(
+                                    "Therapy and algorithm values will be kept. The profile will no longer show a percent or tuned badge."
+                                )
+                            }
+                        )
+                        Spacer()
                     }
                 }
             } header: {
@@ -96,10 +114,7 @@ extension AdaptProfile {
             ProfileSummaryLabel.strings(
                 appliedPercent: state.appliedPercent,
                 dailyBasalRate: state.draftDailyBasal,
-                tuning: .init(
-                    preferencesTuned: state.sourceProfileID != nil && state.preferencesChanged,
-                    targetsTuned: state.sourceProfileID != nil && state.targetsAreChanged
-                )
+                tuning: state.tuningVsSource
             )
         }
 

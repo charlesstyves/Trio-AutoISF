@@ -49,6 +49,12 @@ extension AdaptProfile {
         /// Full algorithm preferences snapshot, mutated by SettingInputSection bindings.
         var preferences = Preferences()
 
+        /// Source profile's prefs and BG targets, loaded lazily in edit mode via
+        /// `loadSourceForTuning()`. Nil in new-draft mode (where `originalPreferences` already
+        /// equals source) and stays nil if the source profile is missing / was deleted.
+        var sourcePreferencesForTuning: Preferences?
+        var sourceTargetItemsForTuning: [TherapySettingItem]?
+
         // MARK: - Picker option arrays
 
         private let settingsProvider = PickerSettingsProvider.shared
@@ -161,6 +167,35 @@ extension AdaptProfile {
 
         var hasLabel: Bool {
             appliedPercent != 100 || sourceProfileID != nil
+        }
+
+        /// Tuning flags against the source profile — the same semantics the AdaptProfile list
+        /// and History tab use. In new-draft mode falls through to `originalPreferences` (which
+        /// IS source). In edit mode relies on the lazy fetch in `loadSourceForTuning()`; if that
+        /// hasn't completed or the source is gone, reports `.none` so we don't show a misleading
+        /// badge during the brief load.
+        var tuningVsSource: ProfileSummaryLabel.Tuning {
+            guard sourceProfileID != nil else { return .none }
+            let sourcePrefs = sourcePreferencesForTuning ?? (editingProfileID == nil ? originalPreferences : nil)
+            let sourceTargets = sourceTargetItemsForTuning ?? (editingProfileID == nil ? originalTargetItems : nil)
+            guard let sourcePrefs = sourcePrefs, let sourceTargets = sourceTargets else { return .none }
+            return ProfileSummaryLabel.Tuning(
+                preferencesTuned: preferences != sourcePrefs,
+                targetsTuned: targetItems != sourceTargets
+            )
+        }
+
+        /// Edit-mode only: pull the source profile's prefs + targets so `tuningVsSource` can
+        /// report the accumulated customizations (not just unsaved session edits).
+        @MainActor func loadSourceForTuning() async {
+            guard editingProfileID != nil,
+                  let sourceID = sourceProfileID,
+                  let content = await provider.loadProfileContent(id: sourceID)
+            else { return }
+            sourcePreferencesForTuning = content.preferences
+            sourceTargetItemsForTuning = content.therapy.bgTargets.targets.map {
+                TherapySettingItem(time: TimeInterval($0.offset * 60), value: $0.low)
+            }
         }
 
         /// Sum over the current draft basal items, matching `[BasalProfileEntry].totalDailyBasal`.
