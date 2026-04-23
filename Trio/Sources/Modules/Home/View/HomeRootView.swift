@@ -787,10 +787,21 @@ extension Home {
         /// HomeStateModel — so the countdown stays live without an ad-hoc timer.
         /// Same mechanism PumpView / LoopView use for their remaining-time displays.
         private func profileSubtitle(_ profile: ProfileStored, now: Date) -> String {
-            guard let expires = profile.expiresAt else { return "" }
-            let minutesLeft = Int(expires.timeIntervalSince(now) / 60)
-            guard minutesLeft > 0 else { return String(localized: "Expiring") }
-            return formatHrMin(minutesLeft)
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .decimal
+            formatter.maximumFractionDigits = 2
+            let totalBasal = profile.therapy?.totalDailyBasal ?? 0
+            let totalStr = formatter.string(from: totalBasal as NSNumber) ?? "\(totalBasal)"
+
+            let basalText = "Total BR \(totalStr) U/day"
+
+            if let expires = profile.expiresAt {
+                let minutesLeft = Int(expires.timeIntervalSince(now) / 60)
+                let countdown = minutesLeft > 0 ? formatHrMin(minutesLeft) : String(localized: "Expiring")
+                return "\(countdown) · \(basalText)"
+            } else {
+                return basalText
+            }
         }
 
         @ViewBuilder func adjustmentsRevertProfileView() -> some View {

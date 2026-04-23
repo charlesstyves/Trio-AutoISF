@@ -50,6 +50,7 @@ extension AdaptProfile {
                         }()
 
                         let applied = profile.appliedPercent?.decimalValue ?? 100
+                        let totalBasal = profile.therapy?.totalDailyBasal ?? 0
                         return AdaptProfileListItem(
                             id: id,
                             name: profile.name ?? "Unnamed",
@@ -61,7 +62,8 @@ extension AdaptProfile {
                             appliedPercent: applied,
                             preferencesChangedFromSource: prefsChanged,
                             targetsChangedFromSource: targetsChanged,
-                            previousProfileID: profile.previousProfileID
+                            previousProfileID: profile.previousProfileID,
+                            totalDailyBasal: totalBasal
                         )
                     }
                 } catch {

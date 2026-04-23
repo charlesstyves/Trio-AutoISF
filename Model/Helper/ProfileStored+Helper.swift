@@ -7,6 +7,11 @@ struct TherapyBundle: Codable {
     var sensitivities: InsulinSensitivities
     var carbRatios: CarbRatios
     var bgTargets: BGTargets
+
+    /// Total daily basal rate in units per day
+    var totalDailyBasal: Decimal {
+        basalProfile.totalDailyBasal
+    }
 }
 
 extension NSPredicate {

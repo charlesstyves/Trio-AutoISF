@@ -27,6 +27,8 @@ struct AdaptProfileListItem: Identifiable, Hashable {
     /// Profile that will become active when a timed activation expires. Only meaningful on the
     /// currently-active item while `expiresAt != nil`.
     let previousProfileID: UUID?
+    /// Total daily basal rate in units per day
+    let totalDailyBasal: Decimal
 }
 
 /// Full decoded content of a stored profile, used to seed the draft editor in edit mode.

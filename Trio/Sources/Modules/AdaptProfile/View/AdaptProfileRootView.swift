@@ -400,6 +400,13 @@ extension AdaptProfile {
             case (false, true): out.append(String(localized: "Glucose Targets tuned"))
             case (false, false): break
             }
+            // Add total daily basal
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .decimal
+            formatter.maximumFractionDigits = 2
+            if let totalStr = formatter.string(from: item.totalDailyBasal as NSNumber) {
+                out.append("Total BR \(totalStr) U/day")
+            }
             return out
         }
 
