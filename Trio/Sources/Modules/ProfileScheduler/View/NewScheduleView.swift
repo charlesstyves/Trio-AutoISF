@@ -1,29 +1,43 @@
 import SwiftUI
 
 extension ProfileScheduler {
-    /// New-schedule picker. Sections in order: Profile → Repeat → Time → Duration, plus a live
-    /// preview sentence. Repeat presets collapse into a single dropdown; Custom pushes to a
-    /// sub-screen for weekday / monthly / once selection.
+    /// New-schedule picker. Sections in order: Summary, Profile, Duration, Repeat, and a
+    /// context-dependent Config that switches based on the chosen repeat kind (once / daily /
+    /// weekdays / weekends / custom weekly / custom monthly). Default kind is `.once` so the
+    /// simplest case is one tap away.
     struct NewScheduleView: View {
         @Bindable var state: StateModel
         let onDismiss: () -> Void
 
-        @State private var showCustomRepeat = false
-        @State private var durationMode: DurationMode = .hours
+        // Duration
+        @State private var durationMode: DurationMode = .indefinite
         @State private var durationHours: Int = 6
         @State private var durationMinutes: Int = 0
-        @State private var onceDate: Date = nextHour()
-
-        @State private var showTimePicker = false
         @State private var showDurationPicker = false
-        @State private var selectedPreset: RepeatPreset = .daily
+
+        // Repeat
+        @State private var selectedKind: RepeatKind = .once
+        @State private var onceDate: Date = nextQuarterHour()
+        @State private var weekdaySelection: Set<ProfileSchedule.Weekday> = []
+        @State private var monthDaySelection: Set<Int> = []
+        @State private var showTimePicker = false
 
         @Environment(\.colorScheme) var colorScheme
         @Environment(AppState.self) var appState
 
         enum DurationMode: String, CaseIterable, Identifiable {
-            case hours = "Timed"
-            case untilNext = "Until next change"
+            case indefinite = "Indefinite Profile"
+            case temporary = "Temporary Profile"
+            var id: String { rawValue }
+        }
+
+        enum RepeatKind: String, CaseIterable, Identifiable {
+            case once = "Once"
+            case daily = "Every day"
+            case weekdays = "Every weekday"
+            case weekends = "Every weekend"
+            case customWeekly = "Custom weekly"
+            case customMonthly = "Custom monthly"
             var id: String { rawValue }
         }
 
@@ -32,11 +46,10 @@ extension ProfileScheduler {
                 List {
                     previewSection
                     profileSection
-                    repeatSection
-                    if !isOnce {
-                        timeSection
-                    }
                     durationSection
+                    repeatSection
+                    configSection
+                    saveSection
                 }
                 .listSectionSpacing(10)
                 .scrollContentBackground(.hidden)
@@ -47,26 +60,22 @@ extension ProfileScheduler {
                     ToolbarItem(placement: .topBarLeading) {
                         Button("Cancel", action: onDismiss)
                     }
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button("Save") {
-                            commitDuration()
-                            Task {
-                                if await state.saveDraft() { onDismiss() }
-                            }
-                        }
-                        .disabled(state.draft.validationError != nil)
-                    }
                 }
-                .navigationDestination(isPresented: $showCustomRepeat) {
-                    CustomRepeatView(state: state, onceDate: $onceDate)
+                .onAppear { applyKindToDraft() }
+                .onChange(of: selectedKind) { _, _ in applyKindToDraft() }
+                .onChange(of: weekdaySelection) { _, _ in
+                    if selectedKind == .customWeekly { applyKindToDraft() }
                 }
-                .onAppear {
-                    syncPresetFromDraft()
+                .onChange(of: monthDaySelection) { _, _ in
+                    if selectedKind == .customMonthly { applyKindToDraft() }
+                }
+                .onChange(of: onceDate) { _, _ in
+                    if selectedKind == .once { applyKindToDraft() }
                 }
             }
         }
 
-        // MARK: - Preview
+        // MARK: - Preview / Save
 
         private var previewSection: some View {
             Section {
@@ -95,18 +104,34 @@ extension ProfileScheduler {
 
         private var previewDuration: ProfileSchedule.Duration {
             switch durationMode {
-            case .hours:
+            case .temporary:
                 let total = durationHours * 60 + durationMinutes
-                return .hours(max(1, total / 60))
-            case .untilNext:
-                return .untilNext
+                return .minutes(max(5, total))
+            case .indefinite:
+                return .indefinite
             }
         }
 
-        private func commitDuration() {
+        private func commitDraft() {
             state.draft.duration = previewDuration
-            if case .once = state.draft.repeatRule {
+            applyKindToDraft()
+        }
+
+        /// Pushes `selectedKind` + local selections into `state.draft.repeatRule`.
+        private func applyKindToDraft() {
+            switch selectedKind {
+            case .once:
                 state.draft.repeatRule = .once(onceDate)
+            case .daily:
+                state.draft.repeatRule = .weekdays(Set(ProfileSchedule.Weekday.allCases))
+            case .weekdays:
+                state.draft.repeatRule = .weekdays([.monday, .tuesday, .wednesday, .thursday, .friday])
+            case .weekends:
+                state.draft.repeatRule = .weekdays([.saturday, .sunday])
+            case .customWeekly:
+                state.draft.repeatRule = .weekdays(weekdaySelection)
+            case .customMonthly:
+                state.draft.repeatRule = .monthlyDays(monthDaySelection)
             }
         }
 
@@ -132,114 +157,22 @@ extension ProfileScheduler {
                     }
                     .pickerStyle(.menu)
                 }
-            } header: {
-                Text("Profile")
             }
             .listRowBackground(Color.chart)
         }
 
-        // MARK: - Repeat (dropdown + Custom row)
-
-        private var repeatSection: some View {
-            Section {
-                Picker("Repeat", selection: $selectedPreset) {
-                    ForEach(RepeatPreset.allCases, id: \.self) { p in
-                        Text(p.title).tag(p)
-                    }
-                }
-                .pickerStyle(.menu)
-                .onChange(of: selectedPreset) { _, new in
-                    state.draft.repeatRule = new.rule
-                }
-
-                Button {
-                    showCustomRepeat = true
-                } label: {
-                    HStack {
-                        Text("Custom…").foregroundColor(.primary)
-                        Spacer()
-                        if isCustom {
-                            Text(ProfileScheduleSummary.repeatText(state.draft.repeatRule))
-                                .font(.caption)
-                                .foregroundColor(.accentColor)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
-                        }
-                        Image(systemName: "chevron.right").foregroundColor(.secondary)
-                    }
-                }
-            } header: {
-                Text("Repeat")
-            }
-            .listRowBackground(Color.chart)
-        }
-
-        private var isCustom: Bool {
-            !RepeatPreset.allCases.contains { $0.matches(state.draft.repeatRule) }
-        }
-
-        private var isOnce: Bool {
-            if case .once = state.draft.repeatRule { return true }
-            return false
-        }
-
-        private func syncPresetFromDraft() {
-            // If draft is in a blank/initial state, default to the selected preset so the summary
-            // sentence makes sense from the first render.
-            if case let .weekdays(set) = state.draft.repeatRule, set.isEmpty {
-                state.draft.repeatRule = selectedPreset.rule
-                return
-            }
-            if let match = RepeatPreset.allCases.first(where: { $0.matches(state.draft.repeatRule) }) {
-                selectedPreset = match
-            }
-        }
-
-        // MARK: - Time (collapsible, 15-min UIDatePicker)
-
-        private var timeSection: some View {
-            Section {
-                HStack {
-                    Text("At")
-                    Spacer()
-                    Text(timeLabel)
-                        .foregroundColor(showTimePicker ? .accentColor : .primary)
-                        .onTapGesture { showTimePicker.toggle() }
-                }
-                if showTimePicker {
-                    CustomTimeOnlyPicker(
-                        selection: Binding(
-                            get: { dateFromTime(state.draft.firesAt.first ?? .init(hour: 8, minute: 0)) },
-                            set: { state.draft.firesAt = [timeFromDate($0)] }
-                        ),
-                        // TODO: restore to 15 after live-testing firing. 1-min for fast test cycles.
-                        minuteInterval: 1
-                    )
-                    .frame(height: 160)
-                }
-            } header: {
-                Text("Time")
-            }
-            .listRowBackground(Color.chart)
-        }
-
-        private var timeLabel: String {
-            guard let t = state.draft.firesAt.first else { return "Tap to set" }
-            return String(format: "%02d:%02d", t.hour, t.minute)
-        }
-
-        // MARK: - Duration (collapsible wheels, 5-min)
+        // MARK: - Duration (moved up, below Profile)
 
         private var durationSection: some View {
             Section {
-                Picker("Mode", selection: $durationMode) {
+                Picker("Activation", selection: $durationMode) {
                     ForEach(DurationMode.allCases) { Text($0.rawValue).tag($0) }
                 }
-                .pickerStyle(.segmented)
+                .pickerStyle(.menu)
 
-                if durationMode == .hours {
+                if durationMode == .temporary {
                     HStack {
-                        Text("Duration")
+                        Text("Runs for")
                         Spacer()
                         Text(formatHM(hours: durationHours, minutes: durationMinutes))
                             .foregroundColor(showDurationPicker ? .accentColor : .primary)
@@ -263,17 +196,162 @@ extension ProfileScheduler {
                         }
                     }
                 }
-            } header: {
-                Text("Duration")
             } footer: {
                 Text(
-                    durationMode == .untilNext
+                    durationMode == .indefinite
                         ?
-                        "Runs until another schedule changes the profile, or until changed manually. Indefinite activations write the basal to pump."
-                        : "Timed activations do not touch the pump; the algorithm compensates via temp basals."
+                        "Becomes the new baseline. The basal profile is saved to the pump."
+                        :
+                        "Runs for the chosen duration, then reverts. The pump's saved basal is not changed."
                 )
             }
             .listRowBackground(Color.chart)
+        }
+
+        // MARK: - Repeat (single picker for all kinds)
+
+        private var repeatSection: some View {
+            Section {
+                Picker("Repeat", selection: $selectedKind) {
+                    ForEach(RepeatKind.allCases) { Text($0.rawValue).tag($0) }
+                }
+                .pickerStyle(.menu)
+            }
+            .listRowBackground(Color.chart)
+        }
+
+        // MARK: - Context-dependent config
+
+        @ViewBuilder private var configSection: some View {
+            switch selectedKind {
+            case .once:
+                onceConfigSection
+            case .daily,
+                 .weekdays,
+                 .weekends:
+                timeConfigSection
+            case .customWeekly:
+                weekdayChipsSection
+                timeConfigSection
+            case .customMonthly:
+                monthDayGridSection
+                timeConfigSection
+            }
+        }
+
+        private var onceConfigSection: some View {
+            Section {
+                DatePicker(
+                    "Activates at",
+                    selection: $onceDate,
+                    in: Date()...,
+                    displayedComponents: [.date, .hourAndMinute]
+                )
+            } footer: {
+                Text("Fires once at the chosen date and time, then the schedule is removed.")
+            }
+            .listRowBackground(Color.chart)
+        }
+
+        private var timeConfigSection: some View {
+            Section {
+                HStack {
+                    Text("Activates at")
+                    Spacer()
+                    Text(timeLabel)
+                        .foregroundColor(showTimePicker ? .accentColor : .primary)
+                        .onTapGesture { showTimePicker.toggle() }
+                }
+                if showTimePicker {
+                    CustomTimeOnlyPicker(
+                        selection: Binding(
+                            get: { dateFromTime(state.draft.firesAt.first ?? .init(hour: 8, minute: 0)) },
+                            set: { state.draft.firesAt = [timeFromDate($0)] }
+                        ),
+                        // TODO: restore to 15 after live-testing firing. 1-min for fast test cycles.
+                        minuteInterval: 1
+                    )
+                    .frame(height: 160)
+                }
+            }
+            .listRowBackground(Color.chart)
+        }
+
+        private var weekdayChipsSection: some View {
+            Section {
+                HStack(spacing: 6) {
+                    ForEach(orderedWeekdays, id: \.self) { day in
+                        WeekdayChip(day: day, isOn: weekdaySelection.contains(day)) {
+                            if weekdaySelection.contains(day) {
+                                weekdaySelection.remove(day)
+                            } else {
+                                weekdaySelection.insert(day)
+                            }
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 4)
+            } header: {
+                Text("Weekdays")
+            } footer: {
+                Text("Pick any combination. Example: M/W/F fires three times a week.")
+            }
+            .listRowBackground(Color.chart)
+        }
+
+        private var monthDayGridSection: some View {
+            Section {
+                let columns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 7)
+                LazyVGrid(columns: columns, spacing: 6) {
+                    ForEach(1 ... 31, id: \.self) { day in
+                        MonthDayCell(day: day, isOn: monthDaySelection.contains(day)) {
+                            if monthDaySelection.contains(day) {
+                                monthDaySelection.remove(day)
+                            } else {
+                                monthDaySelection.insert(day)
+                            }
+                        }
+                    }
+                }
+                .padding(.vertical, 6)
+            } header: {
+                Text("Days of month")
+            } footer: {
+                Text("Days that don't exist in a given month (e.g. 31 in February) are skipped.")
+            }
+            .listRowBackground(Color.chart)
+        }
+
+        // MARK: - Save (pill section at bottom, Trio pattern)
+
+        private var saveSection: some View {
+            let invalid = state.draft.validationError != nil
+            return Section {
+                Button {
+                    commitDraft()
+                    Task {
+                        if await state.saveDraft() { onDismiss() }
+                    }
+                } label: {
+                    Text("Save Schedule")
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
+                .disabled(invalid)
+                .tint(.white)
+            }
+            .listRowBackground(invalid ? Color(.systemGray4) : Color(.systemBlue))
+        }
+
+        // MARK: - Helpers
+
+        private var timeLabel: String {
+            guard let t = state.draft.firesAt.first else { return "Tap to set" }
+            return String(format: "%02d:%02d", t.hour, t.minute)
+        }
+
+        private var orderedWeekdays: [ProfileSchedule.Weekday] {
+            [.monday, .tuesday, .wednesday, .thursday, .friday, .saturday, .sunday]
         }
 
         private func formatHM(hours: Int, minutes: Int) -> String {
@@ -282,8 +360,6 @@ extension ProfileScheduler {
             if hours == 0 { return "\(minutes) min" }
             return "\(hours) hr \(minutes) min"
         }
-
-        // MARK: - Helpers
 
         private func dateFromTime(_ t: ProfileSchedule.TimeOfDay) -> Date {
             var comp = DateComponents()
@@ -297,37 +373,60 @@ extension ProfileScheduler {
             return .init(hour: comp.hour ?? 0, minute: comp.minute ?? 0)
         }
 
-        private static func nextHour() -> Date {
-            Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
+        private static func nextQuarterHour() -> Date {
+            let cal = Calendar.current
+            let now = Date()
+            guard let rounded = cal.nextDate(
+                after: now,
+                matching: DateComponents(minute: 0),
+                matchingPolicy: .nextTime
+            ) else { return now.addingTimeInterval(3600) }
+            return rounded
         }
     }
 
-    // MARK: - Presets
+    struct WeekdayChip: View {
+        let day: ProfileSchedule.Weekday
+        let isOn: Bool
+        let toggle: () -> Void
 
-    enum RepeatPreset: CaseIterable, Hashable {
-        case daily
-        case weekdays
-        case weekends
-
-        var title: String {
-            switch self {
-            case .daily: return "Every day"
-            case .weekdays: return "Every weekday"
-            case .weekends: return "Every weekend"
+        var body: some View {
+            Button(action: toggle) {
+                Text(ProfileScheduleSummary.singleLetter(day))
+                    .font(.subheadline.weight(.semibold))
+                    .frame(width: 36, height: 36)
+                    .background(
+                        Circle().fill(isOn ? Color.accentColor : Color.clear)
+                    )
+                    .overlay(
+                        Circle().strokeBorder(isOn ? Color.accentColor : Color.secondary, lineWidth: 1)
+                    )
+                    .foregroundColor(isOn ? .white : .primary)
             }
+            .buttonStyle(.plain)
         }
+    }
 
-        var rule: ProfileSchedule.Repeat {
-            switch self {
-            case .daily: return .weekdays(Set(ProfileSchedule.Weekday.allCases))
-            case .weekdays: return .weekdays([.monday, .tuesday, .wednesday, .thursday, .friday])
-            case .weekends: return .weekdays([.saturday, .sunday])
+    struct MonthDayCell: View {
+        let day: Int
+        let isOn: Bool
+        let toggle: () -> Void
+
+        var body: some View {
+            Button(action: toggle) {
+                Text("\(day)")
+                    .font(.subheadline)
+                    .frame(maxWidth: .infinity, minHeight: 34)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6).fill(isOn ? Color.accentColor : Color.clear)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .strokeBorder(isOn ? Color.accentColor : Color.secondary.opacity(0.4), lineWidth: 1)
+                    )
+                    .foregroundColor(isOn ? .white : .primary)
             }
-        }
-
-        func matches(_ r: ProfileSchedule.Repeat) -> Bool {
-            guard case let .weekdays(set) = r, case let .weekdays(mine) = rule else { return false }
-            return set == mine
+            .buttonStyle(.plain)
         }
     }
 }
