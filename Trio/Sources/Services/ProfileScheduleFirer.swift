@@ -1,30 +1,54 @@
 import CoreData
 import Foundation
+import Swinject
 
-/// Re-entrancy guard. `provider.activate` can take a couple of seconds on the pump-sync path, and
-/// the timer fires every 5s — without a flag a slow activation could overlap with the next tick's
-/// sweep and cause a double-fire.
-@MainActor private var scheduleFireSweepInFlight: Bool = false
+/// App-lifetime service that fires due `ProfileScheduleStored` rows. Registered in
+/// `ServiceAssembly` with container scope and resolved at startup so the sweep loop outlives any
+/// view. This replaces an earlier attempt that ran the check inside `Home.StateModel`'s 5-second
+/// timer — that only worked while Home was visible, so navigating into Settings halted firing.
+///
+/// The loop sleeps for `sweepInterval` between checks. A re-entrancy guard prevents overlap while
+/// `provider.activate()` is in flight on the pump-sync path.
+///
+/// **Prototype scope:** only timed (`.hours`) schedules fire automatically. Indefinite and
+/// `.untilNext` require user-confirmed pump save and are deferred to PR 5 (actionable local
+/// notifications). Once-schedules auto-disable after firing.
+final class ProfileScheduleFirer {
+    private let resolver: Resolver
+    private let coreDataStack = CoreDataStack.shared
 
-extension Home.StateModel {
-    /// Schedule-firing sweep, run on the 5-second `timerDate` tick. Mirrors
-    /// `checkExpiredProfileAndAutoRevert()`.
-    ///
-    /// For every enabled `ProfileScheduleStored`: if the next fire computed from the stored
-    /// `lastFiredAt` (or createdAt, if never fired) is in the past, activate the target profile for
-    /// the schedule's duration and stamp `lastFiredAt = occurrence`. Missed fires during sleep are
-    /// reconciled on the next tick — same mechanism as the expiry sweep.
-    ///
-    /// **Prototype scope:** only timed (`.hours`) schedules fire automatically. Indefinite and
-    /// `.untilNext` schedules require user confirmation at fire time (pump-save dialog) and are
-    /// skipped here; they will be handled in PR 5 via actionable local notifications.
-    @MainActor func checkDueSchedulesAndFire() async {
-        guard !scheduleFireSweepInFlight else { return }
-        guard let resolver = resolver else { return }
-        scheduleFireSweepInFlight = true
-        defer { scheduleFireSweepInFlight = false }
+    /// Time between sweeps. 15s gives tight reconciliation on foreground after a missed fire
+    /// without excess CPU / CoreData pressure while idle.
+    private let sweepInterval: TimeInterval = 15
 
-        let context = CoreDataStack.shared.newTaskContext()
+    private var loopTask: Task<Void, Never>?
+    private var sweepInFlight = false
+
+    init(resolver: Resolver) {
+        self.resolver = resolver
+        startLoop()
+    }
+
+    deinit {
+        loopTask?.cancel()
+    }
+
+    private func startLoop() {
+        loopTask = Task { [weak self] in
+            guard let self else { return }
+            while !Task.isCancelled {
+                await sweep()
+                try? await Task.sleep(nanoseconds: UInt64(sweepInterval * 1_000_000_000))
+            }
+        }
+    }
+
+    private func sweep() async {
+        guard !sweepInFlight else { return }
+        sweepInFlight = true
+        defer { sweepInFlight = false }
+
+        let context = coreDataStack.newTaskContext()
         let now = Date()
 
         struct DueFire {

@@ -85,6 +85,7 @@ extension Notification.Name {
             _ = resolver.resolve(LiveActivityManager.self)!
         }
         _ = resolver.resolve(IOBService.self)!
+        _ = resolver.resolve(ProfileScheduleFirer.self)!
         PickerSettingsProvider.shared.configure(resolver: resolver)
     }
 

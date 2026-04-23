@@ -29,5 +29,8 @@ final class ServiceAssembly: Assembly {
             }
         }
         container.register(IOBService.self) { r in BaseIOBService(resolver: r) }
+        container.register(ProfileScheduleFirer.self) { r in
+            ProfileScheduleFirer(resolver: r)
+        }.inObjectScope(.container)
     }
 }
