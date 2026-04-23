@@ -254,6 +254,25 @@
             <fetchIndexElement property="orderPosition" type="Binary" order="ascending"/>
         </fetchIndex>
     </entity>
+    <entity name="ProfileScheduleStored" representedClassName="ProfileScheduleStored" syncable="YES">
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="durationJSON" optional="YES" attributeType="Binary"/>
+        <attribute name="enabled" optional="YES" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="firesAtJSON" optional="YES" attributeType="Binary"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="profileID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="repeatRuleJSON" optional="YES" attributeType="Binary"/>
+        <fetchIndex name="byCreatedAt">
+            <fetchIndexElement property="createdAt" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="byEnabled">
+            <fetchIndexElement property="enabled" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="byProfileID">
+            <fetchIndexElement property="profileID" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
     <entity name="ProfileRunStored" representedClassName="ProfileRunStored" syncable="YES">
         <attribute name="endDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
