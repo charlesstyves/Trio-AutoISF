@@ -170,7 +170,7 @@ final class ProfileScheduleFirer {
         let content = UNMutableNotificationContent()
         content.title = String(localized: "Save basal of Profile \"\(fire.profileName)\" to pump?")
         content.body = String(
-            localized: "An indefinite activation of \"\(fire.profileName)\" updates the pump's scheduled basal to match this Profile. The pump's basal schedule will be overwritten."
+            localized: "An indefinite activation updates the pump's scheduled basal to match this profile. The pump's basal schedule will be overwritten."
         )
         content.sound = .default
         content.categoryIdentifier = NotificationCategoryIdentifier.scheduleActivation.rawValue

@@ -41,8 +41,18 @@ extension AdaptProfile {
                         let profileTargets = profile.therapy?.bgTargets
 
                         let prefsChanged: Bool = {
-                            guard let source = source, let sp = source.preferences else { return false }
-                            return profilePrefs != sp
+                            guard let source = source,
+                                  let sp = source.preferences,
+                                  var a = profilePrefs
+                            else { return false }
+                            // `Preferences.timestamp` is metadata (last-written marker) and drifts
+                            // independently of user-tunable fields; strip it before comparing so a
+                            // pure %-scaled copy that didn't touch any algorithm toggle doesn't
+                            // read as "Algorithm Settings tuned" just because of timestamp skew.
+                            var b = sp
+                            a.timestamp = nil
+                            b.timestamp = nil
+                            return a != b
                         }()
                         let targetsChanged: Bool = {
                             guard let source = source, let st = source.bgTargets else { return false }

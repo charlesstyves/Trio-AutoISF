@@ -179,7 +179,7 @@ enum ProfileScheduleSummary {
             return "Monthly on \(sorted.map(String.init).joined(separator: ", "))"
         case let .once(date):
             let f = DateFormatter()
-            f.dateFormat = "EEE, dd.MM.yyyy"
+            f.dateFormat = "EEE, dd.MM.yyyy HH:mm"
             return "Once on \(f.string(from: date))"
         }
     }

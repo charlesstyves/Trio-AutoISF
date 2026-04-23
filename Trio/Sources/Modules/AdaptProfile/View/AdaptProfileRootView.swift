@@ -143,9 +143,9 @@ extension AdaptProfile {
                 Button("Cancel", role: .cancel) {
                     Task { await state.skipScheduledActivation(request: req) }
                 }
-            } message: { req in
+            } message: { _ in
                 Text(
-                    "An indefinite activation of \"\(req.profileName)\" updates the pump's scheduled basal to match this Profile. The pump's basal schedule will be overwritten."
+                    "An indefinite activation updates the pump's scheduled basal to match this profile. The pump's basal schedule will be overwritten."
                 )
             }
             .safeAreaInset(edge: .bottom) {
