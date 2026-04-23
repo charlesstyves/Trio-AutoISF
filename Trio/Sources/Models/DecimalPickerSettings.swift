@@ -180,7 +180,7 @@ struct DecimalPickerSettings {
         value: 0.8,
         step: 0.05,
         min: 0.1,
-        max: 1,
+        max: 1.2,
         type: PickerSetting.PickerSettingType.factor
     )
     var autoISFhourlyChange = PickerSetting(
