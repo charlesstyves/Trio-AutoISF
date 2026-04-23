@@ -57,6 +57,7 @@ enum Screen: Identifiable, Hashable {
     case autoisfHistory
     case insulinConcentration
     case adaptProfile
+    case profileScheduler
 
     var id: Int { String(reflecting: self).hashValue }
 }
@@ -186,6 +187,8 @@ extension Screen {
             InsulinConcentration.RootView(resolver: resolver)
         case .adaptProfile:
             AdaptProfile.RootView(resolver: resolver)
+        case .profileScheduler:
+            ProfileScheduler.RootView(resolver: resolver)
         }
     }
 

@@ -63,6 +63,8 @@ extension AdaptProfile {
                 } else if !otherInactiveItems.isEmpty {
                     profilesSection
                 }
+
+                schedulesNavSection
             }
             .listSectionSpacing(10)
             .scrollContentBackground(.hidden)
@@ -293,6 +295,20 @@ extension AdaptProfile {
                     "Tap \"Add Profile\" to start from the currently active profile's settings. First pick a percentage to scale Basal, ISF and CR in one step, then fine-tune any individual setting in the editor that follows."
                 )
             }
+        }
+
+        private var schedulesNavSection: some View {
+            Section {
+                NavigationLink(destination: ProfileScheduler.RootView(resolver: resolver)) {
+                    HStack {
+                        Image(systemName: "calendar.badge.clock")
+                            .foregroundColor(.accentColor)
+                        Text("Schedules")
+                        Spacer()
+                    }
+                }
+            }
+            .listRowBackground(Color.chart)
         }
 
         private var profilesSection: some View {
