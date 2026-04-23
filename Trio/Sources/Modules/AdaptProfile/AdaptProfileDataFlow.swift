@@ -42,6 +42,48 @@ struct LoadedProfileContent {
     let appliedPercent: Decimal
 }
 
+/// Request pushed to `AdaptProfile.StateModel` when the user taps the body of a
+/// schedule-activation notification. The root view reacts by presenting a Save-to-pump / Skip
+/// dialog for the target profile.
+struct ScheduledActivationRequest: Equatable, Identifiable {
+    var id: UUID { scheduleID }
+    let scheduleID: UUID
+    let profileID: UUID
+    let profileName: String
+    let occurrence: Date
+}
+
+/// Process-scoped mailbox that decouples the notification-tap (handled in
+/// `UserNotificationsManager`) from `AdaptProfile.StateModel.subscribe()`: the observer isn't
+/// registered until the view mounts, which happens *after* the tap handler fires, so a direct
+/// Foundation notification post would be lost. The StateModel drains this on subscribe and on
+/// each refresh.
+enum ScheduledActivationMailbox {
+    private static let lock = NSLock()
+    private static var pending: PendingTap?
+
+    struct PendingTap {
+        let scheduleID: UUID
+        let profileID: UUID
+        let occurrence: Date
+    }
+
+    static func enqueue(scheduleID: UUID, profileID: UUID, occurrence: Date) {
+        lock.lock()
+        defer { lock.unlock() }
+        pending = PendingTap(scheduleID: scheduleID, profileID: profileID, occurrence: occurrence)
+    }
+
+    /// Returns and clears the pending tap (one-shot).
+    static func drain() -> PendingTap? {
+        lock.lock()
+        defer { lock.unlock() }
+        let p = pending
+        pending = nil
+        return p
+    }
+}
+
 /// One upcoming schedule fire shown in the Profiles root. Read-only — tap navigates to the
 /// ProfileScheduler management screen; swipe-disable flips `enabled` via that provider. Skip-next
 /// is deferred to PR 4 when firing lands (nothing to skip until then).
@@ -73,6 +115,11 @@ protocol AdaptProfileProvider: Provider {
 
     /// Disable a schedule from the AdaptProfile root (swipe action).
     func disableSchedule(id: UUID) async
+
+    /// Finalize a scheduled indefinite activation (Flow B) after the user tapped Save-to-pump on
+    /// the notification. Stamps `lastFiredAt = occurrence` and clears `pendingOccurrence` on the
+    /// schedule row so the firer doesn't re-post the notification on the next sweep.
+    func markScheduleActivated(scheduleID: UUID, occurrence: Date) async
 
     func rename(id: UUID, to newName: String) async
     func delete(id: UUID) async

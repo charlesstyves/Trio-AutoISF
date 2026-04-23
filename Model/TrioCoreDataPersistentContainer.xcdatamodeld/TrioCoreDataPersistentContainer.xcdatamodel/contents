@@ -263,6 +263,7 @@
         <attribute name="lastFiredAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="orderPosition" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="pendingOccurrence" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="profileID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="repeatRuleJSON" optional="YES" attributeType="Binary"/>
         <fetchIndex name="byCreatedAt">

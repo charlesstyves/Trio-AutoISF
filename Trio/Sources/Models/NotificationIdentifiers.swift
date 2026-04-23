@@ -3,6 +3,22 @@ import UserNotifications
 
 enum NotificationCategoryIdentifier: String {
     case trioAlert = "Trio.alert"
+    /// Actionable notification posted when an indefinite `ProfileScheduleStored` fires — carries
+    /// `Review & save to pump` and `Skip` actions. Resolved by `UserNotificationsManager`.
+    case scheduleActivation = "Trio.schedule.activation"
+}
+
+/// Payload keys used on schedule-activation notifications so the response handler can locate the
+/// corresponding `ProfileScheduleStored` row + target `ProfileStored`.
+enum ScheduleNotificationUserInfoKey {
+    static let scheduleID = "scheduleID"
+    static let profileID = "profileID"
+    static let occurrenceEpoch = "occurrenceEpoch"
+}
+
+enum ScheduleNotificationAction: String {
+    case confirm = "Trio.schedule.confirm"
+    case skip = "Trio.schedule.skip"
 }
 
 enum NotificationResponseAction: String, CaseIterable {
@@ -57,6 +73,30 @@ enum NotificationCategoryFactory {
         return UNNotificationCategory(
             identifier: NotificationCategoryIdentifier.trioAlert.rawValue,
             actions: snoozeActions,
+            intentIdentifiers: [],
+            options: []
+        )
+    }
+
+    /// Actionable category for indefinite-profile schedule fires. Tapping the body brings the app
+    /// to foreground without a specific action; the two action buttons are the explicit paths.
+    static func createScheduleActivationCategory() -> UNNotificationCategory {
+        let confirm = UNNotificationAction(
+            identifier: ScheduleNotificationAction.confirm.rawValue,
+            title: String(
+                localized: "Save to pump",
+                comment: "Schedule activation notification: save-basal-to-pump action"
+            ),
+            options: [.foreground]
+        )
+        let skip = UNNotificationAction(
+            identifier: ScheduleNotificationAction.skip.rawValue,
+            title: String(localized: "Skip", comment: "Schedule activation notification: skip button"),
+            options: [.destructive]
+        )
+        return UNNotificationCategory(
+            identifier: NotificationCategoryIdentifier.scheduleActivation.rawValue,
+            actions: [confirm, skip],
             intentIdentifiers: [],
             options: []
         )
