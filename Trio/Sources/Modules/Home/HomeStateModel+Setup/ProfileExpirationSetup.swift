@@ -61,6 +61,10 @@ extension Home.StateModel {
                 run.startDate = startedAt
                 run.endDate = Date()
                 run.isUploadedToNS = false
+                run.wasIndefinite = false
+                let tuned = AdaptProfile.Provider.computeTunedFlags(for: profile, in: context)
+                run.preferencesTuned = tuned.prefs
+                run.targetsTuned = tuned.targets
                 run.profile = profile
             }
             profile.isActive = false

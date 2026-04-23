@@ -189,6 +189,23 @@ extension History {
                                 }
                             }
                             Divider().frame(height: textHeight + 4).background(Color.secondary)
+                            HStack {
+                                Text(History.Mode.profiles.name)
+                                    .font(.subheadline)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.5)
+                                    .layoutPriority(1)
+                            }
+                            .padding(.vertical, 6)
+                            .padding(.horizontal, 8)
+                            .background(state.mode == .profiles ? Color.loopGray.opacity(0.4) : Color.clear)
+                            .cornerRadius(8)
+                            .onTapGesture {
+                                withAnimation {
+                                    state.mode = .profiles
+                                }
+                            }
+                            Divider().frame(height: textHeight + 4).background(Color.secondary)
                             HStack(spacing: 2) {
                                 Text("autoISF")
                                     .font(.subheadline)
@@ -231,6 +248,7 @@ extension History {
                         case .glucose: glucoseList
                         case .meals: mealsList
                         case .adjustments: adjustmentsList
+                        case .profiles: profilesList
                         }
                     }.scrollContentBackground(.hidden)
                         .background(appState.trioBackgroundColor(for: colorScheme))
@@ -556,6 +574,77 @@ extension History {
             .listRowBackground(Color.chart)
         }
 
+        private var profilesList: some View {
+            List {
+                HStack {
+                    Text("Profile").foregroundStyle(.secondary)
+                    Spacer()
+                }
+                if !profileRunStored.isEmpty {
+                    ForEach(profileRunStored.map(profileAdjustmentItem)) { item in
+                        adjustmentView(for: item)
+                    }
+                } else {
+                    ContentUnavailableView(
+                        String(localized: "No data."),
+                        systemImage: "person.crop.circle.badge.clock"
+                    )
+                }
+            }
+            .listRowBackground(Color.chart)
+        }
+
+        private func profileAdjustmentItem(_ run: ProfileRunStored) -> AdjustmentItem {
+            let summary = ProfileSummaryLabel.strings(
+                appliedPercent: run.profile?.appliedPercent?.decimalValue,
+                dailyBasalRate: run.profile?.therapy?.basalProfile.totalDailyBasal,
+                tuning: .init(preferencesTuned: run.preferencesTuned, targetsTuned: run.targetsTuned)
+            )
+            return AdjustmentItem(
+                id: run.objectID,
+                name: run.name ?? String(localized: "Profile"),
+                startDate: run.startDate ?? Date(),
+                endDate: run.endDate ?? Date(),
+                target: nil,
+                type: .profile,
+                wasIndefinite: run.wasIndefinite,
+                profileSummary: summary
+            )
+        }
+
+        @ViewBuilder private func adjustmentIcon(for item: AdjustmentItem) -> some View {
+            switch item.type {
+            case .override:
+                Image(systemName: "clock.arrow.2.circlepath")
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(
+                        Color.primary,
+                        Color(red: 0.6235294118, green: 0.4235294118, blue: 0.9803921569)
+                    )
+            case .tempTarget:
+                Image(systemName: "arrow.up.circle.badge.clock")
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(Color.primary, Color.loopGreen)
+            case .profile:
+                if item.wasIndefinite {
+                    Image(systemName: "person.2", variableValue: 0.58)
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(Color.blue, Color.white, Color.white)
+                        .font(.system(size: 10, weight: .regular))
+                        .frame(width: 17, height: 17)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 3)
+                                .stroke(Color.blue, lineWidth: 1.3)
+                        )
+                } else {
+                    Image(systemName: "person.2.arrow.trianglehead.counterclockwise")
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(Color.primary, Color.blue)
+                        .font(.system(size: 18))
+                }
+            }
+        }
+
         private func formatAdjustmentDuration(from start: Date, to end: Date) -> String {
             let totalSeconds = max(0, Int(end.timeIntervalSince(start)))
             let hours = totalSeconds / 3600
@@ -589,18 +678,7 @@ extension History {
                 )
             }
 
-            let profiles = profileRunStored.map { profileRun -> AdjustmentItem in
-                AdjustmentItem(
-                    id: profileRun.objectID,
-                    name: profileRun.name ?? String(localized: "Profile"),
-                    startDate: profileRun.startDate ?? Date(),
-                    endDate: profileRun.endDate ?? Date(),
-                    target: nil,
-                    type: .profile
-                )
-            }
-
-            let combined = overrides + tempTargets + profiles
+            let combined = overrides + tempTargets
             return combined.sorted {
                 if $0.startDate == $1.startDate {
                     return $0.endDate > $1.endDate
@@ -615,6 +693,8 @@ extension History {
             let endDate: Date
             let target: Decimal?
             let type: AdjustmentType
+            var wasIndefinite: Bool = false
+            var profileSummary: [String] = []
         }
 
         private enum AdjustmentType {
@@ -653,30 +733,17 @@ extension History {
 
             let targetLabel: String? = item.target.map { "\($0) \(state.units.rawValue)" }
 
-            let labels: [String] = [
-                targetLabel,
-                durationString,
-                formattedDates
-            ].compactMap { $0 }.filter { !$0.isEmpty }
+            let labels: [String] = ([targetLabel].compactMap { $0 } + item.profileSummary + [durationString, formattedDates])
+                .filter { !$0.isEmpty }
 
-            let iconPrimary: Color = item.type == .profile ? Color.teal : Color.primary
-            let iconSecondary: Color = {
-                switch item.type {
-                case .override: return Color(red: 0.6235294118, green: 0.4235294118, blue: 0.9803921569)
-                case .tempTarget: return Color.loopGreen
-                case .profile: return Color.teal
-                }
-            }()
             let iconRotation: Double = item.type == .tempTarget ? 90 : 0
 
             ZStack(alignment: .trailing) {
                 HStack {
                     VStack(alignment: .leading) {
                         HStack {
-                            Image(systemName: item.type.symbolName)
+                            adjustmentIcon(for: item)
                                 .rotationEffect(.degrees(iconRotation))
-                                .symbolRenderingMode(.palette)
-                                .foregroundStyle(iconPrimary, iconSecondary)
                             Text(item.name)
                                 .font(.headline)
                             Spacer()

@@ -504,6 +504,7 @@
 		ADA10041ADA10041ADA10041 /* ProfileRunStored+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10040ADA10040ADA10040 /* ProfileRunStored+CoreDataClass.swift */; };
 		ADA10043ADA10043ADA10043 /* ProfileRunStored+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10042ADA10042ADA10042 /* ProfileRunStored+CoreDataProperties.swift */; };
 		ADA10045ADA10045ADA10045 /* ProfileRunStored+helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10044ADA10044ADA10044 /* ProfileRunStored+helper.swift */; };
+		ADA10047ADA10047ADA10047 /* ProfileSummaryLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10046ADA10046ADA10046 /* ProfileSummaryLabel.swift */; };
 		ADA10008ADA10008ADA10008 /* SettingsScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10007ADA10007ADA10007 /* SettingsScope.swift */; };
 		ADA1000AADA1000AADA1000A /* ActiveProfileMirror.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10009ADA10009ADA10009 /* ActiveProfileMirror.swift */; };
 		ADA1000CADA1000CADA1000C /* ProfileSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA1000BADA1000BADA1000B /* ProfileSeeder.swift */; };
@@ -1524,6 +1525,7 @@
 		ADA10040ADA10040ADA10040 /* ProfileRunStored+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProfileRunStored+CoreDataClass.swift"; sourceTree = "<group>"; };
 		ADA10042ADA10042ADA10042 /* ProfileRunStored+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProfileRunStored+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		ADA10044ADA10044ADA10044 /* ProfileRunStored+helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProfileRunStored+helper.swift"; sourceTree = "<group>"; };
+		ADA10046ADA10046ADA10046 /* ProfileSummaryLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSummaryLabel.swift; sourceTree = "<group>"; };
 		ADA10007ADA10007ADA10007 /* SettingsScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScope.swift; sourceTree = "<group>"; };
 		ADA10009ADA10009ADA10009 /* ActiveProfileMirror.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveProfileMirror.swift; sourceTree = "<group>"; };
 		ADA1000BADA1000BADA1000B /* ProfileSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSeeder.swift; sourceTree = "<group>"; };
@@ -3572,6 +3574,7 @@
 				ADA1000EADA1000EADA1000E /* AdaptProfileProvider.swift */,
 				ADA1000FADA1000FADA1000F /* AdaptProfileStateModel.swift */,
 				ADA1001DADA1001DADA1001D /* DraftEditorStateModel.swift */,
+				ADA10046ADA10046ADA10046 /* ProfileSummaryLabel.swift */,
 				ADA10016ADA10016ADA10016 /* View */,
 			);
 			path = AdaptProfile;
@@ -5698,6 +5701,7 @@
 				ADA10041ADA10041ADA10041 /* ProfileRunStored+CoreDataClass.swift in Sources */,
 				ADA10043ADA10043ADA10043 /* ProfileRunStored+CoreDataProperties.swift in Sources */,
 				ADA10045ADA10045ADA10045 /* ProfileRunStored+helper.swift in Sources */,
+				ADA10047ADA10047ADA10047 /* ProfileSummaryLabel.swift in Sources */,
 				49B21BF52D7F222600D0B6C3 /* DetailPopupView.swift in Sources */,
 				DD9ECB742CA9A0C300AA7C45 /* RemoteControlConfig.swift in Sources */,
 				DD4A00212DAEEED800AB7387 /* OnboardingView+AlgorithmUtil.swift in Sources */,

@@ -11,6 +11,9 @@ public extension ProfileRunStored {
     @NSManaged var isUploadedToNS: Bool
     @NSManaged var name: String?
     @NSManaged var startDate: Date?
+    @NSManaged var wasIndefinite: Bool
+    @NSManaged var preferencesTuned: Bool
+    @NSManaged var targetsTuned: Bool
     @NSManaged var profile: ProfileStored?
 }
 

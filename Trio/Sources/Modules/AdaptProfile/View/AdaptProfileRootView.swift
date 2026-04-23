@@ -391,22 +391,16 @@ extension AdaptProfile {
         private func labels(for item: AdaptProfileListItem) -> [String] {
             var out: [String] = []
             if let source = item.sourceProfileName {
-                let percent = item.appliedPercent.formatted(.number.precision(.fractionLength(0)))
-                out.append("\(source) · \(percent) %")
+                out.append(source)
             }
-            switch (item.preferencesChangedFromSource, item.targetsChangedFromSource) {
-            case (true, true): out.append(String(localized: "Algo & Targets tuned"))
-            case (true, false): out.append(String(localized: "Algorithm Settings tuned"))
-            case (false, true): out.append(String(localized: "Glucose Targets tuned"))
-            case (false, false): break
-            }
-            // Add total daily basal
-            let formatter = NumberFormatter()
-            formatter.numberStyle = .decimal
-            formatter.maximumFractionDigits = 2
-            if let totalStr = formatter.string(from: item.totalDailyBasal as NSNumber) {
-                out.append("Total BR \(totalStr) U/day")
-            }
+            out += ProfileSummaryLabel.strings(
+                appliedPercent: item.appliedPercent,
+                dailyBasalRate: item.totalDailyBasal,
+                tuning: .init(
+                    preferencesTuned: item.preferencesChangedFromSource,
+                    targetsTuned: item.targetsChangedFromSource
+                )
+            )
             return out
         }
 

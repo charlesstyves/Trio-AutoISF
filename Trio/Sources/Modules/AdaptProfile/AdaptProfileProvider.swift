@@ -219,6 +219,10 @@ extension AdaptProfile {
                             run.startDate = startedAt
                             run.endDate = now
                             run.isUploadedToNS = false
+                            run.wasIndefinite = p.expiresAt == nil
+                            let tuned = Self.computeTunedFlags(for: p, in: viewContext)
+                            run.preferencesTuned = tuned.prefs
+                            run.targetsTuned = tuned.targets
                             run.profile = p
                         }
                         p.isActive = false
@@ -364,6 +368,27 @@ extension AdaptProfile {
                     return nil
                 }
             }
+        }
+
+        /// Snapshot whether this profile's preferences / glucose targets diverge from its
+        /// source profile — used to freeze the "Algo / Targets tuned" indicator on run-history
+        /// rows so later edits to the source don't retroactively change how past runs read.
+        static func computeTunedFlags(
+            for profile: ProfileStored,
+            in context: NSManagedObjectContext
+        ) -> (prefs: Bool, targets: Bool) {
+            guard let sourceID = profile.sourceProfileID else { return (false, false) }
+            let req = ProfileStored.fetch(.profileByID(sourceID), fetchLimit: 1)
+            guard let source = try? context.fetch(req).first else { return (false, false) }
+            let prefs: Bool = {
+                guard let sp = source.preferences, let pp = profile.preferences else { return false }
+                return pp != sp
+            }()
+            let targets: Bool = {
+                guard let st = source.therapy?.bgTargets, let pt = profile.therapy?.bgTargets else { return false }
+                return pt.targets != st.targets
+            }()
+            return (prefs, targets)
         }
     }
 }

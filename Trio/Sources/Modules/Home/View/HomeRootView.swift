@@ -787,21 +787,37 @@ extension Home {
         /// HomeStateModel — so the countdown stays live without an ad-hoc timer.
         /// Same mechanism PumpView / LoopView use for their remaining-time displays.
         private func profileSubtitle(_ profile: ProfileStored, now: Date) -> String {
-            let formatter = NumberFormatter()
-            formatter.numberStyle = .decimal
-            formatter.maximumFractionDigits = 2
-            let totalBasal = profile.therapy?.totalDailyBasal ?? 0
-            let totalStr = formatter.string(from: totalBasal as NSNumber) ?? "\(totalBasal)"
-
-            let basalText = "Total BR \(totalStr) U/day"
-
+            var parts: [String] = []
             if let expires = profile.expiresAt {
                 let minutesLeft = Int(expires.timeIntervalSince(now) / 60)
                 let countdown = minutesLeft > 0 ? formatHrMin(minutesLeft) : String(localized: "Expiring")
-                return "\(countdown) · \(basalText)"
-            } else {
-                return basalText
+                parts.append(countdown)
             }
+            parts += ProfileSummaryLabel.strings(
+                appliedPercent: profile.appliedPercent?.decimalValue,
+                dailyBasalRate: profile.therapy?.basalProfile.totalDailyBasal,
+                tuning: profileTuning(for: profile)
+            )
+            return parts.joined(separator: " · ")
+        }
+
+        /// Compares the profile's current prefs + glucose targets against its source to build
+        /// the standard tuning badge. Returns `.none` if no source linkage exists.
+        private func profileTuning(for profile: ProfileStored) -> ProfileSummaryLabel.Tuning {
+            guard let sourceID = profile.sourceProfileID,
+                  let context = profile.managedObjectContext
+            else { return .none }
+            let req = ProfileStored.fetch(.profileByID(sourceID), fetchLimit: 1)
+            guard let source = try? context.fetch(req).first else { return .none }
+            let prefs: Bool = {
+                guard let sp = source.preferences, let pp = profile.preferences else { return false }
+                return pp != sp
+            }()
+            let targets: Bool = {
+                guard let st = source.therapy?.bgTargets, let pt = profile.therapy?.bgTargets else { return false }
+                return pt.targets != st.targets
+            }()
+            return ProfileSummaryLabel.Tuning(preferencesTuned: prefs, targetsTuned: targets)
         }
 
         @ViewBuilder func adjustmentsRevertProfileView() -> some View {
