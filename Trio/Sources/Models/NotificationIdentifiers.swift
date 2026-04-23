@@ -91,8 +91,8 @@ enum NotificationCategoryFactory {
         )
         let skip = UNNotificationAction(
             identifier: ScheduleNotificationAction.skip.rawValue,
-            title: String(localized: "Skip", comment: "Schedule activation notification: skip button"),
-            options: [.destructive]
+            title: String(localized: "Cancel", comment: "Schedule activation notification: cancel / dismiss action"),
+            options: []
         )
         return UNNotificationCategory(
             identifier: NotificationCategoryIdentifier.scheduleActivation.rawValue,

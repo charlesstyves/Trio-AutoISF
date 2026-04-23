@@ -130,7 +130,7 @@ extension AdaptProfile {
                 )
             }
             .alert(
-                "Activate Profile \"\(state.pendingScheduledActivation?.profileName ?? "")\" now?",
+                "Save basal of Profile \"\(state.pendingScheduledActivation?.profileName ?? "")\" to pump?",
                 isPresented: Binding(
                     get: { state.pendingScheduledActivation != nil },
                     set: { if !$0 { state.pendingScheduledActivation = nil } }
@@ -140,15 +140,12 @@ extension AdaptProfile {
                 Button("Save to pump") {
                     Task { await state.confirmScheduledActivation(request: req) }
                 }
-                Button("Skip this occurrence", role: .destructive) {
+                Button("Cancel", role: .cancel) {
                     Task { await state.skipScheduledActivation(request: req) }
-                }
-                Button("Decide later", role: .cancel) {
-                    state.pendingScheduledActivation = nil
                 }
             } message: { req in
                 Text(
-                    "A Profile is a named snapshot of your full therapy and algorithm setup — Basal Rate, ISF, CR, BG Targets, and Algorithm Settings. Activating \"\(req.profileName)\" as an Indefinite Profile writes its Basal Schedule to the pump, and applies everything else immediately. It stays active until another schedule or manual change replaces it."
+                    "An indefinite activation of \"\(req.profileName)\" updates the pump's scheduled basal to match this Profile. The pump's basal schedule will be overwritten."
                 )
             }
             .safeAreaInset(edge: .bottom) {

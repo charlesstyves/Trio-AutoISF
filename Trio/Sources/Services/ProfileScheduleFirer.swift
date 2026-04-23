@@ -168,9 +168,9 @@ final class ProfileScheduleFirer {
 
     private func postActivationNotification(for fire: DueFire) {
         let content = UNMutableNotificationContent()
-        content.title = String(localized: "Activate Profile \"\(fire.profileName)\" now?")
+        content.title = String(localized: "Save basal of Profile \"\(fire.profileName)\" to pump?")
         content.body = String(
-            localized: "Writes its Basal Schedule to the pump, and applies its ISF, CR, Glucose Targets, and Algorithm Settings immediately. Tap Save to pump to activate, or Skip to dismiss this occurrence."
+            localized: "An indefinite activation of \"\(fire.profileName)\" updates the pump's scheduled basal to match this Profile. The pump's basal schedule will be overwritten."
         )
         content.sound = .default
         content.categoryIdentifier = NotificationCategoryIdentifier.scheduleActivation.rawValue
