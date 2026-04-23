@@ -1,6 +1,7 @@
 import CoreData
 import Foundation
 import Swinject
+import UserNotifications
 
 /// App-lifetime service that fires due `ProfileScheduleStored` rows. Registered in
 /// `ServiceAssembly` with container scope and resolved at startup so the sweep loop outlives any
@@ -55,16 +56,14 @@ final class ProfileScheduleFirer {
         let now = Date()
         debug(.coreData, "ProfileScheduleFirer: sweep tick @ \(now)")
 
-        struct DueFire {
-            let scheduleID: UUID
-            let profileID: UUID
-            let occurrence: Date
-            let duration: ProfileSchedule.Duration
-            let isOnce: Bool
-            let objectID: NSManagedObjectID
-        }
-
         let due: [DueFire] = await context.perform {
+            // Pre-resolve profile names so indefinite-fire notifications can reference the
+            // target profile by name rather than a bare UUID.
+            let profiles = (try? context.fetch(ProfileStored.fetchRequest())) ?? []
+            let nameByID: [UUID: String] = profiles.reduce(into: [:]) { dict, p in
+                if let id = p.id { dict[id] = p.name ?? "Unnamed" }
+            }
+
             let request = ProfileScheduleStored.fetch(.enabledSchedule)
             let rows = (try? context.fetch(request)) ?? []
             debug(.coreData, "ProfileScheduleFirer: \(rows.count) enabled schedules in store")
@@ -91,9 +90,11 @@ final class ProfileScheduleFirer {
                 return DueFire(
                     scheduleID: sid,
                     profileID: pid,
+                    profileName: nameByID[pid] ?? "Unnamed",
                     occurrence: next,
                     duration: duration,
                     isOnce: isOnce,
+                    pendingOccurrence: row.pendingOccurrence,
                     objectID: row.objectID
                 )
             }
@@ -118,10 +119,23 @@ final class ProfileScheduleFirer {
                 if outcome != .success { continue }
             case .indefinite,
                  .untilNext:
-                debug(
-                    .coreData,
-                    "Schedule \(fire.scheduleID) indefinite fire skipped — Flow B not yet implemented"
-                )
+                // Flow B: indefinite activations need user-confirmed pump save. Post an actionable
+                // notification the first time we see this occurrence; skip re-posting on subsequent
+                // sweeps until the user confirms, skips, or a new occurrence comes due.
+                if fire.pendingOccurrence == fire.occurrence {
+                    debug(
+                        .coreData,
+                        "ProfileScheduleFirer: \(fire.scheduleID) indefinite already pending user action"
+                    )
+                    continue
+                }
+                postActivationNotification(for: fire)
+                await context.perform {
+                    guard let row = try? context.existingObject(with: fire.objectID)
+                        as? ProfileScheduleStored else { return }
+                    row.pendingOccurrence = fire.occurrence
+                    try? context.save()
+                }
                 continue
             }
 
@@ -135,6 +149,7 @@ final class ProfileScheduleFirer {
                     debug(.coreData, "ProfileScheduleFirer: deleted one-off \(fire.scheduleID) after fire")
                 } else {
                     row.lastFiredAt = fire.occurrence
+                    row.pendingOccurrence = nil
                     debug(.coreData, "ProfileScheduleFirer: stamped lastFiredAt=\(fire.occurrence) on \(fire.scheduleID)")
                 }
                 try? context.save()
@@ -147,5 +162,58 @@ final class ProfileScheduleFirer {
         await MainActor.run {
             Foundation.NotificationCenter.default.post(name: .didUpdateProfileSchedules, object: nil)
         }
+    }
+
+    // MARK: - Flow B (indefinite) notification
+
+    private func postActivationNotification(for fire: DueFire) {
+        let content = UNMutableNotificationContent()
+        content.title = String(localized: "Activate Profile \"\(fire.profileName)\" now?")
+        content.body = String(
+            localized: "Writes its Basal Schedule to the pump, and applies its ISF, CR, Glucose Targets, and Algorithm Settings immediately. Tap Save to pump to activate, or Skip to dismiss this occurrence."
+        )
+        content.sound = .default
+        content.categoryIdentifier = NotificationCategoryIdentifier.scheduleActivation.rawValue
+        content.userInfo = [
+            ScheduleNotificationUserInfoKey.scheduleID: fire.scheduleID.uuidString,
+            ScheduleNotificationUserInfoKey.profileID: fire.profileID.uuidString,
+            ScheduleNotificationUserInfoKey.occurrenceEpoch: fire.occurrence.timeIntervalSince1970
+        ]
+        let request = UNNotificationRequest(
+            identifier: "Trio.schedule.\(fire.scheduleID.uuidString).\(Int(fire.occurrence.timeIntervalSince1970))",
+            content: content,
+            trigger: nil // fire immediately
+        )
+        let center = UNUserNotificationCenter.current()
+        center.getNotificationSettings { settings in
+            debug(
+                .service,
+                "ProfileScheduleFirer: posting notification — authStatus=\(settings.authorizationStatus.rawValue) alertSetting=\(settings.alertSetting.rawValue)"
+            )
+            center.add(request) { error in
+                if let error = error {
+                    debug(
+                        .service,
+                        "ProfileScheduleFirer: failed to post activation notification: \(error)"
+                    )
+                } else {
+                    debug(
+                        .service,
+                        "ProfileScheduleFirer: activation notification queued (id=\(request.identifier))"
+                    )
+                }
+            }
+        }
+    }
+
+    private struct DueFire {
+        let scheduleID: UUID
+        let profileID: UUID
+        let profileName: String
+        let occurrence: Date
+        let duration: ProfileSchedule.Duration
+        let isOnce: Bool
+        let pendingOccurrence: Date?
+        let objectID: NSManagedObjectID
     }
 }
