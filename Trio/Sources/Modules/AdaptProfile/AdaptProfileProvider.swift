@@ -197,19 +197,24 @@ extension AdaptProfile {
                 }
             }
 
-            // Step 4: flip Core Data. Deactivate any currently active profile (should be exactly
-            // one, but iterate defensively) and activate the target.
-            let flipped: Bool = await context.perform { () -> Bool in
+            // Step 4: flip Core Data on the VIEW context so SwiftUI `@FetchRequest` consumers
+            // (Home's active-profile banner) pick up the change immediately. A background
+            // context save would require a subsequent merge — viewContext has
+            // `automaticallyMergesChangesFromParent = false` so @FetchRequest would stay stale
+            // until persistent-history notifications caught up, which is why the Home banner
+            // showed the previous profile until the next loop tick.
+            let viewContext = coreDataStack.persistentContainer.viewContext
+            let flipped: Bool = await viewContext.perform { () -> Bool in
                 do {
                     let activeReq = ProfileStored.fetch(.activeProfile)
-                    let actives = try context.fetch(activeReq)
+                    let actives = try viewContext.fetch(activeReq)
                     for p in actives where p.id != id {
                         p.isActive = false
                         p.activatedAt = nil
                         p.expiresAt = nil
                     }
                     let targetReq = ProfileStored.fetch(.profileByID(id), fetchLimit: 1)
-                    guard let target = try context.fetch(targetReq).first else { return false }
+                    guard let target = try viewContext.fetch(targetReq).first else { return false }
                     target.isActive = true
                     target.activatedAt = Date()
                     target.expiresAt = durationMinutes.map { Date().addingTimeInterval(TimeInterval($0) * 60) }
@@ -224,7 +229,7 @@ extension AdaptProfile {
                     } else {
                         target.previousProfileID = loaded.oldAnchorID ?? loaded.oldActiveID
                     }
-                    try context.save()
+                    try viewContext.save()
                     return true
                 } catch {
                     debug(.coreData, "AdaptProfileProvider.activate CoreData flip failed: \(error)")
