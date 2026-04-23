@@ -61,6 +61,13 @@ extension History {
             animation: .bouncy
         ) var tempTargetRunStored: FetchedResults<TempTargetRunStored>
 
+        @FetchRequest(
+            entity: ProfileRunStored.entity(),
+            sortDescriptors: [NSSortDescriptor(key: "startDate", ascending: false)],
+            predicate: NSPredicate.profileRunStoredFromOneDayAgo,
+            animation: .bouncy
+        ) var profileRunStored: FetchedResults<ProfileRunStored>
+
         private func resolvedType(for event: PumpEventStored) -> String {
             if let bolus = event.bolus {
                 if bolus.isSMB {
@@ -549,6 +556,16 @@ extension History {
             .listRowBackground(Color.chart)
         }
 
+        private func formatAdjustmentDuration(from start: Date, to end: Date) -> String {
+            let totalSeconds = max(0, Int(end.timeIntervalSince(start)))
+            let hours = totalSeconds / 3600
+            let minutes = (totalSeconds % 3600) / 60
+            if hours > 0 {
+                return minutes > 0 ? "\(hours)h \(minutes)m" : "\(hours)h"
+            }
+            return minutes > 0 ? "\(minutes)m" : "<1m"
+        }
+
         private var combinedAdjustments: [AdjustmentItem] {
             let overrides = overrideRunStored.map { override -> AdjustmentItem in
                 AdjustmentItem(
@@ -572,7 +589,18 @@ extension History {
                 )
             }
 
-            let combined = overrides + tempTargets
+            let profiles = profileRunStored.map { profileRun -> AdjustmentItem in
+                AdjustmentItem(
+                    id: profileRun.objectID,
+                    name: profileRun.name ?? String(localized: "Profile"),
+                    startDate: profileRun.startDate ?? Date(),
+                    endDate: profileRun.endDate ?? Date(),
+                    target: nil,
+                    type: .profile
+                )
+            }
+
+            let combined = overrides + tempTargets + profiles
             return combined.sorted {
                 if $0.startDate == $1.startDate {
                     return $0.endDate > $1.endDate
@@ -592,6 +620,7 @@ extension History {
         private enum AdjustmentType {
             case override
             case tempTarget
+            case profile
 
             var symbolName: String {
                 switch self {
@@ -599,6 +628,8 @@ extension History {
                     return "clock.arrow.2.circlepath"
                 case .tempTarget:
                     return "arrow.up.circle.badge.clock"
+                case .profile:
+                    return "person.crop.circle.badge.clock"
                 }
             }
 
@@ -608,6 +639,8 @@ extension History {
                     return .orange
                 case .tempTarget:
                     return .blue
+                case .profile:
+                    return .teal
                 }
             }
         }
@@ -616,25 +649,34 @@ extension History {
             let formattedDates =
                 "\(Formatter.timeFormatter.string(from: item.startDate)) - \(Formatter.timeFormatter.string(from: item.endDate))"
 
+            let durationString = formatAdjustmentDuration(from: item.startDate, to: item.endDate)
+
+            let targetLabel: String? = item.target.map { "\($0) \(state.units.rawValue)" }
+
             let labels: [String] = [
-                "\(item.target) \(state.units.rawValue)",
+                targetLabel,
+                durationString,
                 formattedDates
-            ].filter { !$0.isEmpty }
+            ].compactMap { $0 }.filter { !$0.isEmpty }
+
+            let iconPrimary: Color = item.type == .profile ? Color.teal : Color.primary
+            let iconSecondary: Color = {
+                switch item.type {
+                case .override: return Color(red: 0.6235294118, green: 0.4235294118, blue: 0.9803921569)
+                case .tempTarget: return Color.loopGreen
+                case .profile: return Color.teal
+                }
+            }()
+            let iconRotation: Double = item.type == .tempTarget ? 90 : 0
 
             ZStack(alignment: .trailing) {
                 HStack {
                     VStack(alignment: .leading) {
                         HStack {
                             Image(systemName: item.type.symbolName)
-                                .rotationEffect(.degrees(
-                                    item.type == .override ? 0 : 90
-                                ))
+                                .rotationEffect(.degrees(iconRotation))
                                 .symbolRenderingMode(.palette)
-                                .foregroundStyle(
-                                    Color.primary,
-                                    item.type == .override ? Color(red: 0.6235294118, green: 0.4235294118, blue: 0.9803921569) :
-                                        Color.loopGreen
-                                )
+                                .foregroundStyle(iconPrimary, iconSecondary)
                             Text(item.name)
                                 .font(.headline)
                             Spacer()

@@ -210,7 +210,17 @@ extension AdaptProfile {
                 do {
                     let activeReq = ProfileStored.fetch(.activeProfile)
                     let actives = try viewContext.fetch(activeReq)
+                    let now = Date()
                     for p in actives where p.id != id {
+                        if let startedAt = p.activatedAt {
+                            let run = ProfileRunStored(context: viewContext)
+                            run.id = UUID()
+                            run.name = p.name
+                            run.startDate = startedAt
+                            run.endDate = now
+                            run.isUploadedToNS = false
+                            run.profile = p
+                        }
                         p.isActive = false
                         p.activatedAt = nil
                         p.expiresAt = nil

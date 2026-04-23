@@ -54,7 +54,17 @@ extension Home.StateModel {
         // No anchor — just deactivate in place so the chip stops showing.
         await context.perform {
             guard let profile = try? context.existingObject(with: expired.objectID) as? ProfileStored else { return }
+            if let startedAt = profile.activatedAt {
+                let run = ProfileRunStored(context: context)
+                run.id = UUID()
+                run.name = profile.name
+                run.startDate = startedAt
+                run.endDate = Date()
+                run.isUploadedToNS = false
+                run.profile = profile
+            }
             profile.isActive = false
+            profile.activatedAt = nil
             profile.expiresAt = nil
             try? context.save()
         }

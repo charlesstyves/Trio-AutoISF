@@ -501,6 +501,9 @@
 		ADA10002ADA10002ADA10002 /* ProfileStored+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10001ADA10001ADA10001 /* ProfileStored+CoreDataClass.swift */; };
 		ADA10004ADA10004ADA10004 /* ProfileStored+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10003ADA10003ADA10003 /* ProfileStored+CoreDataProperties.swift */; };
 		ADA10006ADA10006ADA10006 /* ProfileStored+Helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10005ADA10005ADA10005 /* ProfileStored+Helper.swift */; };
+		ADA10041ADA10041ADA10041 /* ProfileRunStored+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10040ADA10040ADA10040 /* ProfileRunStored+CoreDataClass.swift */; };
+		ADA10043ADA10043ADA10043 /* ProfileRunStored+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10042ADA10042ADA10042 /* ProfileRunStored+CoreDataProperties.swift */; };
+		ADA10045ADA10045ADA10045 /* ProfileRunStored+helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10044ADA10044ADA10044 /* ProfileRunStored+helper.swift */; };
 		ADA10008ADA10008ADA10008 /* SettingsScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10007ADA10007ADA10007 /* SettingsScope.swift */; };
 		ADA1000AADA1000AADA1000A /* ActiveProfileMirror.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10009ADA10009ADA10009 /* ActiveProfileMirror.swift */; };
 		ADA1000CADA1000CADA1000C /* ProfileSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA1000BADA1000BADA1000B /* ProfileSeeder.swift */; };
@@ -1518,6 +1521,9 @@
 		ADA10001ADA10001ADA10001 /* ProfileStored+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProfileStored+CoreDataClass.swift"; sourceTree = "<group>"; };
 		ADA10003ADA10003ADA10003 /* ProfileStored+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProfileStored+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		ADA10005ADA10005ADA10005 /* ProfileStored+Helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProfileStored+Helper.swift"; sourceTree = "<group>"; };
+		ADA10040ADA10040ADA10040 /* ProfileRunStored+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProfileRunStored+CoreDataClass.swift"; sourceTree = "<group>"; };
+		ADA10042ADA10042ADA10042 /* ProfileRunStored+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProfileRunStored+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		ADA10044ADA10044ADA10044 /* ProfileRunStored+helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProfileRunStored+helper.swift"; sourceTree = "<group>"; };
 		ADA10007ADA10007ADA10007 /* SettingsScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScope.swift; sourceTree = "<group>"; };
 		ADA10009ADA10009ADA10009 /* ActiveProfileMirror.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveProfileMirror.swift; sourceTree = "<group>"; };
 		ADA1000BADA1000BADA1000B /* ProfileSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSeeder.swift; sourceTree = "<group>"; };
@@ -3440,6 +3446,7 @@
 				BDCD47AE2C1F3F1700F8BCD5 /* OverrideStored+helper.swift */,
 				BD793CAF2CE7C60E00D669AC /* OverrideRunStored+helper.swift */,
 				ADA10005ADA10005ADA10005 /* ProfileStored+Helper.swift */,
+				ADA10044ADA10044ADA10044 /* ProfileRunStored+helper.swift */,
 				BDB899892C565D0B006F3298 /* CarbsGlucose+helper.swift */,
 				58A3D5432C96DE11003F90FC /* TempTargetStored+Helper.swift */,
 				BD793CB12CE8032E00D669AC /* TempTargetRunStored.swift */,
@@ -4419,6 +4426,8 @@
 				DDE1794D2C910127003CDDB7 /* OverrideRunStored+CoreDataProperties.swift */,
 				DDE179502C910127003CDDB7 /* OverrideStored+CoreDataClass.swift */,
 				DDE179512C910127003CDDB7 /* OverrideStored+CoreDataProperties.swift */,
+				ADA10040ADA10040ADA10040 /* ProfileRunStored+CoreDataClass.swift */,
+				ADA10042ADA10042ADA10042 /* ProfileRunStored+CoreDataProperties.swift */,
 				ADA10001ADA10001ADA10001 /* ProfileStored+CoreDataClass.swift */,
 				ADA10003ADA10003ADA10003 /* ProfileStored+CoreDataProperties.swift */,
 				DDE1793E2C910127003CDDB7 /* PumpEventStored+CoreDataClass.swift */,
@@ -5686,6 +5695,9 @@
 				ADA10002ADA10002ADA10002 /* ProfileStored+CoreDataClass.swift in Sources */,
 				ADA10004ADA10004ADA10004 /* ProfileStored+CoreDataProperties.swift in Sources */,
 				ADA10006ADA10006ADA10006 /* ProfileStored+Helper.swift in Sources */,
+				ADA10041ADA10041ADA10041 /* ProfileRunStored+CoreDataClass.swift in Sources */,
+				ADA10043ADA10043ADA10043 /* ProfileRunStored+CoreDataProperties.swift in Sources */,
+				ADA10045ADA10045ADA10045 /* ProfileRunStored+helper.swift in Sources */,
 				49B21BF52D7F222600D0B6C3 /* DetailPopupView.swift in Sources */,
 				DD9ECB742CA9A0C300AA7C45 /* RemoteControlConfig.swift in Sources */,
 				DD4A00212DAEEED800AB7387 /* OnboardingView+AlgorithmUtil.swift in Sources */,

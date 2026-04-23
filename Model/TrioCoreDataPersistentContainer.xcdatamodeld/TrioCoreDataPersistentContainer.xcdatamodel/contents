@@ -243,6 +243,7 @@
         <attribute name="previousProfileID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="sourceProfileID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="therapyJSON" optional="YES" attributeType="Binary"/>
+        <relationship name="profileRun" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProfileRunStored" inverseName="profile" inverseEntity="ProfileRunStored"/>
         <fetchIndex name="byCreatedAt">
             <fetchIndexElement property="createdAt" type="Binary" order="descending"/>
         </fetchIndex>
@@ -251,6 +252,17 @@
         </fetchIndex>
         <fetchIndex name="byOrderPosition">
             <fetchIndexElement property="orderPosition" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="ProfileRunStored" representedClassName="ProfileRunStored" syncable="YES">
+        <attribute name="endDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isUploadedToNS" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="startDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="profile" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProfileStored" inverseName="profileRun" inverseEntity="ProfileStored"/>
+        <fetchIndex name="byDate">
+            <fetchIndexElement property="startDate" type="Binary" order="ascending"/>
         </fetchIndex>
     </entity>
     <entity name="PumpEventStored" representedClassName="PumpEventStored" syncable="YES">
