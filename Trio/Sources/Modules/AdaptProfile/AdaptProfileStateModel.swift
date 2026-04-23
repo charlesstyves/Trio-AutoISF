@@ -34,6 +34,10 @@ extension AdaptProfile {
         var items: [AdaptProfileListItem] = []
         var upcoming: [UpcomingScheduleItem] = []
         var isLoading: Bool = false
+        /// Populated when the user taps the body of a schedule-activation notification (default
+        /// action, not the explicit Save-to-pump / Skip action buttons). Drives the in-app
+        /// confirmation alert on RootView.
+        var pendingScheduledActivation: ScheduledActivationRequest?
 
         var draft = NewProfileDraft()
 
@@ -45,10 +49,67 @@ extension AdaptProfile {
                 name: .didUpdateProfileSchedules,
                 object: nil
             )
+            // Cover the race where the Foundation notification fires before we registered: refresh()
+            // drains the mailbox, so the live-observer path is only needed when the StateModel is
+            // already alive and the tap arrives mid-session.
+            Foundation.NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(handleScheduleNotificationTap(_:)),
+                name: .didTapScheduleNotification,
+                object: nil
+            )
         }
 
         @objc private func handleSchedulesUpdated() {
             Task { @MainActor in await refresh() }
+        }
+
+        @objc private func handleScheduleNotificationTap(_ note: Notification) {
+            guard let info = note.userInfo,
+                  let scheduleID = info[ScheduleNotificationUserInfoKey.scheduleID] as? UUID,
+                  let profileID = info[ScheduleNotificationUserInfoKey.profileID] as? UUID,
+                  let occurrenceEpoch = info[ScheduleNotificationUserInfoKey.occurrenceEpoch] as? Double
+            else { return }
+            let occurrence = Date(timeIntervalSince1970: occurrenceEpoch)
+            Task { @MainActor in
+                if items.isEmpty { await refresh() }
+                let name = items.first(where: { $0.id == profileID })?.name ?? "Scheduled profile"
+                pendingScheduledActivation = ScheduledActivationRequest(
+                    scheduleID: scheduleID,
+                    profileID: profileID,
+                    profileName: name,
+                    occurrence: occurrence
+                )
+            }
+        }
+
+        /// Alert "Save to pump" button — activates indefinitely with pump sync and stamps the
+        /// schedule so the firer moves on. Takes the request by value (captured at alert creation)
+        /// so SwiftUI's auto-dismiss setting `pendingScheduledActivation = nil` doesn't wipe state
+        /// before the Task runs.
+        @MainActor func confirmScheduledActivation(request req: ScheduledActivationRequest) async {
+            pendingScheduledActivation = nil
+            await provider.markScheduleActivated(scheduleID: req.scheduleID, occurrence: req.occurrence)
+            _ = await provider.activate(
+                id: req.profileID,
+                durationMinutes: nil,
+                confirmedPumpSync: true
+            )
+            await refresh()
+            Foundation.NotificationCenter.default.post(
+                name: .didUpdateProfileSchedules,
+                object: nil
+            )
+        }
+
+        /// Alert "Skip" button — stamps the schedule as handled without activating.
+        @MainActor func skipScheduledActivation(request req: ScheduledActivationRequest) async {
+            pendingScheduledActivation = nil
+            await provider.markScheduleActivated(scheduleID: req.scheduleID, occurrence: req.occurrence)
+            Foundation.NotificationCenter.default.post(
+                name: .didUpdateProfileSchedules,
+                object: nil
+            )
         }
 
         @MainActor func refresh() async {
@@ -58,6 +119,22 @@ extension AdaptProfile {
             items = await itemsTask
             upcoming = await upcomingTask
             isLoading = false
+            drainPendingTap()
+        }
+
+        /// Pulls any pending schedule-notification tap from the process mailbox and converts it
+        /// into a `ScheduledActivationRequest` with the target profile's current name. One-shot.
+        @MainActor private func drainPendingTap() {
+            guard pendingScheduledActivation == nil,
+                  let tap = ScheduledActivationMailbox.drain()
+            else { return }
+            let name = items.first(where: { $0.id == tap.profileID })?.name ?? "Scheduled profile"
+            pendingScheduledActivation = ScheduledActivationRequest(
+                scheduleID: tap.scheduleID,
+                profileID: tap.profileID,
+                profileName: name,
+                occurrence: tap.occurrence
+            )
         }
 
         func disableSchedule(_ item: UpcomingScheduleItem) {

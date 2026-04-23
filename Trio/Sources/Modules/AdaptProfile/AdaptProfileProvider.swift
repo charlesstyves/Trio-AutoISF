@@ -115,6 +115,22 @@ extension AdaptProfile {
             }
         }
 
+        func markScheduleActivated(scheduleID: UUID, occurrence: Date) async {
+            let context = coreDataStack.newTaskContext()
+            await context.perform {
+                let request = ProfileScheduleStored.fetch(.scheduleByID(scheduleID), fetchLimit: 1)
+                guard let row = (try? context.fetch(request))?.first else { return }
+                if case .once = row.rule?.repeatRule {
+                    // One-off schedules cannot fire again; delete rather than leave a stamped row.
+                    context.delete(row)
+                } else {
+                    row.lastFiredAt = occurrence
+                    row.pendingOccurrence = nil
+                }
+                try? context.save()
+            }
+        }
+
         func applyOrdering(_ orderedIDs: [UUID]) async {
             let context = coreDataStack.newTaskContext()
             await context.perform {
@@ -164,8 +180,29 @@ extension AdaptProfile {
                         debug(.coreData, "AdaptProfileProvider.delete: refusing to delete active profile")
                         return
                     }
+                    // Cascade: any ProfileScheduleStored referencing this profile loses its target
+                    // and would otherwise show as "Profile missing" forever. Delete them here.
+                    let schedReq = ProfileScheduleStored.fetch(.schedulesForProfile(id))
+                    let orphanedSchedules = (try? context.fetch(schedReq)) ?? []
+                    for schedule in orphanedSchedules {
+                        context.delete(schedule)
+                    }
+                    if !orphanedSchedules.isEmpty {
+                        debug(
+                            .coreData,
+                            "AdaptProfileProvider.delete: cascaded \(orphanedSchedules.count) schedule(s) for profile \(id)"
+                        )
+                    }
                     context.delete(profile)
                     try context.save()
+                    if !orphanedSchedules.isEmpty {
+                        Task { @MainActor in
+                            Foundation.NotificationCenter.default.post(
+                                name: .didUpdateProfileSchedules,
+                                object: nil
+                            )
+                        }
+                    }
                 } catch {
                     debug(.coreData, "AdaptProfileProvider.delete failed: \(error)")
                 }

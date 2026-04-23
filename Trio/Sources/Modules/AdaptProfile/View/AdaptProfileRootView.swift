@@ -129,6 +129,28 @@ extension AdaptProfile {
                     onDismiss: { activationTarget = nil }
                 )
             }
+            .alert(
+                "Activate Profile \"\(state.pendingScheduledActivation?.profileName ?? "")\" now?",
+                isPresented: Binding(
+                    get: { state.pendingScheduledActivation != nil },
+                    set: { if !$0 { state.pendingScheduledActivation = nil } }
+                ),
+                presenting: state.pendingScheduledActivation
+            ) { req in
+                Button("Save to pump") {
+                    Task { await state.confirmScheduledActivation(request: req) }
+                }
+                Button("Skip this occurrence", role: .destructive) {
+                    Task { await state.skipScheduledActivation(request: req) }
+                }
+                Button("Decide later", role: .cancel) {
+                    state.pendingScheduledActivation = nil
+                }
+            } message: { req in
+                Text(
+                    "A Profile is a named snapshot of your full therapy and algorithm setup — Basal Rate, ISF, CR, BG Targets, and Algorithm Settings. Activating \"\(req.profileName)\" as an Indefinite Profile writes its Basal Schedule to the pump, and applies everything else immediately. It stays active until another schedule or manual change replaces it."
+                )
+            }
             .safeAreaInset(edge: .bottom) {
                 if let active = activeItem,
                    active.expiresAt != nil,
@@ -388,6 +410,8 @@ extension AdaptProfile {
                     Button("Cancel", role: .cancel) {
                         selectedProfile = nil
                     }
+                } message: {
+                    Text("Any schedules that activate this profile will also be removed.")
                 }
                 .listRowBackground(Color.chart)
             } header: {
