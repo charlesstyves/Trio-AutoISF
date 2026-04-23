@@ -329,6 +329,7 @@ extension AdaptProfile {
                             state.disableSchedule(item)
                         } label: {
                             Label("Delete", systemImage: "trash.fill")
+                                .tint(.red)
                         }
                     }
                 }
