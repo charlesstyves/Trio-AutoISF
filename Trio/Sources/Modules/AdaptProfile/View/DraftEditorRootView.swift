@@ -52,20 +52,36 @@ extension AdaptProfile {
                         .multilineTextAlignment(.trailing)
                         .textInputAutocapitalization(.words)
                 }
-                HStack {
-                    Text("Copied from")
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    Text(state.sourceProfileName)
-                        .foregroundColor(.secondary)
-                }
-                if state.appliedPercent != 100 {
+                if state.sourceProfileID != nil {
                     HStack {
-                        Text("Therapy adjustment")
+                        Text("Copied from")
                             .foregroundColor(.secondary)
                         Spacer()
-                        Text("\(state.appliedPercent.formatted(.number.precision(.fractionLength(0)))) %")
-                            .foregroundColor(.accentColor)
+                        Text(state.sourceProfileName)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                if !summaryLabels.isEmpty {
+                    HStack(spacing: 6) {
+                        ForEach(Array(summaryLabels.enumerated()), id: \.offset) { idx, label in
+                            Text(label)
+                            if idx != summaryLabels.count - 1 {
+                                Divider().frame(width: 1, height: 14)
+                            }
+                        }
+                        Spacer()
+                    }
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                }
+                if state.hasLabel {
+                    Button(role: .destructive) {
+                        withAnimation { state.makeDefault() }
+                    } label: {
+                        HStack {
+                            Image(systemName: "tag.slash")
+                            Text("Remove label — make a default")
+                        }
                     }
                 }
             } header: {
@@ -74,6 +90,17 @@ extension AdaptProfile {
                 Text("Blue entries differ from the source profile. Tap any row to review or adjust.")
             }
             .listRowBackground(Color.chart)
+        }
+
+        private var summaryLabels: [String] {
+            ProfileSummaryLabel.strings(
+                appliedPercent: state.appliedPercent,
+                dailyBasalRate: state.draftDailyBasal,
+                tuning: .init(
+                    preferencesTuned: state.sourceProfileID != nil && state.preferencesChanged,
+                    targetsTuned: state.sourceProfileID != nil && state.targetsAreChanged
+                )
+            )
         }
 
         private var therapySection: some View {

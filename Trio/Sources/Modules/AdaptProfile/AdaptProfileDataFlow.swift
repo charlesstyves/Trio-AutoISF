@@ -80,7 +80,9 @@ protocol AdaptProfileProvider: Provider {
         id: UUID,
         name: String,
         preferences: Preferences,
-        therapy: TherapyBundle
+        therapy: TherapyBundle,
+        sourceProfileID: UUID?,
+        appliedPercent: Decimal
     ) async -> Bool
 
     /// Load a profile's editable content for the draft editor hub.

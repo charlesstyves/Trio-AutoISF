@@ -18,9 +18,11 @@ extension AdaptProfile {
         let units: GlucoseUnits
 
         /// Name of the profile this draft was seeded from (shown in the hub).
-        let sourceProfileName: String
+        var sourceProfileName: String
         /// Persisted on the new profile so the list can show "From <source> <percent> %".
-        let sourceProfileID: UUID?
+        /// Cleared by `makeDefault()` to sever the "derived from" link — the profile then
+        /// stops showing the percent/tuned badge the same way the seeded default profile does.
+        var sourceProfileID: UUID?
         /// When non-nil, the hub operates in "edit" mode: `save()` updates the existing profile
         /// instead of creating a new one.
         let editingProfileID: UUID?
@@ -147,6 +149,33 @@ extension AdaptProfile {
             preferences[keyPath: keyPath] = originalPreferences[keyPath: keyPath]
         }
 
+        /// Drops the label-bearing metadata: percent → 100, source link cleared. Leaves therapy
+        /// and algorithm values untouched so the user's tuned numbers survive — only the "derived
+        /// from source" framing goes away. After this, the profile renders like the seeded
+        /// default (no percent, no tuned badge).
+        func makeDefault() {
+            appliedPercent = 100
+            sourceProfileID = nil
+            sourceProfileName = ""
+        }
+
+        var hasLabel: Bool {
+            appliedPercent != 100 || sourceProfileID != nil
+        }
+
+        /// Sum over the current draft basal items, matching `[BasalProfileEntry].totalDailyBasal`.
+        var draftDailyBasal: Decimal {
+            guard !basalItems.isEmpty else { return 0 }
+            let sorted = basalItems.sorted { $0.time < $1.time }
+            var total: Decimal = 0
+            for (i, item) in sorted.enumerated() {
+                let nextSeconds = i + 1 < sorted.count ? sorted[i + 1].time : 86400
+                let hours = Decimal((nextSeconds - item.time) / 3600)
+                total += item.value * hours
+            }
+            return total
+        }
+
         /// Edit-mode init: seed from an already-persisted profile. `original*` fields capture the
         /// profile's saved state at session open, so blue "changed" markers show only unsaved
         /// edits made during this session.
@@ -222,7 +251,9 @@ extension AdaptProfile {
                     id: editingID,
                     name: name,
                     preferences: preferences,
-                    therapy: therapyBundle()
+                    therapy: therapyBundle(),
+                    sourceProfileID: sourceProfileID,
+                    appliedPercent: appliedPercent
                 )
             }
             let id = await provider.saveNewProfile(

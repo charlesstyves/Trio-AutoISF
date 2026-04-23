@@ -280,7 +280,9 @@ extension AdaptProfile {
             id: UUID,
             name: String,
             preferences: Preferences,
-            therapy: TherapyBundle
+            therapy: TherapyBundle,
+            sourceProfileID: UUID?,
+            appliedPercent: Decimal
         ) async -> Bool {
             let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty else { return false }
@@ -293,6 +295,8 @@ extension AdaptProfile {
                     profile.name = trimmed
                     profile.preferences = preferences
                     profile.therapy = therapy
+                    profile.sourceProfileID = sourceProfileID
+                    profile.appliedPercent = NSDecimalNumber(decimal: appliedPercent)
                     try context.save()
                     return true
                 } catch {
