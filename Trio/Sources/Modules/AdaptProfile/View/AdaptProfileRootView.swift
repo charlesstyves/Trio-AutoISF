@@ -58,17 +58,13 @@ extension AdaptProfile {
                     revertToSection(pinned, activatesAt: expiresAt)
                 }
 
-                if !state.upcoming.isEmpty {
-                    upcomingSection
-                }
+                upcomingSection
 
                 if otherInactiveItems.isEmpty, !state.isLoading, pinnedRevertItem == nil {
                     defaultText
                 } else if !otherInactiveItems.isEmpty {
                     profilesSection
                 }
-
-                schedulesNavSection
             }
             .listSectionSpacing(10)
             .scrollContentBackground(.hidden)
@@ -189,15 +185,16 @@ extension AdaptProfile {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
                         Text("\(item.name) is active")
+                            .foregroundStyle(.white)
                         Spacer()
                         Image(systemName: "square.and.pencil")
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(.white)
                     }
                     if let expiresAt = item.expiresAt {
                         let minutesLeft = max(0, Int(expiresAt.timeIntervalSinceNow / 60))
                         Text(minutesLeft > 0 ? formatHrMin(minutesLeft) : String(localized: "Expiring"))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(.footnote.weight(.medium))
+                            .foregroundStyle(.white.opacity(0.9))
                     }
                 }
                 .contentShape(Rectangle())
@@ -205,7 +202,7 @@ extension AdaptProfile {
                     openEditor(for: item)
                 }
             }
-            .listRowBackground(Color.tabBar.opacity(0.8))
+            .listRowBackground(Color.blue)
         }
 
         private func revertToSection(_ item: AdaptProfileListItem, activatesAt: Date) -> some View {
@@ -312,17 +309,15 @@ extension AdaptProfile {
 
         private var upcomingSection: some View {
             Section {
-                ForEach(state.upcoming) { item in
+                ForEach(state.upcoming.prefix(2)) { item in
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(Self.upcomingFormatter.string(from: item.nextFire))
                                 .font(.body)
                                 .foregroundColor(item.profileExists ? .primary : .red)
-                            if !item.profileExists {
-                                Text("Profile missing")
-                                    .font(.caption)
-                                    .foregroundColor(.red)
-                            }
+                            Text(item.profileExists ? item.profileName : "Profile missing")
+                                .font(.caption)
+                                .foregroundColor(item.profileExists ? .secondary : .red)
                         }
                         Spacer()
                         Text(durationLabel(item.duration))
@@ -330,40 +325,43 @@ extension AdaptProfile {
                             .foregroundColor(.secondary)
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button {
+                        Button(role: .destructive) {
                             state.disableSchedule(item)
                         } label: {
-                            Label("Disable", systemImage: "pause.circle")
+                            Label("Delete", systemImage: "trash.fill")
                         }
-                        .tint(.orange)
                     }
                 }
             } header: {
-                Text("Upcoming")
+                HStack {
+                    Text("Upcoming")
+                    Spacer()
+                    NavigationLink(destination: ProfileScheduler.RootView(resolver: resolver)) {
+                        HStack(spacing: 4) {
+                            Text("Schedules")
+                            Image(systemName: "chevron.right")
+                        }
+                        .font(.caption)
+                        .foregroundColor(.accentColor)
+                        .textCase(nil)
+                    }
+                }
             }
             .listRowBackground(Color.chart)
         }
 
         private func durationLabel(_ duration: ProfileSchedule.Duration) -> String {
             switch duration {
-            case let .hours(h): return "for \(h) h"
+            case let .minutes(m):
+                let h = m / 60
+                let mm = m % 60
+                if h == 0 { return "for \(mm) min" }
+                if mm == 0 { return "for \(h) h" }
+                return "for \(h) h \(mm) min"
             case .indefinite,
-                 .untilNext: return "until next change"
+                 .untilNext:
+                return "until next change"
             }
-        }
-
-        private var schedulesNavSection: some View {
-            Section {
-                NavigationLink(destination: ProfileScheduler.RootView(resolver: resolver)) {
-                    HStack {
-                        Image(systemName: "calendar.badge.clock")
-                            .foregroundColor(.accentColor)
-                        Text("Schedules")
-                        Spacer()
-                    }
-                }
-            }
-            .listRowBackground(Color.chart)
         }
 
         private var profilesSection: some View {

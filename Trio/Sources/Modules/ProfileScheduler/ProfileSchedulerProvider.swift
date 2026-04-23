@@ -15,11 +15,11 @@ extension ProfileScheduler {
                 }
 
                 let request: NSFetchRequest<ProfileScheduleStored> = ProfileScheduleStored.fetchRequest()
-                request.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: true)]
+                request.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: false)]
                 let rows = (try? context.fetch(request)) ?? []
                 let now = Date()
 
-                return rows.compactMap { s -> ProfileScheduleListItem? in
+                let items: [ProfileScheduleListItem] = rows.compactMap { s in
                     guard let id = s.id,
                           let profileID = s.profileID,
                           let rule = s.rule,
@@ -36,6 +36,19 @@ extension ProfileScheduler {
                         createdAt: s.createdAt ?? .distantPast,
                         nextFire: s.enabled ? rule.nextFire(after: now) : nil
                     )
+                }
+
+                // Auto-sort: enabled rows first, ascending by next fire. Disabled rows sink to the
+                // bottom, ordered by most-recently-created first (their createdAt from the fetch
+                // sort above).
+                return items.sorted { a, b in
+                    if a.enabled != b.enabled { return a.enabled && !b.enabled }
+                    if a.enabled {
+                        let aNext = a.nextFire ?? .distantFuture
+                        let bNext = b.nextFire ?? .distantFuture
+                        if aNext != bNext { return aNext < bNext }
+                    }
+                    return a.createdAt > b.createdAt
                 }
             }
         }

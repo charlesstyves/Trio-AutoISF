@@ -35,7 +35,7 @@ struct ProfileScheduleDraft {
     var profileName: String = ""
     var repeatRule: ProfileSchedule.Repeat = .weekdays([])
     var firesAt: [ProfileSchedule.TimeOfDay] = [.init(hour: 8, minute: 0)]
-    var duration: ProfileSchedule.Duration = .hours(6)
+    var duration: ProfileSchedule.Duration = .untilNext
     /// User-facing optional name ("Morning switch"). Empty string = no name.
     var name: String = ""
 

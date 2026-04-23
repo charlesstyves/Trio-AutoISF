@@ -12,6 +12,16 @@ extension ProfileScheduler {
 
         override func subscribe() {
             Task { await refresh() }
+            Foundation.NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(handleSchedulesUpdated),
+                name: .didUpdateProfileSchedules,
+                object: nil
+            )
+        }
+
+        @objc private func handleSchedulesUpdated() {
+            Task { @MainActor in await refresh() }
         }
 
         @MainActor func refresh() async {
@@ -25,6 +35,10 @@ extension ProfileScheduler {
 
         @MainActor func startNewDraft() {
             draft = ProfileScheduleDraft()
+            // Default to a one-off schedule an hour from now — simplest case, no configuration
+            // beyond picking a date+time.
+            let nextHour = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
+            draft.repeatRule = .once(nextHour)
             // Pre-select the currently active profile as a sensible default.
             if let active = availableProfiles.first(where: { $0.isActive }) {
                 draft.profileID = active.id

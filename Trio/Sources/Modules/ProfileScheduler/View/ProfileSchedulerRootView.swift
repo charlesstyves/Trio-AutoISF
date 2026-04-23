@@ -6,6 +6,8 @@ extension ProfileScheduler {
         let resolver: Resolver
         @State var state = StateModel()
         @State private var showNewSchedule = false
+        @State private var selectedForDelete: ProfileScheduleListItem?
+        @State private var isConfirmDeletePresented = false
 
         @Environment(\.colorScheme) var colorScheme
         @Environment(AppState.self) var appState
@@ -37,7 +39,10 @@ extension ProfileScheduler {
                         state.startNewDraft()
                         showNewSchedule = true
                     }, label: {
-                        Image(systemName: "plus")
+                        HStack {
+                            Text("Add Schedule")
+                            Image(systemName: "plus")
+                        }
                     })
                 }
             }
@@ -70,29 +75,50 @@ extension ProfileScheduler {
                 ForEach(state.schedules) { item in
                     row(for: item)
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                            Button(role: .destructive) {
-                                state.delete(item)
+                            Button {
+                                selectedForDelete = item
+                                isConfirmDeletePresented = true
                             } label: {
-                                Label("Delete", systemImage: "trash")
+                                Label("Delete", systemImage: "trash.fill")
+                                    .tint(.red)
                             }
                             Button {
                                 state.toggleEnabled(item)
                             } label: {
                                 if item.enabled {
-                                    Label("Disable", systemImage: "pause.circle")
+                                    Label("Disable", systemImage: "pause.circle.fill")
+                                        .tint(.blue)
                                 } else {
-                                    Label("Enable", systemImage: "play.circle")
+                                    Label("Enable", systemImage: "play.circle.fill")
+                                        .tint(.blue)
                                 }
                             }
-                            .tint(.orange)
                         }
                 }
+                .confirmationDialog(
+                    "Delete this schedule?",
+                    isPresented: $isConfirmDeletePresented,
+                    titleVisibility: .visible
+                ) {
+                    if let target = selectedForDelete {
+                        Button("Delete", role: .destructive) {
+                            state.delete(target)
+                            selectedForDelete = nil
+                        }
+                    }
+                    Button("Cancel", role: .cancel) { selectedForDelete = nil }
+                }
+                .listRowBackground(Color.chart)
             } header: {
                 Text("Active schedules")
             } footer: {
-                Text("Swipe a row to disable or delete. Upcoming fires are shown on the Profiles screen.")
+                HStack {
+                    Image(systemName: "hand.draw.fill").foregroundStyle(.primary)
+                    Text(
+                        "Swipe left to enable, disable, or delete. Enabled schedules are sorted by next fire; disabled ones sink to the bottom."
+                    )
+                }
             }
-            .listRowBackground(Color.chart)
         }
 
         @ViewBuilder private func row(for item: ProfileScheduleListItem) -> some View {
@@ -146,7 +172,7 @@ enum ProfileScheduleSummary {
             if days == [.saturday, .sunday] { return "Weekends" }
             if days.isEmpty { return "No days selected" }
             let sorted = days.sorted { $0.rawValue < $1.rawValue }
-            return sorted.map(shortName(_:)).joined(separator: " ")
+            return "Weekly on " + sorted.map(shortName(_:)).joined(separator: ", ")
         case let .monthlyDays(days):
             if days.isEmpty { return "No days selected" }
             let sorted = days.sorted()
@@ -166,21 +192,41 @@ enum ProfileScheduleSummary {
 
     static func durationText(_ duration: ProfileSchedule.Duration) -> String {
         switch duration {
-        case let .hours(h): return "for \(h) h"
+        case let .minutes(m):
+            let h = m / 60
+            let mm = m % 60
+            if h == 0 { return "for \(mm) min" }
+            if mm == 0 { return "for \(h) h" }
+            return "for \(h) h \(mm) min"
         case .indefinite,
-             .untilNext: return "until next change"
+             .untilNext:
+            return "until next change"
         }
     }
 
+    /// Locale-aware 3-letter weekday abbreviation (e.g. "Mon" / "Mo." / "月").
     static func shortName(_ w: ProfileSchedule.Weekday) -> String {
-        switch w {
-        case .monday: return "Mon"
-        case .tuesday: return "Tue"
-        case .wednesday: return "Wed"
-        case .thursday: return "Thu"
-        case .friday: return "Fri"
-        case .saturday: return "Sat"
-        case .sunday: return "Sun"
-        }
+        let symbols = shortStandaloneWeekdaySymbols
+        let index = w.rawValue - 1 // Calendar.weekday: Sunday=1
+        return index >= 0 && index < symbols.count ? symbols[index] : "?"
+    }
+
+    /// Locale-aware single-letter weekday for chip buttons (e.g. "M" / "L" / "月").
+    static func singleLetter(_ w: ProfileSchedule.Weekday) -> String {
+        let symbols = veryShortStandaloneWeekdaySymbols
+        let index = w.rawValue - 1
+        return index >= 0 && index < symbols.count ? symbols[index] : "?"
+    }
+
+    private static var shortStandaloneWeekdaySymbols: [String] {
+        let f = DateFormatter()
+        f.locale = .current
+        return f.shortStandaloneWeekdaySymbols ?? []
+    }
+
+    private static var veryShortStandaloneWeekdaySymbols: [String] {
+        let f = DateFormatter()
+        f.locale = .current
+        return f.veryShortStandaloneWeekdaySymbols ?? []
     }
 }

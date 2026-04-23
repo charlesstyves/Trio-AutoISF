@@ -39,6 +39,16 @@ extension AdaptProfile {
 
         override func subscribe() {
             Task { await refresh() }
+            Foundation.NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(handleSchedulesUpdated),
+                name: .didUpdateProfileSchedules,
+                object: nil
+            )
+        }
+
+        @objc private func handleSchedulesUpdated() {
+            Task { @MainActor in await refresh() }
         }
 
         @MainActor func refresh() async {
