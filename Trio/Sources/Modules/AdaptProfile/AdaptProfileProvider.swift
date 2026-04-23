@@ -73,6 +73,48 @@ extension AdaptProfile {
             }
         }
 
+        func fetchUpcoming() async -> [UpcomingScheduleItem] {
+            let context = coreDataStack.newTaskContext()
+            return await context.perform {
+                let profiles = (try? context.fetch(ProfileStored.fetchRequest())) ?? []
+                let nameByID: [UUID: String] = profiles.reduce(into: [:]) { dict, p in
+                    if let id = p.id { dict[id] = p.name ?? "Unnamed" }
+                }
+
+                let request = ProfileScheduleStored.fetch(.enabledSchedule, ascending: true)
+                let rows = (try? context.fetch(request)) ?? []
+                let now = Date()
+
+                return rows.compactMap { s -> UpcomingScheduleItem? in
+                    guard let id = s.id,
+                          let profileID = s.profileID,
+                          let rule = s.rule,
+                          let duration = s.duration,
+                          let next = rule.nextFire(after: now)
+                    else { return nil }
+                    let profileName = nameByID[profileID] ?? "Profile missing"
+                    return UpcomingScheduleItem(
+                        id: id,
+                        nextFire: next,
+                        duration: duration,
+                        profileName: profileName,
+                        profileExists: nameByID[profileID] != nil
+                    )
+                }
+                .sorted { $0.nextFire < $1.nextFire }
+            }
+        }
+
+        func disableSchedule(id: UUID) async {
+            let context = coreDataStack.newTaskContext()
+            await context.perform {
+                let request = ProfileScheduleStored.fetch(.scheduleByID(id), fetchLimit: 1)
+                guard let row = (try? context.fetch(request))?.first else { return }
+                row.enabled = false
+                try? context.save()
+            }
+        }
+
         func applyOrdering(_ orderedIDs: [UUID]) async {
             let context = coreDataStack.newTaskContext()
             await context.perform {

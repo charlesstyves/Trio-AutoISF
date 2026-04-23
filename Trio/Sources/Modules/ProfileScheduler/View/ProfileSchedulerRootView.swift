@@ -95,7 +95,7 @@ extension ProfileScheduler {
             .listRowBackground(Color.chart)
         }
 
-        @ViewBuilder  private func row(for item: ProfileScheduleListItem) -> some View {
+        @ViewBuilder private func row(for item: ProfileScheduleListItem) -> some View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(headline(for: item))

@@ -58,6 +58,10 @@ extension AdaptProfile {
                     revertToSection(pinned, activatesAt: expiresAt)
                 }
 
+                if !state.upcoming.isEmpty {
+                    upcomingSection
+                }
+
                 if otherInactiveItems.isEmpty, !state.isLoading, pinnedRevertItem == nil {
                     defaultText
                 } else if !otherInactiveItems.isEmpty {
@@ -72,7 +76,10 @@ extension AdaptProfile {
             .navigationTitle("Profiles")
             .navigationBarTitleDisplayMode(.large)
             .refreshable { await state.refresh() }
-            .onAppear(perform: configureView)
+            .onAppear {
+                configureView()
+                Task { await state.refresh() }
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: {
@@ -294,6 +301,54 @@ extension AdaptProfile {
                 Text(
                     "Tap \"Add Profile\" to start from the currently active profile's settings. First pick a percentage to scale Basal, ISF and CR in one step, then fine-tune any individual setting in the editor that follows."
                 )
+            }
+        }
+
+        private static let upcomingFormatter: DateFormatter = {
+            let f = DateFormatter()
+            f.dateFormat = "EEE, dd.MM. HH:mm"
+            return f
+        }()
+
+        private var upcomingSection: some View {
+            Section {
+                ForEach(state.upcoming) { item in
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(Self.upcomingFormatter.string(from: item.nextFire))
+                                .font(.body)
+                                .foregroundColor(item.profileExists ? .primary : .red)
+                            if !item.profileExists {
+                                Text("Profile missing")
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                            }
+                        }
+                        Spacer()
+                        Text(durationLabel(item.duration))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        Button {
+                            state.disableSchedule(item)
+                        } label: {
+                            Label("Disable", systemImage: "pause.circle")
+                        }
+                        .tint(.orange)
+                    }
+                }
+            } header: {
+                Text("Upcoming")
+            }
+            .listRowBackground(Color.chart)
+        }
+
+        private func durationLabel(_ duration: ProfileSchedule.Duration) -> String {
+            switch duration {
+            case let .hours(h): return "for \(h) h"
+            case .indefinite,
+                 .untilNext: return "until next change"
             }
         }
 

@@ -32,6 +32,7 @@ extension AdaptProfile {
 
     @Observable final class StateModel: BaseStateModel<Provider> {
         var items: [AdaptProfileListItem] = []
+        var upcoming: [UpcomingScheduleItem] = []
         var isLoading: Bool = false
 
         var draft = NewProfileDraft()
@@ -42,8 +43,18 @@ extension AdaptProfile {
 
         @MainActor func refresh() async {
             isLoading = true
-            items = await provider.fetchAll()
+            async let itemsTask = provider.fetchAll()
+            async let upcomingTask = provider.fetchUpcoming()
+            items = await itemsTask
+            upcoming = await upcomingTask
             isLoading = false
+        }
+
+        func disableSchedule(_ item: UpcomingScheduleItem) {
+            Task {
+                await provider.disableSchedule(id: item.id)
+                await refresh()
+            }
         }
 
         func rename(_ item: AdaptProfileListItem, to newName: String) {

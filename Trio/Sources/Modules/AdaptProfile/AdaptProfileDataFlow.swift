@@ -42,6 +42,18 @@ struct LoadedProfileContent {
     let appliedPercent: Decimal
 }
 
+/// One upcoming schedule fire shown in the Profiles root. Read-only — tap navigates to the
+/// ProfileScheduler management screen; swipe-disable flips `enabled` via that provider. Skip-next
+/// is deferred to PR 4 when firing lands (nothing to skip until then).
+struct UpcomingScheduleItem: Identifiable, Hashable {
+    let id: UUID
+    let nextFire: Date
+    let duration: ProfileSchedule.Duration
+    let profileName: String
+    /// True if the schedule references a profile that still exists.
+    let profileExists: Bool
+}
+
 /// Outcome of `AdaptProfileProvider.activate`. The `.needsPumpConfirm` case is returned when an
 /// indefinite activation would change the pump's scheduled basal; the caller should present a
 /// confirmation dialog and retry with `confirmedPumpSync: true`.
@@ -54,6 +66,14 @@ enum ActivationOutcome: Equatable {
 
 protocol AdaptProfileProvider: Provider {
     func fetchAll() async -> [AdaptProfileListItem]
+
+    /// Enabled schedules with a future next-fire, sorted ascending. Empty when no enabled
+    /// schedule can fire.
+    func fetchUpcoming() async -> [UpcomingScheduleItem]
+
+    /// Disable a schedule from the AdaptProfile root (swipe action).
+    func disableSchedule(id: UUID) async
+
     func rename(id: UUID, to newName: String) async
     func delete(id: UUID) async
 
