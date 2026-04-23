@@ -1,8 +1,9 @@
 import SwiftUI
 
 extension ProfileScheduler {
-    /// New-schedule picker: single-screen form with sections for Repeat / At / Profile / Duration,
-    /// plus a live preview sentence. Custom repeat rules open a detail screen.
+    /// New-schedule picker. Sections in order: Profile → Repeat → Time → Duration, plus a live
+    /// preview sentence. Repeat presets collapse into a single dropdown; Custom pushes to a
+    /// sub-screen for weekday / monthly / once selection.
     struct NewScheduleView: View {
         @Bindable var state: StateModel
         let onDismiss: () -> Void
@@ -12,6 +13,10 @@ extension ProfileScheduler {
         @State private var durationHours: Int = 6
         @State private var durationMinutes: Int = 0
         @State private var onceDate: Date = nextHour()
+
+        @State private var showTimePicker = false
+        @State private var showDurationPicker = false
+        @State private var selectedPreset: RepeatPreset = .daily
 
         @Environment(\.colorScheme) var colorScheme
         @Environment(AppState.self) var appState
@@ -23,14 +28,14 @@ extension ProfileScheduler {
         }
 
         var body: some View {
-            NavigationView {
+            NavigationStack {
                 List {
                     previewSection
+                    profileSection
                     repeatSection
                     if !isOnce {
-                        atSection
+                        timeSection
                     }
-                    profileSection
                     durationSection
                 }
                 .listSectionSpacing(10)
@@ -54,6 +59,9 @@ extension ProfileScheduler {
                 }
                 .navigationDestination(isPresented: $showCustomRepeat) {
                     CustomRepeatView(state: state, onceDate: $onceDate)
+                }
+                .onAppear {
+                    syncPresetFromDraft()
                 }
             }
         }
@@ -102,30 +110,61 @@ extension ProfileScheduler {
             }
         }
 
-        // MARK: - Repeat
+        // MARK: - Profile
+
+        private var profileSection: some View {
+            Section {
+                if state.availableProfiles.isEmpty {
+                    Text("No profiles — create one first.")
+                        .foregroundColor(.secondary)
+                } else {
+                    Picker("Profile", selection: Binding(
+                        get: { state.draft.profileID ?? state.availableProfiles.first?.id ?? UUID() },
+                        set: { id in
+                            state.draft.profileID = id
+                            state.draft.profileName = state.availableProfiles
+                                .first(where: { $0.id == id })?.name ?? ""
+                        }
+                    )) {
+                        ForEach(state.availableProfiles) { p in
+                            Text(p.name).tag(p.id)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                }
+            } header: {
+                Text("Profile")
+            }
+            .listRowBackground(Color.chart)
+        }
+
+        // MARK: - Repeat (dropdown + Custom row)
 
         private var repeatSection: some View {
             Section {
-                ForEach(RepeatPreset.allCases, id: \.self) { preset in
-                    Button {
-                        state.draft.repeatRule = preset.rule
-                    } label: {
-                        HStack {
-                            Text(preset.title).foregroundColor(.primary)
-                            Spacer()
-                            if preset.matches(state.draft.repeatRule) {
-                                Image(systemName: "checkmark").foregroundColor(.accentColor)
-                            }
-                        }
+                Picker("Repeat", selection: $selectedPreset) {
+                    ForEach(RepeatPreset.allCases, id: \.self) { p in
+                        Text(p.title).tag(p)
                     }
                 }
+                .pickerStyle(.menu)
+                .onChange(of: selectedPreset) { _, new in
+                    state.draft.repeatRule = new.rule
+                }
+
                 Button {
                     showCustomRepeat = true
                 } label: {
                     HStack {
                         Text("Custom…").foregroundColor(.primary)
                         Spacer()
-                        if isCustom { Image(systemName: "checkmark").foregroundColor(.accentColor) }
+                        if isCustom {
+                            Text(ProfileScheduleSummary.repeatText(state.draft.repeatRule))
+                                .font(.caption)
+                                .foregroundColor(.accentColor)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                        }
                         Image(systemName: "chevron.right").foregroundColor(.secondary)
                     }
                 }
@@ -144,71 +183,52 @@ extension ProfileScheduler {
             return false
         }
 
-        // MARK: - At (time picker, 15-min increments)
+        private func syncPresetFromDraft() {
+            // If draft is in a blank/initial state, default to the selected preset so the summary
+            // sentence makes sense from the first render.
+            if case let .weekdays(set) = state.draft.repeatRule, set.isEmpty {
+                state.draft.repeatRule = selectedPreset.rule
+                return
+            }
+            if let match = RepeatPreset.allCases.first(where: { $0.matches(state.draft.repeatRule) }) {
+                selectedPreset = match
+            }
+        }
 
-        private var atSection: some View {
+        // MARK: - Time (collapsible, 15-min UIDatePicker)
+
+        private var timeSection: some View {
             Section {
-                ForEach(Array(state.draft.firesAt.enumerated()), id: \.offset) { idx, _ in
-                    DatePicker(
-                        "Time",
+                HStack {
+                    Text("At")
+                    Spacer()
+                    Text(timeLabel)
+                        .foregroundColor(showTimePicker ? .accentColor : .primary)
+                        .onTapGesture { showTimePicker.toggle() }
+                }
+                if showTimePicker {
+                    CustomTimeOnlyPicker(
                         selection: Binding(
-                            get: { dateFromTime(state.draft.firesAt[idx]) },
-                            set: { state.draft.firesAt[idx] = timeFromDate($0) }
+                            get: { dateFromTime(state.draft.firesAt.first ?? .init(hour: 8, minute: 0)) },
+                            set: { state.draft.firesAt = [timeFromDate($0)] }
                         ),
-                        displayedComponents: .hourAndMinute
+                        // TODO: restore to 15 after live-testing firing. 1-min for fast test cycles.
+                        minuteInterval: 1
                     )
-                    .datePickerStyle(.compact)
-                }
-                if state.draft.firesAt.count < 2 {
-                    Button {
-                        state.draft.firesAt.append(.init(hour: 20, minute: 0))
-                    } label: {
-                        Label("Add a second time", systemImage: "plus.circle")
-                    }
-                }
-                if state.draft.firesAt.count > 1 {
-                    Button(role: .destructive) {
-                        state.draft.firesAt.removeLast()
-                    } label: {
-                        Label("Remove second time", systemImage: "minus.circle")
-                    }
+                    .frame(height: 160)
                 }
             } header: {
-                Text("At")
-            } footer: {
-                Text("Schedules fire in 15-minute increments.")
+                Text("Time")
             }
             .listRowBackground(Color.chart)
         }
 
-        // MARK: - Profile
-
-        private var profileSection: some View {
-            Section {
-                if state.availableProfiles.isEmpty {
-                    Text("No profiles — create one first.")
-                        .foregroundColor(.secondary)
-                } else {
-                    Picker("Profile", selection: Binding(
-                        get: { state.draft.profileID ?? UUID() },
-                        set: { id in
-                            state.draft.profileID = id
-                            state.draft.profileName = state.availableProfiles
-                                .first(where: { $0.id == id })?.name ?? ""
-                        }
-                    )) {
-                        ForEach(state.availableProfiles) { p in
-                            Text(p.name).tag(p.id)
-                        }
-                    }
-                }
-            } header: {
-                Text("Profile")
-            }
-            .listRowBackground(Color.chart)
+        private var timeLabel: String {
+            guard let t = state.draft.firesAt.first else { return "Tap to set" }
+            return String(format: "%02d:%02d", t.hour, t.minute)
         }
 
-        // MARK: - Duration
+        // MARK: - Duration (collapsible wheels, 5-min)
 
         private var durationSection: some View {
             Section {
@@ -219,32 +239,46 @@ extension ProfileScheduler {
 
                 if durationMode == .hours {
                     HStack {
-                        Picker("Hours", selection: $durationHours) {
-                            ForEach(0 ..< 25) { Text("\($0) hr").tag($0) }
-                        }
-                        .pickerStyle(.wheel)
-                        .frame(maxWidth: .infinity)
-
-                        Picker("Minutes", selection: $durationMinutes) {
-                            ForEach(Array(stride(from: 0, through: 55, by: 5)), id: \.self) {
-                                Text("\($0) min").tag($0)
+                        Text("Duration")
+                        Spacer()
+                        Text(formatHM(hours: durationHours, minutes: durationMinutes))
+                            .foregroundColor(showDurationPicker ? .accentColor : .primary)
+                            .onTapGesture { showDurationPicker.toggle() }
+                    }
+                    if showDurationPicker {
+                        HStack {
+                            Picker("Hours", selection: $durationHours) {
+                                ForEach(0 ..< 25) { Text("\($0) hr").tag($0) }
                             }
+                            .pickerStyle(.wheel)
+                            .frame(maxWidth: .infinity)
+
+                            Picker("Minutes", selection: $durationMinutes) {
+                                ForEach(Array(stride(from: 0, through: 55, by: 5)), id: \.self) {
+                                    Text("\($0) min").tag($0)
+                                }
+                            }
+                            .pickerStyle(.wheel)
+                            .frame(maxWidth: .infinity)
                         }
-                        .pickerStyle(.wheel)
-                        .frame(maxWidth: .infinity)
                     }
                 }
             } header: {
                 Text("Duration")
             } footer: {
-                Text(
-                    durationMode == .untilNext
-                        ?
-                        "Runs until another schedule changes profile, or until the profile is changed manually. Indefinite activations write the basal to pump."
-                        : "Timed activations do not touch the pump; the algorithm compensates via temp basals."
+                Text(durationMode == .untilNext
+                    ? "Runs until another schedule changes the profile, or until changed manually. Indefinite activations write the basal to pump."
+                    : "Timed activations do not touch the pump; the algorithm compensates via temp basals."
                 )
             }
             .listRowBackground(Color.chart)
+        }
+
+        private func formatHM(hours: Int, minutes: Int) -> String {
+            if hours == 0, minutes == 0 { return "Tap to set" }
+            if minutes == 0 { return "\(hours) hr" }
+            if hours == 0 { return "\(minutes) min" }
+            return "\(hours) hr \(minutes) min"
         }
 
         // MARK: - Helpers
@@ -258,13 +292,7 @@ extension ProfileScheduler {
 
         private func timeFromDate(_ d: Date) -> ProfileSchedule.TimeOfDay {
             let comp = Calendar.current.dateComponents([.hour, .minute], from: d)
-            let minute = roundToFifteen(comp.minute ?? 0)
-            return .init(hour: comp.hour ?? 0, minute: minute)
-        }
-
-        private func roundToFifteen(_ m: Int) -> Int {
-            let rounded = Int((Double(m) / 15).rounded()) * 15
-            return min(max(rounded, 0), 45)
+            return .init(hour: comp.hour ?? 0, minute: comp.minute ?? 0)
         }
 
         private static func nextHour() -> Date {
@@ -274,7 +302,7 @@ extension ProfileScheduler {
 
     // MARK: - Presets
 
-    enum RepeatPreset: CaseIterable {
+    enum RepeatPreset: CaseIterable, Hashable {
         case daily
         case weekdays
         case weekends
@@ -300,4 +328,33 @@ extension ProfileScheduler {
             return set == mine
         }
     }
+}
+
+/// Time-of-day UIDatePicker wrapper (no date component, fixed minute interval). Mirrors
+/// `CustomDateTimePicker` but `.time` mode and no `maximumDate` — schedules are future-facing.
+struct CustomTimeOnlyPicker: UIViewRepresentable {
+    @Binding var selection: Date
+    var minuteInterval: Int
+
+    class Coordinator: NSObject {
+        var parent: CustomTimeOnlyPicker
+        init(_ parent: CustomTimeOnlyPicker) { self.parent = parent }
+        @objc func dateChanged(_ sender: UIDatePicker) { parent.selection = sender.date }
+    }
+
+    func makeUIView(context: Context) -> UIDatePicker {
+        let picker = UIDatePicker()
+        picker.datePickerMode = .time
+        picker.minuteInterval = minuteInterval
+        picker.preferredDatePickerStyle = .wheels
+        picker.addTarget(context.coordinator, action: #selector(Coordinator.dateChanged(_:)), for: .valueChanged)
+        return picker
+    }
+
+    func updateUIView(_ uiView: UIDatePicker, context _: Context) {
+        uiView.date = selection
+        uiView.minuteInterval = minuteInterval
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
 }

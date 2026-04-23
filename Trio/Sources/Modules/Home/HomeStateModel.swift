@@ -340,6 +340,7 @@ extension Home {
                     self.timerDate = Date()
                     Task { @MainActor [weak self] in
                         await self?.checkExpiredProfileAndAutoRevert()
+                        await self?.checkDueSchedulesAndFire()
                     }
                 }
             }

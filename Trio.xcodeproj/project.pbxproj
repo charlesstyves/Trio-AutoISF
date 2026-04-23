@@ -524,6 +524,7 @@
 		ADA10043ADA10043ADA10043 /* ProfileRunStored+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10042ADA10042ADA10042 /* ProfileRunStored+CoreDataProperties.swift */; };
 		ADA10045ADA10045ADA10045 /* ProfileRunStored+helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10044ADA10044ADA10044 /* ProfileRunStored+helper.swift */; };
 		ADA10047ADA10047ADA10047 /* ProfileSummaryLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA10046ADA10046ADA10046 /* ProfileSummaryLabel.swift */; };
+		B743861663E75B7C0DE3B9A8 /* ScheduleFireSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABA854824EF663390AA5722C /* ScheduleFireSetup.swift */; };
 		B7C465E9472624D8A2BE2A6A /* BuildFile in Sources */ = {isa = PBXBuildFile; };
 		B958F1B72BA0711600484851 /* MKRingProgressView in Frameworks */ = {isa = PBXBuildFile; productRef = B958F1B62BA0711600484851 /* MKRingProgressView */; };
 		BA00D96F7B2FF169A06FB530 /* CGMSettingsStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C018D1680307A31C9ED7120 /* CGMSettingsStateModel.swift */; };
@@ -1534,6 +1535,7 @@
 		A401509D21F7F35D4E109EDA /* HistoryDataFlow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HistoryDataFlow.swift; sourceTree = "<group>"; };
 		A8630D58BDAD6D9C650B9B39 /* PumpConfigProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PumpConfigProvider.swift; sourceTree = "<group>"; };
 		AAFF91130F2FCCC7EBBA11AD /* BasalProfileEditorStateModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BasalProfileEditorStateModel.swift; sourceTree = "<group>"; };
+		ABA854824EF663390AA5722C /* ScheduleFireSetup.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScheduleFireSetup.swift; sourceTree = "<group>"; };
 		ADA10001ADA10001ADA10001 /* ProfileStored+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProfileStored+CoreDataClass.swift"; sourceTree = "<group>"; };
 		ADA10003ADA10003ADA10003 /* ProfileStored+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProfileStored+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		ADA10005ADA10005ADA10005 /* ProfileStored+Helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProfileStored+Helper.swift"; sourceTree = "<group>"; };
@@ -3519,6 +3521,7 @@
 				58645BA22CA2D325008AFCE7 /* BatterySetup.swift */,
 				58645BA42CA2D347008AFCE7 /* ForecastSetup.swift */,
 				58645BA62CA2D390008AFCE7 /* ChartAxisSetup.swift */,
+				ABA854824EF663390AA5722C /* ScheduleFireSetup.swift */,
 			);
 			path = "HomeStateModel+Setup";
 			sourceTree = "<group>";
@@ -5791,6 +5794,7 @@
 				CE51D92F6BA6C58B03D3C0D9 /* ProfileSchedulerRootView.swift in Sources */,
 				324C9DA0BCAF56E5E21A283D /* NewScheduleView.swift in Sources */,
 				5295820B7D871691946434EA /* CustomRepeatView.swift in Sources */,
+				B743861663E75B7C0DE3B9A8 /* ScheduleFireSetup.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
