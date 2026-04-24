@@ -5,7 +5,7 @@ extension ProfileScheduler {
     /// context-dependent Config that switches based on the chosen repeat kind (once / daily /
     /// weekdays / weekends / custom weekly / custom monthly). Default kind is `.once` so the
     /// simplest case is one tap away.
-    struct NewScheduleView: View {
+    struct AddScheduleView: View {
         @Bindable var state: StateModel
         let onDismiss: () -> Void
 

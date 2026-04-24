@@ -6,7 +6,7 @@ extension AdaptProfile {
     /// On "Next" the percentage is applied (basal floored to pump-supported rates, ISF and CR
     /// quantized to picker steps) and the parent transitions to the draft editor hub. Saving
     /// happens from the hub, not here.
-    struct NewProfileForm: View {
+    struct AddProfileForm: View {
         @Bindable var state: StateModel
         let onCancel: () -> Void
         let onNext: () -> Void

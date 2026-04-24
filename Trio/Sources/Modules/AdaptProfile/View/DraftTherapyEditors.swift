@@ -1,9 +1,6 @@
 import Charts
 import SwiftUI
 
-// Thin wrappers around the shared `TherapySettingEditorView` for each therapy schedule in the
-// draft flow. Bindings write straight into the draft state model — no side effects.
-
 extension AdaptProfile {
     /// Basal rate editor with the same chart + total daily basal footer as the live editor.
     struct DraftBasalEditor: View {

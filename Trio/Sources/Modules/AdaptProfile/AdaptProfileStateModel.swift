@@ -3,7 +3,7 @@ import Observation
 import SwiftUI
 
 extension AdaptProfile {
-    /// In-memory draft handed from `NewProfileForm` → `DraftEditorRootView`. Holds the source
+    /// In-memory draft handed from `AddProfileForm` → `DraftEditorRootView`. Holds the source
     /// profile's values plus the percent-adjusted therapy values, ready for further editing.
     struct NewProfileDraft {
         var name: String = ""

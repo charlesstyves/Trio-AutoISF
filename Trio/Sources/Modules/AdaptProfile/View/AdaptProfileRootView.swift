@@ -5,7 +5,7 @@ extension AdaptProfile {
     struct RootView: BaseView {
         let resolver: Resolver
         @State var state = StateModel()
-        @State private var showNewProfile = false
+        @State private var showAddProfile = false
         @State private var draftEditorState: DraftEditorStateModel?
         @State private var editDraftState: DraftEditorStateModel?
         @State private var selectedProfile: AdaptProfileListItem?
@@ -94,7 +94,7 @@ extension AdaptProfile {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: {
                         state.startNewDraft()
-                        showNewProfile = true
+                        showAddProfile = true
                     }, label: {
                         HStack {
                             Text("Add Profile")
@@ -117,8 +117,8 @@ extension AdaptProfile {
                     sheetTitle: String(localized: "Help", comment: "Help sheet title")
                 )
             }
-            .sheet(isPresented: $showNewProfile, onDismiss: { draftEditorState = nil }) {
-                newProfileSheet
+            .sheet(isPresented: $showAddProfile, onDismiss: { draftEditorState = nil }) {
+                addProfileSheet
             }
             .sheet(item: $editDraftState) { draftState in
                 NavigationStack {
@@ -190,11 +190,11 @@ extension AdaptProfile {
             }
         }
 
-        private var newProfileSheet: some View {
+        private var addProfileSheet: some View {
             NavigationStack {
-                NewProfileForm(
+                AddProfileForm(
                     state: state,
-                    onCancel: { showNewProfile = false },
+                    onCancel: { showAddProfile = false },
                     onNext: {
                         draftEditorState = DraftEditorStateModel(
                             provider: state.provider,
@@ -214,7 +214,7 @@ extension AdaptProfile {
                         DraftEditorRootView(
                             state: draftState,
                             onSaved: {
-                                showNewProfile = false
+                                showAddProfile = false
                                 Task { await state.refresh() }
                             }
                         )

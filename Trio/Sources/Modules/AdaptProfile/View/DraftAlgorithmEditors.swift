@@ -1,8 +1,5 @@
 import SwiftUI
 
-// Algorithm sub-editors for the profile draft flow. Each embeds shared `SettingInputSection`s
-// bound directly to the DraftEditorStateModel's `preferences` — pure bindings, no side effects.
-
 extension AdaptProfile {
     // MARK: - Autosens
 

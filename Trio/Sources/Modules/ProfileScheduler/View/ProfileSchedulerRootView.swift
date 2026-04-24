@@ -5,7 +5,7 @@ extension ProfileScheduler {
     struct RootView: BaseView {
         let resolver: Resolver
         @State var state = StateModel()
-        @State private var showNewSchedule = false
+        @State private var showAddSchedule = false
         @State private var selectedForDelete: ProfileScheduleListItem?
         @State private var isConfirmDeletePresented = false
 
@@ -20,7 +20,7 @@ extension ProfileScheduler {
 
         var body: some View {
             List {
-                if state.schedules.isEmpty, !state.isLoading {
+                if state.items.isEmpty, !state.isLoading {
                     emptyState
                 } else {
                     schedulesSection
@@ -37,7 +37,7 @@ extension ProfileScheduler {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: {
                         state.startNewDraft()
-                        showNewSchedule = true
+                        showAddSchedule = true
                     }, label: {
                         HStack {
                             Text("Add Schedule")
@@ -46,8 +46,8 @@ extension ProfileScheduler {
                     })
                 }
             }
-            .sheet(isPresented: $showNewSchedule) {
-                NewScheduleView(state: state, onDismiss: { showNewSchedule = false })
+            .sheet(isPresented: $showAddSchedule) {
+                AddScheduleView(state: state, onDismiss: { showAddSchedule = false })
             }
         }
 
@@ -72,7 +72,7 @@ extension ProfileScheduler {
 
         private var schedulesSection: some View {
             Section {
-                ForEach(state.schedules) { item in
+                ForEach(state.items) { item in
                     row(for: item)
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                             Button {

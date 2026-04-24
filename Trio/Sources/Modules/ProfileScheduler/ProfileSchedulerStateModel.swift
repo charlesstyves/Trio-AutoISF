@@ -4,7 +4,7 @@ import SwiftUI
 
 extension ProfileScheduler {
     @Observable final class StateModel: BaseStateModel<Provider> {
-        var schedules: [ProfileScheduleListItem] = []
+        var items: [ProfileScheduleListItem] = []
         var availableProfiles: [ProfilePickerChoice] = []
         var isLoading: Bool = false
 
@@ -28,7 +28,7 @@ extension ProfileScheduler {
             isLoading = true
             async let schedulesTask = provider.fetchAllSchedules()
             async let profilesTask = provider.fetchProfiles()
-            schedules = await schedulesTask
+            items = await schedulesTask
             availableProfiles = await profilesTask
             isLoading = false
         }
