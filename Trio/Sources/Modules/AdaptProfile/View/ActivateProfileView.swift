@@ -131,11 +131,19 @@ extension AdaptProfile {
 
         private func formatHoursAndMinutes(hours: Int, minutes: Int) -> String {
             if hours == 0, minutes == 0 {
-                return String(localized: "Tap to set")
+                return String(
+                    localized: "Tap to set",
+                    comment: "Placeholder on activation duration row when the user hasn't chosen hours or minutes yet"
+                )
             }
-            if hours == 0 { return "\(minutes) min" }
-            if minutes == 0 { return "\(hours) hr" }
-            return "\(hours) hr \(minutes) min"
+            if hours ==
+                0 { return String(localized: "\(minutes) min", comment: "Activation duration row — duration in minutes only") }
+            if minutes ==
+                0 { return String(localized: "\(hours) hr", comment: "Activation duration row — duration in whole hours") }
+            return String(
+                localized: "\(hours) hr \(minutes) min",
+                comment: "Activation duration row — duration in hours and minutes"
+            )
         }
 
         private var slideSection: some View {
@@ -166,13 +174,20 @@ extension AdaptProfile {
         }
 
         private var slideLabel: String {
-            if indefinite { return String(localized: "Slide to activate indefinitely") }
+            if indefinite { return String(
+                localized: "Slide to activate indefinitely",
+                comment: "Slide-to-confirm button label when user chose indefinite activation"
+            ) }
             if totalMinutes > 0 {
                 return String(
-                    localized: "Slide to activate for \(formatHoursAndMinutes(hours: durationHours, minutes: durationMinutes))"
+                    localized: "Slide to activate for \(formatHoursAndMinutes(hours: durationHours, minutes: durationMinutes))",
+                    comment: "Slide-to-confirm button label — the interpolated value is a formatted duration like '3 hr 15 min'"
                 )
             }
-            return String(localized: "Choose a duration first")
+            return String(
+                localized: "Choose a duration first",
+                comment: "Slide-to-confirm button label shown (disabled) when no duration is set and indefinite is off"
+            )
         }
 
         // MARK: - Activation driver

@@ -112,7 +112,7 @@ extension AdaptProfile {
                 SettingInputHintView(
                     hintDetent: $profileHintDetent,
                     shouldDisplayHint: $showProfileHint,
-                    hintLabel: String(localized: "About Profiles"),
+                    hintLabel: String(localized: "About Profiles", comment: "Help hint label on the AdaptProfile list screen"),
                     hintText: AnyView(profileAbstractHint),
                     sheetTitle: String(localized: "Help", comment: "Help sheet title")
                 )
@@ -200,7 +200,10 @@ extension AdaptProfile {
                             provider: state.provider,
                             insulinConcentration: state.settingsManager.settings.insulinConcentration,
                             units: state.settingsManager.settings.units,
-                            sourceProfileName: activeItem?.name ?? String(localized: "Current"),
+                            sourceProfileName: activeItem?.name ?? String(
+                                localized: "Current",
+                                comment: "Fallback source-profile name used in the draft editor when no profile is currently active"
+                            ),
                             sourceProfileID: activeItem?.id,
                             from: state.draft
                         )
@@ -243,7 +246,10 @@ extension AdaptProfile {
                     }
                     if let expiresAt = item.expiresAt {
                         let minutesLeft = max(0, Int(expiresAt.timeIntervalSinceNow / 60))
-                        Text(minutesLeft > 0 ? formatHrMin(minutesLeft) : String(localized: "Expiring"))
+                        Text(minutesLeft > 0 ? formatHrMin(minutesLeft) : String(
+                            localized: "Expiring",
+                            comment: "Countdown label shown on the active-profile banner when less than a minute of a timed activation remains"
+                        ))
                             .font(.footnote.weight(.medium))
                             .foregroundStyle(.white.opacity(0.9))
                     }
@@ -408,12 +414,16 @@ extension AdaptProfile {
             case let .minutes(m):
                 let h = m / 60
                 let mm = m % 60
-                if h == 0 { return "for \(mm) min" }
-                if mm == 0 { return "for \(h) h" }
-                return "for \(h) h \(mm) min"
+                if h ==
+                    0 { return String(localized: "for \(mm) min", comment: "Upcoming-schedule row duration — under one hour") }
+                if mm == 0 { return String(localized: "for \(h) h", comment: "Upcoming-schedule row duration — whole hours") }
+                return String(localized: "for \(h) h \(mm) min", comment: "Upcoming-schedule row duration — hours and minutes")
             case .indefinite,
                  .untilNext:
-                return "until next change"
+                return String(
+                    localized: "until next change",
+                    comment: "Upcoming-schedule row duration — indefinite or until-next activation"
+                )
             }
         }
 

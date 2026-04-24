@@ -203,21 +203,30 @@ extension Notification.Name {
             try await importer.importGlucoseHistoryIfNeeded()
         } catch {
             importErrors
-                .append(String(localized: "Failed to import glucose history."))
+                .append(String(
+                    localized: "Failed to import glucose history.",
+                    comment: "Migration error shown on first launch when legacy glucose JSON fails to import into Core Data"
+                ))
             debug(.coreData, "❌ Failed to import JSON-based Glucose History: \(error)")
         }
 
         do {
             try await importer.importPumpHistoryIfNeeded()
         } catch {
-            importErrors.append(String(localized: "Failed to import pump history."))
+            importErrors.append(String(
+                localized: "Failed to import pump history.",
+                comment: "Migration error shown on first launch when legacy pump-history JSON fails to import into Core Data"
+            ))
             debug(.coreData, "❌ Failed to import JSON-based Pump History: \(error)")
         }
 
         do {
             try await importer.importCarbHistoryIfNeeded()
         } catch {
-            importErrors.append(String(localized: "Failed to import algorithm data."))
+            importErrors.append(String(
+                localized: "Failed to import algorithm data.",
+                comment: "Migration error shown on first launch when legacy carb/algorithm JSON fails to import into Core Data"
+            ))
             debug(.coreData, "❌ Failed to import JSON-based Carb History: \(error)")
         }
 
@@ -226,7 +235,10 @@ extension Notification.Name {
         } catch {
             importErrors
                 .append(
-                    String(localized: "Migration of JSON-based OpenAPS Determination Data failed: \(error.localizedDescription)")
+                    String(
+                        localized: "Migration of JSON-based OpenAPS Determination Data failed: \(error.localizedDescription)",
+                        comment: "Migration error on first launch — the interpolated value is the underlying system error description"
+                    )
                 )
             debug(.coreData, "❌ Failed to import JSON-based OpenAPS Determination Data: \(error)")
         }

@@ -396,7 +396,7 @@ struct AddOverrideForm: View {
                 isExpanded: $showAutoISFSection,
                 content: {
                     autoISFRow(
-                        label: "IOB Threshold %",
+                        label: String(localized: "IOB Threshold %", comment: "Row label on Add Override form — IOB Threshold %"),
                         value: Binding(
                             get: { state.overrideIobThresholdPercent ?? state.profileIobThresholdPercent },
                             set: { state.overrideIobThresholdPercent = $0 == state.profileIobThresholdPercent ? nil : $0 }
@@ -407,7 +407,7 @@ struct AddOverrideForm: View {
                         onReset: { state.overrideIobThresholdPercent = nil }
                     )
                     autoISFRow(
-                        label: "autoISF Min",
+                        label: String(localized: "autoISF Min", comment: "Row label on Add Override form — autoISF Min"),
                         value: Binding(
                             get: { state.overrideAutoISFmin ?? state.profileAutoISFmin },
                             set: { state.overrideAutoISFmin = $0 == state.profileAutoISFmin ? nil : $0 }
@@ -418,7 +418,7 @@ struct AddOverrideForm: View {
                         onReset: { state.overrideAutoISFmin = nil }
                     )
                     autoISFRow(
-                        label: "autoISF Max",
+                        label: String(localized: "autoISF Max", comment: "Row label on Add Override form — autoISF Max"),
                         value: Binding(
                             get: { state.overrideAutoISFmax ?? state.profileAutoISFmax },
                             set: { state.overrideAutoISFmax = $0 == state.profileAutoISFmax ? nil : $0 }
@@ -429,7 +429,7 @@ struct AddOverrideForm: View {
                         onReset: { state.overrideAutoISFmax = nil }
                     )
                     autoISFRow(
-                        label: "DuraISF Weight",
+                        label: String(localized: "DuraISF Weight", comment: "Row label on Add Override form — DuraISF Weight"),
                         value: Binding(
                             get: { state.overrideAutoISFhourlyChange ?? state.profileAutoISFhourlyChange },
                             set: { state.overrideAutoISFhourlyChange = $0 == state.profileAutoISFhourlyChange ? nil : $0 }
@@ -440,7 +440,10 @@ struct AddOverrideForm: View {
                         onReset: { state.overrideAutoISFhourlyChange = nil }
                     )
                     autoISFRow(
-                        label: "ISF Weight for Higher BGs",
+                        label: String(
+                            localized: "ISF Weight for Higher BGs",
+                            comment: "Row label on Add Override form — ISF Weight for Higher BGs"
+                        ),
                         value: Binding(
                             get: { state.overrideHigherISFrangeWeight ?? state.profileHigherISFrangeWeight },
                             set: { state.overrideHigherISFrangeWeight = $0 == state.profileHigherISFrangeWeight ? nil : $0 }
@@ -451,7 +454,10 @@ struct AddOverrideForm: View {
                         onReset: { state.overrideHigherISFrangeWeight = nil }
                     )
                     autoISFRow(
-                        label: "ISF Weight for Lower BGs",
+                        label: String(
+                            localized: "ISF Weight for Lower BGs",
+                            comment: "Row label on Add Override form — ISF Weight for Lower BGs"
+                        ),
                         value: Binding(
                             get: { state.overrideLowerISFrangeWeight ?? state.profileLowerISFrangeWeight },
                             set: { state.overrideLowerISFrangeWeight = $0 == state.profileLowerISFrangeWeight ? nil : $0 }
@@ -462,7 +468,10 @@ struct AddOverrideForm: View {
                         onReset: { state.overrideLowerISFrangeWeight = nil }
                     )
                     autoISFRow(
-                        label: "ISF Weight for Postprandial BG Rise",
+                        label: String(
+                            localized: "ISF Weight for Postprandial BG Rise",
+                            comment: "Row label on Add Override form — ISF Weight for Postprandial BG Rise"
+                        ),
                         value: Binding(
                             get: { state.overridePostMealISFweight ?? state.profilePostMealISFweight },
                             set: { state.overridePostMealISFweight = $0 == state.profilePostMealISFweight ? nil : $0 }
@@ -497,7 +506,10 @@ struct AddOverrideForm: View {
                         .labelsHidden()
                     }
                     autoISFRow(
-                        label: "ISF Weight While BG Accelerates",
+                        label: String(
+                            localized: "ISF Weight While BG Accelerates",
+                            comment: "Row label on Add Override form — ISF Weight While BG Accelerates"
+                        ),
                         value: Binding(
                             get: { state.overrideBgAccelISFweight ?? state.profileBgAccelISFweight },
                             set: { state.overrideBgAccelISFweight = $0 == state.profileBgAccelISFweight ? nil : $0 }
@@ -508,7 +520,10 @@ struct AddOverrideForm: View {
                         onReset: { state.overrideBgAccelISFweight = nil }
                     )
                     autoISFRow(
-                        label: "ISF Weight While BG Decelerates",
+                        label: String(
+                            localized: "ISF Weight While BG Decelerates",
+                            comment: "Row label on Add Override form — ISF Weight While BG Decelerates"
+                        ),
                         value: Binding(
                             get: { state.overrideBgBrakeISFweight ?? state.profileBgBrakeISFweight },
                             set: { state.overrideBgBrakeISFweight = $0 == state.profileBgBrakeISFweight ? nil : $0 }
@@ -594,7 +609,10 @@ struct AddOverrideForm: View {
                 isExpanded: $showSmbSection,
                 content: {
                     autoISFRow(
-                        label: "SMB Delivery Ratio",
+                        label: String(
+                            localized: "SMB Delivery Ratio",
+                            comment: "Row label on Add Override form — SMB Delivery Ratio"
+                        ),
                         value: Binding(
                             get: { state.overrideSmbDeliveryRatio ?? state.profileSmbDeliveryRatio },
                             set: { state.overrideSmbDeliveryRatio = $0 == state.profileSmbDeliveryRatio ? nil : $0 }
@@ -609,7 +627,10 @@ struct AddOverrideForm: View {
                         isExpanded: $showVariableSmbRatio,
                         content: {
                             autoISFRow(
-                                label: "SMB Delivery Ratio BG Range",
+                                label: String(
+                                    localized: "SMB Delivery Ratio BG Range",
+                                    comment: "Row label on Add Override form — SMB Delivery Ratio BG Range"
+                                ),
                                 value: Binding(
                                     get: { state.overrideSmbDeliveryRatioBGrange ?? state.profileSmbDeliveryRatioBGrange },
                                     set: {
@@ -623,7 +644,10 @@ struct AddOverrideForm: View {
                                 onReset: { state.overrideSmbDeliveryRatioBGrange = nil }
                             )
                             autoISFRow(
-                                label: "SMB Delivery Ratio Min",
+                                label: String(
+                                    localized: "SMB Delivery Ratio Min",
+                                    comment: "Row label on Add Override form — SMB Delivery Ratio Min"
+                                ),
                                 value: Binding(
                                     get: { state.overrideSmbDeliveryRatioMin ?? state.profileSmbDeliveryRatioMin },
                                     set: {
@@ -636,7 +660,10 @@ struct AddOverrideForm: View {
                                 onReset: { state.overrideSmbDeliveryRatioMin = nil }
                             )
                             autoISFRow(
-                                label: "SMB Delivery Ratio Max",
+                                label: String(
+                                    localized: "SMB Delivery Ratio Max",
+                                    comment: "Row label on Add Override form — SMB Delivery Ratio Max"
+                                ),
                                 value: Binding(
                                     get: { state.overrideSmbDeliveryRatioMax ?? state.profileSmbDeliveryRatioMax },
                                     set: {
@@ -748,15 +775,33 @@ struct AddOverrideForm: View {
             !hasSmbOverrides
 
         if noDurationSpecified {
-            return (true, String(localized: "Enable indefinitely or set a duration."))
+            return (
+                true,
+                String(
+                    localized: "Enable indefinitely or set a duration.",
+                    comment: "Validation error on Add Override form when neither indefinite nor a duration is set"
+                )
+            )
         }
 
         if targetZeroWithOverride {
-            return (true, String(localized: "Target glucose is out of range (\(state.units == .mgdL ? "72-270" : "4-14"))."))
+            return (
+                true,
+                String(
+                    localized: "Target glucose is out of range (\(state.units == .mgdL ? "72-270" : "4-14")).",
+                    comment: "Validation error on Add Override form when target glucose is outside allowed range — interpolated value is the unit-dependent range"
+                )
+            )
         }
 
         if allSettingsDefault {
-            return (true, String(localized: "All settings are at default values."))
+            return (
+                true,
+                String(
+                    localized: "All settings are at default values.",
+                    comment: "Validation error on Add Override form when the override would be a no-op (all defaults)"
+                )
+            )
         }
 
         return (false, nil)

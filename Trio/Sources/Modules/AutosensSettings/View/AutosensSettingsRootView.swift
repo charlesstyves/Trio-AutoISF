@@ -102,7 +102,10 @@ extension AutosensSettings {
                         Spacer()
                         Button(
                             action: {
-                                hintLabel = String(localized: "Autosens")
+                                hintLabel = String(
+                                    localized: "Autosens",
+                                    comment: "Hint mini-label on the Autosens settings screen when explaining the live Sensitivity Ratio"
+                                )
                                 selectedVerboseHint = AnyView(autosensVerboseHint)
                                 shouldDisplayHint.toggle()
                             },
@@ -139,7 +142,10 @@ extension AutosensSettings {
                     label: AlgorithmSettingHints.autosensMaxLabel,
                     miniHint: AlgorithmSettingHints.autosensMaxMini,
                     verboseHint: AlgorithmSettingHints.autosensMaxVerbose(),
-                    headerText: String(localized: "Glucose Deviations Algorithm")
+                    headerText: String(
+                        localized: "Glucose Deviations Algorithm",
+                        comment: "Section header on the Autosens settings screen grouping max/min and related controls"
+                    )
                 )
 
                 SettingInputSection(

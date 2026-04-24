@@ -122,7 +122,10 @@ final class BaseOverrideStorage: @preconcurrency OverrideStorage, Injectable {
                 newOverride.name = override.name
             } else {
                 let formattedDate = self.dateFormatter.string(from: Date())
-                newOverride.name = "Override \(formattedDate)"
+                newOverride.name = String(
+                    localized: "Override \(formattedDate)",
+                    comment: "Default name for a new override when the user left the name field blank — interpolated value is a formatted date/time"
+                )
             }
             newOverride.id = UUID().uuidString
             newOverride.date = override.date
@@ -292,7 +295,10 @@ final class BaseOverrideStorage: @preconcurrency OverrideStorage, Injectable {
                     eventType: OverrideStored.EventType.nsExercise,
                     createdAt: override.date ?? Date(),
                     enteredBy: NightscoutExercise.local,
-                    notes: override.name ?? String(localized: "Custom Override"),
+                    notes: override.name ?? String(
+                        localized: "Custom Override",
+                        comment: "Fallback name for an unnamed override uploaded to Nightscout"
+                    ),
                     id: UUID(uuidString: override.id ?? UUID().uuidString)
                 )
             }
@@ -325,7 +331,10 @@ final class BaseOverrideStorage: @preconcurrency OverrideStorage, Injectable {
                     eventType: OverrideStored.EventType.nsExercise,
                     createdAt: (overrideRun.startDate ?? overrideRun.override?.date) ?? Date(),
                     enteredBy: NightscoutExercise.local,
-                    notes: overrideRun.name ?? String(localized: "Custom Override"),
+                    notes: overrideRun.name ?? String(
+                        localized: "Custom Override",
+                        comment: "Fallback name for an unnamed historical override run uploaded to Nightscout"
+                    ),
                     id: overrideRun.id
                 )
             }
@@ -375,7 +384,10 @@ final class BaseOverrideStorage: @preconcurrency OverrideStorage, Injectable {
                 eventType: OverrideStored.EventType.nsExercise,
                 createdAt: recordDate,
                 enteredBy: NightscoutExercise.local,
-                notes: record.name ?? String(localized: "Custom Override"),
+                notes: record.name ?? String(
+                    localized: "Custom Override",
+                    comment: "Fallback name when checking whether a stored Nightscout override entry needs updating"
+                ),
                 id: UUID(uuidString: record.id ?? UUID().uuidString)
             )
         }

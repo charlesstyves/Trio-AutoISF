@@ -53,7 +53,7 @@ extension Home.StateModel {
             }()
             return Expired(
                 objectID: active.objectID,
-                name: active.name ?? "Unnamed",
+                name: active.name ?? "",
                 previousID: active.previousProfileID,
                 previousName: previousName
             )
@@ -63,7 +63,7 @@ extension Home.StateModel {
         if let previousID = expired.previousID {
             let provider = AdaptProfile.Provider(resolver: resolver)
             _ = await provider.activate(id: previousID, durationMinutes: nil, confirmedPumpSync: true)
-            postRevertedNotification(expiredName: expired.name, anchorName: expired.previousName ?? "Unnamed")
+            postRevertedNotification(expiredName: expired.name, anchorName: expired.previousName ?? "")
             return
         }
 
@@ -93,8 +93,14 @@ extension Home.StateModel {
 
 @MainActor private func postRevertedNotification(expiredName: String, anchorName: String) {
     let content = UNMutableNotificationContent()
-    content.title = String(localized: "Profile \"\(expiredName)\" expired")
-    content.body = String(localized: "Reverted to \"\(anchorName)\".")
+    content.title = String(
+        localized: "Profile \"\(expiredName)\" expired",
+        comment: "Title of profile-expired notification — interpolated value is the expiring profile's name"
+    )
+    content.body = String(
+        localized: "Reverted to \"\(anchorName)\".",
+        comment: "Body of profile-expired notification — interpolated value is the anchor profile name we reverted to"
+    )
     content.sound = .default
     content.categoryIdentifier = NotificationCategoryIdentifier.profileReverted.rawValue
     let request = UNNotificationRequest(

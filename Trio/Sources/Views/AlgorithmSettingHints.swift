@@ -15,7 +15,10 @@ enum AlgorithmSettingHints {
     // MARK: - Autosens
 
     static let autosensMaxLabel = String(localized: "Autosens Max", comment: "Autosens Max")
-    static let autosensMaxMini = String(localized: "Upper limit of the Sensitivity Ratio.")
+    static let autosensMaxMini = String(
+        localized: "Upper limit of the Sensitivity Ratio.",
+        comment: "Mini-hint for Autosens Max setting"
+    )
 
     @ViewBuilder static func autosensMaxVerbose() -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -33,7 +36,10 @@ enum AlgorithmSettingHints {
     }
 
     static let autosensMinLabel = String(localized: "Autosens Min", comment: "Autosens Min")
-    static let autosensMinMini = String(localized: "Lower limit of the Sensitivity Ratio.")
+    static let autosensMinMini = String(
+        localized: "Lower limit of the Sensitivity Ratio.",
+        comment: "Mini-hint for Autosens Min setting"
+    )
 
     @ViewBuilder static func autosensMinVerbose() -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -51,7 +57,10 @@ enum AlgorithmSettingHints {
     }
 
     static let rewindResetsAutosensLabel = String(localized: "Rewind Resets Autosens", comment: "Rewind Resets Autosens")
-    static let rewindResetsAutosensMini = String(localized: "Pump rewind initiates a reset in Sensitivity Ratio.")
+    static let rewindResetsAutosensMini = String(
+        localized: "Pump rewind initiates a reset in Sensitivity Ratio.",
+        comment: "Mini-hint for Rewind Resets Autosens setting"
+    )
 
     @ViewBuilder static func rewindResetsAutosensVerbose() -> some View {
         VStack(alignment: .leading, spacing: 5) {
@@ -79,7 +88,8 @@ enum AlgorithmSettingHints {
     )
     static func highTempTargetRaisesSensitivityMini(units: GlucoseUnits) -> String {
         String(
-            localized: "Increase sensitivity when glucose is above target if a manual Temp Target > \(units == .mgdL ? "100" : 100.formattedAsMmolL) \(units.rawValue) is set."
+            localized: "Increase sensitivity when glucose is above target if a manual Temp Target > \(units == .mgdL ? "100" : 100.formattedAsMmolL) \(units.rawValue) is set.",
+            comment: "Mini-hint for High Temp Target Raises Sensitivity — interpolated values are the threshold number and the glucose unit"
         )
     }
 
@@ -102,7 +112,8 @@ enum AlgorithmSettingHints {
     )
     static func lowTempTargetLowersSensitivityMini(units: GlucoseUnits) -> String {
         String(
-            localized: "Decrease sensitivity when glucose is below target if a manual Temp Target < \(units == .mgdL ? "100" : 100.formattedAsMmolL) \(units.rawValue) is set."
+            localized: "Decrease sensitivity when glucose is below target if a manual Temp Target < \(units == .mgdL ? "100" : 100.formattedAsMmolL) \(units.rawValue) is set.",
+            comment: "Mini-hint for Low Temp Target Lowers Sensitivity — interpolated values are the threshold number and the glucose unit"
         )
     }
 
@@ -122,7 +133,10 @@ enum AlgorithmSettingHints {
     static let sensitivityRaisesTargetLabel = String(
         localized: "Sensitivity Raises Target", comment: "Sensitivity Raises Target"
     )
-    static let sensitivityRaisesTargetMini = String(localized: "Raise target glucose when Autosens Ratio is less than 1.")
+    static let sensitivityRaisesTargetMini = String(
+        localized: "Raise target glucose when Autosens Ratio is less than 1.",
+        comment: "Mini-hint for Sensitivity Raises Target setting"
+    )
 
     @ViewBuilder static func sensitivityRaisesTargetVerbose() -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -136,7 +150,10 @@ enum AlgorithmSettingHints {
     static let resistanceLowersTargetLabel = String(
         localized: "Resistance Lowers Target", comment: "Resistance Lowers Target"
     )
-    static let resistanceLowersTargetMini = String(localized: "Lower target glucose when Autosens Ratio is greater than 1.")
+    static let resistanceLowersTargetMini = String(
+        localized: "Lower target glucose when Autosens Ratio is greater than 1.",
+        comment: "Mini-hint for Resistance Lowers Target setting"
+    )
 
     @ViewBuilder static func resistanceLowersTargetVerbose() -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -150,7 +167,10 @@ enum AlgorithmSettingHints {
     static let halfBasalExerciseTargetLabel = String(
         localized: "Half Basal Exercise Target", comment: "Half Basal Exercise Target"
     )
-    static let halfBasalExerciseTargetMini = String(localized: "Scales down your basal rate to 50% at this value.")
+    static let halfBasalExerciseTargetMini = String(
+        localized: "Scales down your basal rate to 50% at this value.",
+        comment: "Mini-hint for Half Basal Exercise Target setting"
+    )
 
     @ViewBuilder static func halfBasalExerciseTargetVerbose(units: GlucoseUnits) -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -173,7 +193,10 @@ enum AlgorithmSettingHints {
     // MARK: - SMB
 
     static let enableSMBAlwaysLabel = String(localized: "Enable SMB Always", comment: "Enable SMB Always")
-    static let enableSMBAlwaysMini = String(localized: "Allow SMBs at all times except when a high Temp Target is set.")
+    static let enableSMBAlwaysMini = String(
+        localized: "Allow SMBs at all times except when a high Temp Target is set.",
+        comment: "Mini-hint for Enable SMB Always setting"
+    )
 
     @ViewBuilder static func enableSMBAlwaysVerbose() -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -188,7 +211,10 @@ enum AlgorithmSettingHints {
     }
 
     static let enableSMBWithCOBLabel = String(localized: "Enable SMB With COB", comment: "Enable SMB With COB")
-    static let enableSMBWithCOBMini = String(localized: "Allow SMB when carbs are on board.")
+    static let enableSMBWithCOBMini = String(
+        localized: "Allow SMB when carbs are on board.",
+        comment: "Mini-hint for Enable SMB With COB setting"
+    )
 
     @ViewBuilder static func enableSMBWithCOBVerbose() -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -207,7 +233,8 @@ enum AlgorithmSettingHints {
     )
     static func enableSMBWithTemptargetMini(units: GlucoseUnits) -> String {
         String(
-            localized: "Allow SMB when a manual Temporary Target is set under \(units == .mgdL ? "100" : 100.formattedAsMmolL) \(units.rawValue)."
+            localized: "Allow SMB when a manual Temporary Target is set under \(units == .mgdL ? "100" : 100.formattedAsMmolL) \(units.rawValue).",
+            comment: "Mini-hint for Enable SMB With Temptarget — interpolated values are the threshold number and the glucose unit"
         )
     }
 
@@ -224,7 +251,10 @@ enum AlgorithmSettingHints {
     }
 
     static let enableSMBAfterCarbsLabel = String(localized: "Enable SMB After Carbs", comment: "Enable SMB After Carbs")
-    static let enableSMBAfterCarbsMini = String(localized: "Allow SMB for 6 hrs after a carb entry.")
+    static let enableSMBAfterCarbsMini = String(
+        localized: "Allow SMB for 6 hrs after a carb entry.",
+        comment: "Mini-hint for Enable SMB After Carbs setting"
+    )
 
     @ViewBuilder static func enableSMBAfterCarbsVerbose() -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -241,9 +271,13 @@ enum AlgorithmSettingHints {
     static let enableSMBWithHighGlucoseLabel = String(
         localized: "Enable SMB With High Glucose", comment: "Enable SMB With High Glucose"
     )
-    static let enableSMBWithHighGlucoseConditionalLabel = String(localized: "High Glucose Target")
+    static let enableSMBWithHighGlucoseConditionalLabel = String(
+        localized: "High Glucose Target",
+        comment: "Row label for the high-glucose target field that gates Enable SMB With High Glucose"
+    )
     static let enableSMBWithHighGlucoseMini = String(
-        localized: "Allow SMB when glucose is above the High Glucose Target value."
+        localized: "Allow SMB when glucose is above the High Glucose Target value.",
+        comment: "Mini-hint for Enable SMB With High Glucose setting"
     )
 
     @ViewBuilder static func enableSMBWithHighGlucoseVerbose() -> some View {
@@ -263,7 +297,8 @@ enum AlgorithmSettingHints {
     )
     static func allowSMBWithHighTemptargetMini(units: GlucoseUnits) -> String {
         String(
-            localized: "Allow SMB when a manual Temporary Target is set greater than \(units == .mgdL ? "100" : 100.formattedAsMmolL) \(units.rawValue)."
+            localized: "Allow SMB when a manual Temporary Target is set greater than \(units == .mgdL ? "100" : 100.formattedAsMmolL) \(units.rawValue).",
+            comment: "Mini-hint for Allow SMB With High Temptarget — interpolated values are the threshold number and the glucose unit"
         )
     }
 
@@ -283,7 +318,7 @@ enum AlgorithmSettingHints {
     }
 
     static let enableUAMLabel = String(localized: "Enable UAM", comment: "Enable UAM")
-    static let enableUAMMini = String(localized: "Enable Unannounced Meals SMB.")
+    static let enableUAMMini = String(localized: "Enable Unannounced Meals SMB.", comment: "Mini-hint for Enable UAM setting")
 
     @ViewBuilder static func enableUAMVerbose() -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -301,7 +336,10 @@ enum AlgorithmSettingHints {
     }
 
     static let maxSMBBasalMinutesLabel = String(localized: "Max SMB Basal Minutes", comment: "Max SMB Basal Minutes")
-    static let maxSMBBasalMinutesMini = String(localized: "Limits the size of a single Super Micro Bolus (SMB) dose.")
+    static let maxSMBBasalMinutesMini = String(
+        localized: "Limits the size of a single Super Micro Bolus (SMB) dose.",
+        comment: "Mini-hint for Max SMB Basal Minutes setting"
+    )
 
     @ViewBuilder static func maxSMBBasalMinutesVerbose() -> some View {
         VStack(spacing: 10) {
@@ -334,7 +372,8 @@ enum AlgorithmSettingHints {
 
     static let smbThresholdRatioLabel = String(localized: "SMB Threshold Ratio", comment: "SMB Threshold Ratio")
     static let smbThresholdRatioMini = String(
-        localized: "Raises the glucose floor below which SMBs are blocked. 0.5 keeps default behaviour, 1.0 blocks SMBs until above target."
+        localized: "Raises the glucose floor below which SMBs are blocked. 0.5 keeps default behaviour, 1.0 blocks SMBs until above target.",
+        comment: "Mini-hint for SMB Threshold Ratio setting"
     )
 
     @ViewBuilder static func smbThresholdRatioVerbose() -> some View {
@@ -357,11 +396,15 @@ enum AlgorithmSettingHints {
     }
 
     static let maxUAMBasalMinutesLabel = String(localized: "Max UAM Basal Minutes", comment: "Max UAM Basal Minutes")
-    static let maxUAMBasalMinutesMini = String(localized: "Limits the size of a single Unannounced Meal (UAM) SMB dose.")
+    static let maxUAMBasalMinutesMini = String(
+        localized: "Limits the size of a single Unannounced Meal (UAM) SMB dose.",
+        comment: "Mini-hint for Max UAM Basal Minutes setting"
+    )
 
     static let smbIntervalLabel = String(localized: "SMB Interval", comment: "SMB Interval")
     static let smbIntervalMini = String(
-        localized: "Minimum minutes since the last SMB or manual bolus to allow an automated SMB."
+        localized: "Minimum minutes since the last SMB or manual bolus to allow an automated SMB.",
+        comment: "Mini-hint for SMB Interval setting"
     )
 
     @ViewBuilder static func smbIntervalVerbose() -> some View {
@@ -409,7 +452,8 @@ enum AlgorithmSettingHints {
     /// the Settings picker, but the help content is identical).
     static let dynamicISFLabel = String(localized: "Dynamic ISF", comment: "Dynamic ISF")
     static let useDynamicISFMini = String(
-        localized: "Dynamically adjust insulin sensitivity using Dynamic Ratio rather than Autosens Ratio."
+        localized: "Dynamically adjust insulin sensitivity using Dynamic Ratio rather than Autosens Ratio.",
+        comment: "Mini-hint for Use Dynamic ISF setting"
     )
 
     @ViewBuilder static func dynamicISFVerbose() -> some View {
@@ -456,8 +500,14 @@ enum AlgorithmSettingHints {
         }
     }
 
-    static let adjustmentFactorLabel = String(localized: "Adjustment Factor (AF)")
-    static let adjustmentFactorMini = String(localized: "Alter the rate of Dynamic ISF (Sensitivity) adjustments.")
+    static let adjustmentFactorLabel = String(
+        localized: "Adjustment Factor (AF)",
+        comment: "Row label for the Dynamic ISF Adjustment Factor (AF) setting"
+    )
+    static let adjustmentFactorMini = String(
+        localized: "Alter the rate of Dynamic ISF (Sensitivity) adjustments.",
+        comment: "Mini-hint for Dynamic ISF Adjustment Factor (AF) setting"
+    )
 
     @ViewBuilder static func adjustmentFactorVerbose() -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -474,9 +524,13 @@ enum AlgorithmSettingHints {
         }
     }
 
-    static let adjustmentFactorSigmoidLabel = String(localized: "Sigmoid Adjustment Factor")
+    static let adjustmentFactorSigmoidLabel = String(
+        localized: "Sigmoid Adjustment Factor",
+        comment: "Row label for the Sigmoid variant of the Dynamic ISF Adjustment Factor"
+    )
     static let adjustmentFactorSigmoidMini = String(
-        localized: "Alter the rate of dynamic sensitivity adjustments for Sigmoid."
+        localized: "Alter the rate of dynamic sensitivity adjustments for Sigmoid.",
+        comment: "Mini-hint for Sigmoid Dynamic ISF Adjustment Factor"
     )
 
     @ViewBuilder static func adjustmentFactorSigmoidVerbose() -> some View {
@@ -497,8 +551,14 @@ enum AlgorithmSettingHints {
         }
     }
 
-    static let weightPercentageLabel = String(localized: "Weighted Average of TDD")
-    static let weightPercentageMini = String(localized: "Weight of 24-hr TDD against 10-day TDD.")
+    static let weightPercentageLabel = String(
+        localized: "Weighted Average of TDD",
+        comment: "Row label for the Dynamic ISF Weighted-Average-of-TDD setting"
+    )
+    static let weightPercentageMini = String(
+        localized: "Weight of 24-hr TDD against 10-day TDD.",
+        comment: "Mini-hint for Dynamic ISF Weighted-Average-of-TDD setting"
+    )
 
     @ViewBuilder static func weightPercentageVerbose() -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -514,8 +574,11 @@ enum AlgorithmSettingHints {
         }
     }
 
-    static let tddAdjBasalLabel = String(localized: "Adjust Basal")
-    static let tddAdjBasalMini = String(localized: "Use Dynamic Ratio to adjust basal rates.")
+    static let tddAdjBasalLabel = String(localized: "Adjust Basal", comment: "Row label for the Dynamic-ISF Adjust-Basal toggle")
+    static let tddAdjBasalMini = String(
+        localized: "Use Dynamic Ratio to adjust basal rates.",
+        comment: "Mini-hint for Dynamic-ISF Adjust-Basal toggle"
+    )
 
     @ViewBuilder static func tddAdjBasalVerbose() -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -533,16 +596,26 @@ enum AlgorithmSettingHints {
 
     // Draft-only master/sub toggles for Dynamic ISF. Settings uses a picker; the draft models
     // dynISF as two booleans (`useNewFormula`, `sigmoid`). Both reuse the full `dynamicISFVerbose`.
-    static let useDynamicISFLabel = String(localized: "Use Dynamic ISF")
-    static let sigmoidLabel = String(localized: "Sigmoid")
-    static let sigmoidMini = String(localized: "Use the sigmoid dynISF formula instead of logarithmic.")
+    static let useDynamicISFLabel = String(localized: "Use Dynamic ISF", comment: "Row label for the Use Dynamic ISF toggle")
+    static let sigmoidLabel = String(
+        localized: "Sigmoid",
+        comment: "Row label for the Sigmoid (vs logarithmic) Dynamic-ISF formula toggle"
+    )
+    static let sigmoidMini = String(
+        localized: "Use the sigmoid dynISF formula instead of logarithmic.",
+        comment: "Mini-hint for the Sigmoid (vs logarithmic) Dynamic-ISF formula toggle"
+    )
 
     // MARK: - autoISF
 
-    static let autoISFTitleLabel = String(localized: "autoISF 3.01")
-    static let activateAutoISFLabel = String(localized: "Activate autoISF")
+    static let autoISFTitleLabel = String(
+        localized: "autoISF 3.01",
+        comment: "Title label of the autoISF extension (version 3.01)"
+    )
+    static let activateAutoISFLabel = String(localized: "Activate autoISF", comment: "Row label for the Activate autoISF toggle")
     static let activateAutoISFMini = String(
-        localized: "autoISF 3.01 calculates insulin sensitivity (ISF) each loop cycle based on glucose behaviour within set limits."
+        localized: "autoISF 3.01 calculates insulin sensitivity (ISF) each loop cycle based on glucose behaviour within set limits.",
+        comment: "Mini-hint for Activate autoISF toggle"
     )
 
     @ViewBuilder static func activateAutoISFVerbose() -> some View {
@@ -1172,7 +1245,8 @@ enum AlgorithmSettingHints {
     /// (`smbDeliveryRatioFixed*`).
     static let smbDeliveryRatioLabel = String(localized: "SMB Delivery Ratio", comment: "SMB Delivery Ratio")
     static let smbDeliveryRatioMini = String(
-        localized: "Percentage of calculated insulin required that is given as SMB."
+        localized: "Percentage of calculated insulin required that is given as SMB.",
+        comment: "Mini-hint for SMB Delivery Ratio (AlgorithmAdvanced) setting"
     )
 
     @ViewBuilder static func smbDeliveryRatioVerbose() -> some View {
@@ -1189,7 +1263,10 @@ enum AlgorithmSettingHints {
     }
 
     static let min5mCarbimpactLabel = String(localized: "Min 5m Carb Impact", comment: "Min 5m Carb Impact")
-    static let min5mCarbimpactMini = String(localized: "Default impact of carb absorption over a 5 minute interval.")
+    static let min5mCarbimpactMini = String(
+        localized: "Default impact of carb absorption over a 5 minute interval.",
+        comment: "Mini-hint for Min 5m Carb Impact setting"
+    )
 
     @ViewBuilder static func min5mCarbimpactVerbose(units: GlucoseUnits) -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -1395,7 +1472,8 @@ enum AlgorithmSettingHints {
 
     static let ketoProtectLabel = String(localized: "Activate KetoProtection", comment: "Enable KetoProtection")
     static let ketoProtectMini = String(
-        localized: "This feature enables a small safety Temp Basal Rate (TBR) to reduce ketoacidosis risk. Without the Variable Protection, the safety TBR is always applied."
+        localized: "This feature enables a small safety Temp Basal Rate (TBR) to reduce ketoacidosis risk. Without the Variable Protection, the safety TBR is always applied.",
+        comment: "Mini-hint for Activate KetoProtection setting"
     )
 
     @ViewBuilder static func ketoProtectVerbose() -> some View {

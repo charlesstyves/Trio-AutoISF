@@ -40,11 +40,36 @@ extension Home {
         @State var showCGMSelection: Bool = false
         @State var notificationsDisabled = false
         @State var timeButtons: [TimePicker] = [
-            TimePicker(label: String(localized: "2 hours"), number: "2", active: false, hours: 2),
-            TimePicker(label: String(localized: "4 hours"), number: "4", active: false, hours: 4),
-            TimePicker(label: String(localized: "6 hours"), number: "6", active: false, hours: 6),
-            TimePicker(label: String(localized: "12 hours"), number: "12", active: false, hours: 12),
-            TimePicker(label: String(localized: "24 hours"), number: "24", active: false, hours: 24)
+            TimePicker(
+                label: String(localized: "2 hours", comment: "Time range button on Home chart — show last 2 hours"),
+                number: "2",
+                active: false,
+                hours: 2
+            ),
+            TimePicker(
+                label: String(localized: "4 hours", comment: "Time range button on Home chart — show last 4 hours"),
+                number: "4",
+                active: false,
+                hours: 4
+            ),
+            TimePicker(
+                label: String(localized: "6 hours", comment: "Time range button on Home chart — show last 6 hours"),
+                number: "6",
+                active: false,
+                hours: 6
+            ),
+            TimePicker(
+                label: String(localized: "12 hours", comment: "Time range button on Home chart — show last 12 hours"),
+                number: "12",
+                active: false,
+                hours: 12
+            ),
+            TimePicker(
+                label: String(localized: "24 hours", comment: "Time range button on Home chart — show last 24 hours"),
+                number: "24",
+                active: false,
+                hours: 24
+            )
         ]
 
         let buttonFont = Font.custom("TimeButtonFont", size: 14)
@@ -329,7 +354,10 @@ extension Home {
                 : ""
 
             let smbToggleString = latestOverride.smbIsOff || latestOverride
-                .smbIsScheduledOff ? String(localized: "SMBs Off\(smbScheduleString)") : ""
+                .smbIsScheduledOff ? String(
+                    localized: "SMBs Off\(smbScheduleString)",
+                    comment: "Override subtitle fragment on Home showing that SMBs are disabled — interpolated value is an optional time-range like ' 08:00-10:00'"
+                ) : ""
 
             var smbMinuteString: String = ""
             var uamMinuteString: String = ""
@@ -721,7 +749,10 @@ extension Home {
                     .font(.title2)
                     .foregroundStyle(Color.primary, Color.purple)
                 VStack(alignment: .leading) {
-                    Text(latestOverride.first?.name ?? String(localized: "Custom Override"))
+                    Text(latestOverride.first?.name ?? String(
+                        localized: "Custom Override",
+                        comment: "Fallback name on Home adjustments banner for an active override without a name"
+                    ))
                         .font(.subheadline)
                         .frame(alignment: .leading)
 
@@ -745,7 +776,10 @@ extension Home {
                     .font(.system(size: 22))
                     .foregroundStyle(Color.primary, Color.loopGreen)
                 VStack(alignment: .leading) {
-                    Text(latestTempTarget.first?.name ?? String(localized: "Temp Target"))
+                    Text(latestTempTarget.first?.name ?? String(
+                        localized: "Temp Target",
+                        comment: "Fallback name on Home adjustments banner for an active temp target without a name"
+                    ))
                         .font(.subheadline)
                         .frame(alignment: .leading)
                     Text(tempTargetString)
@@ -779,7 +813,10 @@ extension Home {
                         )
                 }
                 HStack(spacing: 6) {
-                    Text(profile.name ?? String(localized: "Active Profile"))
+                    Text(profile.name ?? String(
+                        localized: "Active Profile",
+                        comment: "Fallback name on Home adjustments banner for the active profile when it has no name set"
+                    ))
                         .font(.subheadline)
                     let subtitle = profileSubtitle(profile, now: state.timerDate)
                     if !subtitle.isEmpty {
@@ -803,7 +840,10 @@ extension Home {
             var parts: [String] = []
             if let expires = profile.expiresAt {
                 let minutesLeft = Int(expires.timeIntervalSince(now) / 60)
-                let countdown = minutesLeft > 0 ? formatHrMin(minutesLeft) : String(localized: "Expiring")
+                let countdown = minutesLeft > 0 ? formatHrMin(minutesLeft) : String(
+                    localized: "Expiring",
+                    comment: "Countdown text on Home profile banner when less than a minute of a timed activation remains"
+                )
                 parts.append(countdown)
             }
             parts += ProfileSummaryLabel.strings(
@@ -1446,7 +1486,10 @@ extension Home {
                 let determination = getMostRecentDetermination()
 
                 if determination == nil {
-                    return "No Algorithm result"
+                    return String(
+                        localized: "No Algorithm result",
+                        comment: "Home status popup title when no determination is available"
+                    )
                 }
 
                 let dateFormatter = DateFormatter()
@@ -1460,7 +1503,10 @@ extension Home {
 
                     // Add warning if the loop is not closed or if it's a manual temp basal
                     if state.manualTempBasal || !state.closedLoop {
-                        title += " - not enacted!"
+                        title += String(
+                            localized: " - not enacted!",
+                            comment: "Suffix appended to Home status popup title when the suggestion was not enacted"
+                        )
                     }
                     return title
                 } else {
@@ -1499,7 +1545,11 @@ extension Home {
                             .fixedSize(horizontal: false, vertical: true)
                     } else {
                         let tags = !state.isSmoothingEnabled ? determination.reasonParts : determination
-                            .reasonParts + ["Smoothing: On"]
+                            .reasonParts +
+                            [String(
+                                localized: "Smoothing: On",
+                                comment: "Tag chip in Home status popup — glucose smoothing is enabled"
+                            )]
                         TagCloudView(
                             tags: tags,
                             shouldParseToMmolL: state.units == .mmolL
@@ -1530,7 +1580,10 @@ extension Home {
             let determination = getMostRecentDetermination()
 
             if determination == nil {
-                statusTitlePopup = "No Algorithm result"
+                statusTitlePopup = String(
+                    localized: "No Algorithm result",
+                    comment: "Home status popup title fallback when no determination exists"
+                )
                 return statusTitlePopup
             }
 
@@ -1546,7 +1599,10 @@ extension Home {
 
                 // Add warning if the loop is not closed or if it's a manual temp basal
                 if state.manualTempBasal || !state.closedLoop {
-                    statusTitlePopup += " - not enacted!"
+                    statusTitlePopup += String(
+                        localized: " - not enacted!",
+                        comment: "Suffix appended to Home status popup title when the suggestion was not enacted"
+                    )
                 }
             } else {
                 statusTitlePopup = "\(algo) " + String(localized: "Algorithm enacted at", comment: "Headline in enacted popup") +

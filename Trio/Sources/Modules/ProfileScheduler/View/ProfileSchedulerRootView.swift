@@ -60,7 +60,10 @@ extension ProfileScheduler {
                 SettingInputHintView(
                     hintDetent: $scheduleHintDetent,
                     shouldDisplayHint: $showScheduleHint,
-                    hintLabel: String(localized: "About Schedules"),
+                    hintLabel: String(
+                        localized: "About Schedules",
+                        comment: "Help hint label on the Profile Scheduler list screen"
+                    ),
                     hintText: AnyView(scheduleAbstractHint),
                     sheetTitle: String(localized: "Help", comment: "Help sheet title")
                 )
@@ -231,27 +234,58 @@ enum ProfileScheduleSummary {
     static func repeatText(_ rule: ProfileSchedule.Repeat) -> String {
         switch rule {
         case let .weekdays(days):
-            if days.count == 7 { return "Every day" }
-            if days == [.monday, .tuesday, .wednesday, .thursday, .friday] { return "Weekdays" }
-            if days == [.saturday, .sunday] { return "Weekends" }
-            if days.isEmpty { return "No days selected" }
+            if days
+                .count == 7 { return String(localized: "Every day", comment: "Schedule repeat summary — every day of the week") }
+            if days ==
+                [.monday, .tuesday, .wednesday, .thursday, .friday]
+            {
+                return String(localized: "Weekdays", comment: "Schedule repeat summary — Monday through Friday") }
+            if days ==
+                [.saturday, .sunday]
+            {
+                return String(localized: "Weekends", comment: "Schedule repeat summary — Saturday and Sunday") }
+            if days
+                .isEmpty
+            {
+                return String(
+                    localized: "No days selected",
+                    comment: "Schedule repeat summary when the weekday set is empty (error state)"
+                ) }
             let sorted = days.sorted { $0.rawValue < $1.rawValue }
-            return "Weekly on " + sorted.map(shortName(_:)).joined(separator: ", ")
+            return String(
+                localized: "Weekly on \(sorted.map(shortName(_:)).joined(separator: ", "))",
+                comment: "Schedule repeat summary prefix for a custom weekly pattern — interpolated list is comma-separated weekday abbreviations"
+            )
         case let .monthlyDays(days):
-            if days.isEmpty { return "No days selected" }
+            if days
+                .isEmpty
+            {
+                return String(
+                    localized: "No days selected",
+                    comment: "Schedule repeat summary when the monthly day set is empty"
+                ) }
             let sorted = days.sorted()
-            return "Monthly on \(sorted.map(String.init).joined(separator: ", "))"
+            return String(
+                localized: "Monthly on \(sorted.map(String.init).joined(separator: ", "))",
+                comment: "Schedule repeat summary for custom monthly days — interpolated list is comma-separated day numbers"
+            )
         case let .once(date):
             let f = DateFormatter()
             f.dateFormat = "EEE, dd.MM.yyyy HH:mm"
-            return "Once on \(f.string(from: date))"
+            return String(
+                localized: "Once on \(f.string(from: date))",
+                comment: "Schedule repeat summary for a one-off fire — interpolated value is a localized date/time string"
+            )
         }
     }
 
     static func timesText(_ times: [ProfileSchedule.TimeOfDay], for rule: ProfileSchedule.Repeat) -> String {
         if case .once = rule { return "" }
         if times.isEmpty { return "" }
-        return "at " + times.map { String(format: "%02d:%02d", $0.hour, $0.minute) }.joined(separator: " & ")
+        return String(
+            localized: "at \(times.map { String(format: "%02d:%02d", $0.hour, $0.minute) }.joined(separator: " & "))",
+            comment: "Schedule summary time prefix — interpolated list is two-digit HH:MM values joined with ' & '"
+        )
     }
 
     static func durationText(_ duration: ProfileSchedule.Duration) -> String {
@@ -259,12 +293,27 @@ enum ProfileScheduleSummary {
         case let .minutes(m):
             let h = m / 60
             let mm = m % 60
-            if h == 0 { return "for \(mm) min" }
-            if mm == 0 { return "for \(h) h" }
-            return "for \(h) h \(mm) min"
+            if h ==
+                0
+            {
+                return String(
+                    localized: "for \(mm) min",
+                    comment: "Schedule duration summary — temporary activation under one hour"
+                ) }
+            if mm ==
+                0
+            {
+                return String(
+                    localized: "for \(h) h",
+                    comment: "Schedule duration summary — temporary activation in whole hours"
+                ) }
+            return String(
+                localized: "for \(h) h \(mm) min",
+                comment: "Schedule duration summary — temporary activation in hours and minutes"
+            )
         case .indefinite,
              .untilNext:
-            return "until next change"
+            return String(localized: "until next change", comment: "Schedule duration summary — indefinite/until-next activation")
         }
     }
 

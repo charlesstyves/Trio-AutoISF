@@ -35,7 +35,10 @@ extension TargetBehavoir {
                     label: AlgorithmSettingHints.highTempTargetRaisesSensitivityLabel,
                     miniHint: AlgorithmSettingHints.highTempTargetRaisesSensitivityMini(units: state.units),
                     verboseHint: AlgorithmSettingHints.highTempTargetRaisesSensitivityVerbose(units: state.units),
-                    headerText: String(localized: "Algorithmic Target Settings")
+                    headerText: String(
+                        localized: "Algorithmic Target Settings",
+                        comment: "Section header on the Target Behavior screen grouping sensitivity-vs-target controls"
+                    )
                 )
 
                 SettingInputSection(

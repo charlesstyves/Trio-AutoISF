@@ -23,9 +23,18 @@ enum ProfileSummaryLabel {
         var text: String? {
             switch self {
             case .none: return nil
-            case .both: return String(localized: "Algo & Targets tuned")
-            case .preferences: return String(localized: "Algorithm Settings tuned")
-            case .targets: return String(localized: "Glucose Targets tuned")
+            case .both: return String(
+                    localized: "Algo & Targets tuned",
+                    comment: "Profile summary badge — both algorithm preferences and glucose targets differ from defaults"
+                )
+            case .preferences: return String(
+                    localized: "Algorithm Settings tuned",
+                    comment: "Profile summary badge — algorithm preferences differ from defaults"
+                )
+            case .targets: return String(
+                    localized: "Glucose Targets tuned",
+                    comment: "Profile summary badge — glucose targets differ from defaults"
+                )
             }
         }
     }
@@ -53,14 +62,18 @@ enum ProfileSummaryLabel {
         var out: [String] = []
         if let pct = appliedPercent, pct != 100 {
             let pctStr = pct.formatted(.number.precision(.fractionLength(0)))
-            out.append("\(pctStr) %")
+            out.append(String(localized: "\(pctStr) %", comment: "Profile summary badge — applied therapy percentage"))
         }
         if let br = dailyBasalRate {
             let formatter = NumberFormatter()
             formatter.numberStyle = .decimal
             formatter.maximumFractionDigits = 2
             let brStr = formatter.string(from: br as NSNumber) ?? "\(br)"
-            out.append("\(brStr) U/day")
+            out
+                .append(String(
+                    localized: "\(brStr) U/day",
+                    comment: "Profile summary badge — total daily basal in insulin units per day"
+                ))
         }
         return out
     }

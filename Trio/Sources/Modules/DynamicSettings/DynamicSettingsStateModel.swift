@@ -141,13 +141,13 @@ extension DynamicSettings {
         var displayName: String {
             switch self {
             case .disabled:
-                return String(localized: "Disabled")
+                return String(localized: "Disabled", comment: "Dynamic ISF picker option — feature disabled")
 
             case .logarithmic:
-                return String(localized: "Logarithmic")
+                return String(localized: "Logarithmic", comment: "Dynamic ISF picker option — logarithmic formula")
 
             case .sigmoid:
-                return String(localized: "Sigmoid")
+                return String(localized: "Sigmoid", comment: "Dynamic ISF picker option — sigmoid formula")
             }
         }
     }

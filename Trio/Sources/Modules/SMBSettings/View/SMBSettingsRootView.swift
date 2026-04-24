@@ -34,7 +34,10 @@ extension SMBSettings {
                     label: AlgorithmSettingHints.enableSMBAlwaysLabel,
                     miniHint: AlgorithmSettingHints.enableSMBAlwaysMini,
                     verboseHint: AlgorithmSettingHints.enableSMBAlwaysVerbose(),
-                    headerText: String(localized: "Super-Micro-Bolus")
+                    headerText: String(
+                        localized: "Super-Micro-Bolus",
+                        comment: "Section header on the SMB Settings screen grouping core SMB enable toggles"
+                    )
                 )
 
                 if !state.enableSMBAlways {

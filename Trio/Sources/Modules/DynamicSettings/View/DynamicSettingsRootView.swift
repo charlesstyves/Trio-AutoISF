@@ -60,10 +60,12 @@ extension DynamicSettings {
                             HStack(alignment: .center) {
                                 let miniHintText = state.hasValidTDD ?
                                     String(
-                                        localized: "Dynamically adjust insulin sensitivity using Dynamic Ratio rather than Autosens Ratio."
+                                        localized: "Dynamically adjust insulin sensitivity using Dynamic Ratio rather than Autosens Ratio.",
+                                        comment: "Mini-hint under Dynamic ISF picker on Dynamic Settings when enough TDD data exists"
                                     ) :
                                     String(
-                                        localized: "Trio does not have enough closed-loop data to enable Dynamic ISF. This data collection can take up to 7 days."
+                                        localized: "Trio does not have enough closed-loop data to enable Dynamic ISF. This data collection can take up to 7 days.",
+                                        comment: "Mini-hint under Dynamic ISF picker on Dynamic Settings when TDD data is insufficient (requires up to 7 days of closed-loop runs)"
                                     )
                                 let miniHintTextColorForDisabled: Color = colorScheme == .dark ? .orange :
                                     .accentColor
@@ -172,7 +174,10 @@ extension DynamicSettings {
                         label: AlgorithmSettingHints.tddAdjBasalLabel,
                         miniHint: AlgorithmSettingHints.tddAdjBasalMini,
                         verboseHint: AlgorithmSettingHints.tddAdjBasalVerbose(),
-                        headerText: String(localized: "Dynamic-dependent Features")
+                        headerText: String(
+                            localized: "Dynamic-dependent Features",
+                            comment: "Section header on Dynamic Settings grouping features that depend on Dynamic ISF being enabled (e.g. TDD basal adjustment)"
+                        )
                     )
                 }
             }

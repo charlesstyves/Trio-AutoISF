@@ -71,7 +71,7 @@ extension AdaptProfile {
                 shouldDisplayHint: $shouldDisplayHint,
                 hintLabel: hintLabel ?? "",
                 hintText: selectedVerboseHint ?? AnyView(EmptyView()),
-                sheetTitle: String(localized: "Help")
+                sheetTitle: String(localized: "Help", comment: "Help sheet title")
             )
         }
 
@@ -184,7 +184,7 @@ extension AdaptProfile {
                 shouldDisplayHint: $shouldDisplayHint,
                 hintLabel: hintLabel ?? "",
                 hintText: selectedVerboseHint ?? AnyView(EmptyView()),
-                sheetTitle: String(localized: "Help")
+                sheetTitle: String(localized: "Help", comment: "Help sheet title")
             )
         }
 
@@ -390,7 +390,7 @@ extension AdaptProfile {
                 shouldDisplayHint: $shouldDisplayHint,
                 hintLabel: hintLabel ?? "",
                 hintText: selectedVerboseHint ?? AnyView(EmptyView()),
-                sheetTitle: String(localized: "Help")
+                sheetTitle: String(localized: "Help", comment: "Help sheet title")
             )
         }
 
@@ -532,7 +532,7 @@ extension AdaptProfile {
                     shouldDisplayHint: $showDynamicISFHint,
                     hintLabel: AlgorithmSettingHints.dynamicISFLabel,
                     hintText: AlgorithmSettingHints.dynamicISFVerbose(),
-                    sheetTitle: String(localized: "Help")
+                    sheetTitle: String(localized: "Help", comment: "Help sheet title")
                 )
             }
         }
@@ -543,7 +543,7 @@ extension AdaptProfile {
                 shouldDisplayHint: $shouldDisplayHint,
                 hintLabel: hintLabel ?? "",
                 hintText: selectedVerboseHint ?? AnyView(EmptyView()),
-                sheetTitle: String(localized: "Help")
+                sheetTitle: String(localized: "Help", comment: "Help sheet title")
             )
         }
 
@@ -622,7 +622,10 @@ extension AdaptProfile {
                         label: AlgorithmSettingHints.smbDeliveryRatioFixedLabel,
                         miniHint: AlgorithmSettingHints.smbDeliveryRatioFixedMini,
                         verboseHint: AlgorithmSettingHints.smbDeliveryRatioFixedVerbose(),
-                        headerText: String(localized: "SMB Delivery Ratios"),
+                        headerText: String(
+                            localized: "SMB Delivery Ratios",
+                            comment: "Section header on the AutoISF draft editor grouping the fixed and range-based SMB delivery ratio rows"
+                        ),
                         isChanged: state.isChanged(\.smbDeliveryRatio),
                         onReset: { state.resetField(\.smbDeliveryRatio) }
                     )
@@ -827,7 +830,7 @@ extension AdaptProfile {
                 shouldDisplayHint: $shouldDisplayHint,
                 hintLabel: hintLabel ?? "",
                 hintText: selectedVerboseHint ?? AnyView(EmptyView()),
-                sheetTitle: String(localized: "Help")
+                sheetTitle: String(localized: "Help", comment: "Help sheet title")
             )
         }
 
@@ -996,7 +999,7 @@ extension AdaptProfile {
                 shouldDisplayHint: $shouldDisplayHint,
                 hintLabel: hintLabel ?? "",
                 hintText: selectedVerboseHint ?? AnyView(EmptyView()),
-                sheetTitle: String(localized: "Help")
+                sheetTitle: String(localized: "Help", comment: "Help sheet title")
             )
         }
 
@@ -1139,7 +1142,7 @@ extension AdaptProfile {
                 shouldDisplayHint: $shouldDisplayHint,
                 hintLabel: hintLabel ?? "",
                 hintText: selectedVerboseHint ?? AnyView(EmptyView()),
-                sheetTitle: String(localized: "Help")
+                sheetTitle: String(localized: "Help", comment: "Help sheet title")
             )
         }
 
@@ -1259,7 +1262,7 @@ extension AdaptProfile {
                 shouldDisplayHint: $shouldDisplayHint,
                 hintLabel: hintLabel ?? "",
                 hintText: selectedVerboseHint ?? AnyView(EmptyView()),
-                sheetTitle: String(localized: "Help")
+                sheetTitle: String(localized: "Help", comment: "Help sheet title")
             )
         }
 

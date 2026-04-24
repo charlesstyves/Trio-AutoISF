@@ -594,15 +594,33 @@ struct EditOverrideForm: View {
             !smbIsOff && !smbIsScheduledOff
 
         if noDurationSpecified {
-            return (true, String(localized: "Enable indefinitely or set a duration."))
+            return (
+                true,
+                String(
+                    localized: "Enable indefinitely or set a duration.",
+                    comment: "Validation error on Edit Override form when neither indefinite nor a duration is set"
+                )
+            )
         }
 
         if targetZeroWithOverride {
-            return (true, String(localized: "Target glucose is out of range (\(state.units == .mgdL ? "72-270" : "4-14"))."))
+            return (
+                true,
+                String(
+                    localized: "Target glucose is out of range (\(state.units == .mgdL ? "72-270" : "4-14")).",
+                    comment: "Validation error on Edit Override form when target glucose is outside allowed range — interpolated value is the unit-dependent range"
+                )
+            )
         }
 
         if allSettingsDefault {
-            return (true, String(localized: "All settings are at default values."))
+            return (
+                true,
+                String(
+                    localized: "All settings are at default values.",
+                    comment: "Validation error on Edit Override form when the override would be a no-op (all defaults)"
+                )
+            )
         }
 
         if !hasChanges {
@@ -621,7 +639,7 @@ struct EditOverrideForm: View {
                 isExpanded: $showAutoISFSection,
                 content: {
                     editAutoISFRow(
-                        label: "IOB Threshold %",
+                        label: String(localized: "IOB Threshold %", comment: "Row label on Edit Override form — IOB Threshold %"),
                         value: Binding(
                             get: { aiIobThresholdPercent ?? state.profileIobThresholdPercent },
                             set: { aiIobThresholdPercent = $0 == state.profileIobThresholdPercent ? nil : $0
@@ -634,7 +652,7 @@ struct EditOverrideForm: View {
                             hasChanges = true }
                     )
                     editAutoISFRow(
-                        label: "autoISF Min",
+                        label: String(localized: "autoISF Min", comment: "Row label on Edit Override form — autoISF Min"),
                         value: Binding(get: { aiAutoISFmin ?? profileMin }, set: { aiAutoISFmin = $0 == profileMin ? nil : $0
                             hasChanges = true }),
                         profileValue: profileMin,
@@ -644,7 +662,7 @@ struct EditOverrideForm: View {
                             hasChanges = true }
                     )
                     editAutoISFRow(
-                        label: "autoISF Max",
+                        label: String(localized: "autoISF Max", comment: "Row label on Edit Override form — autoISF Max"),
                         value: Binding(get: { aiAutoISFmax ?? profileMax }, set: { aiAutoISFmax = $0 == profileMax ? nil : $0
                             hasChanges = true }),
                         profileValue: profileMax,
@@ -654,7 +672,7 @@ struct EditOverrideForm: View {
                             hasChanges = true }
                     )
                     editAutoISFRow(
-                        label: "DuraISF Weight",
+                        label: String(localized: "DuraISF Weight", comment: "Row label on Edit Override form — DuraISF Weight"),
                         value: Binding(
                             get: { aiAutoISFhourlyChange ?? state.profileAutoISFhourlyChange },
                             set: { aiAutoISFhourlyChange = $0 == state.profileAutoISFhourlyChange ? nil : $0
@@ -667,7 +685,10 @@ struct EditOverrideForm: View {
                             hasChanges = true }
                     )
                     editAutoISFRow(
-                        label: "ISF Weight for Higher BGs",
+                        label: String(
+                            localized: "ISF Weight for Higher BGs",
+                            comment: "Row label on Edit Override form — ISF Weight for Higher BGs"
+                        ),
                         value: Binding(
                             get: { aiHigherISFrangeWeight ?? state.profileHigherISFrangeWeight },
                             set: { aiHigherISFrangeWeight = $0 == state.profileHigherISFrangeWeight ? nil : $0
@@ -680,7 +701,10 @@ struct EditOverrideForm: View {
                             hasChanges = true }
                     )
                     editAutoISFRow(
-                        label: "ISF Weight for Lower BGs",
+                        label: String(
+                            localized: "ISF Weight for Lower BGs",
+                            comment: "Row label on Edit Override form — ISF Weight for Lower BGs"
+                        ),
                         value: Binding(
                             get: { aiLowerISFrangeWeight ?? state.profileLowerISFrangeWeight },
                             set: { aiLowerISFrangeWeight = $0 == state.profileLowerISFrangeWeight ? nil : $0
@@ -693,7 +717,10 @@ struct EditOverrideForm: View {
                             hasChanges = true }
                     )
                     editAutoISFRow(
-                        label: "ISF Weight for Postprandial BG Rise",
+                        label: String(
+                            localized: "ISF Weight for Postprandial BG Rise",
+                            comment: "Row label on Edit Override form — ISF Weight for Postprandial BG Rise"
+                        ),
                         value: Binding(
                             get: { aiPostMealISFweight ?? state.profilePostMealISFweight },
                             set: { aiPostMealISFweight = $0 == state.profilePostMealISFweight ? nil : $0
@@ -727,7 +754,10 @@ struct EditOverrideForm: View {
                         )).labelsHidden()
                     }
                     editAutoISFRow(
-                        label: "ISF Weight While BG Accelerates",
+                        label: String(
+                            localized: "ISF Weight While BG Accelerates",
+                            comment: "Row label on Edit Override form — ISF Weight While BG Accelerates"
+                        ),
                         value: Binding(
                             get: { aiBgAccelISFweight ?? state.profileBgAccelISFweight },
                             set: { aiBgAccelISFweight = $0 == state.profileBgAccelISFweight ? nil : $0
@@ -740,7 +770,10 @@ struct EditOverrideForm: View {
                             hasChanges = true }
                     )
                     editAutoISFRow(
-                        label: "ISF Weight While BG Decelerates",
+                        label: String(
+                            localized: "ISF Weight While BG Decelerates",
+                            comment: "Row label on Edit Override form — ISF Weight While BG Decelerates"
+                        ),
                         value: Binding(
                             get: { aiBgBrakeISFweight ?? state.profileBgBrakeISFweight },
                             set: { aiBgBrakeISFweight = $0 == state.profileBgBrakeISFweight ? nil : $0
@@ -775,7 +808,10 @@ struct EditOverrideForm: View {
                 isExpanded: $showSmbSection,
                 content: {
                     editAutoISFRow(
-                        label: "SMB Delivery Ratio",
+                        label: String(
+                            localized: "SMB Delivery Ratio",
+                            comment: "Row label on Edit Override form — SMB Delivery Ratio"
+                        ),
                         value: Binding(
                             get: { aiSmbDeliveryRatio ?? state.profileSmbDeliveryRatio },
                             set: { aiSmbDeliveryRatio = $0 == state.profileSmbDeliveryRatio ? nil : $0
@@ -792,7 +828,10 @@ struct EditOverrideForm: View {
                         isExpanded: $showVariableSmbRatio,
                         content: {
                             editAutoISFRow(
-                                label: "SMB Delivery Ratio BG Range",
+                                label: String(
+                                    localized: "SMB Delivery Ratio BG Range",
+                                    comment: "Row label on Edit Override form — SMB Delivery Ratio BG Range"
+                                ),
                                 value: Binding(
                                     get: { aiSmbDeliveryRatioBGrange ?? state.profileSmbDeliveryRatioBGrange },
                                     set: { aiSmbDeliveryRatioBGrange = $0 == state.profileSmbDeliveryRatioBGrange ? nil : $0
@@ -805,7 +844,10 @@ struct EditOverrideForm: View {
                                     hasChanges = true }
                             )
                             editAutoISFRow(
-                                label: "SMB Delivery Ratio Min",
+                                label: String(
+                                    localized: "SMB Delivery Ratio Min",
+                                    comment: "Row label on Edit Override form — SMB Delivery Ratio Min"
+                                ),
                                 value: Binding(
                                     get: { aiSmbDeliveryRatioMin ?? state.profileSmbDeliveryRatioMin },
                                     set: { aiSmbDeliveryRatioMin = $0 == state.profileSmbDeliveryRatioMin ? nil : $0
@@ -818,7 +860,10 @@ struct EditOverrideForm: View {
                                     hasChanges = true }
                             )
                             editAutoISFRow(
-                                label: "SMB Delivery Ratio Max",
+                                label: String(
+                                    localized: "SMB Delivery Ratio Max",
+                                    comment: "Row label on Edit Override form — SMB Delivery Ratio Max"
+                                ),
                                 value: Binding(
                                     get: { aiSmbDeliveryRatioMax ?? state.profileSmbDeliveryRatioMax },
                                     set: { aiSmbDeliveryRatioMax = $0 == state.profileSmbDeliveryRatioMax ? nil : $0
@@ -909,7 +954,10 @@ struct EditOverrideForm: View {
 
     private func saveChanges() {
         if !override.isPreset, hasChanges, name == (override.name ?? "") {
-            override.name = "Custom Override"
+            override.name = String(
+                localized: "Custom Override",
+                comment: "Default name assigned to an override when the user saves edits without providing a name"
+            )
         } else {
             override.name = name
         }

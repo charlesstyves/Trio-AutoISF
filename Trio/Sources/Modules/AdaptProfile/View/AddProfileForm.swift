@@ -69,14 +69,21 @@ extension AdaptProfile {
                     get: { selectedVerboseHint },
                     set: {
                         selectedVerboseHint = $0.map { AnyView($0) }
-                        hintLabel = String(localized: "Adjust current Therapy Setting")
+                        hintLabel = String(
+                            localized: "Adjust current Therapy Setting",
+                            comment: "Hint mini-label shown when tapping info on the therapy-adjustment percentage row of Add Profile form"
+                        )
                     }
                 ),
                 units: .mgdL,
                 type: .decimal("therapyAdjustment"),
-                label: String(localized: "Adjust current Therapy Settings"),
+                label: String(
+                    localized: "Adjust current Therapy Settings",
+                    comment: "Row label on Add Profile form for the percentage that rescales Basal/ISF/CR"
+                ),
                 miniHint: String(
-                    localized: "Values >100% = less sensitive, more insulin nedded, Basal Rates profile is lifted, ISF and CR profiles decrease. 100% preserves current Therapy Settings."
+                    localized: "Values >100% = less sensitive, more insulin nedded, Basal Rates profile is lifted, ISF and CR profiles decrease. 100% preserves current Therapy Settings.",
+                    comment: "Mini-hint beneath the therapy-adjustment percentage row on Add Profile form"
                 ),
                 verboseHint:
                 VStack(alignment: .leading, spacing: 10) {
@@ -97,7 +104,10 @@ extension AdaptProfile {
                         "Adjusted basal rates are rounded down to the nearest pump-supported rate. ISF is rounded to 1 mg/dL steps, CR to 0.1 g/U. You can fine-tune each value manually in the editor after tapping Next."
                     )
                 },
-                headerText: String(localized: "Therapy Adjustment")
+                headerText: String(
+                    localized: "Therapy Adjustment",
+                    comment: "Section header for the therapy-adjustment percentage on Add Profile form"
+                )
             )
         }
 

@@ -11,7 +11,7 @@ extension ProfileScheduler {
                 // Fetch all profile names first so each schedule row can carry its profile label.
                 let profiles = (try? context.fetch(ProfileStored.fetchRequest())) ?? []
                 let nameByID: [UUID: String] = profiles.reduce(into: [:]) { dict, p in
-                    if let id = p.id { dict[id] = p.name ?? "Unnamed" }
+                    if let id = p.id { dict[id] = p.name ?? "" }
                 }
 
                 let request: NSFetchRequest<ProfileScheduleStored> = ProfileScheduleStored.fetchRequest()
@@ -28,7 +28,10 @@ extension ProfileScheduler {
                     return ProfileScheduleListItem(
                         id: id,
                         profileID: profileID,
-                        profileName: nameByID[profileID] ?? "Missing profile",
+                        profileName: nameByID[profileID] ?? String(
+                            localized: "Missing profile",
+                            comment: "Schedule list row shown when the schedule's target profile has been deleted"
+                        ),
                         repeatRule: rule.repeatRule,
                         firesAt: rule.firesAt,
                         duration: duration,
@@ -64,7 +67,7 @@ extension ProfileScheduler {
                 let rows = (try? context.fetch(request)) ?? []
                 return rows.compactMap { p -> ProfilePickerChoice? in
                     guard let id = p.id else { return nil }
-                    return ProfilePickerChoice(id: id, name: p.name ?? "Unnamed", isActive: p.isActive)
+                    return ProfilePickerChoice(id: id, name: p.name ?? "", isActive: p.isActive)
                 }
             }
         }

@@ -61,7 +61,7 @@ final class ProfileScheduleFirer {
             // target profile by name rather than a bare UUID.
             let profiles = (try? context.fetch(ProfileStored.fetchRequest())) ?? []
             let nameByID: [UUID: String] = profiles.reduce(into: [:]) { dict, p in
-                if let id = p.id { dict[id] = p.name ?? "Unnamed" }
+                if let id = p.id { dict[id] = p.name ?? "" }
             }
 
             let request = ProfileScheduleStored.fetch(.enabledSchedule)
@@ -90,7 +90,7 @@ final class ProfileScheduleFirer {
                 return DueFire(
                     scheduleID: sid,
                     profileID: pid,
-                    profileName: nameByID[pid] ?? "Unnamed",
+                    profileName: nameByID[pid] ?? "",
                     occurrence: next,
                     duration: duration,
                     isOnce: isOnce,
@@ -174,9 +174,13 @@ final class ProfileScheduleFirer {
         let revertTime = timeFormatter.string(from: revertDate)
 
         let content = UNMutableNotificationContent()
-        content.title = String(localized: "Profile \"\(fire.profileName)\" activated")
+        content.title = String(
+            localized: "Profile \"\(fire.profileName)\" activated",
+            comment: "Title of schedule-fire notification (timed Flow A) — interpolated value is the profile name"
+        )
         content.body = String(
-            localized: "Temporary — active for \(formatDuration(minutes: minutes)), auto-reverts at \(revertTime)."
+            localized: "Temporary — active for \(formatDuration(minutes: minutes)), auto-reverts at \(revertTime).",
+            comment: "Body of schedule-fire notification for a timed activation — first interpolated value is a duration like '3 hr 15 min', second is a clock time"
         )
         content.sound = .default
         content.categoryIdentifier = NotificationCategoryIdentifier.scheduleActivated.rawValue
@@ -202,18 +206,37 @@ final class ProfileScheduleFirer {
     private func formatDuration(minutes: Int) -> String {
         let hours = minutes / 60
         let mins = minutes % 60
-        if hours == 0 { return "\(mins) min" }
-        if mins == 0 { return "\(hours) hr" }
-        return "\(hours) hr \(mins) min"
+        if hours ==
+            0
+        {
+            return String(
+                localized: "\(mins) min",
+                comment: "Temp-activation notification body fragment — duration in minutes only"
+            ) }
+        if mins ==
+            0
+        {
+            return String(
+                localized: "\(hours) hr",
+                comment: "Temp-activation notification body fragment — duration in whole hours"
+            ) }
+        return String(
+            localized: "\(hours) hr \(mins) min",
+            comment: "Temp-activation notification body fragment — duration in hours and minutes"
+        )
     }
 
     // MARK: - Flow B (indefinite) notification
 
     private func postActivationNotification(for fire: DueFire) {
         let content = UNMutableNotificationContent()
-        content.title = String(localized: "Save basal of Profile \"\(fire.profileName)\" to pump?")
+        content.title = String(
+            localized: "Save basal of Profile \"\(fire.profileName)\" to pump?",
+            comment: "Title of schedule-fire notification for an indefinite activation that needs pump sync — interpolated value is the profile name"
+        )
         content.body = String(
-            localized: "An indefinite activation updates the pump's scheduled basal to match this profile. The pump's basal schedule will be overwritten."
+            localized: "An indefinite activation updates the pump's scheduled basal to match this profile. The pump's basal schedule will be overwritten.",
+            comment: "Body of schedule-fire notification warning the user that confirming will overwrite the pump's basal schedule"
         )
         content.sound = .default
         content.categoryIdentifier = NotificationCategoryIdentifier.scheduleActivation.rawValue

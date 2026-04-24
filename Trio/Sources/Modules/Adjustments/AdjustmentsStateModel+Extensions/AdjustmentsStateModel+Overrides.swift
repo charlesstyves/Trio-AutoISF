@@ -294,14 +294,20 @@ extension Adjustments.StateModel {
     @MainActor func setCurrentOverride(from IDs: [NSManagedObjectID]) async {
         do {
             guard let firstID = IDs.first else {
-                activeOverrideName = "Custom Override"
+                activeOverrideName = String(
+                    localized: "Custom Override",
+                    comment: "Fallback display name for the active override when no list entry exists"
+                )
                 currentActiveOverride = nil
                 return
             }
 
             if let overrideToEdit = try viewContext.existingObject(with: firstID) as? OverrideStored {
                 currentActiveOverride = overrideToEdit
-                activeOverrideName = overrideToEdit.name ?? String(localized: "Custom Override")
+                activeOverrideName = overrideToEdit.name ?? String(
+                    localized: "Custom Override",
+                    comment: "Fallback display name for the active override when no name was set"
+                )
             }
         } catch {
             debugPrint(
@@ -325,7 +331,10 @@ extension Adjustments.StateModel {
 
             if let overrideToEdit = try viewContext.existingObject(with: duplicateId) as? OverrideStored {
                 currentActiveOverride = overrideToEdit
-                activeOverrideName = overrideToEdit.name ?? String(localized: "Custom Override")
+                activeOverrideName = overrideToEdit.name ?? String(
+                    localized: "Custom Override",
+                    comment: "Fallback display name for a duplicated override when the preset had no name"
+                )
             }
         } catch {
             debugPrint(

@@ -28,7 +28,7 @@ extension AdaptProfile {
                     let byID: [UUID: SourceSnapshot] = rows.reduce(into: [:]) { dict, p in
                         guard let id = p.id else { return }
                         dict[id] = SourceSnapshot(
-                            name: p.name ?? "Unnamed",
+                            name: p.name ?? "",
                             preferences: p.preferences,
                             bgTargets: p.therapy?.bgTargets
                         )
@@ -63,7 +63,7 @@ extension AdaptProfile {
                         let totalBasal = profile.therapy?.totalDailyBasal ?? 0
                         return AdaptProfileListItem(
                             id: id,
-                            name: profile.name ?? "Unnamed",
+                            name: profile.name ?? "",
                             createdAt: profile.createdAt ?? .distantPast,
                             isActive: profile.isActive,
                             expiresAt: profile.expiresAt,
@@ -88,7 +88,7 @@ extension AdaptProfile {
             return await context.perform {
                 let profiles = (try? context.fetch(ProfileStored.fetchRequest())) ?? []
                 let nameByID: [UUID: String] = profiles.reduce(into: [:]) { dict, p in
-                    if let id = p.id { dict[id] = p.name ?? "Unnamed" }
+                    if let id = p.id { dict[id] = p.name ?? "" }
                 }
 
                 let request = ProfileScheduleStored.fetch(.enabledSchedule, ascending: true)
@@ -102,7 +102,10 @@ extension AdaptProfile {
                           let duration = s.duration,
                           let next = rule.nextFire(after: now)
                     else { return nil }
-                    let profileName = nameByID[profileID] ?? "Profile missing"
+                    let profileName = nameByID[profileID] ?? String(
+                        localized: "Profile missing",
+                        comment: "Upcoming-schedule row shown when the target profile has been deleted"
+                    )
                     return UpcomingScheduleItem(
                         id: id,
                         nextFire: next,
@@ -139,7 +142,10 @@ extension AdaptProfile {
                 else { return nil }
 
                 let profileReq = ProfileStored.fetch(.profileByID(pid), fetchLimit: 1)
-                let name = (try? context.fetch(profileReq))?.first?.name ?? "Scheduled profile"
+                let name = (try? context.fetch(profileReq))?.first?.name ?? String(
+                    localized: "Scheduled profile",
+                    comment: "Fallback profile name used in the pending-activation pump-save alert when the scheduled profile can't be resolved by id"
+                )
                 return ScheduledActivationRequest(
                     scheduleID: sid,
                     profileID: pid,
@@ -273,7 +279,10 @@ extension AdaptProfile {
             }
 
             guard let loaded = loaded else {
-                return .failed(String(localized: "Profile not found."))
+                return .failed(String(
+                    localized: "Profile not found.",
+                    comment: "Error returned when activating a profile whose Core Data record can't be loaded"
+                ))
             }
 
             // Step 2: pump-sync decision. Only indefinite activations that would change the basal
@@ -289,7 +298,10 @@ extension AdaptProfile {
             // Step 3: pump sync (indefinite + basal changed + user confirmed).
             if needsPumpSync {
                 guard let pump = deviceManager?.pumpManager else {
-                    return .pumpSyncFailed(String(localized: "No pump manager available."))
+                    return .pumpSyncFailed(String(
+                        localized: "No pump manager available.",
+                        comment: "Pump-sync failure shown when activating a profile but no pump is paired"
+                    ))
                 }
                 let concentration = settingsManager.settings.insulinConcentration
                 let syncValues = loaded.therapy.basalProfile.map {
@@ -367,7 +379,10 @@ extension AdaptProfile {
             }
 
             guard flipped else {
-                return .failed(String(localized: "Failed to update profile state."))
+                return .failed(String(
+                    localized: "Failed to update profile state.",
+                    comment: "Error returned when the Core Data flip marking a profile active could not be saved"
+                ))
             }
 
             // Step 5: write live settings. Order: preferences first, then therapy. The mirror will

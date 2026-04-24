@@ -124,7 +124,10 @@ extension AdaptProfile {
                     DraftBasalEditor(state: state)
                 } label: {
                     therapyRow(
-                        title: String(localized: "Basal Rates"),
+                        title: String(
+                            localized: "Basal Rates",
+                            comment: "Navigation-link title for the Basal Rates editor inside the draft profile editor"
+                        ),
                         summary: basalSummary,
                         changed: state.basalIsChanged
                     )
@@ -134,7 +137,10 @@ extension AdaptProfile {
                     DraftISFEditor(state: state)
                 } label: {
                     therapyRow(
-                        title: String(localized: "Insulin Sensitivities"),
+                        title: String(
+                            localized: "Insulin Sensitivities",
+                            comment: "Navigation-link title for the Insulin Sensitivity (ISF) editor inside the draft profile editor"
+                        ),
                         summary: isfSummary,
                         changed: state.isfIsChanged
                     )
@@ -144,7 +150,10 @@ extension AdaptProfile {
                     DraftCREditor(state: state)
                 } label: {
                     therapyRow(
-                        title: String(localized: "Carb Ratios"),
+                        title: String(
+                            localized: "Carb Ratios",
+                            comment: "Navigation-link title for the Carb Ratio (CR) editor inside the draft profile editor"
+                        ),
                         summary: crSummary,
                         changed: state.crIsChanged
                     )
@@ -154,7 +163,10 @@ extension AdaptProfile {
                     DraftTargetEditor(state: state)
                 } label: {
                     therapyRow(
-                        title: String(localized: "Glucose Targets"),
+                        title: String(
+                            localized: "Glucose Targets",
+                            comment: "Navigation-link title for the Glucose Targets editor inside the draft profile editor"
+                        ),
                         summary: targetSummary,
                         changed: state.targetsAreChanged
                     )
@@ -173,7 +185,10 @@ extension AdaptProfile {
                     DraftAutosensEditor(state: state)
                 } label: {
                     algorithmRow(
-                        title: String(localized: "Autosens"),
+                        title: String(
+                            localized: "Autosens",
+                            comment: "Navigation-link title for the Autosens section in the draft profile editor"
+                        ),
                         changed: autosensChanged,
                         onReset: resetAutosens
                     )
@@ -182,7 +197,10 @@ extension AdaptProfile {
                     DraftSMBEditor(state: state)
                 } label: {
                     algorithmRow(
-                        title: String(localized: "Super Micro Bolus (SMB)"),
+                        title: String(
+                            localized: "Super Micro Bolus (SMB)",
+                            comment: "Navigation-link title for the SMB section in the draft profile editor"
+                        ),
                         changed: smbChanged,
                         onReset: resetSMB
                     )
@@ -191,7 +209,10 @@ extension AdaptProfile {
                     DraftTargetBehaviorEditor(state: state)
                 } label: {
                     algorithmRow(
-                        title: String(localized: "Target Behavior"),
+                        title: String(
+                            localized: "Target Behavior",
+                            comment: "Navigation-link title for the Target Behavior section in the draft profile editor"
+                        ),
                         changed: targetBehaviorChanged,
                         onReset: resetTargetBehavior
                     )
@@ -200,7 +221,10 @@ extension AdaptProfile {
                     DraftAdvancedEditor(state: state)
                 } label: {
                     algorithmRow(
-                        title: String(localized: "Additionals"),
+                        title: String(
+                            localized: "Additionals",
+                            comment: "Navigation-link title for the additional/advanced oref settings section in the draft profile editor"
+                        ),
                         changed: advancedChanged,
                         onReset: resetAdvanced
                     )
@@ -215,7 +239,10 @@ extension AdaptProfile {
                     DraftDynamicISFEditor(state: state)
                 } label: {
                     algorithmRow(
-                        title: String(localized: "Dynamic Settings"),
+                        title: String(
+                            localized: "Dynamic Settings",
+                            comment: "Navigation-link title for the Dynamic ISF/Ratio section in the draft profile editor"
+                        ),
                         changed: dynISFChanged,
                         onReset: resetDynISF
                     )
@@ -224,7 +251,10 @@ extension AdaptProfile {
                     DraftAutoISFEditor(state: state)
                 } label: {
                     algorithmRow(
-                        title: String(localized: "autoISF"),
+                        title: String(
+                            localized: "autoISF",
+                            comment: "Navigation-link title for the autoISF extension section in the draft profile editor"
+                        ),
                         changed: autoISFChanged,
                         onReset: resetAutoISF
                     )
@@ -233,7 +263,10 @@ extension AdaptProfile {
                     DraftB30Editor(state: state)
                 } label: {
                     algorithmRow(
-                        title: String(localized: "AIMI B30"),
+                        title: String(
+                            localized: "AIMI B30",
+                            comment: "Navigation-link title for the AIMI B30 extension section in the draft profile editor"
+                        ),
                         changed: b30Changed,
                         onReset: resetB30
                     )
@@ -242,7 +275,10 @@ extension AdaptProfile {
                     DraftKetoProtectEditor(state: state)
                 } label: {
                     algorithmRow(
-                        title: String(localized: "Keto Protection"),
+                        title: String(
+                            localized: "Keto Protection",
+                            comment: "Navigation-link title for the Keto Protection extension section in the draft profile editor"
+                        ),
                         changed: ketoChanged,
                         onReset: resetKeto
                     )
@@ -468,7 +504,10 @@ extension AdaptProfile {
         // MARK: - Summaries
 
         private var basalSummary: String {
-            guard !state.basalItems.isEmpty else { return String(localized: "None") }
+            guard !state.basalItems.isEmpty else { return String(
+                localized: "None",
+                comment: "Summary shown next to the Basal Rates row in the draft editor when the schedule is empty"
+            ) }
             let total = state.basalItems.enumerated().reduce(Decimal(0)) { running, pair in
                 let (idx, item) = pair
                 let nextTime = idx + 1 < state.basalItems.count ? state.basalItems[idx + 1].time : 86400
@@ -476,22 +515,43 @@ extension AdaptProfile {
                 return running + item.value * hours
             }
             let totalStr = rateFormatter.string(from: total as NSDecimalNumber) ?? "\(total)"
-            return "\(state.basalItems.count) · \(totalStr) U/day"
+            return String(
+                localized: "\(state.basalItems.count) · \(totalStr) U/day",
+                comment: "Draft editor Basal Rates row summary — entry count and total daily insulin units per day"
+            )
         }
 
         private var isfSummary: String {
-            guard !state.isfItems.isEmpty else { return String(localized: "None") }
-            return "\(state.isfItems.count) entries"
+            guard !state.isfItems.isEmpty else { return String(
+                localized: "None",
+                comment: "Summary shown next to the Insulin Sensitivities row in the draft editor when the schedule is empty"
+            ) }
+            return String(
+                localized: "\(state.isfItems.count) entries",
+                comment: "Draft editor ISF row summary — number of schedule entries"
+            )
         }
 
         private var crSummary: String {
-            guard !state.crItems.isEmpty else { return String(localized: "None") }
-            return "\(state.crItems.count) entries"
+            guard !state.crItems.isEmpty else { return String(
+                localized: "None",
+                comment: "Summary shown next to the Carb Ratios row in the draft editor when the schedule is empty"
+            ) }
+            return String(
+                localized: "\(state.crItems.count) entries",
+                comment: "Draft editor Carb Ratios row summary — number of schedule entries"
+            )
         }
 
         private var targetSummary: String {
-            guard !state.targetItems.isEmpty else { return String(localized: "None") }
-            return "\(state.targetItems.count) entries"
+            guard !state.targetItems.isEmpty else { return String(
+                localized: "None",
+                comment: "Summary shown next to the Glucose Targets row in the draft editor when the schedule is empty"
+            ) }
+            return String(
+                localized: "\(state.targetItems.count) entries",
+                comment: "Draft editor Glucose Targets row summary — number of schedule entries"
+            )
         }
 
         private var canSave: Bool {
