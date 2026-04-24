@@ -67,6 +67,14 @@ extension Home {
             fetchLimit: 1
         )) var activeProfile: FetchedResults<ProfileStored>
 
+        /// Count-only fetch, capped at 2 — the banner hides when a user has just one profile, so
+        /// we only need to know whether the total is >1.
+        @FetchRequest(fetchRequest: ProfileStored.fetch(
+            NSPredicate(value: true),
+            ascending: false,
+            fetchLimit: 2
+        )) var profilesForCount: FetchedResults<ProfileStored>
+
         var bolusProgressFormatter: NumberFormatter {
             let fractionDigits: Int = switch state.settingsManager.preferences.bolusIncrement {
             case 0.1: 1
@@ -708,7 +716,7 @@ extension Home {
         }
 
         @ViewBuilder func adjustmentsOverrideView(_ overrideString: String) -> some View {
-            Group {
+            HStack {
                 Image(systemName: "clock.arrow.2.circlepath")
                     .font(.title2)
                     .foregroundStyle(Color.primary, Color.purple)
@@ -721,6 +729,7 @@ extension Home {
                         .font(.caption)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
             .onTapGesture {
                 selectedTab = 2
@@ -728,7 +737,7 @@ extension Home {
         }
 
         @ViewBuilder func adjustmentsTempTargetView(_ tempTargetString: String) -> some View {
-            Group {
+            HStack {
                 let targetValue = latestTempTarget.first?.target?.doubleValue ?? 0.0
                 let rotationValue: Double = targetValue < 100 ? 180 : 0
                 Image(systemName: "arrow.up.circle.badge.clock")
@@ -744,6 +753,7 @@ extension Home {
                         .frame(alignment: .leading)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
             .onTapGesture {
                 selectedTab = 2
@@ -751,7 +761,7 @@ extension Home {
         }
 
         @ViewBuilder func adjustmentsProfileView(_ profile: ProfileStored) -> some View {
-            Group {
+            HStack {
                 if profile.expiresAt != nil {
                     Image(systemName: "person.2.arrow.trianglehead.counterclockwise")
                         .font(.system(size: 26))
@@ -779,6 +789,7 @@ extension Home {
                     }
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
             .onTapGesture {
                 state.showModal(for: .adaptProfile)
@@ -929,6 +940,7 @@ extension Home {
 
             let profileToShow: ProfileStored? = {
                 guard overrideString == nil, tempTargetString == nil else { return nil }
+                guard profilesForCount.count > 1 else { return nil }
                 return activeProfile.first
             }()
 
@@ -1214,7 +1226,9 @@ extension Home {
                 if let progress = state.bolusProgress {
                     bolusProgressView(geo: geo, progress)
                         .padding(.bottom, UIDevice.adjustPadding(min: 0, max: 6))
-                } else if overrideString != nil || tempTargetString != nil || activeProfile.first != nil {
+                } else if overrideString != nil || tempTargetString != nil
+                    || (activeProfile.first != nil && profilesForCount.count > 1)
+                {
                     adjustmentView(geo: geo)
                         .padding(.bottom, UIDevice.adjustPadding(min: 0, max: 6))
                 }
