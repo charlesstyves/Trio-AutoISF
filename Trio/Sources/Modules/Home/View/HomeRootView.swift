@@ -778,7 +778,7 @@ extension Home {
                 }
             }
             .onTapGesture {
-                selectedTab = 2
+                state.showModal(for: .adaptProfile)
             }
         }
 

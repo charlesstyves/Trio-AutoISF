@@ -14,9 +14,16 @@ extension AdaptProfile {
         @State private var isConfirmRevertPresented = false
         @State private var showProfileHint = false
         @State private var profileHintDetent = PresentationDetent.large
+        @State private var showRenameActive = false
+        @State private var activeRenameText: String = ""
 
         @Environment(\.colorScheme) var colorScheme
         @Environment(AppState.self) var appState
+        /// True when RootView is presented as a modal sheet (e.g. from the Home profile banner
+        /// via `router.mainModalScreen`). False when pushed inside the Settings nav stack, where
+        /// the parent stack already supplies a Back button. Drives whether we show an explicit
+        /// Close button in the top-leading toolbar slot.
+        @Environment(\.isPresented) private var isPresented
 
         private static let dateFormatter: DateFormatter = {
             let f = DateFormatter()
@@ -77,6 +84,13 @@ extension AdaptProfile {
                 Task { await state.refresh() }
             }
             .toolbar {
+                if isPresented {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button(action: state.hideModal) {
+                            Text("Close").foregroundColor(.tabBar)
+                        }
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: {
                         state.startNewDraft()
@@ -127,6 +141,24 @@ extension AdaptProfile {
                     profile: item,
                     state: state,
                     onDismiss: { activationTarget = nil }
+                )
+            }
+            .alert(
+                "Rename active Profile",
+                isPresented: $showRenameActive
+            ) {
+                TextField("Name", text: $activeRenameText)
+                    .textInputAutocapitalization(.words)
+                Button("Save") {
+                    guard let item = activeItem else { return }
+                    let trimmed = activeRenameText.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !trimmed.isEmpty else { return }
+                    state.rename(item, to: trimmed)
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text(
+                    "Only the name is editable here. The active Profile's therapy values (Basal Rate, ISF, CR, BG Targets) and Algorithm Settings are edited directly in Therapy and Algorithm Settings while this Profile is active."
                 )
             }
             .alert(
@@ -218,7 +250,8 @@ extension AdaptProfile {
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    openEditor(for: item)
+                    activeRenameText = item.name
+                    showRenameActive = true
                 }
             }
             .listRowBackground(Color.blue)
@@ -416,7 +449,7 @@ extension AdaptProfile {
             } footer: {
                 HStack {
                     Image(systemName: "hand.draw.fill").foregroundStyle(.primary)
-                    Text("Swipe left to rename or delete a profile. Hold, drag and drop to reorder.")
+                    Text("Swipe left to edit or delete a profile. Hold, drag and drop to reorder.")
                 }
             }
         }
