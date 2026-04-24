@@ -392,6 +392,7 @@ extension AdaptProfile {
             state.resetField(\.adjustmentFactorSigmoid)
             state.resetField(\.weightPercentage)
             state.resetField(\.tddAdjBasal)
+            state.enforceAlgorithmMutualExclusion(prefer: .preferDynISF)
         }
 
         private func resetAutoISF() {
@@ -406,6 +407,7 @@ extension AdaptProfile {
             state.resetField(\.bgBrakeISFweight)
             state.resetField(\.postMealISFweight)
             state.resetField(\.iobThresholdPercent)
+            state.enforceAlgorithmMutualExclusion(prefer: .preferAutoISF)
         }
 
         private func resetAdvanced() {

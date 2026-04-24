@@ -410,6 +410,7 @@ extension AdaptProfile {
     struct DraftDynamicISFEditor: View {
         @Bindable var state: DraftEditorStateModel
         @State private var shouldDisplayHint = false
+        @State private var showDynamicISFHint = false
         @State private var hintLabel: String?
         @State private var selectedVerboseHint: AnyView?
         @State private var hintDetent = PresentationDetent.large
@@ -417,60 +418,49 @@ extension AdaptProfile {
         @Environment(\.colorScheme) var colorScheme
         @Environment(AppState.self) var appState
 
+        private var dynamicTypeBinding: Binding<DynamicSettings.DynamicSensitivityType> {
+            Binding(
+                get: {
+                    guard state.preferences.useNewFormula else { return .disabled }
+                    return state.preferences.sigmoid ? .sigmoid : .logarithmic
+                },
+                set: { newValue in state.setDynISFMode(newValue) }
+            )
+        }
+
         var body: some View {
             List {
-                SettingInputSection(
-                    decimalValue: .constant(0),
-                    booleanValue: Binding(
-                        get: { state.preferences.useNewFormula },
-                        set: { newValue in
-                            state.preferences.useNewFormula = newValue
-                            // dynISF and autoISF are mutually exclusive: enabling one disables
-                            // the other.
-                            if newValue { state.preferences.autoisf = false }
-                        }
-                    ),
-                    shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.useDynamicISFLabel),
-                    units: state.units,
-                    type: .boolean,
-                    label: AlgorithmSettingHints.useDynamicISFLabel,
-                    miniHint: AlgorithmSettingHints.useDynamicISFMini,
-                    verboseHint: AlgorithmSettingHints.dynamicISFVerbose(),
-                    isChanged: state.isChanged(\.useNewFormula),
-                    onReset: { state.resetField(\.useNewFormula) }
-                )
+                Section(
+                    header: Text("Dynamic Insulin Sensitivity"),
+                    content: {
+                        VStack(alignment: .leading) {
+                            Picker(
+                                selection: dynamicTypeBinding,
+                                label: Text(AlgorithmSettingHints.useDynamicISFLabel).multilineTextAlignment(.leading)
+                            ) {
+                                ForEach(DynamicSettings.DynamicSensitivityType.allCases) { option in
+                                    Text(option.displayName).tag(option)
+                                }
+                            }
+                            .padding(.top)
 
-                // Sub-toggles are hidden when dynISF is off, matching the live DynamicSettings view.
+                            HStack(alignment: .center) {
+                                Text(AlgorithmSettingHints.useDynamicISFMini)
+                                    .font(.footnote)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(nil)
+                                Spacer()
+                                Button(
+                                    action: { showDynamicISFHint = true },
+                                    label: { Image(systemName: "questionmark.circle") }
+                                )
+                                .buttonStyle(BorderlessButtonStyle())
+                            }.padding(.top)
+                        }.padding(.bottom)
+                    }
+                ).listRowBackground(Color.chart)
+
                 if state.preferences.useNewFormula {
-                    SettingInputSection(
-                        decimalValue: .constant(0),
-                        booleanValue: $state.preferences.sigmoid,
-                        shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.sigmoidLabel),
-                        units: state.units,
-                        type: .boolean,
-                        label: AlgorithmSettingHints.sigmoidLabel,
-                        miniHint: AlgorithmSettingHints.sigmoidMini,
-                        verboseHint: AlgorithmSettingHints.dynamicISFVerbose(),
-                        isChanged: state.isChanged(\.sigmoid),
-                        onReset: { state.resetField(\.sigmoid) }
-                    )
-
-                    SettingInputSection(
-                        decimalValue: $state.preferences.adjustmentFactor,
-                        booleanValue: .constant(false),
-                        shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.adjustmentFactorLabel),
-                        units: state.units,
-                        type: .decimal("adjustmentFactor"),
-                        label: AlgorithmSettingHints.adjustmentFactorLabel,
-                        miniHint: AlgorithmSettingHints.adjustmentFactorMini,
-                        verboseHint: AlgorithmSettingHints.adjustmentFactorVerbose(),
-                        isChanged: state.isChanged(\.adjustmentFactor),
-                        onReset: { state.resetField(\.adjustmentFactor) }
-                    )
-
                     if state.preferences.sigmoid {
                         SettingInputSection(
                             decimalValue: $state.preferences.adjustmentFactorSigmoid,
@@ -485,21 +475,35 @@ extension AdaptProfile {
                             isChanged: state.isChanged(\.adjustmentFactorSigmoid),
                             onReset: { state.resetField(\.adjustmentFactorSigmoid) }
                         )
-                    }
+                    } else {
+                        SettingInputSection(
+                            decimalValue: $state.preferences.adjustmentFactor,
+                            booleanValue: .constant(false),
+                            shouldDisplayHint: $shouldDisplayHint,
+                            selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.adjustmentFactorLabel),
+                            units: state.units,
+                            type: .decimal("adjustmentFactor"),
+                            label: AlgorithmSettingHints.adjustmentFactorLabel,
+                            miniHint: AlgorithmSettingHints.adjustmentFactorMini,
+                            verboseHint: AlgorithmSettingHints.adjustmentFactorVerbose(),
+                            isChanged: state.isChanged(\.adjustmentFactor),
+                            onReset: { state.resetField(\.adjustmentFactor) }
+                        )
 
-                    SettingInputSection(
-                        decimalValue: $state.preferences.weightPercentage,
-                        booleanValue: .constant(false),
-                        shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.weightPercentageLabel),
-                        units: state.units,
-                        type: .decimal("weightPercentage"),
-                        label: AlgorithmSettingHints.weightPercentageLabel,
-                        miniHint: AlgorithmSettingHints.weightPercentageMini,
-                        verboseHint: AlgorithmSettingHints.weightPercentageVerbose(),
-                        isChanged: state.isChanged(\.weightPercentage),
-                        onReset: { state.resetField(\.weightPercentage) }
-                    )
+                        SettingInputSection(
+                            decimalValue: $state.preferences.weightPercentage,
+                            booleanValue: .constant(false),
+                            shouldDisplayHint: $shouldDisplayHint,
+                            selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.weightPercentageLabel),
+                            units: state.units,
+                            type: .decimal("weightPercentage"),
+                            label: AlgorithmSettingHints.weightPercentageLabel,
+                            miniHint: AlgorithmSettingHints.weightPercentageMini,
+                            verboseHint: AlgorithmSettingHints.weightPercentageVerbose(),
+                            isChanged: state.isChanged(\.weightPercentage),
+                            onReset: { state.resetField(\.weightPercentage) }
+                        )
+                    }
 
                     SettingInputSection(
                         decimalValue: .constant(0),
@@ -522,6 +526,15 @@ extension AdaptProfile {
             .navigationTitle("Dynamic Settings")
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $shouldDisplayHint) { hintSheet }
+            .sheet(isPresented: $showDynamicISFHint) {
+                SettingInputHintView(
+                    hintDetent: $hintDetent,
+                    shouldDisplayHint: $showDynamicISFHint,
+                    hintLabel: AlgorithmSettingHints.dynamicISFLabel,
+                    hintText: AlgorithmSettingHints.dynamicISFVerbose(),
+                    sheetTitle: String(localized: "Help")
+                )
+            }
         }
 
         private var hintSheet: some View {
@@ -563,15 +576,7 @@ extension AdaptProfile {
                     decimalValue: .constant(0),
                     booleanValue: Binding(
                         get: { state.preferences.autoisf },
-                        set: { newValue in
-                            state.preferences.autoisf = newValue
-                            // dynISF and autoISF are mutually exclusive: enabling one disables
-                            // the other.
-                            if newValue { state.preferences.useNewFormula = false }
-                            // When autoISF is off, autosens must be on — oref relies on at least
-                            // one of autosens / autoISF to scale ISF dynamically.
-                            if !newValue { state.preferences.enableAutosens = true }
-                        }
+                        set: { newValue in state.setAutoISF(newValue) }
                     ),
                     shouldDisplayHint: $shouldDisplayHint,
                     selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.activateAutoISFLabel),
@@ -581,7 +586,10 @@ extension AdaptProfile {
                     miniHint: AlgorithmSettingHints.activateAutoISFMini,
                     verboseHint: AlgorithmSettingHints.activateAutoISFVerbose(),
                     isChanged: state.isChanged(\.autoisf),
-                    onReset: { state.resetField(\.autoisf) }
+                    onReset: {
+                        state.resetField(\.autoisf)
+                        state.enforceAlgorithmMutualExclusion(prefer: .preferAutoISF)
+                    }
                 )
 
                 // autoISF sub-settings are hidden when the master toggle is off.

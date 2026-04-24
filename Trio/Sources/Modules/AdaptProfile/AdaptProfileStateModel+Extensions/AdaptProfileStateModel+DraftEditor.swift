@@ -155,6 +155,96 @@ extension AdaptProfile {
             preferences[keyPath: keyPath] = originalPreferences[keyPath: keyPath]
         }
 
+        // MARK: - dynISF / autoISF cascade caches
+
+        //
+        // Enabling autoISF forces `useNewFormula` + `sigmoid` off; enabling dynISF forces
+        // `autoisf` off. When the user later reverses the enabling side, we want the cascaded
+        // side to come back to whatever it was before — otherwise the hub shows a stale
+        // "changed" indicator and the user has to go hunt down the implicit side effect.
+
+        @ObservationIgnored private var cachedDynISFBeforeAutoISFCascade: (useNewFormula: Bool, sigmoid: Bool)?
+        @ObservationIgnored private var cachedAutoISFBeforeDynISFCascade: Bool?
+
+        /// Toggle autoISF with cascade-and-restore. `true` caches the current dynISF pair and
+        /// flips it off; `false` restores the cache (if any) and re-asserts the autosens invariant.
+        func setAutoISF(_ enabled: Bool) {
+            // User touched autoISF directly — any stale cache on the dynISF side is moot.
+            cachedAutoISFBeforeDynISFCascade = nil
+            preferences.autoisf = enabled
+            if enabled {
+                if cachedDynISFBeforeAutoISFCascade == nil {
+                    cachedDynISFBeforeAutoISFCascade = (preferences.useNewFormula, preferences.sigmoid)
+                }
+                preferences.useNewFormula = false
+                preferences.sigmoid = false
+            } else {
+                if let cache = cachedDynISFBeforeAutoISFCascade {
+                    preferences.useNewFormula = cache.useNewFormula
+                    preferences.sigmoid = cache.sigmoid
+                    cachedDynISFBeforeAutoISFCascade = nil
+                }
+                // oref needs at least one of autosens / autoISF to scale ISF dynamically.
+                preferences.enableAutosens = true
+            }
+        }
+
+        /// Switch dynISF mode with cascade-and-restore. Non-disabled caches current autoISF and
+        /// flips it off; `.disabled` restores the cached autoISF value.
+        func setDynISFMode(_ mode: DynamicSettings.DynamicSensitivityType) {
+            // User touched the picker directly — any stale cache on the autoISF side is moot.
+            cachedDynISFBeforeAutoISFCascade = nil
+            switch mode {
+            case .logarithmic:
+                preferences.useNewFormula = true
+                preferences.sigmoid = false
+            case .sigmoid:
+                preferences.useNewFormula = true
+                preferences.sigmoid = true
+            case .disabled:
+                preferences.useNewFormula = false
+                preferences.sigmoid = false
+            }
+            if mode != .disabled {
+                if cachedAutoISFBeforeDynISFCascade == nil {
+                    cachedAutoISFBeforeDynISFCascade = preferences.autoisf
+                }
+                preferences.autoisf = false
+            } else {
+                if let cache = cachedAutoISFBeforeDynISFCascade {
+                    preferences.autoisf = cache
+                    cachedAutoISFBeforeDynISFCascade = nil
+                }
+            }
+        }
+
+        /// Tie-break policy for `enforceAlgorithmMutualExclusion` when both dynISF and autoISF end
+        /// up active. Resets restore original field values verbatim; if the user had previously
+        /// toggled one and cascaded the other off, an undo on just one field re-enables both —
+        /// this tells us which one the user's most recent action meant to keep.
+        enum MutexPreference {
+            case preferDynISF
+            case preferAutoISF
+        }
+
+        /// Ensures `useNewFormula` and `autoisf` aren't simultaneously on. Call after any reset
+        /// path that can restore one without touching the other.
+        func enforceAlgorithmMutualExclusion(prefer: MutexPreference) {
+            if preferences.useNewFormula, preferences.autoisf {
+                switch prefer {
+                case .preferDynISF:
+                    preferences.autoisf = false
+                case .preferAutoISF:
+                    preferences.useNewFormula = false
+                    preferences.sigmoid = false
+                }
+            }
+            // sigmoid without useNewFormula is never valid — clean up stray state.
+            if preferences.sigmoid, !preferences.useNewFormula {
+                preferences.sigmoid = false
+            }
+        }
+
         /// Drops the label-bearing metadata: percent → 100, source link cleared. Leaves therapy
         /// and algorithm values untouched so the user's tuned numbers survive — only the "derived
         /// from source" framing goes away. After this, the profile renders like the seeded
