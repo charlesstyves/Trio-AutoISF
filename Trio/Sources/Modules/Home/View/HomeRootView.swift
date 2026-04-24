@@ -721,6 +721,7 @@ extension Home {
                         .font(.caption)
                 }
             }
+            .contentShape(Rectangle())
             .onTapGesture {
                 selectedTab = 2
             }
@@ -743,6 +744,7 @@ extension Home {
                         .frame(alignment: .leading)
                 }
             }
+            .contentShape(Rectangle())
             .onTapGesture {
                 selectedTab = 2
             }
@@ -777,6 +779,7 @@ extension Home {
                     }
                 }
             }
+            .contentShape(Rectangle())
             .onTapGesture {
                 state.showModal(for: .adaptProfile)
             }
