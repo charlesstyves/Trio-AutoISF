@@ -338,7 +338,7 @@ extension AdaptProfile {
                     "Indefinite: becomes your new baseline. The basal schedule is written to the pump and everything else is applied immediately."
                 )
                 Text(
-                    "Timed (up to 24 h): applied until the duration expires, then auto-reverts to the indefinite baseline. The pump's scheduled basal is NOT changed; the algorithm compensates in-the-loop via temp basals — just like an override. This means you can safely experiment without touching the pump."
+                    "Timed (up to 24 h): applied until the duration expires, then auto-reverts to the indefinite baseline. Trio and the pump manager deliver the timed profile's basal rates live — the pump's saved basal schedule is NOT changed. If pump connectivity drops, the pump falls back to its last saved schedule."
                 )
 
                 Text("Reverting").bold()

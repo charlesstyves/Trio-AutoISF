@@ -8,6 +8,8 @@ extension ProfileScheduler {
         @State private var showAddSchedule = false
         @State private var selectedForDelete: ProfileScheduleListItem?
         @State private var isConfirmDeletePresented = false
+        @State private var showScheduleHint = false
+        @State private var scheduleHintDetent = PresentationDetent.large
 
         @Environment(\.colorScheme) var colorScheme
         @Environment(AppState.self) var appState
@@ -45,9 +47,71 @@ extension ProfileScheduler {
                         }
                     })
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(action: { showScheduleHint = true }) {
+                        Image(systemName: "info.circle")
+                    }
+                }
             }
             .sheet(isPresented: $showAddSchedule) {
                 AddScheduleView(state: state, onDismiss: { showAddSchedule = false })
+            }
+            .sheet(isPresented: $showScheduleHint) {
+                SettingInputHintView(
+                    hintDetent: $scheduleHintDetent,
+                    shouldDisplayHint: $showScheduleHint,
+                    hintLabel: String(localized: "About Schedules"),
+                    hintText: AnyView(scheduleAbstractHint),
+                    sheetTitle: String(localized: "Help", comment: "Help sheet title")
+                )
+            }
+        }
+
+        @ViewBuilder private var scheduleAbstractHint: some View {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("What is a Schedule?").bold()
+                Text(
+                    "A Schedule fires a profile activation at a future time — once, or on a repeating cadence. It lets you automate profile switches that follow a predictable pattern (sick days, night mode, workouts, menstrual cycle, travel)."
+                )
+
+                Text("Repeat options").bold()
+                Text("Once: fires a single time at the picked date and time. The schedule auto-deletes after firing.")
+                Text(
+                    "Daily / Weekdays / Weekends / Custom weekly: fires at the chosen time on matching weekdays."
+                )
+                Text("Monthly: fires on the chosen day-of-month.")
+
+                Text("Duration").bold()
+                Text(
+                    "Temporary (up to 24 h): runs for the chosen duration, then reverts to the anchor (your last indefinite profile). Trio and the pump manager deliver the profile's basal rates live — the pump's saved basal schedule is NOT changed. If pump connectivity drops, the pump falls back to its last saved schedule."
+                )
+                Text(
+                    "Indefinite / until next: becomes your new baseline. The basal profile is saved to the pump and stays until you switch profiles again."
+                )
+
+                Text("Notifications").bold()
+                Text(
+                    "Temporary activation: an informational notification confirms the switch (\"Profile X activated — auto-reverts at hh:mm\"). No action required."
+                )
+                Text(
+                    "Indefinite activation: an actionable notification (\"Save basal to pump?\") with Save to pump / Cancel buttons. Tapping the body re-opens an in-app confirmation dialog when you return to the app."
+                )
+                Text(
+                    "Auto-revert: when a temp profile expires, you get a notification (\"Profile X expired — reverted to Y\")."
+                )
+
+                Text("Confirming pump writes").bold()
+                Text(
+                    "Only indefinite (and until-next) activations write a new basal schedule into the pump's memory. Schedules will NOT write to the pump automatically — confirm via Save to pump in the notification or the in-app dialog. Until you confirm, the previous saved schedule stays on the pump."
+                )
+                Text(
+                    "Temporary activations don't overwrite the pump's saved schedule — Trio and the pump manager deliver the temp profile's rates live. That's what lets the temp auto-revert cleanly and also protects you if pump connectivity drops (the pump falls back to its last saved schedule)."
+                )
+
+                Text("Managing").bold()
+                Text(
+                    "Swipe left on a schedule row to enable, disable, or delete it. Disabled schedules sink to the bottom and don't fire. The Upcoming section on the Profiles screen shows the next two fires across all enabled schedules."
+                )
             }
         }
 
