@@ -6,6 +6,13 @@ enum NotificationCategoryIdentifier: String {
     /// Actionable notification posted when an indefinite `ProfileScheduleStored` fires — carries
     /// `Review & save to pump` and `Skip` actions. Resolved by `UserNotificationsManager`.
     case scheduleActivation = "Trio.schedule.activation"
+    /// Informational notification posted after a timed `.minutes` schedule fires and auto-activates
+    /// its temp profile. No actions — just surfaces the fact to the user since the activation is
+    /// otherwise silent.
+    case scheduleActivated = "Trio.schedule.activated"
+    /// Informational notification posted when a timed temp profile auto-reverts to the previous
+    /// indefinite anchor profile. No actions — symmetric with `.scheduleActivated`.
+    case profileReverted = "Trio.profile.reverted"
 }
 
 /// Payload keys used on schedule-activation notifications so the response handler can locate the
@@ -97,6 +104,26 @@ enum NotificationCategoryFactory {
         return UNNotificationCategory(
             identifier: NotificationCategoryIdentifier.scheduleActivation.rawValue,
             actions: [confirm, skip],
+            intentIdentifiers: [],
+            options: []
+        )
+    }
+
+    /// Informational (non-actionable) category posted after a timed temp profile auto-activates.
+    static func createScheduleActivatedCategory() -> UNNotificationCategory {
+        UNNotificationCategory(
+            identifier: NotificationCategoryIdentifier.scheduleActivated.rawValue,
+            actions: [],
+            intentIdentifiers: [],
+            options: []
+        )
+    }
+
+    /// Informational (non-actionable) category posted after a timed temp profile auto-reverts.
+    static func createProfileRevertedCategory() -> UNNotificationCategory {
+        UNNotificationCategory(
+            identifier: NotificationCategoryIdentifier.profileReverted.rawValue,
+            actions: [],
             intentIdentifiers: [],
             options: []
         )

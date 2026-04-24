@@ -1,5 +1,6 @@
 import CoreData
 import Foundation
+import UserNotifications
 
 /// Re-entrancy guard: `activate()` can take a couple of seconds (pump sync paths
 /// and Core Data writes), and the timer fires every 5s. Without a flag a slow
@@ -30,7 +31,9 @@ extension Home.StateModel {
 
         struct Expired {
             let objectID: NSManagedObjectID
+            let name: String
             let previousID: UUID?
+            let previousName: String?
         }
 
         let expired: Expired? = await context.perform {
@@ -41,13 +44,26 @@ extension Home.StateModel {
                   let expiresAt = active.expiresAt,
                   expiresAt <= Date()
             else { return nil }
-            return Expired(objectID: active.objectID, previousID: active.previousProfileID)
+            let previousName: String? = {
+                guard let pid = active.previousProfileID else { return nil }
+                let anchorReq = ProfileStored.fetchRequest()
+                anchorReq.predicate = NSPredicate(format: "id == %@", pid as CVarArg)
+                anchorReq.fetchLimit = 1
+                return (try? context.fetch(anchorReq).first)?.name
+            }()
+            return Expired(
+                objectID: active.objectID,
+                name: active.name ?? "Unnamed",
+                previousID: active.previousProfileID,
+                previousName: previousName
+            )
         }
         guard let expired = expired else { return }
 
         if let previousID = expired.previousID {
             let provider = AdaptProfile.Provider(resolver: resolver)
             _ = await provider.activate(id: previousID, durationMinutes: nil, confirmedPumpSync: true)
+            postRevertedNotification(expiredName: expired.name, anchorName: expired.previousName ?? "Unnamed")
             return
         }
 
@@ -71,6 +87,26 @@ extension Home.StateModel {
             profile.activatedAt = nil
             profile.expiresAt = nil
             try? context.save()
+        }
+    }
+}
+
+@MainActor private func postRevertedNotification(expiredName: String, anchorName: String) {
+    let content = UNMutableNotificationContent()
+    content.title = String(localized: "Profile \"\(expiredName)\" expired")
+    content.body = String(localized: "Reverted to \"\(anchorName)\".")
+    content.sound = .default
+    content.categoryIdentifier = NotificationCategoryIdentifier.profileReverted.rawValue
+    let request = UNNotificationRequest(
+        identifier: "Trio.profile.reverted.\(expiredName).\(Int(Date().timeIntervalSince1970))",
+        content: content,
+        trigger: nil
+    )
+    UNUserNotificationCenter.current().add(request) { error in
+        if let error = error {
+            debug(.service, "ProfileExpiration: failed to post reverted notification: \(error)")
+        } else {
+            debug(.service, "ProfileExpiration: reverted notification queued (id=\(request.identifier))")
         }
     }
 }

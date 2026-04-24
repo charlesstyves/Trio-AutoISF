@@ -122,10 +122,14 @@ final class BaseUserNotificationsManager: NSObject, UserNotificationsManager, In
 
             let glucoseCategory = NotificationCategoryFactory.createGlucoseCategory()
             let scheduleCategory = NotificationCategoryFactory.createScheduleActivationCategory()
+            let scheduleActivatedCategory = NotificationCategoryFactory.createScheduleActivatedCategory()
+            let profileRevertedCategory = NotificationCategoryFactory.createProfileRevertedCategory()
 
             var categories = existingCategories
             categories.update(with: glucoseCategory)
             categories.update(with: scheduleCategory)
+            categories.update(with: scheduleActivatedCategory)
+            categories.update(with: profileRevertedCategory)
             // UNUserNotificationCenter methods should be called on main thread
             Task { @MainActor [weak self] in
                 guard let self else { return }

@@ -117,6 +117,7 @@ final class ProfileScheduleFirer {
                 )
                 debug(.coreData, "ProfileScheduleFirer: activate outcome = \(outcome)")
                 if outcome != .success { continue }
+                postActivatedNotification(for: fire, minutes: m)
             case .indefinite,
                  .untilNext:
                 // Flow B: indefinite activations need user-confirmed pump save. Post an actionable
@@ -162,6 +163,48 @@ final class ProfileScheduleFirer {
         await MainActor.run {
             Foundation.NotificationCenter.default.post(name: .didUpdateProfileSchedules, object: nil)
         }
+    }
+
+    // MARK: - Temp-profile activation notification (informational)
+
+    private func postActivatedNotification(for fire: DueFire, minutes: Int) {
+        let revertDate = fire.occurrence.addingTimeInterval(TimeInterval(minutes) * 60)
+        let timeFormatter = DateFormatter()
+        timeFormatter.timeStyle = .short
+        let revertTime = timeFormatter.string(from: revertDate)
+
+        let content = UNMutableNotificationContent()
+        content.title = String(localized: "Profile \"\(fire.profileName)\" activated")
+        content.body = String(
+            localized: "Temporary — active for \(formatDuration(minutes: minutes)), auto-reverts at \(revertTime)."
+        )
+        content.sound = .default
+        content.categoryIdentifier = NotificationCategoryIdentifier.scheduleActivated.rawValue
+        content.userInfo = [
+            ScheduleNotificationUserInfoKey.scheduleID: fire.scheduleID.uuidString,
+            ScheduleNotificationUserInfoKey.profileID: fire.profileID.uuidString,
+            ScheduleNotificationUserInfoKey.occurrenceEpoch: fire.occurrence.timeIntervalSince1970
+        ]
+        let request = UNNotificationRequest(
+            identifier: "Trio.schedule.activated.\(fire.scheduleID.uuidString).\(Int(fire.occurrence.timeIntervalSince1970))",
+            content: content,
+            trigger: nil
+        )
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                debug(.service, "ProfileScheduleFirer: failed to post activated notification: \(error)")
+            } else {
+                debug(.service, "ProfileScheduleFirer: activated notification queued (id=\(request.identifier))")
+            }
+        }
+    }
+
+    private func formatDuration(minutes: Int) -> String {
+        let hours = minutes / 60
+        let mins = minutes % 60
+        if hours == 0 { return "\(mins) min" }
+        if mins == 0 { return "\(hours) hr" }
+        return "\(hours) hr \(mins) min"
     }
 
     // MARK: - Flow B (indefinite) notification
