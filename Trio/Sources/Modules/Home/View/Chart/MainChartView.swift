@@ -165,7 +165,8 @@ extension MainChartView {
                     bolusIncrement: state.bolusIncrement,
                     peaks: state.showGlucosePeaks ? state.glucosePeaks : [],
                     useBars: state.useChartBars,
-                    screenHours: screenHours
+                    screenHours: screenHours,
+                    bolusDisplayThreshold: state.bolusDisplayThreshold
                 )
 
                 CarbView(

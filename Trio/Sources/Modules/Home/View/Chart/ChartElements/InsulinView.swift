@@ -10,6 +10,7 @@ struct InsulinView: ChartContent {
     let peaks: [(date: Date, glucose: Int16, type: ExtremumType)]
     let useBars: Bool
     let screenHours: Int16
+    let bolusDisplayThreshold: BolusDisplayThreshold
 
     /// Time proximity (seconds) within which a bolus/SMB is considered to collide with a peak label.
     private static let proximityWindow: TimeInterval = 15 * 60
@@ -50,7 +51,9 @@ struct InsulinView: ChartContent {
                 )?.glucose {
                     let baseY = units == .mgdL ? Decimal(glucose) : Decimal(glucose).asMmolL
                     let amountDecimal = amount.decimalValue
-                    let label = Formatter.bolusFormatterToIncrement(for: bolusIncrement).string(from: amount) ?? ""
+                    let showLabel = amountDecimal >= bolusDisplayThreshold.rawValue
+                    let label = showLabel ? Formatter.bolusFormatterToIncrement(for: bolusIncrement)
+                        .string(from: amount) ?? "" : ""
 
                     if useBars {
                         // Bar mode: anchor at curve, fixed pixel gap. Peak-label overlap is resolved by
@@ -109,7 +112,9 @@ struct InsulinView: ChartContent {
                     time: bolusDate.timeIntervalSince1970
                 )?.glucose {
                     let amountDecimal = amount.decimalValue
-                    let label = Formatter.bolusFormatterToIncrement(for: bolusIncrement).string(from: amount) ?? ""
+                    let showLabel = amountDecimal >= bolusDisplayThreshold.rawValue
+                    let label = showLabel ? Formatter.bolusFormatterToIncrement(for: bolusIncrement)
+                        .string(from: amount) ?? "" : ""
 
                     if useBars {
                         // Bar mode: anchor SMBs at curve, fixed pixel gap. Peak-label collision is

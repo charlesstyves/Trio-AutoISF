@@ -1030,6 +1030,12 @@ extension SettingsExport {
                 addSetting(
                     category: featuresCategory,
                     subcategory: userInterfaceSubcategory,
+                    name: String(localized: "Bolus Label Threshold"),
+                    value: trioSettings.bolusDisplayThreshold.displayName
+                )
+                addSetting(
+                    category: featuresCategory,
+                    subcategory: userInterfaceSubcategory,
                     name: String(localized: "Low Threshold"),
                     value: trioSettings
                         .units == .mgdL ? String(describing: trioSettings.low) : String(describing: trioSettings.low.asMmolL),

@@ -221,6 +221,51 @@ extension UserInterfaceSettings {
                     }
                 )
 
+                Section {
+                    VStack {
+                        Picker(
+                            selection: $state.bolusDisplayThreshold,
+                            label: Text("Bolus Label Threshold")
+                        ) {
+                            ForEach(BolusDisplayThreshold.allCases) { selection in
+                                Text(selection.displayName).tag(selection)
+                            }
+                        }.padding(.top)
+
+                        HStack(alignment: .center) {
+                            Text(
+                                "Hide numeric labels next to small boluses and SMBs to reduce chart clutter."
+                            )
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                            .lineLimit(nil)
+                            Spacer()
+                            Button(
+                                action: {
+                                    hintLabel = String(localized: "Bolus Label Threshold")
+                                    selectedVerboseHint =
+                                        AnyView(
+                                            VStack(alignment: .leading, spacing: 10) {
+                                                Text(
+                                                    "Only boluses and SMBs at or above the selected amount will show their numeric label on the main chart. The bar or marker itself is always drawn."
+                                                )
+                                                Text(
+                                                    "Choose 'Show all labels' to keep every label, or pick a higher threshold to clean up the chart when there are many small SMBs."
+                                                )
+                                            }
+                                        )
+                                    shouldDisplayHint.toggle()
+                                },
+                                label: {
+                                    HStack {
+                                        Image(systemName: "questionmark.circle")
+                                    }
+                                }
+                            ).buttonStyle(BorderlessButtonStyle())
+                        }.padding(.top)
+                    }.padding(.bottom)
+                }.listRowBackground(Color.chart)
+
                 SettingInputSection(
                     decimalValue: $decimalPlaceholder,
                     booleanValue: $state.rulerMarks,

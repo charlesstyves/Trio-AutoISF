@@ -74,6 +74,7 @@ struct TrioSettings: JSON, Equatable, Encodable {
     var insulinConcentration: Decimal = 1
     var showCobIobChart: Bool = true
     var rulerMarks: Bool = true
+    var bolusDisplayThreshold: BolusDisplayThreshold = .allUnits
     var forecastDisplayType: ForecastDisplayType = .cone
     var maxCarbs: Decimal = 250
     var maxFat: Decimal = 250
@@ -333,6 +334,10 @@ extension TrioSettings: Decodable {
 
         if let rulerMarks = try? container.decode(Bool.self, forKey: .rulerMarks) {
             settings.rulerMarks = rulerMarks
+        }
+
+        if let bolusDisplayThreshold = try? container.decode(BolusDisplayThreshold.self, forKey: .bolusDisplayThreshold) {
+            settings.bolusDisplayThreshold = bolusDisplayThreshold
         }
 
         if let forecastDisplayType = try? container.decode(ForecastDisplayType.self, forKey: .forecastDisplayType) {
