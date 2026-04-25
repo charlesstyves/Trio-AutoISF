@@ -139,4 +139,84 @@ enum AutoISF {
             glucoseStatus: status
         )
     }
+
+    /// Outcome of the autoISF B30 dispatch. `notActive` → caller runs the standard
+    /// oref dosing pipeline. `delivered` or `blocked` → caller returns the determination
+    /// as-is (B30 took over either by boosting basal or by committing a safeguard fallback).
+    enum B30Dispatch {
+        case notActive
+        case delivered(Determination)
+        case blocked(Determination)
+    }
+
+    /// Mirrors JS `aimiRateActivated` branch — activation check, safeguard overlay,
+    /// KetoProtect gate, and post-block SMB re-evaluation all live here so the top-level
+    /// generator only has to ask autoISF for the outcome.
+    ///
+    /// - When safeguards suppress B30, AutoISFsmb is re-evaluated with `b30IsActive=false`
+    ///   so the returned determination's `smbRatio` / `iobTH` / displayed SMB state reflect
+    ///   the post-block reality (B30 isn't actually running).
+    static func dispatchB30(
+        b30Result: B30Result,
+        determination: Determination,
+        safetyInputs: B30SafetyInputs,
+        profile: Profile,
+        targetBG: Decimal,
+        currentGlucose: Decimal,
+        microBolusAllowed: Bool,
+        iob: Decimal,
+        exerciseModeActive: Bool,
+        overrideSmbIsOff: Bool,
+        bolusIOB: Decimal,
+        basalIOB: Decimal,
+        iobActivity: Decimal
+    ) throws -> B30Dispatch {
+        guard b30Result.isActive else { return .notActive }
+
+        let (suppressed, afterSafeguards) = try AimiB30.applySafetyChecks(
+            inputs: safetyInputs,
+            determination: determination
+        )
+
+        if suppressed {
+            var blocked = afterSafeguards
+            let updatedSmb = AutoISFsmb.evaluate(
+                profile: profile,
+                targetBG: targetBG,
+                microBolusAllowed: microBolusAllowed,
+                iob: iob,
+                b30IsActive: false,
+                exerciseModeActive: exerciseModeActive,
+                overrideSmbIsOff: overrideSmbIsOff
+            )
+            blocked.smbRatio = min(
+                AutoISFsmb.variableSMBRatio(
+                    profile: profile,
+                    currentGlucose: currentGlucose,
+                    targetGlucose: targetBG,
+                    loopMode: updatedSmb?.loopMode ?? .oref
+                ),
+                1
+            )
+            blocked.iobTH = updatedSmb?.iobTHEffective
+            return .blocked(blocked)
+        }
+
+        // Safeguards passed → deliver B30 boost. KetoProtect mirrors JS basal-set-temp.js
+        // where keto check precedes the aimiRateActivated branch.
+        var det = afterSafeguards
+        let keto = KetoProtect.apply(
+            rate: b30Result.boostRate,
+            profile: profile,
+            bolusIOB: bolusIOB,
+            basalIOB: basalIOB,
+            iobActivity: iobActivity
+        )
+        det.reason = keto.reason + b30Result.reason + det.reason
+        det.reason = "AIMI B30, TBR \(keto.rate)U/hr" + det.reason
+        det.reason += "calculated AIMI B30 Temp \(keto.rate)U/hr\(b30Result.reason)"
+        det.rate = keto.rate
+        det.duration = min(30, b30Result.remainingMinutes)
+        return .delivered(det)
+    }
 }

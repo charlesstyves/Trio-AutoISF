@@ -355,6 +355,11 @@ enum DeterminationGenerator {
             throw DeterminationError.missingIob
         }
 
+        // Split IOB and activity for KetoProtect (mirrors JS rT.bolusIOB / rT.basalIOB / rT.iobActivity).
+        let bolusIOB = iobData.first?.bolusiob ?? 0
+        let basalIOB = iobData.first?.basaliob ?? 0
+        let iobActivity = iobData.first?.activity ?? 0
+
         let naiveEventualGlucose: Decimal
         if currentIob > 0 {
             naiveEventualGlucose = (currentGlucose - (currentIob * adjustedSensitivity)).jsRounded()
@@ -554,8 +559,9 @@ enum DeterminationGenerator {
 
         // MARK: - Core dosing logic
 
-        // B30 fires before all safety checks — mirrors JS determine-basal.js line 1578
-        if b30Result.isActive {
+        // autoISF gates B30 + KetoProtect + associated safeguards. When disabled, we fall
+        // straight through to the oref dosing pipeline below.
+        if profile.autoisf {
             let safetyInputs = B30SafetyInputs(
                 currentGlucose: currentGlucose,
                 minGuardGlucose: forecastResult.minGuardGlucose,
@@ -577,20 +583,33 @@ enum DeterminationGenerator {
                 minForecastGlucose: forecastResult.minForecastedGlucose,
                 maxIob: profile.maxIob,
                 currentTemp: currentTemp,
-                profile: profile
+                profile: profile,
+                bolusIOB: bolusIOB,
+                basalIOB: basalIOB,
+                iobActivity: iobActivity
             )
-            let (suppressed, d) = try AimiB30.applySafetyChecks(inputs: safetyInputs, determination: determination)
-            if suppressed { return d }
-            determination = d
-            // Rate is already rounded and capped to maxBasal in AimiB30.
-            // Bypass setTempBasal (which would re-apply the 4×currentBasal safety multiplier cap)
-            // — mirrors JS aimiRateActivated path in basal-set-temp.js that uses max_basal directly.
-            determination.reason = b30Result.reason + determination.reason
-            determination.reason = "AIMI B30, TBR \(b30Result.boostRate)U/hr" + determination.reason
-            determination.reason += "calculated AIMI B30 Temp \(b30Result.boostRate)U/hr\(b30Result.reason)"
-            determination.rate = b30Result.boostRate
-            determination.duration = min(30, b30Result.remainingMinutes)
-            return determination
+            let dispatch = try AutoISF.dispatchB30(
+                b30Result: b30Result,
+                determination: determination,
+                safetyInputs: safetyInputs,
+                profile: profile,
+                targetBG: adjustedGlucoseTargets.targetGlucose,
+                currentGlucose: currentGlucose,
+                microBolusAllowed: microBolusAllowed,
+                iob: iobData.first?.iob ?? 0,
+                exerciseModeActive: exerciseModeActive,
+                overrideSmbIsOff: overrideDisablesSmb,
+                bolusIOB: bolusIOB,
+                basalIOB: basalIOB,
+                iobActivity: iobActivity
+            )
+            switch dispatch {
+            case .notActive:
+                break // fall through to normal pipeline
+            case let .blocked(det),
+                 let .delivered(det):
+                return det
+            }
         }
 
         let (shouldSetTempBasalForLowGlucoseSuspend, lowGlucoseSuspendDetermination) = try DosingEngine.lowGlucoseSuspend(
@@ -605,7 +624,10 @@ enum DeterminationGenerator {
             adjustedSensitivity: adjustedSensitivity,
             targetGlucose: adjustedGlucoseTargets.targetGlucose,
             currentTemp: currentTemp,
-            determination: determination
+            determination: determination,
+            bolusIOB: bolusIOB,
+            basalIOB: basalIOB,
+            iobActivity: iobActivity
         )
         determination = lowGlucoseSuspendDetermination
         if shouldSetTempBasalForLowGlucoseSuspend {
@@ -617,7 +639,10 @@ enum DeterminationGenerator {
             profile: profile,
             clock: currentTime,
             currentTemp: currentTemp,
-            determination: determination
+            determination: determination,
+            bolusIOB: bolusIOB,
+            basalIOB: basalIOB,
+            iobActivity: iobActivity
         )
         determination = skipNeutralTempDetermination
         if shouldSetTempBasalForSkipNeutralTemp {
@@ -639,7 +664,10 @@ enum DeterminationGenerator {
                 profile: profile,
                 determination: determination,
                 adjustedSensitivity: adjustedSensitivity,
-                overrideFactor: trioCustomOrefVariables.overrideFactor()
+                overrideFactor: trioCustomOrefVariables.overrideFactor(),
+                bolusIOB: bolusIOB,
+                basalIOB: basalIOB,
+                iobActivity: iobActivity
             )
         determination = lowEventualGlucoseDetermination
         if shouldSetTempBasalForLowEventualGlucose {
@@ -659,7 +687,10 @@ enum DeterminationGenerator {
             basal: basal,
             smbIsEnabled: smbIsEnabled,
             profile: profile,
-            determination: determination
+            determination: determination,
+            bolusIOB: bolusIOB,
+            basalIOB: basalIOB,
+            iobActivity: iobActivity
         )
         determination = glucoseFallingFasterThanExpectedDetermination
         if shouldSetTempBasalForGlucoseFallingFasterThanExpected {
@@ -677,7 +708,10 @@ enum DeterminationGenerator {
             basal: basal,
             smbIsEnabled: smbIsEnabled,
             profile: profile,
-            determination: determination
+            determination: determination,
+            bolusIOB: bolusIOB,
+            basalIOB: basalIOB,
+            iobActivity: iobActivity
         )
         determination = eventualOrForecastGlucoseLessThanMaxDetermination
         if shouldSetTempBasalEventualOrForecastGlucoseLessThanMax {
@@ -696,7 +730,10 @@ enum DeterminationGenerator {
             currentTemp: currentTemp,
             basal: basal,
             profile: profile,
-            determination: determination
+            determination: determination,
+            bolusIOB: bolusIOB,
+            basalIOB: basalIOB,
+            iobActivity: iobActivity
         )
         determination = iobGreaterThanMaxDetermination
         if shouldSetTempBasalForIobGreaterThanMax {
@@ -751,7 +788,10 @@ enum DeterminationGenerator {
             basal: basal,
             profile: profile,
             currentTemp: currentTemp,
-            determination: determination
+            determination: determination,
+            bolusIOB: bolusIOB,
+            basalIOB: basalIOB,
+            iobActivity: iobActivity
         )
     }
 
