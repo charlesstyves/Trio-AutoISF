@@ -715,7 +715,7 @@ extension Home {
                 }
             }
             .onTapGesture {
-                selectedTab = 2
+                selectedTab = 3
             }
         }
 
@@ -737,7 +737,7 @@ extension Home {
                 }
             }
             .onTapGesture {
-                selectedTab = 2
+                selectedTab = 3
             }
         }
 
@@ -820,7 +820,7 @@ extension Home {
                     // clear color for the icon
                     .foregroundStyle(Color.clear)
             }.onTapGesture {
-                selectedTab = 2
+                selectedTab = 3
             }
         }
 
@@ -1260,21 +1260,29 @@ extension Home {
                     NavigationStack { History.RootView(resolver: resolver) }
                         .tabItem { Label("History", systemImage: historySFSymbol) }.tag(1)
 
-                    Spacer()
+                    // Tag-2 placeholder for the central "+" button slot. iOS divides the
+                    // bar into 5 equal slots; without an explicit tag here, the strips of
+                    // this slot to the left/right of the 42pt "+" icon route taps to an
+                    // untagged Spacer and surface an empty view (black screen). Tagging
+                    // lets `onChange(of: selectedTab)` intercept the tap and treat it as
+                    // a "+" press. Mirrors nightscout/Trio PR #764.
+                    Color.clear
+                        .tabItem {}
+                        .tag(2)
 
                     NavigationStack { Adjustments.RootView(resolver: resolver) }
                         .tabItem {
                             Label(
                                 "Adjustments",
                                 systemImage: "slider.horizontal.2.gobackward"
-                            ) }.tag(2)
+                            ) }.tag(3)
 
                     NavigationStack(path: self.$settingsPath) {
                         Settings.RootView(resolver: resolver) }
                         .tabItem { Label(
                             "Settings",
                             systemImage: "gear"
-                        ) }.tag(3)
+                        ) }.tag(4)
                 }
                 .tint(Color.tabBar)
 
@@ -1296,8 +1304,23 @@ extension Home {
                     }
                 )
             }.ignoresSafeArea(.keyboard, edges: .bottom).blur(radius: state.waitForSuggestion ? 8 : 0)
-                .onChange(of: selectedTab) {
-                    if !settingsPath.isEmpty {
+                .onChange(of: selectedTab) { oldValue, newValue in
+                    // Tag-2 is the placeholder slot under the central "+". If a tap lands
+                    // on the strips around the 42pt "+" icon, treat it as a "+" press:
+                    // open the Treatment sheet, then bounce selection back. The 1s delay
+                    // lets the modal animation start before SwiftUI flips the tab —
+                    // immediate revert can race the sheet presentation. Same pattern as
+                    // nightscout/Trio PR #764.
+                    if newValue == 2 {
+                        state.showModal(for: .treatmentView)
+                        Task {
+                            try? await Task.sleep(for: .seconds(1))
+                            selectedTab = oldValue
+                        }
+                        return
+                    }
+                    // Don't clear settingsPath when bouncing back from the placeholder.
+                    if oldValue != 2, !settingsPath.isEmpty {
                         settingsPath = NavigationPath()
                     }
                 }
