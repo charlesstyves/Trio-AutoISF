@@ -253,7 +253,12 @@ extension AdaptProfile {
             deviceManager.pumpManager?.supportedBasalRates.map { Decimal($0) }
         }
 
-        func activate(id: UUID, durationMinutes: Int?, confirmedPumpSync: Bool) async -> ActivationOutcome {
+        func activate(
+            id: UUID,
+            durationMinutes: Int?,
+            confirmedPumpSync: Bool,
+            skipPumpSync: Bool = false
+        ) async -> ActivationOutcome {
             let context = coreDataStack.newTaskContext()
             context.name = "AdaptProfileActivateContext"
             context.transactionAuthor = "AdaptProfileActivate"
@@ -287,9 +292,14 @@ extension AdaptProfile {
 
             // Step 2: pump-sync decision. Only indefinite activations that would change the basal
             // schedule require a pump write; timed activations keep the pump schedule untouched.
+            // Revert paths pass `skipPumpSync: true` because the anchor invariant guarantees the
+            // pump already holds the target's basal — see Step 4 anchor rule and the doc comments
+            // on `revertActiveProfile()` / `checkExpiredProfileAndAutoRevert()`. The basal-diff
+            // comparison is short-circuited away in that case.
             let isIndefinite = (durationMinutes == nil)
-            let basalDiffers = scope.basalProfile != loaded.therapy.basalProfile
-            let needsPumpSync = isIndefinite && basalDiffers
+            let needsPumpSync = !skipPumpSync
+                && isIndefinite
+                && scope.basalProfile != loaded.therapy.basalProfile
 
             if needsPumpSync, !confirmedPumpSync {
                 return .needsPumpConfirm

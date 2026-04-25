@@ -16,9 +16,10 @@ extension Home.StateModel {
     ///
     /// If the active profile's `expiresAt` has passed:
     ///  - With an anchor (`previousProfileID`): re-activate it indefinitely via
-    ///    `AdaptProfile.Provider.activate`. The anchor is, by construction, the
-    ///    last indefinite profile (its basal is already on the pump), so the
-    ///    pump sync is pre-confirmed — same contract as `revertActiveProfile()`.
+    ///    `AdaptProfile.Provider.activate` with `skipPumpSync: true`. The anchor
+    ///    is, by construction, the last indefinite profile (its basal is already
+    ///    on the pump), so a pump write would be redundant — same contract as
+    ///    `revertActiveProfile()`.
     ///  - Without an anchor: clear `isActive` / `expiresAt` in place. No pump
     ///    write (timed activations never touched the pump anyway).
     @MainActor func checkExpiredProfileAndAutoRevert() async {
@@ -62,7 +63,12 @@ extension Home.StateModel {
 
         if let previousID = expired.previousID {
             let provider = AdaptProfile.Provider(resolver: resolver)
-            _ = await provider.activate(id: previousID, durationMinutes: nil, confirmedPumpSync: true)
+            _ = await provider.activate(
+                id: previousID,
+                durationMinutes: nil,
+                confirmedPumpSync: true,
+                skipPumpSync: true
+            )
             postRevertedNotification(expiredName: expired.name, anchorName: expired.previousName ?? "")
             return
         }

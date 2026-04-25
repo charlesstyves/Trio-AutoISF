@@ -162,6 +162,13 @@ protocol AdaptProfileProvider: Provider {
 
     /// Activate a stored profile. `durationMinutes == nil` means indefinite. When indefinite and the
     /// target basal differs from live, pump sync is required — set `confirmedPumpSync = true` after
-    /// the user approves the "Save to pump" dialog.
-    func activate(id: UUID, durationMinutes: Int?, confirmedPumpSync: Bool) async -> ActivationOutcome
+    /// the user approves the "Save to pump" dialog. Revert paths pass `skipPumpSync: true` to bypass
+    /// the pump write entirely (the anchor invariant guarantees the pump already holds the target's
+    /// basal).
+    func activate(
+        id: UUID,
+        durationMinutes: Int?,
+        confirmedPumpSync: Bool,
+        skipPumpSync: Bool
+    ) async -> ActivationOutcome
 }
