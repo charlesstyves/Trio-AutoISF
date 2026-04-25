@@ -15,7 +15,7 @@ struct CarbView: ChartContent {
     /// Time proximity (seconds) within which a carb marker is considered to collide with a peak label.
     private static let proximityWindow: TimeInterval = 15 * 60
 
-    /// iAPS-style scaling reference: max carb amount across the visible carb data.
+    /// Scaling reference for bar height: max carb amount across the visible carb data.
     private var maxCarbsValue: Decimal {
         let amounts = carbData.map { Decimal($0.carbs) }
         return amounts.max() ?? 1

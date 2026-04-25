@@ -433,7 +433,6 @@
 		582DF9752C8CDB92001F516D /* GlucoseChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 582DF9742C8CDB92001F516D /* GlucoseChartView.swift */; };
 		582DF9772C8CDBE7001F516D /* InsulinView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 582DF9762C8CDBE7001F516D /* InsulinView.swift */; };
 		F1ABCDE10000000000000001 /* ChartBarShapes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1ABCDE10000000000000002 /* ChartBarShapes.swift */; };
-		F1ABCDE10000000000000003 /* LabelPlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1ABCDE10000000000000004 /* LabelPlacement.swift */; };
 		F1ABCDE10000000000000005 /* PeakLabelsOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1ABCDE10000000000000006 /* PeakLabelsOverlay.swift */; };
 		582DF97B2C8CE209001F516D /* CarbView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 582DF97A2C8CE209001F516D /* CarbView.swift */; };
 		582FAE432C05102C00D1C13F /* CoreDataError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 582FAE422C05102C00D1C13F /* CoreDataError.swift */; };
@@ -779,6 +778,7 @@
 		DD6B7CB22C7B6F0800B75029 /* Rounding.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD6B7CB12C7B6F0800B75029 /* Rounding.swift */; };
 		DD6B7CB42C7B71F700B75029 /* ForecastDisplayType.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD6B7CB32C7B71F700B75029 /* ForecastDisplayType.swift */; };
 		BD0BD7000001000000000001 /* BolusDisplayThreshold.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD0BD7000001000000000002 /* BolusDisplayThreshold.swift */; };
+		F1ABCDE10000000000000003 /* LabelPlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1ABCDE10000000000000004 /* LabelPlacement.swift */; };
 		DD6D67E42C9C253500660C9B /* ColorSchemeOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD6D67E32C9C253500660C9B /* ColorSchemeOption.swift */; };
 		DD6F63CC2D27F615007D94CF /* TreatmentMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD6F63CB2D27F606007D94CF /* TreatmentMenuView.swift */; };
 		DD73FA0F2D74F58E00D19D1E /* BackgroundTask+Helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD73FA0E2D74F57300D19D1E /* BackgroundTask+Helper.swift */; };
@@ -1436,7 +1436,6 @@
 		582DF9742C8CDB92001F516D /* GlucoseChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlucoseChartView.swift; sourceTree = "<group>"; };
 		582DF9762C8CDBE7001F516D /* InsulinView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsulinView.swift; sourceTree = "<group>"; };
 		F1ABCDE10000000000000002 /* ChartBarShapes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartBarShapes.swift; sourceTree = "<group>"; };
-		F1ABCDE10000000000000004 /* LabelPlacement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabelPlacement.swift; sourceTree = "<group>"; };
 		F1ABCDE10000000000000006 /* PeakLabelsOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeakLabelsOverlay.swift; sourceTree = "<group>"; };
 		582DF97A2C8CE209001F516D /* CarbView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarbView.swift; sourceTree = "<group>"; };
 		582FAE422C05102C00D1C13F /* CoreDataError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataError.swift; sourceTree = "<group>"; };
@@ -1778,6 +1777,7 @@
 		DD6B7CB12C7B6F0800B75029 /* Rounding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rounding.swift; sourceTree = "<group>"; };
 		DD6B7CB32C7B71F700B75029 /* ForecastDisplayType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastDisplayType.swift; sourceTree = "<group>"; };
 		BD0BD7000001000000000002 /* BolusDisplayThreshold.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusDisplayThreshold.swift; sourceTree = "<group>"; };
+		F1ABCDE10000000000000004 /* LabelPlacement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabelPlacement.swift; sourceTree = "<group>"; };
 		DD6D67E32C9C253500660C9B /* ColorSchemeOption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorSchemeOption.swift; sourceTree = "<group>"; };
 		DD6F63CB2D27F606007D94CF /* TreatmentMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TreatmentMenuView.swift; sourceTree = "<group>"; };
 		DD73FA0E2D74F57300D19D1E /* BackgroundTask+Helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BackgroundTask+Helper.swift"; sourceTree = "<group>"; };

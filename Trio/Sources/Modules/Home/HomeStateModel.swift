@@ -758,7 +758,10 @@ extension Home.StateModel:
         thresholdLines = settingsManager.settings.rulerMarks
         showGlucosePeaks = settingsManager.settings.showGlucosePeaks
         if showGlucosePeaks {
-            glucosePeaks = PeakPicker.pick(data: glucoseFromPersistence)
+            glucosePeaks = PeakPicker.pick(
+                data: glucoseFromPersistence,
+                windowHours: Double(hours) / 2.5
+            )
         } else {
             glucosePeaks = []
         }

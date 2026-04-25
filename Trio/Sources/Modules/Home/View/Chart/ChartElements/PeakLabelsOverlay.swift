@@ -2,8 +2,8 @@ import Charts
 import Foundation
 import SwiftUI
 
-/// Renders BG peak labels with collision avoidance against bolus/carb bar marks and the glucose curve.
-/// Mirrors iAPS's approach: bars stay anchored to the curve at a fixed pixel offset; the *labels* move
+/// Renders BG peak labels with collision avoidance against bolus/carb bar marks and the
+/// glucose curve. Bars stay anchored to the curve at a fixed pixel offset; labels move
 /// to find a collision-free position via `LabelPlacement.placeLabelCenter`.
 struct PeakLabelsOverlay: View {
     let proxy: ChartProxy
@@ -36,6 +36,13 @@ struct PeakLabelsOverlay: View {
                 ZStack(alignment: .topLeading) {
                     ForEach(placed.indices, id: \.self) { i in
                         let p = placed[i]
+                        // Connector from peak point on the curve to the label edge.
+                        Path { path in
+                            path.move(to: CGPoint(x: p.peakX, y: p.peakY))
+                            path.addLine(to: connectorAnchor(rect: p.rect, peakY: p.peakY))
+                        }
+                        .stroke(p.color.opacity(0.6), lineWidth: 0.75)
+
                         Text(p.text)
                             .font(.system(size: 12, weight: .semibold, design: .rounded))
                             .foregroundStyle(p.color)
@@ -44,6 +51,10 @@ struct PeakLabelsOverlay: View {
                             .background(
                                 RoundedRectangle(cornerRadius: 3)
                                     .fill(p.color.opacity(0.15))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 3)
+                                    .stroke(p.color.opacity(0.7), lineWidth: 0.6)
                             )
                             .position(x: p.rect.midX, y: p.rect.midY)
                     }
@@ -59,8 +70,18 @@ struct PeakLabelsOverlay: View {
 
     private struct PlacedPeak {
         let rect: CGRect
+        let peakX: CGFloat
+        let peakY: CGFloat
         let text: String
         let color: Color
+    }
+
+    /// Anchor on the label rect closest to the peak point — vertically above or below
+    /// depending on which side of `peakY` the rect ended up on, clamped horizontally
+    /// inside the rect to keep diagonal connectors short.
+    private func connectorAnchor(rect: CGRect, peakY: CGFloat) -> CGPoint {
+        let y = rect.midY <= peakY ? rect.maxY : rect.minY
+        return CGPoint(x: rect.midX, y: y)
     }
 
     private func computePlacements(obstacles: [CGRect], plotRect _: CGRect) -> [PlacedPeak] {
@@ -107,6 +128,8 @@ struct PeakLabelsOverlay: View {
 
             return PlacedPeak(
                 rect: placedRect,
+                peakX: cxRel,
+                peakY: cyRel,
                 text: formattedGlucose(Int(peak.glucose)),
                 color: peakColor(glucose: glucoseDecimal)
             )

@@ -15,8 +15,8 @@ struct InsulinView: ChartContent {
     /// Time proximity (seconds) within which a bolus/SMB is considered to collide with a peak label.
     private static let proximityWindow: TimeInterval = 15 * 60
 
-    /// iAPS-style scaling reference: max bolus amount across the visible insulin data.
-    /// Floor of 1 to keep small-window scaling sensible (matches iAPS `?? 1`).
+    /// Scaling reference for bar height: max bolus amount across the visible insulin data.
+    /// Floor of 1 keeps short windows from blowing tiny SMBs up to full bar height.
     private var maxBolusValue: Decimal {
         let amounts = insulinData.compactMap { $0.bolus?.amount?.decimalValue }
         return amounts.max() ?? 1

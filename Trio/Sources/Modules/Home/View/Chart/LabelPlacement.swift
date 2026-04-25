@@ -1,7 +1,6 @@
 import Foundation
 
-/// Ported from iAPS (Artificial-Pancreas/iAPS) `FreeAPS/Sources/Modules/Home/View/Chart/LabelPlacement.swift`.
-/// Used to position peak labels around bolus/carb bars and BG curve points without overlap.
+/// Positions peak labels around bolus/carb bars and BG curve points without overlap.
 
 enum VerticalSide {
     case above
