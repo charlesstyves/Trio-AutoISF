@@ -9,6 +9,8 @@ extension UserInterfaceSettings {
         @Published var showCobIobChart: Bool = true
         @Published var rulerMarks: Bool = true
         @Published var showGlucosePeaks: Bool = false
+        @Published var useChartBars: Bool = false
+        @Published var bolusDisplayThreshold: BolusDisplayThreshold = .allUnits
         @Published var forecastDisplayType: ForecastDisplayType = .cone
         @Published var showCarbsRequiredBadge: Bool = true
         @Published var carbsRequiredThreshold: Decimal = 0
@@ -27,6 +29,8 @@ extension UserInterfaceSettings {
             subscribeSetting(\.showCobIobChart, on: $showCobIobChart) { showCobIobChart = $0 }
             subscribeSetting(\.rulerMarks, on: $rulerMarks) { rulerMarks = $0 }
             subscribeSetting(\.showGlucosePeaks, on: $showGlucosePeaks) { showGlucosePeaks = $0 }
+            subscribeSetting(\.useChartBars, on: $useChartBars) { useChartBars = $0 }
+            subscribeSetting(\.bolusDisplayThreshold, on: $bolusDisplayThreshold) { bolusDisplayThreshold = $0 }
 
             subscribeSetting(\.forecastDisplayType, on: $forecastDisplayType) { forecastDisplayType = $0 }
 

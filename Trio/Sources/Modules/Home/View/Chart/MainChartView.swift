@@ -147,7 +147,7 @@ extension MainChartView {
                     glucoseColorScheme: state.glucoseColorScheme
                 )
 
-                if state.showGlucosePeaks {
+                if state.showGlucosePeaks, !state.useChartBars {
                     GlucosePeaksChartView(
                         peaks: state.glucosePeaks,
                         units: state.units,
@@ -163,7 +163,10 @@ extension MainChartView {
                     insulinData: state.insulinFromPersistence,
                     units: state.units,
                     bolusIncrement: state.bolusIncrement,
-                    peaks: state.showGlucosePeaks ? state.glucosePeaks : []
+                    peaks: state.showGlucosePeaks ? state.glucosePeaks : [],
+                    useBars: state.useChartBars,
+                    screenHours: screenHours,
+                    bolusDisplayThreshold: state.bolusDisplayThreshold
                 )
 
                 CarbView(
@@ -173,7 +176,9 @@ extension MainChartView {
                     fpuData: state.fpusFromPersistence,
                     minValue: units == .mgdL ? state.minYAxisValue : state.minYAxisValue
                         .asMmolL,
-                    peaks: state.showGlucosePeaks ? state.glucosePeaks : []
+                    peaks: state.showGlucosePeaks ? state.glucosePeaks : [],
+                    useBars: state.useChartBars,
+                    screenHours: screenHours
                 )
 
                 ForecastView(
@@ -222,6 +227,23 @@ extension MainChartView {
                 "zt": Color.zt,
                 "cob": Color.orange
             ])
+            .chartOverlay { proxy in
+                if state.showGlucosePeaks, state.useChartBars {
+                    PeakLabelsOverlay(
+                        proxy: proxy,
+                        peaks: state.glucosePeaks,
+                        glucoseData: state.glucoseFromPersistence,
+                        insulinData: state.insulinFromPersistence,
+                        carbData: state.carbsFromPersistence,
+                        units: state.units,
+                        highGlucose: state.highGlucose,
+                        lowGlucose: state.lowGlucose,
+                        glucoseColorScheme: state.glucoseColorScheme,
+                        currentGlucoseTarget: state.currentGlucoseTarget,
+                        screenHours: screenHours
+                    )
+                }
+            }
         }
     }
 }

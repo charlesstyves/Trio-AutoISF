@@ -122,6 +122,24 @@ enum AutoISFReason {
         "autoISF-SMB enabled:, even Target, eff.iobTH:, \(iobThEffective)"
     }
 
+    /// SMB-section chip text used when the autoISF iobTH 130 % cap reduced the SMB.
+    /// Replaces the `even TT` / `even Target` segment in-place via `applyIobTHCapTag`.
+    static let smbCappedByIobTHTag = "capped by iobTH"
+
+    /// Replaces the `even TT` / `even Target` chip in an autoISF SMB reason with
+    /// `capped by iobTH`. No-op if neither marker is present (defensive — a future
+    /// reason format change would simply leave the reason untouched rather than
+    /// silently corrupting it).
+    static func applyIobTHCapTag(to reason: String) -> String {
+        if reason.contains(", even TT,") {
+            return reason.replacingOccurrences(of: ", even TT,", with: ", \(smbCappedByIobTHTag),")
+        }
+        if reason.contains(", even Target,") {
+            return reason.replacingOccurrences(of: ", even Target,", with: ", \(smbCappedByIobTHTag),")
+        }
+        return reason
+    }
+
     // MARK: - ISF adjustment fragments (AutoISFAdjust outputs)
 
     /// Reason when no autoISF factor modifies ISF.

@@ -84,6 +84,8 @@ extension Home {
         var thresholdLines: Bool = false
         var showGlucosePeaks: Bool = false
         var glucosePeaks: [(date: Date, glucose: Int16, type: ExtremumType)] = []
+        var useChartBars: Bool = false
+        var bolusDisplayThreshold: BolusDisplayThreshold = .allUnits
         var hours: Int16 = 6
         var totalBolus: Decimal = 0
         var isStatusPopupPresented: Bool = false
@@ -440,6 +442,8 @@ extension Home {
             displayYgridLines = settingsManager.settings.yGridLines
             thresholdLines = settingsManager.settings.rulerMarks
             showGlucosePeaks = settingsManager.settings.showGlucosePeaks
+            useChartBars = settingsManager.settings.useChartBars
+            bolusDisplayThreshold = settingsManager.settings.bolusDisplayThreshold
             showCarbsRequiredBadge = settingsManager.settings.showCarbsRequiredBadge
             forecastDisplayType = settingsManager.settings.forecastDisplayType
             highTTraisesSens = settingsManager.preferences.highTemptargetRaisesSensitivity
@@ -758,10 +762,15 @@ extension Home.StateModel:
         thresholdLines = settingsManager.settings.rulerMarks
         showGlucosePeaks = settingsManager.settings.showGlucosePeaks
         if showGlucosePeaks {
-            glucosePeaks = PeakPicker.pick(data: glucoseFromPersistence)
+            glucosePeaks = PeakPicker.pick(
+                data: glucoseFromPersistence,
+                windowHours: Double(hours) / 2.5
+            )
         } else {
             glucosePeaks = []
         }
+        useChartBars = settingsManager.settings.useChartBars
+        bolusDisplayThreshold = settingsManager.settings.bolusDisplayThreshold
         showCarbsRequiredBadge = settingsManager.settings.showCarbsRequiredBadge
         forecastDisplayType = settingsManager.settings.forecastDisplayType
         cgmAvailable = (fetchGlucoseManager.cgmGlucoseSourceType != CGMType.none)

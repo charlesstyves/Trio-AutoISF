@@ -8,9 +8,19 @@ struct InsulinView: ChartContent {
     let units: GlucoseUnits
     let bolusIncrement: Decimal
     let peaks: [(date: Date, glucose: Int16, type: ExtremumType)]
+    let useBars: Bool
+    let screenHours: Int16
+    let bolusDisplayThreshold: BolusDisplayThreshold
 
     /// Time proximity (seconds) within which a bolus/SMB is considered to collide with a peak label.
     private static let proximityWindow: TimeInterval = 15 * 60
+
+    /// Scaling reference for bar height: max bolus amount across the visible insulin data.
+    /// Floor of 1 keeps short windows from blowing tiny SMBs up to full bar height.
+    private var maxBolusValue: Decimal {
+        let amounts = insulinData.compactMap { $0.bolus?.amount?.decimalValue }
+        return amounts.max() ?? 1
+    }
 
     var body: some ChartContent {
         drawBoluses()
@@ -39,26 +49,51 @@ struct InsulinView: ChartContent {
                     glucoseValues: glucoseData,
                     time: bolusDate.timeIntervalSince1970
                 )?.glucose {
-                    // Original position; shift up extra if near a peak-max label
                     let baseY = units == .mgdL ? Decimal(glucose) : Decimal(glucose).asMmolL
-                    let nearPeak = nearbyPeakType(for: bolusDate)
-                    let yPosition = nearPeak == .max ? baseY + collisionOffset : baseY
-                    let size = (sqrt(CGFloat(amount) / .pi) * MainChartHelper.Config.bolusScale * 2)
+                    let amountDecimal = amount.decimalValue
+                    let showLabel = amountDecimal >= bolusDisplayThreshold.rawValue
+                    let label = showLabel ? Formatter.bolusFormatterToIncrement(for: bolusIncrement)
+                        .string(from: amount) ?? "" : ""
 
-                    PointMark(
-                        x: .value("Time", bolusDate, unit: .second),
-                        y: .value("Value", yPosition)
-                    )
-                    .symbol {
-                        Image(systemName: "circle.fill").font(.system(size: size)).foregroundStyle(Color.teal)
-                            .overlay(
-                                Circle().stroke(Color.primary, lineWidth: 1)
-                            )
-                    }
-                    .annotation(position: .top) {
-                        Text(Formatter.bolusFormatterToIncrement(for: bolusIncrement).string(from: amount) ?? "")
-                            .font(.caption2)
-                            .foregroundStyle(Color.primary)
+                    if useBars {
+                        // Bar mode: anchor at curve, fixed pixel gap. Peak-label overlap is resolved by
+                        // LabelPlacement on the peak labels rather than by shifting the bar.
+                        bolusBarMark(
+                            date: bolusDate,
+                            yPosition: baseY,
+                            amount: amountDecimal,
+                            barWidth: MainChartHelper.bolusBarWidth(
+                                amount: amountDecimal,
+                                minimumSMB: MainChartHelper.Config.smbWidthThreshold,
+                                screenHours: screenHours
+                            ),
+                            label: label,
+                            color: Color(red: 0.05, green: 0.32, blue: 0.62)
+                        )
+                    } else {
+                        // Legacy circle mode keeps the existing peak-collision shift.
+                        let nearPeak = nearbyPeakType(for: bolusDate)
+                        let yPosition = nearPeak == .max ? baseY + collisionOffset : baseY
+                        let size = (sqrt(CGFloat(amount) / .pi) * MainChartHelper.Config.bolusScale * 2)
+
+                        PointMark(
+                            x: .value("Time", bolusDate, unit: .second),
+                            y: .value("Value", yPosition)
+                        )
+                        .symbol {
+                            Image(systemName: "circle.fill").font(.system(size: size)).foregroundStyle(Color.teal)
+                                .overlay(
+                                    Circle().stroke(Color.primary, lineWidth: 1)
+                                )
+                        }
+                        .annotation(position: .top, spacing: 2) {
+                            Text(label)
+                                .font(.caption2)
+                                .fixedSize()
+                                .rotationEffect(.degrees(-90))
+                                .frame(width: 12, height: 26)
+                                .foregroundStyle(Color.primary)
+                        }
                     }
                 }
             }
@@ -76,34 +111,61 @@ struct InsulinView: ChartContent {
                     glucoseValues: glucoseData,
                     time: bolusDate.timeIntervalSince1970
                 )?.glucose {
-                    let size = (
-                        MainChartHelper.Config.bolusSize + CGFloat(truncating: amount) * MainChartHelper.Config
-                            .bolusScale
-                    )
-                    // Original position (glucose + 1× offset); shift up extra if near a peak-max label
-                    let baseY = (units == .mgdL ? Decimal(glucose) : Decimal(glucose).asMmolL) + MainChartHelper
-                        .bolusOffset(units: units)
-                    let nearPeak = nearbyPeakType(for: bolusDate)
-                    let yPosition = nearPeak == .max ? baseY + collisionOffset : baseY
+                    let amountDecimal = amount.decimalValue
+                    let showLabel = amountDecimal >= bolusDisplayThreshold.rawValue
+                    let label = showLabel ? Formatter.bolusFormatterToIncrement(for: bolusIncrement)
+                        .string(from: amount) ?? "" : ""
 
-                    PointMark(
-                        x: .value("Time", bolusDate, unit: .second),
-                        y: .value("Value", yPosition)
-                    )
-                    .symbol {
-                        ZStack {
-                            Image(systemName: "arrowtriangle.down")
-                                .font(.system(size: size + 3))
-                                .foregroundStyle(Color.primary)
-                            Image(systemName: "arrowtriangle.down.fill")
-                                .font(.system(size: size))
-                                .foregroundStyle(Color.insulin)
+                    if useBars {
+                        // Bar mode: anchor SMBs at curve, fixed pixel gap. Peak-label collision is
+                        // handled by LabelPlacement on the peak labels.
+                        let baseY = units == .mgdL ? Decimal(glucose) : Decimal(glucose).asMmolL
+
+                        bolusBarMark(
+                            date: bolusDate,
+                            yPosition: baseY,
+                            amount: amountDecimal,
+                            barWidth: MainChartHelper.bolusBarWidth(
+                                amount: amountDecimal,
+                                minimumSMB: MainChartHelper.Config.smbWidthThreshold,
+                                screenHours: screenHours
+                            ),
+                            label: label,
+                            color: Color.insulin
+                        )
+                    } else {
+                        let size = (
+                            MainChartHelper.Config.bolusSize + CGFloat(truncating: amount) * MainChartHelper.Config
+                                .bolusScale
+                        )
+                        // Original position (glucose + 1× offset); shift up extra if near a peak-max label
+                        let baseY = (units == .mgdL ? Decimal(glucose) : Decimal(glucose).asMmolL) + MainChartHelper
+                            .bolusOffset(units: units)
+                        let nearPeak = nearbyPeakType(for: bolusDate)
+                        let yPosition = nearPeak == .max ? baseY + collisionOffset : baseY
+
+                        PointMark(
+                            x: .value("Time", bolusDate, unit: .second),
+                            y: .value("Value", yPosition)
+                        )
+                        .symbol {
+                            ZStack {
+                                Image(systemName: "arrowtriangle.down")
+                                    .font(.system(size: size + 3))
+                                    .foregroundStyle(Color.primary)
+                                Image(systemName: "arrowtriangle.down.fill")
+                                    .font(.system(size: size))
+                                    .foregroundStyle(Color.insulin)
+                            }
                         }
-                    }
-                    .annotation(position: .top) {
-                        Text(Formatter.bolusFormatterToIncrement(for: bolusIncrement).string(from: amount) ?? "")
-                            .font(.caption2)
-                            .foregroundStyle(Color.primary)
+                        .annotation(position: .top, spacing: 2) {
+                            Text(label)
+                                .font(.caption2)
+                                .fixedSize()
+                                .rotationEffect(.degrees(-90))
+                                .frame(width: 12, height: 26)
+                                .foregroundStyle(Color.primary)
+                        }
                     }
                 }
             }
@@ -137,11 +199,47 @@ struct InsulinView: ChartContent {
                             .foregroundStyle(Color.purple)
                     }
                 }
-                .annotation(position: .top) {
+                .annotation(position: .top, spacing: 2) {
                     Text(Formatter.bolusFormatterToIncrement(for: bolusIncrement).string(from: amount) ?? "")
                         .font(.caption2)
+                        .fixedSize()
+                        .rotationEffect(.degrees(-90))
+                        .frame(width: 12, height: 26)
                         .foregroundStyle(Color.primary)
                 }
+            }
+        }
+    }
+
+    private func bolusBarMark(
+        date: Date,
+        yPosition: Decimal,
+        amount: Decimal,
+        barWidth: CGFloat,
+        label: String,
+        color: Color
+    ) -> some ChartContent {
+        let height = MainChartHelper.bolusBarHeight(amount: amount, maxAmount: maxBolusValue)
+
+        return PointMark(
+            x: .value("Time", date, unit: .second),
+            y: .value("Value", yPosition)
+        )
+        .symbol { Color.clear.frame(width: 0, height: 0) }
+        .annotation(position: .top, alignment: .center, spacing: MainChartHelper.Config.bolusAnnotationSpacing) {
+            VStack(spacing: 1) {
+                Text(label)
+                    .font(.caption2)
+                    .fixedSize()
+                    .rotationEffect(.degrees(-90))
+                    .frame(width: 12, height: 26)
+                    .foregroundStyle(Color.primary)
+                DownArrowBarShape()
+                    .fill(color)
+                    .overlay(
+                        DownArrowBarShape().stroke(Color.primary, lineWidth: 0.4)
+                    )
+                    .frame(width: barWidth, height: height)
             }
         }
     }
