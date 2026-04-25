@@ -100,6 +100,10 @@ enum AutoISFReason {
 
     // MARK: - SMB control fragments (AutoISFsmb outputs)
 
+    /// Tail appended to "Microbolusing Xu" when the autoISF iobTH 130 % cap reduced
+    /// the SMB. Mirrors JS `, capped by autoISF iobTH`.
+    static let smbCappedByIobTH = ", capped by autoISF iobTH"
+
     static let smbBlockedOverride = "SMB disabled:, Override"
     static let smbBlockedB30Running = "SMB disabled:, B30 running"
     static let smbBlockedIobTHExceeded = "autoISF-SMB disabled:, iobTH exceeded"

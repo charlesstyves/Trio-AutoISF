@@ -775,6 +775,8 @@ enum DeterminationGenerator {
             adjustedCarbRatio: forecastResult.adjustedCarbRatio,
             basal: basal,
             smbDeliveryRatio: autoISFResult.smbRatio,
+            autoISFLoopMode: autoISFResult.smbResult?.loopMode ?? .oref,
+            autoISFiobTHVirtual: autoISFResult.smbResult?.iobTHVirtual ?? 0,
             determination: determination
         )
         determination = smbDetermination

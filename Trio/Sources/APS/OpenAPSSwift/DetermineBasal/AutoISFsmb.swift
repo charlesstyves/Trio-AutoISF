@@ -3,8 +3,10 @@ import Foundation
 /// Output of the autoISF SMB-activation decision.
 struct AutoISFsmbResult {
     let loopMode: AutoISFLoopMode
-    /// Effective IOB threshold value (for logging).
+    /// Effective IOB threshold value (for logging). 100 % of `iob_threshold_percent * max_iob`.
     let iobTHEffective: Decimal
+    /// 130 %-tolerance virtual IOB ceiling used by `applyIobTHcap`. Mirrors JS `iobTHvirtual`.
+    let iobTHVirtual: Decimal
     /// Reason fragment to prepend to the determination reason string.
     let reason: String
 
@@ -32,14 +34,14 @@ enum AutoISFsmb {
 
         // iob_threshold_percent == 1 (100 %) disables the iobTH method
         let useIobTH = profile.iobThresholdPercent != 1
-        // iobTH_reduction_ratio = 1.0 in normal mode (exercise_ratio not yet ported)
-        let iobThEffective = (profile.iobThresholdPercent * profile.maxIob).jsRounded(scale: 1)
+        let (iobThEffective, iobThVirtual) = iobTHValues(profile: profile)
 
         // Override disabling SMB wins over all autoISF SMB logic
         if overrideSmbIsOff {
             return AutoISFsmbResult(
                 loopMode: .blocked,
                 iobTHEffective: iobThEffective,
+                iobTHVirtual: iobThVirtual,
                 reason: AutoISFReason.smbBlockedOverride
             )
         }
@@ -49,12 +51,18 @@ enum AutoISFsmb {
             return AutoISFsmbResult(
                 loopMode: .b30Running,
                 iobTHEffective: iobThEffective,
+                iobTHVirtual: iobThVirtual,
                 reason: AutoISFReason.smbBlockedB30Running
             )
         }
 
         guard microBolusAllowed else {
-            return AutoISFsmbResult(loopMode: .oref, iobTHEffective: iobThEffective, reason: "")
+            return AutoISFsmbResult(
+                loopMode: .oref,
+                iobTHEffective: iobThEffective,
+                iobTHVirtual: iobThVirtual,
+                reason: ""
+            )
         }
 
         // IOB threshold: disable SMB if IOB exceeds effective threshold
@@ -62,13 +70,19 @@ enum AutoISFsmb {
             return AutoISFsmbResult(
                 loopMode: .iobTHExceeded,
                 iobTHEffective: iobThEffective,
+                iobTHVirtual: iobThVirtual,
                 reason: AutoISFReason.smbBlockedIobTHExceeded
             )
         }
 
         // Even/odd target override — only active when setting is enabled
         guard profile.enableSMBEvenOnOddOffAlways else {
-            return AutoISFsmbResult(loopMode: .oref, iobTHEffective: iobThEffective, reason: "")
+            return AutoISFsmbResult(
+                loopMode: .oref,
+                iobTHEffective: iobThEffective,
+                iobTHVirtual: iobThVirtual,
+                reason: ""
+            )
         }
 
         let evenTarget: Bool
@@ -82,6 +96,7 @@ enum AutoISFsmb {
             return AutoISFsmbResult(
                 loopMode: .blocked,
                 iobTHEffective: iobThEffective,
+                iobTHVirtual: iobThVirtual,
                 reason: AutoISFReason.smbBlockedOddTarget
             )
         }
@@ -90,6 +105,7 @@ enum AutoISFsmb {
             return AutoISFsmbResult(
                 loopMode: .blocked,
                 iobTHEffective: iobThEffective,
+                iobTHVirtual: iobThVirtual,
                 reason: AutoISFReason.smbBlockedMaxIobZero
             )
         }
@@ -99,14 +115,63 @@ enum AutoISFsmb {
             return AutoISFsmbResult(
                 loopMode: .fullLoop,
                 iobTHEffective: iobThEffective,
+                iobTHVirtual: iobThVirtual,
                 reason: AutoISFReason.smbEnabledFullLoop(iobThEffective: iobThEffective)
             )
         }
         return AutoISFsmbResult(
             loopMode: .enforced,
             iobTHEffective: iobThEffective,
+            iobTHVirtual: iobThVirtual,
             reason: AutoISFReason.smbEnabledEnforced(iobThEffective: iobThEffective)
         )
+    }
+
+    /// Computes the autoISF IOB-threshold values from the profile.
+    ///
+    /// Mirrors determine-basal.js (autoISF 3.01):
+    /// - `iobThEffective` = `iob_threshold_percent * max_iob * iobTH_reduction_ratio`,
+    ///   clamped to `max_iob` (JS `Math.min(profile.max_iob, iobThEffective)`).
+    ///   Used by the gate (disable SMB when current IOB exceeds it).
+    /// - `iobThVirtual`   = `iob_threshold_percent * 1.3 * max_iob * iobTH_reduction_ratio`.
+    ///   The 130 % overrun ceiling used by `applyIobTHcap`.
+    ///
+    /// `iobTH_reduction_ratio` is 1.0 here — `exercise_ratio` is not yet ported.
+    static func iobTHValues(profile: Profile) -> (effective: Decimal, virtual: Decimal) {
+        let reductionRatio: Decimal = 1.0
+        let effective = min(
+            profile.maxIob,
+            profile.iobThresholdPercent * profile.maxIob * reductionRatio
+        )
+        let virtual = profile.iobThresholdPercent * Decimal(1.3) * profile.maxIob * reductionRatio
+        return (effective, virtual)
+    }
+
+    /// autoISF 130 % iobTH SMB cap. Mirrors determine-basal.js lines 1855-1864.
+    ///
+    /// If autoISF is enabled, the iobTH method is on (`iob_threshold_percent != 1`),
+    /// the loop mode is `.fullLoop` or `.enforced`, and delivering this microBolus
+    /// would push current IOB past `iobTHVirtual`, the bolus is clamped so post-
+    /// delivery IOB stays at `iobTHVirtual`. Returns the (possibly reduced) bolus
+    /// and a reason tail to append to the "Microbolusing Xu" string.
+    ///
+    /// With autoISF disabled, this is a no-op by design — standard oref SMB path
+    /// is preserved unchanged.
+    static func applyIobTHcap(
+        profile: Profile,
+        currentIob: Decimal,
+        microBolus: Decimal,
+        loopMode: AutoISFLoopMode,
+        iobTHVirtual: Decimal
+    ) -> (microBolus: Decimal, reasonTail: String) {
+        guard profile.autoisf,
+              profile.iobThresholdPercent != 1,
+              loopMode == .fullLoop || loopMode == .enforced,
+              microBolus > iobTHVirtual - currentIob
+        else {
+            return (microBolus, "")
+        }
+        return (iobTHVirtual - currentIob, AutoISFReason.smbCappedByIobTH)
     }
 
     /// Ports `determine_varSMBratio()` from determine-basal.js (autoISF 3.01).
