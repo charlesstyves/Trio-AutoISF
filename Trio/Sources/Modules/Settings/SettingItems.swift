@@ -32,10 +32,6 @@ enum SettingItems {
     static let trioConfig = [
         SettingItem(title: String(localized: "Devices", comment: "Devices menu item in the Settings main view."), view: .devices),
         SettingItem(
-            title: String(localized: "Profiles", comment: "Profiles menu item in the Settings main view."),
-            view: .adaptProfile
-        ),
-        SettingItem(
             title: String(localized: "Therapy", comment: "Therapy menu item in the Settings main view."),
             view: .therapySettings
         ),

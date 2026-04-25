@@ -829,14 +829,12 @@ extension Home {
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
             .onTapGesture {
-                // Switch to Settings tab (tag 4) and push AdaptProfile. The append is
-                // deferred so it runs after `onChange(of: selectedTab)` resets
-                // `settingsPath` — without the deferral the new push would be cleared
-                // by that handler.
-                selectedTab = 4
-                DispatchQueue.main.async {
-                    settingsPath.append(Screen.adaptProfile)
-                }
+                // Profiles live in the Adjustments tab (tag 3) as the third sub-tab next
+                // to Overrides and Temp Targets. We can't reach AdjustmentsRootView's local
+                // tab state directly, so we leave a flag in UserDefaults that the view
+                // consumes on its next .onAppear.
+                UserDefaults.standard.set(true, forKey: Adjustments.pendingProfilesTabKey)
+                selectedTab = 3
             }
         }
 
