@@ -170,24 +170,6 @@ extension SMBSettings {
                 )
 
                 SettingInputSection(
-                    decimalValue: $state.smbThresholdRatio,
-                    booleanValue: $booleanPlaceholder,
-                    shouldDisplayHint: $shouldDisplayHint,
-                    selectedVerboseHint: Binding(
-                        get: { selectedVerboseHint },
-                        set: {
-                            selectedVerboseHint = $0.map { AnyView($0) }
-                            hintLabel = AlgorithmSettingHints.smbThresholdRatioLabel
-                        }
-                    ),
-                    units: state.units,
-                    type: .decimal("smbThresholdRatio"),
-                    label: AlgorithmSettingHints.smbThresholdRatioLabel,
-                    miniHint: AlgorithmSettingHints.smbThresholdRatioMini,
-                    verboseHint: AlgorithmSettingHints.smbThresholdRatioVerbose()
-                )
-
-                SettingInputSection(
                     decimalValue: $state.maxUAMSMBBasalMinutes,
                     booleanValue: $booleanPlaceholder,
                     shouldDisplayHint: $shouldDisplayHint,

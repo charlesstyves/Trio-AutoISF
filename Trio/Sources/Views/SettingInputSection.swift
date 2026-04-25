@@ -141,6 +141,8 @@ struct SettingInputSection<VerboseHint: View>: View {
             return pickerSettingsProvider.settings.autosensMin
         case "smbDeliveryRatio":
             return pickerSettingsProvider.settings.smbDeliveryRatio
+        case "smbThresholdRatio":
+            return pickerSettingsProvider.settings.smbThresholdRatio
         case "halfBasalExerciseTarget":
             return pickerSettingsProvider.settings.halfBasalExerciseTarget
         case "maxCOB":

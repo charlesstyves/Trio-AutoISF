@@ -5,3 +5,4 @@ dura-weigt in Profiles
 Profile Banner tapping fixed
 no save to pump when reverting from temp Profile
 fix ioBTh bug
+expose SMBThresholdRatio in Therapy > Units & Limits
