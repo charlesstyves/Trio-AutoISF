@@ -55,7 +55,7 @@ enum AutoISFReason {
               status.r_squ >= Decimal(0.9)
         else { return "" }
         let tVertex = -(status.a_1 / (2 * status.a_2))
-        let minsDelta = (abs(tVertex) * 5).jsRounded(scale: 1)
+        let minsDelta = (abs(tVertex) * 5).jsRounded(scale: 0)
         let extremumBG = (status.a_0 - status.a_1 * status.a_1 / (4 * status.a_2)).jsRounded(scale: 1)
         guard extremumBG >= -200, extremumBG <= 400, minsDelta <= 300 else { return "" }
         if tVertex > 0 {
