@@ -93,6 +93,7 @@ struct TrioSettings: JSON, Equatable, Encodable {
     var timeInRangeType: TimeInRangeType = .timeInTightRange
     var showGlucosePeaks: Bool = false
     var useSwiftOref: Bool = false
+    var useChartBars: Bool = false
 
     /// Selected Garmin watchface (Trio or SwissAlpine)
     var garminWatchface: GarminWatchface = .trio
@@ -392,6 +393,10 @@ extension TrioSettings: Decodable {
 
         if let useSwiftOref = try? container.decode(Bool.self, forKey: .useSwiftOref) {
             settings.useSwiftOref = useSwiftOref
+        }
+
+        if let useChartBars = try? container.decode(Bool.self, forKey: .useChartBars) {
+            settings.useChartBars = useChartBars
         }
 
         if let garminWatchface = try? container.decode(GarminWatchface.self, forKey: .garminWatchface) {

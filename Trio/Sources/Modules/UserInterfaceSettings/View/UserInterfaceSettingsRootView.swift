@@ -195,6 +195,34 @@ extension UserInterfaceSettings {
 
                 SettingInputSection(
                     decimalValue: $decimalPlaceholder,
+                    booleanValue: $state.useChartBars,
+                    shouldDisplayHint: $shouldDisplayHint,
+                    selectedVerboseHint: Binding(
+                        get: { selectedVerboseHint },
+                        set: {
+                            selectedVerboseHint = $0.map { AnyView($0) }
+                            hintLabel = String(localized: "Use Bars for Bolus and Carbs")
+                        }
+                    ),
+                    units: state.units,
+                    type: .boolean,
+                    label: String(localized: "Use Bars for Bolus and Carbs"),
+                    miniHint: String(
+                        localized: "Replace circles and triangles with vertical bars for bolus, SMB and carbs."
+                    ),
+                    verboseHint: VStack(alignment: .leading, spacing: 10) {
+                        Text(
+                            "When enabled, boluses and SMBs are drawn as blue bars hanging down from above the glucose curve, and carbs as orange bars rising up from below."
+                        )
+                        Text(
+                            "The bar height grows with the dose or carb amount, making it easier to spot large entries at a glance."
+                        )
+                        Text("External insulin keeps its rhombus marker.")
+                    }
+                )
+
+                SettingInputSection(
+                    decimalValue: $decimalPlaceholder,
                     booleanValue: $state.rulerMarks,
                     shouldDisplayHint: $shouldDisplayHint,
                     selectedVerboseHint: Binding(

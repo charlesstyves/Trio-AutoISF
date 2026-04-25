@@ -432,6 +432,9 @@
 		5825A1BE2C97335C0046467E /* EditTempTargetForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5825A1BD2C97335C0046467E /* EditTempTargetForm.swift */; };
 		582DF9752C8CDB92001F516D /* GlucoseChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 582DF9742C8CDB92001F516D /* GlucoseChartView.swift */; };
 		582DF9772C8CDBE7001F516D /* InsulinView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 582DF9762C8CDBE7001F516D /* InsulinView.swift */; };
+		F1ABCDE10000000000000001 /* ChartBarShapes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1ABCDE10000000000000002 /* ChartBarShapes.swift */; };
+		F1ABCDE10000000000000003 /* LabelPlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1ABCDE10000000000000004 /* LabelPlacement.swift */; };
+		F1ABCDE10000000000000005 /* PeakLabelsOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1ABCDE10000000000000006 /* PeakLabelsOverlay.swift */; };
 		582DF97B2C8CE209001F516D /* CarbView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 582DF97A2C8CE209001F516D /* CarbView.swift */; };
 		582FAE432C05102C00D1C13F /* CoreDataError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 582FAE422C05102C00D1C13F /* CoreDataError.swift */; };
 		583684062BD178DB00070A60 /* GlucoseStored+helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 583684052BD178DB00070A60 /* GlucoseStored+helper.swift */; };
@@ -1431,6 +1434,9 @@
 		5825A1BD2C97335C0046467E /* EditTempTargetForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditTempTargetForm.swift; sourceTree = "<group>"; };
 		582DF9742C8CDB92001F516D /* GlucoseChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlucoseChartView.swift; sourceTree = "<group>"; };
 		582DF9762C8CDBE7001F516D /* InsulinView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsulinView.swift; sourceTree = "<group>"; };
+		F1ABCDE10000000000000002 /* ChartBarShapes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartBarShapes.swift; sourceTree = "<group>"; };
+		F1ABCDE10000000000000004 /* LabelPlacement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabelPlacement.swift; sourceTree = "<group>"; };
+		F1ABCDE10000000000000006 /* PeakLabelsOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeakLabelsOverlay.swift; sourceTree = "<group>"; };
 		582DF97A2C8CE209001F516D /* CarbView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarbView.swift; sourceTree = "<group>"; };
 		582FAE422C05102C00D1C13F /* CoreDataError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataError.swift; sourceTree = "<group>"; };
 		583684052BD178DB00070A60 /* GlucoseStored+helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GlucoseStored+helper.swift"; sourceTree = "<group>"; };
@@ -2588,6 +2594,7 @@
 			isa = PBXGroup;
 			children = (
 				49D659712F3737EA00CF5074 /* PeakPicker.swift */,
+				F1ABCDE10000000000000004 /* LabelPlacement.swift */,
 				DDA6E24F2D22187500C2988C /* ChartLegendView.swift */,
 				BD3CC0712B0B89D50013189E /* MainChartView.swift */,
 				BDDAF9F12D0055CC00B34E7A /* ChartElements */,
@@ -3699,6 +3706,8 @@
 				DD7A3F032E07A1B300C2988C /* GlucosePeaksChartView.swift */,
 				582DF9762C8CDBE7001F516D /* InsulinView.swift */,
 				582DF97A2C8CE209001F516D /* CarbView.swift */,
+				F1ABCDE10000000000000002 /* ChartBarShapes.swift */,
+				F1ABCDE10000000000000006 /* PeakLabelsOverlay.swift */,
 				58D08B212C8DAA8E00AA37D3 /* OverrideView.swift */,
 				58D08B2F2C8DEA7500AA37D3 /* ForecastView.swift */,
 				58D08B312C8DF88900AA37D3 /* DummyCharts.swift */,
@@ -5373,6 +5382,8 @@
 				1BBB001DAD60F3B8CEA4B1C7 /* ISFEditorStateModel.swift in Sources */,
 				DDB37CC72D05127500D99BF4 /* FontExtensions.swift in Sources */,
 				582DF9772C8CDBE7001F516D /* InsulinView.swift in Sources */,
+				F1ABCDE10000000000000001 /* ChartBarShapes.swift in Sources */,
+				F1ABCDE10000000000000005 /* PeakLabelsOverlay.swift in Sources */,
 				BD47FD132D88AA700043966B /* OnboardingManager.swift in Sources */,
 				F816826028DB441800054060 /* BluetoothTransmitter.swift in Sources */,
 				DD68889D2C386E17006E3C44 /* NightscoutExercise.swift in Sources */,
@@ -5526,6 +5537,7 @@
 				495A42CF2F8911CC005B0044 /* CSFEditorDataFlow.swift in Sources */,
 				38569349270B5DFB0002C50D /* AppGroupSource.swift in Sources */,
 				49D659722F3737EA00CF5074 /* PeakPicker.swift in Sources */,
+				F1ABCDE10000000000000003 /* LabelPlacement.swift in Sources */,
 				3B5CD2A12D4AEA5100CE213C /* JavascriptOptional.swift in Sources */,
 				F5CA3DB1F9DC8B05792BBFAA /* CGMSettingsDataFlow.swift in Sources */,
 				BDF34F952C10D27300D51995 /* DeterminationData.swift in Sources */,

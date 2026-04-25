@@ -47,6 +47,66 @@ enum MainChartHelper {
         static let fpuSize: CGFloat = 10
         static let maxGlucose = 270
         static let minGlucose = 45
+
+        /// Max carb/FPU bar widths (iAPS `carbWidth = 5`, FPU clamp = 3).
+        static let carbBarWidth: CGFloat = 5
+        static let fpuBarWidth: CGFloat = 3
+        /// Arrow tip length — iAPS `ChartConfig.pointSizeHeight = 5`.
+        static let barArrowHeight: CGFloat = 5
+
+        /// Max bar body height — iAPS `ChartConfig.bolusHeight` / `carbHeight = 45`.
+        static let bolusBarMaxHeight: CGFloat = 45
+        static let carbBarMaxHeight: CGFloat = 45
+
+        /// Pixel gap between the bar's arrow tip and the BG curve — iAPS `insulinOffset = 15`,
+        /// applied for both bolus and carb bars (carbs use `insulinOffset` in iAPS, not `carbOffset`).
+        static let bolusAnnotationSpacing: CGFloat = 15
+        static let carbAnnotationSpacing: CGFloat = 15
+
+        /// SMB-class threshold for bar-width selection. iAPS reads `minimumSMB` from settings
+        /// (default 0.3 U); Trio has no equivalent preference, so we mirror the iAPS default.
+        static let smbWidthThreshold: Decimal = 0.3
+    }
+
+    /// Bar width: piecewise on `screenHours`, narrower for SMB-class doses. iAPS uses
+    /// 3.5/4 at 6h, 2.5/3 at 12h, 1.5/2 at 24h, but Trio's main chart packs more events
+    /// per pixel at every step, so iAPS widths overlap when SMBs cluster — we shift one
+    /// step down so 6h here matches what iAPS draws at 12h, and so on.
+    static func bolusBarWidth(amount: Decimal, minimumSMB: Decimal, screenHours: Int16) -> CGFloat {
+        let isSmall = amount < minimumSMB
+        switch screenHours {
+        case ...6:
+            return isSmall ? 2.5 : 3
+        case 7 ... 18:
+            return isSmall ? 2 : 2.5
+        default: // 19…24
+            return isSmall ? 1.5 : 2
+        }
+    }
+
+    /// iAPS clamps carb width to `carbWidth = 5` — same `width(value:)` shape, then `min(_, 5)`.
+    static func carbBarWidth(amount: Decimal, minimumSMB: Decimal, screenHours: Int16) -> CGFloat {
+        min(bolusBarWidth(amount: amount, minimumSMB: minimumSMB, screenHours: screenHours), Config.carbBarWidth)
+    }
+
+    /// iAPS clamps FPU width to 3 (literal in `fpuBarEntries`).
+    static func fpuBarWidth(amount: Decimal, minimumSMB: Decimal, screenHours: Int16) -> CGFloat {
+        min(bolusBarWidth(amount: amount, minimumSMB: minimumSMB, screenHours: screenHours), Config.fpuBarWidth)
+    }
+
+    /// Linear bolus bar height — iAPS `bolusHeight(amount:) = (amount / maxBolusValue) * 45`.
+    /// No min floor: iAPS lets the rendered arrow tip (`pointSizeHeight = 5`) serve as the floor.
+    static func bolusBarHeight(amount: Decimal, maxAmount: Decimal) -> CGFloat {
+        let amountValue = CGFloat(truncating: amount as NSNumber)
+        let maxValue = max(CGFloat(truncating: maxAmount as NSNumber), 0.001)
+        return (amountValue / maxValue) * Config.bolusBarMaxHeight
+    }
+
+    /// Linear carb bar height — iAPS `carbHeight(amount:) = (amount / maxCarbsValue) * 45`.
+    static func carbBarHeight(amount: Decimal, maxAmount: Decimal) -> CGFloat {
+        let amountValue = CGFloat(truncating: amount as NSNumber)
+        let maxValue = max(CGFloat(truncating: maxAmount as NSNumber), 0.001)
+        return (amountValue / maxValue) * Config.carbBarMaxHeight
     }
 
     static func bolusOffset(units: GlucoseUnits) -> Decimal {
