@@ -279,7 +279,10 @@ enum DosingEngine {
         adjustedSensitivity: Decimal,
         targetGlucose: Decimal,
         currentTemp: TempBasal,
-        determination: Determination
+        determination: Determination,
+        bolusIOB: Decimal = 0,
+        basalIOB: Decimal = 0,
+        iobActivity: Decimal = 0
     ) throws -> (shouldSetTempBasal: Bool, determination: Determination) {
         var newDetermination = determination
 
@@ -319,7 +322,10 @@ enum DosingEngine {
                 duration: durationRequired,
                 profile: profile,
                 determination: newDetermination,
-                currentTemp: currentTemp
+                currentTemp: currentTemp,
+                bolusIOB: bolusIOB,
+                basalIOB: basalIOB,
+                iobActivity: iobActivity
             )
             return (shouldSetTempBasal: true, determination: finalDetermination)
         }
@@ -337,7 +343,10 @@ enum DosingEngine {
         profile: Profile,
         clock: Date,
         currentTemp: TempBasal,
-        determination: Determination
+        determination: Determination,
+        bolusIOB: Decimal = 0,
+        basalIOB: Decimal = 0,
+        iobActivity: Decimal = 0
     ) throws -> (shouldSetTempBasal: Bool, determination: Determination) {
         guard profile.skipNeutralTemps else {
             return (shouldSetTempBasal: false, determination: determination)
@@ -363,7 +372,10 @@ enum DosingEngine {
                 duration: 0,
                 profile: profile,
                 determination: newDetermination,
-                currentTemp: currentTemp
+                currentTemp: currentTemp,
+                bolusIOB: bolusIOB,
+                basalIOB: basalIOB,
+                iobActivity: iobActivity
             )
             return (shouldSetTempBasal: true, determination: finalDetermination)
         } else {
@@ -392,7 +404,10 @@ enum DosingEngine {
         profile: Profile,
         determination: Determination,
         adjustedSensitivity: Decimal,
-        overrideFactor: Decimal
+        overrideFactor: Decimal,
+        bolusIOB: Decimal = 0,
+        basalIOB: Decimal = 0,
+        iobActivity: Decimal = 0
     ) throws -> (shouldSetTempBasal: Bool, determination: Determination) {
         guard eventualGlucose < minGlucose else {
             return (shouldSetTempBasal: false, determination: determination)
@@ -416,7 +431,10 @@ enum DosingEngine {
                     duration: 30,
                     profile: profile,
                     determination: newDetermination,
-                    currentTemp: currentTemp
+                    currentTemp: currentTemp,
+                    bolusIOB: bolusIOB,
+                    basalIOB: basalIOB,
+                    iobActivity: iobActivity
                 )
                 return (shouldSetTempBasal: true, determination: finalDetermination)
             }
@@ -445,7 +463,10 @@ enum DosingEngine {
                     duration: 30,
                     profile: profile,
                     determination: newDetermination,
-                    currentTemp: currentTemp
+                    currentTemp: currentTemp,
+                    bolusIOB: bolusIOB,
+                    basalIOB: basalIOB,
+                    iobActivity: iobActivity
                 )
                 return (shouldSetTempBasal: true, determination: finalDetermination)
             }
@@ -477,7 +498,10 @@ enum DosingEngine {
                 duration: 30,
                 profile: profile,
                 determination: newDetermination,
-                currentTemp: currentTemp
+                currentTemp: currentTemp,
+                bolusIOB: bolusIOB,
+                basalIOB: basalIOB,
+                iobActivity: iobActivity
             )
             return (shouldSetTempBasal: true, determination: finalDetermination)
         }
@@ -508,7 +532,10 @@ enum DosingEngine {
                         duration: durationRequired,
                         profile: profile,
                         determination: newDetermination,
-                        currentTemp: currentTemp
+                        currentTemp: currentTemp,
+                        bolusIOB: bolusIOB,
+                        basalIOB: basalIOB,
+                        iobActivity: iobActivity
                     )
                     return (shouldSetTempBasal: true, determination: finalDetermination)
                 }
@@ -521,7 +548,10 @@ enum DosingEngine {
                 duration: 30,
                 profile: profile,
                 determination: newDetermination,
-                currentTemp: currentTemp
+                currentTemp: currentTemp,
+                bolusIOB: bolusIOB,
+                basalIOB: basalIOB,
+                iobActivity: iobActivity
             )
             return (shouldSetTempBasal: true, determination: finalDetermination)
         }
@@ -542,9 +572,14 @@ enum DosingEngine {
         basal: Decimal,
         smbIsEnabled: Bool,
         profile: Profile,
-        determination: Determination
+        determination: Determination,
+        bolusIOB: Decimal = 0,
+        basalIOB: Decimal = 0,
+        iobActivity: Decimal = 0
     ) throws -> (shouldSetTempBasal: Bool, determination: Determination) {
-        guard minDelta < expectedDelta else {
+        // Must actually be falling (minDelta negative), not just "rising slower than expected".
+        // Otherwise this fires during pre-meal B30 windows where BG is flat/rising but IOB is high.
+        guard minDelta < expectedDelta, minDelta < 0 else {
             return (shouldSetTempBasal: false, determination: determination)
         }
 
@@ -575,7 +610,10 @@ enum DosingEngine {
                     duration: 30,
                     profile: profile,
                     determination: newDetermination,
-                    currentTemp: currentTemp
+                    currentTemp: currentTemp,
+                    bolusIOB: bolusIOB,
+                    basalIOB: basalIOB,
+                    iobActivity: iobActivity
                 )
                 return (shouldSetTempBasal: true, determination: finalDetermination)
             }
@@ -597,7 +635,10 @@ enum DosingEngine {
         basal: Decimal,
         smbIsEnabled: Bool,
         profile: Profile,
-        determination: Determination
+        determination: Determination,
+        bolusIOB: Decimal = 0,
+        basalIOB: Decimal = 0,
+        iobActivity: Decimal = 0
     ) throws -> (shouldSetTempBasal: Bool, determination: Determination) {
         guard min(eventualGlucose, minForecastGlucose) < maxGlucose else {
             return (shouldSetTempBasal: false, determination: determination)
@@ -624,7 +665,10 @@ enum DosingEngine {
                     duration: 30,
                     profile: profile,
                     determination: newDetermination,
-                    currentTemp: currentTemp
+                    currentTemp: currentTemp,
+                    bolusIOB: bolusIOB,
+                    basalIOB: basalIOB,
+                    iobActivity: iobActivity
                 )
                 return (shouldSetTempBasal: true, determination: finalDetermination)
             }
@@ -644,7 +688,10 @@ enum DosingEngine {
         currentTemp: TempBasal,
         basal: Decimal,
         profile: Profile,
-        determination: Determination
+        determination: Determination,
+        bolusIOB: Decimal = 0,
+        basalIOB: Decimal = 0,
+        iobActivity: Decimal = 0
     ) throws -> (shouldSetTempBasal: Bool, determination: Determination) {
         guard iob > maxIob else {
             return (shouldSetTempBasal: false, determination: determination)
@@ -666,7 +713,10 @@ enum DosingEngine {
                 duration: 30,
                 profile: profile,
                 determination: newDetermination,
-                currentTemp: currentTemp
+                currentTemp: currentTemp,
+                bolusIOB: bolusIOB,
+                basalIOB: basalIOB,
+                iobActivity: iobActivity
             )
             return (shouldSetTempBasal: true, determination: finalDetermination)
         }
@@ -878,7 +928,10 @@ enum DosingEngine {
         basal: Decimal,
         profile: Profile,
         currentTemp: TempBasal,
-        determination: Determination
+        determination: Determination,
+        bolusIOB: Decimal = 0,
+        basalIOB: Decimal = 0,
+        iobActivity: Decimal = 0
     ) throws -> Determination {
         var newDetermination = determination
         var rate = basal + (2 * insulinRequired)
@@ -901,7 +954,10 @@ enum DosingEngine {
                 duration: 30,
                 profile: profile,
                 determination: newDetermination,
-                currentTemp: currentTemp
+                currentTemp: currentTemp,
+                bolusIOB: bolusIOB,
+                basalIOB: basalIOB,
+                iobActivity: iobActivity
             )
             return finalDetermination
         }
@@ -913,7 +969,10 @@ enum DosingEngine {
                 duration: 30,
                 profile: profile,
                 determination: newDetermination,
-                currentTemp: currentTemp
+                currentTemp: currentTemp,
+                bolusIOB: bolusIOB,
+                basalIOB: basalIOB,
+                iobActivity: iobActivity
             )
             return finalDetermination
         }
@@ -932,7 +991,10 @@ enum DosingEngine {
             duration: 30,
             profile: profile,
             determination: newDetermination,
-            currentTemp: currentTemp
+            currentTemp: currentTemp,
+            bolusIOB: bolusIOB,
+            basalIOB: basalIOB,
+            iobActivity: iobActivity
         )
         return finalDetermination
     }

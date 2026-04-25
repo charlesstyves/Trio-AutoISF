@@ -35,6 +35,9 @@ struct B30SafetyInputs {
     let maxIob: Decimal
     let currentTemp: TempBasal
     let profile: Profile
+    let bolusIOB: Decimal
+    let basalIOB: Decimal
+    let iobActivity: Decimal
 }
 
 /// Evaluates whether the autoISF B30 boost-basal should activate for this loop cycle.
@@ -138,10 +141,15 @@ enum AimiB30 {
                 adjustedSensitivity: inputs.adjustedSensitivity,
                 targetGlucose: inputs.targetGlucose,
                 currentTemp: inputs.currentTemp,
-                determination: det
+                determination: det,
+                bolusIOB: inputs.bolusIOB,
+                basalIOB: inputs.basalIOB,
+                iobActivity: inputs.iobActivity
             )
             debug(.openAPSSwift, "B30 check 1 (zeroTempSuspend): fires=\(fires)")
-            if fires { return (true, d) }
+            if fires {
+                return (true, applyBlockedTag(d, blocker: "zeroTempSuspend"))
+            }
             det = d
         }
 
@@ -160,10 +168,15 @@ enum AimiB30 {
                 profile: inputs.profile,
                 determination: det,
                 adjustedSensitivity: inputs.adjustedSensitivity,
-                overrideFactor: inputs.overrideFactor
+                overrideFactor: inputs.overrideFactor,
+                bolusIOB: inputs.bolusIOB,
+                basalIOB: inputs.basalIOB,
+                iobActivity: inputs.iobActivity
             )
             debug(.openAPSSwift, "B30 check 2 (lowEventualBG): fires=\(fires)")
-            if fires { return (true, d) }
+            if fires {
+                return (true, applyBlockedTag(d, blocker: "lowEventualBG"))
+            }
             det = d
         }
 
@@ -178,10 +191,15 @@ enum AimiB30 {
                 basal: inputs.basal,
                 smbIsEnabled: inputs.smbIsEnabled,
                 profile: inputs.profile,
-                determination: det
+                determination: det,
+                bolusIOB: inputs.bolusIOB,
+                basalIOB: inputs.basalIOB,
+                iobActivity: inputs.iobActivity
             )
             debug(.openAPSSwift, "B30 check 3 (glucoseFallingFast): fires=\(fires)")
-            if fires { return (true, d) }
+            if fires {
+                return (true, applyBlockedTag(d, blocker: "glucoseFallingFast"))
+            }
             det = d
         }
 
@@ -194,7 +212,10 @@ enum AimiB30 {
                 basal: inputs.basal,
                 smbIsEnabled: inputs.smbIsEnabled,
                 profile: inputs.profile,
-                determination: det
+                determination: det,
+                bolusIOB: inputs.bolusIOB,
+                basalIOB: inputs.basalIOB,
+                iobActivity: inputs.iobActivity
             )
             debug(.openAPSSwift, "B30 check 4 (eventualForecastLow): fires=\(fires)")
             if fires { return (true, d) }
@@ -208,7 +229,10 @@ enum AimiB30 {
                 currentTemp: inputs.currentTemp,
                 basal: inputs.basal,
                 profile: inputs.profile,
-                determination: det
+                determination: det,
+                bolusIOB: inputs.bolusIOB,
+                basalIOB: inputs.basalIOB,
+                iobActivity: inputs.iobActivity
             )
             debug(.openAPSSwift, "B30 check 5 (iobCap): fires=\(fires)")
             if fires { return (true, d) }
@@ -217,5 +241,18 @@ enum AimiB30 {
 
         debug(.openAPSSwift, "B30 safety checks passed — boost will activate")
         return (false, det)
+    }
+
+    /// Prepends `AIMI B30, blocked by <name>, ` to the reason and strips the now-stale
+    /// `SMB disabled:, B30 running` fragment (AutoISFsmb added it optimistically before
+    /// safeguards ran — if they block, B30 isn't actually running, so the SMB-off tag
+    /// doesn't belong). "AIMI B30" matches the existing exact-match rule in TagCloudView.
+    private static func applyBlockedTag(_ determination: Determination, blocker: String) -> Determination {
+        var blocked = determination
+        var reason = blocked.reason
+        reason = reason.replacingOccurrences(of: "SMB disabled:, B30 running, ", with: "")
+        reason = reason.replacingOccurrences(of: "SMB disabled:, B30 running", with: "")
+        blocked.reason = "AIMI B30, blocked by \(blocker), " + reason
+        return blocked
     }
 }

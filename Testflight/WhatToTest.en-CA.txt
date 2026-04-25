@@ -1,4 +1,9 @@
-notifications for schedule executions
+Trio dev 0.7.0
+orefswift with all fixes
+overrides with autoISF & SMB Dell.Ratio settings
+stable CSF toggle (CR changes with ISF)
+popup tags in mmol/L and more UI fixes
+high SMBdelRatio
 no profile banner for users that only have 1 profile
 dura-weigt in Profiles
 Profile Banner tapping fixed

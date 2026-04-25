@@ -37,13 +37,13 @@ struct Determination: JSON, Equatable {
     let carbRatio: Decimal?
     let received: Bool?
     //    autoISF
-    let smbRatio: Decimal?
+    var smbRatio: Decimal?
     let duraISFratio: Decimal?
     let bgISFratio: Decimal?
     let ppISFratio: Decimal?
     let acceISFratio: Decimal?
     let autoISFratio: Decimal?
-    let iobTH: Decimal?
+    var iobTH: Decimal?
     let tick: Int?
     // acce calc
     let parabolaFitMinutes: Decimal?
