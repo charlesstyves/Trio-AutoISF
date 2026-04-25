@@ -15,6 +15,7 @@ extension UnitsLimitsSettings {
         @Published var maxCOB: Decimal = 120
         @Published var hasChanged: Bool = false
         @Published var threshold_setting: Decimal = 60
+        @Published var smbThresholdRatio: Decimal = 0.5
         var targetUnits: GlucoseUnits = .mgdL
 
         var preferences: Preferences {
@@ -38,6 +39,7 @@ extension UnitsLimitsSettings {
             subscribePreferencesSetting(\.maxIOB, on: $maxIOB) { maxIOB = $0 }
             subscribePreferencesSetting(\.maxCOB, on: $maxCOB) { maxCOB = $0 }
             subscribePreferencesSetting(\.threshold_setting, on: $threshold_setting) { threshold_setting = $0 }
+            subscribePreferencesSetting(\.smbThresholdRatio, on: $smbThresholdRatio) { smbThresholdRatio = $0 }
 
             maxBasal = pumpSettings.maxBasal
             maxBolus = pumpSettings.maxBolus

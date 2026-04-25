@@ -120,6 +120,8 @@ enum SettingItems {
                 "Max IOB",
                 "Max COB",
                 "Minimum Safety Threshold",
+                "SMB Threshold Ratio",
+                "SMB cutoff",
                 "Delivery Limits"
             ],
             path: ["Therapy Settings", "Units and Limits"]
