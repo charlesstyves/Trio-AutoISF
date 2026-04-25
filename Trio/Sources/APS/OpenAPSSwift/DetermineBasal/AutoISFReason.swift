@@ -100,6 +100,10 @@ enum AutoISFReason {
 
     // MARK: - SMB control fragments (AutoISFsmb outputs)
 
+    /// Tail appended to "Microbolusing Xu" when the autoISF iobTH 130 % cap reduced
+    /// the SMB. Mirrors JS `, capped by autoISF iobTH`.
+    static let smbCappedByIobTH = ", capped by autoISF iobTH"
+
     static let smbBlockedOverride = "SMB disabled:, Override"
     static let smbBlockedB30Running = "SMB disabled:, B30 running"
     static let smbBlockedIobTHExceeded = "autoISF-SMB disabled:, iobTH exceeded"
@@ -116,6 +120,24 @@ enum AutoISFReason {
     /// target at or above 100 mg/dL).
     static func smbEnabledEnforced(iobThEffective: Decimal) -> String {
         "autoISF-SMB enabled:, even Target, eff.iobTH:, \(iobThEffective)"
+    }
+
+    /// SMB-section chip text used when the autoISF iobTH 130 % cap reduced the SMB.
+    /// Replaces the `even TT` / `even Target` segment in-place via `applyIobTHCapTag`.
+    static let smbCappedByIobTHTag = "capped by iobTH"
+
+    /// Replaces the `even TT` / `even Target` chip in an autoISF SMB reason with
+    /// `capped by iobTH`. No-op if neither marker is present (defensive — a future
+    /// reason format change would simply leave the reason untouched rather than
+    /// silently corrupting it).
+    static func applyIobTHCapTag(to reason: String) -> String {
+        if reason.contains(", even TT,") {
+            return reason.replacingOccurrences(of: ", even TT,", with: ", \(smbCappedByIobTHTag),")
+        }
+        if reason.contains(", even Target,") {
+            return reason.replacingOccurrences(of: ", even Target,", with: ", \(smbCappedByIobTHTag),")
+        }
+        return reason
     }
 
     // MARK: - ISF adjustment fragments (AutoISFAdjust outputs)

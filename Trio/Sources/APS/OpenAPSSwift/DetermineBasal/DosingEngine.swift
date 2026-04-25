@@ -816,6 +816,7 @@ enum DosingEngine {
         adjustedCarbRatio: Decimal,
         basal: Decimal,
         smbDeliveryRatio: Decimal,
+        autoISFSmbResult: AutoISFsmbResult? = nil,
         determination: Determination
     ) throws -> (shouldSetTempBasal: Bool, determination: Determination) {
         var newDetermination = determination
@@ -842,8 +843,17 @@ enum DosingEngine {
         )
 
         let roundSmbTo = 1 / profile.bolusIncrement
-        let microBolusWithoutRounding = min(insulinRequired * smbDeliveryRatio, maxBolus)
-        let microBolus = (microBolusWithoutRounding * roundSmbTo).floor() / roundSmbTo
+        // autoISF iobTH 130 % overrun cap. Encapsulated in AutoISFsmb so the standard
+        // (non-autoISF) path stays one-liner; with autoISF off `cap` is a no-op.
+        let cap = AutoISFsmb.applyIobTHcap(
+            profile: profile,
+            currentIob: currentIob,
+            microBolus: min(insulinRequired * smbDeliveryRatio, maxBolus),
+            smbResult: autoISFSmbResult,
+            reason: newDetermination.reason
+        )
+        newDetermination.reason = cap.reason
+        let microBolus = (cap.microBolus * roundSmbTo).floor() / roundSmbTo
 
         let worstCaseInsulinRequired = (targetGlucose - (naiveEventualGlucose + minIOBForecastedGlucose) / 2) /
             adjustedSensitivity
@@ -904,7 +914,7 @@ enum DosingEngine {
             if lastBolusAge > smbInterval {
                 if microBolus > 0 {
                     newDetermination.units = microBolus
-                    newDetermination.reason += "Microbolusing \(microBolus)U. "
+                    newDetermination.reason += "Microbolusing \(microBolus)U\(cap.reasonTail). "
                 }
             } else {
                 newDetermination.reason += "Waiting \(nextBolusMinutes)m \(nextBolusSeconds)s to microbolus again. "
