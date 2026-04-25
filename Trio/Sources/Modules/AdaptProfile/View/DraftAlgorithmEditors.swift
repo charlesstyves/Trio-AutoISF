@@ -814,6 +814,20 @@ extension AdaptProfile {
                         isChanged: state.isChanged(\.postMealISFweight),
                         onReset: { state.resetField(\.postMealISFweight) }
                     )
+
+                    SettingInputSection(
+                        decimalValue: $state.preferences.autoISFhourlyChange,
+                        booleanValue: .constant(false),
+                        shouldDisplayHint: $shouldDisplayHint,
+                        selectedVerboseHint: verboseHintBinding(AlgorithmSettingHints.autoISFhourlyChangeLabel),
+                        units: state.units,
+                        type: .decimal("autoISFhourlyChange"),
+                        label: AlgorithmSettingHints.autoISFhourlyChangeLabel,
+                        miniHint: AlgorithmSettingHints.autoISFhourlyChangeMini,
+                        verboseHint: AlgorithmSettingHints.autoISFhourlyChangeVerbose(),
+                        isChanged: state.isChanged(\.autoISFhourlyChange),
+                        onReset: { state.resetField(\.autoISFhourlyChange) }
+                    )
                 } // if state.preferences.autoisf
             }
             .listSectionSpacing(10)
