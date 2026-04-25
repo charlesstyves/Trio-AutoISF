@@ -2,7 +2,7 @@ Trio dev 0.7.0
 high SMBdelRatio
 no profile banner for users that only have 1 profile
 dura-weigt in Profiles
-Profile Banner tapping fixed
 no save to pump when reverting from temp Profile
 fix ioBTh bug
 expose SMBThresholdRatio in Therapy > Units & Limits
+fix banner tap
