@@ -829,7 +829,13 @@ extension Home {
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
             .onTapGesture {
-                state.showModal(for: .adaptProfile)
+                // Switch to Settings tab and push AdaptProfile. The append is deferred so
+                // it runs after `onChange(of: selectedTab)` resets `settingsPath` — without
+                // the deferral the new push would be cleared by that handler.
+                selectedTab = 3
+                DispatchQueue.main.async {
+                    settingsPath.append(Screen.adaptProfile)
+                }
             }
         }
 

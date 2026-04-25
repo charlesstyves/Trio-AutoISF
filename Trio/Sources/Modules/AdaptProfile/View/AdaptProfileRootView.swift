@@ -19,11 +19,13 @@ extension AdaptProfile {
 
         @Environment(\.colorScheme) var colorScheme
         @Environment(AppState.self) var appState
-        /// True when RootView is presented as a modal sheet (e.g. from the Home profile banner
-        /// via `router.mainModalScreen`). False when pushed inside the Settings nav stack, where
-        /// the parent stack already supplies a Back button. Drives whether we show an explicit
-        /// Close button in the top-leading toolbar slot.
-        @Environment(\.isPresented) private var isPresented
+        /// True when RootView is presented as a modal sheet (set in MainRootView's `.sheet(item:)`
+        /// wrapper). False when pushed inside the Settings nav stack, where the parent stack
+        /// already supplies a Back button. Drives whether we show an explicit Close button in the
+        /// top-leading toolbar slot. We can't use SwiftUI's `\.isPresented` here because it also
+        /// returns true for views pushed onto a NavigationStack — leading to "Back" + "Close"
+        /// stacking in the toolbar.
+        @Environment(\.isInModalSheet) private var isInModalSheet
 
         private static let dateFormatter: DateFormatter = {
             let f = DateFormatter()
@@ -84,7 +86,7 @@ extension AdaptProfile {
                 Task { await state.refresh() }
             }
             .toolbar {
-                if isPresented {
+                if isInModalSheet {
                     ToolbarItem(placement: .topBarLeading) {
                         Button(action: state.hideModal) {
                             Text("Close").foregroundColor(.tabBar)
