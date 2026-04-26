@@ -113,14 +113,6 @@ extension Adjustments {
 
         /// Subscribes to notifications and initializes settings.
         override func subscribe() {
-            // Honor a pending banner-tap request from Home before any view body runs, so the
-            // first render already targets the Profiles tab. Doing this in .onAppear instead
-            // causes a one-frame layout where the bar/safe-area is sized for the previously
-            // selected tab and the embedded AdaptProfile list ends up offset.
-            if UserDefaults.standard.bool(forKey: Adjustments.pendingProfilesTabKey) {
-                UserDefaults.standard.removeObject(forKey: Adjustments.pendingProfilesTabKey)
-                selectedTab = .profiles
-            }
             setupNotification()
             setupSettings()
             broadcaster.register(SettingsObserver.self, observer: self)

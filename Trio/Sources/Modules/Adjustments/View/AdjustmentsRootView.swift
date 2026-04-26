@@ -180,7 +180,23 @@ extension Adjustments {
                         }
                     }
                 }
-                .onAppear(perform: configureView)
+                .onAppear {
+                    configureView()
+                    // Banner-arrival path: let the view first render on the default tab so the
+                    // NavigationStack chrome and List layout settle exactly the same way they
+                    // would on any normal mount, then animate the swap to .profiles. This makes
+                    // the banner path go through the identical "tab switch" code path the user
+                    // would trigger by tapping the pill manually — eliminating the layout
+                    // mismatch we got from setting .profiles before/during first render.
+                    if UserDefaults.standard.bool(forKey: Adjustments.pendingProfilesTabKey) {
+                        UserDefaults.standard.removeObject(forKey: Adjustments.pendingProfilesTabKey)
+                        DispatchQueue.main.async {
+                            withAnimation {
+                                state.selectedTab = .profiles
+                            }
+                        }
+                    }
+                }
                 .sheet(isPresented: $state.showOverrideEditSheet, onDismiss: {
                     Task {
                         await state.resetStateVariables()
