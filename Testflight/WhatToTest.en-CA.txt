@@ -1,8 +1,9 @@
 Trio dev 0.7.0
-high SMBdelRatio
+JK high SMBdelRatio
+JK insulin & carb bars
+no save to pump when reverting from temp Profile
+move Profiles to Adjustments
 no profile banner for users that only have 1 profile
 dura-weigt in Profiles
-no save to pump when reverting from temp Profile
 fix ioBTh bug
 expose SMBThresholdRatio in Therapy > Units & Limits
-fix banner tap
