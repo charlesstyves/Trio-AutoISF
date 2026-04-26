@@ -124,11 +124,8 @@ extension Adjustments {
                         // Embed the existing Profiles screen as the third tab. AdaptProfile.RootView
                         // owns its own List, toolbar, and "Profiles" navigation title — those take
                         // over while this tab is active. The Adjustments-side toolbar/title below is
-                        // skipped on this tab to avoid stacking. The top padding matches the visual
-                        // gap that TT/Override Lists naturally have between the pill picker and
-                        // their first section.
+                        // skipped on this tab to avoid stacking.
                         AdaptProfile.RootView(resolver: resolver)
-                            .padding(.top, 10)
                     case .overrides,
                          .tempTargets:
                         List {
