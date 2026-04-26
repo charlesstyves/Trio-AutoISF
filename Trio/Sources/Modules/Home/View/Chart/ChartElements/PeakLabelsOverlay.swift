@@ -45,16 +45,16 @@ struct PeakLabelsOverlay: View {
 
                         Text(p.text)
                             .font(.system(size: 12, weight: .semibold, design: .rounded))
-                            .foregroundStyle(p.color)
+                            .foregroundStyle(.primary)
                             .padding(.horizontal, 4)
                             .padding(.vertical, 2)
                             .background(
                                 RoundedRectangle(cornerRadius: 3)
-                                    .fill(p.color.opacity(0.15))
+                                    .fill(p.color.opacity(0.35))
                             )
                             .overlay(
                                 RoundedRectangle(cornerRadius: 3)
-                                    .stroke(p.color.opacity(0.7), lineWidth: 0.6)
+                                    .stroke(Color.primary.opacity(0.7), lineWidth: 0.6)
                             )
                             .position(x: p.rect.midX, y: p.rect.midY)
                     }
