@@ -182,14 +182,7 @@ extension Adjustments {
                         }
                     }
                 }
-                .onAppear {
-                    configureView()
-                    // Honor a pending banner-tap request from Home to open the Profiles tab.
-                    if UserDefaults.standard.bool(forKey: Adjustments.pendingProfilesTabKey) {
-                        UserDefaults.standard.removeObject(forKey: Adjustments.pendingProfilesTabKey)
-                        state.selectedTab = .profiles
-                    }
-                }
+                .onAppear(perform: configureView)
                 .sheet(isPresented: $state.showOverrideEditSheet, onDismiss: {
                     Task {
                         await state.resetStateVariables()
