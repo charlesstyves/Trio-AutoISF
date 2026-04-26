@@ -150,6 +150,8 @@ extension Adjustments {
                         }
                         .scrollContentBackground(.hidden)
                         .background(appState.trioBackgroundColor(for: colorScheme))
+                        .navigationBarTitle("Adjustments")
+                        .navigationBarTitleDisplayMode(.large)
                         .toolbar {
                             ToolbarItem(placement: .topBarTrailing) {
                                 Group {
@@ -261,15 +263,7 @@ extension Adjustments {
                 } message: {
                     Text("Stop the Temp Target \"\(state.currentActiveTempTarget?.name ?? "")\"?")
                 }
-            }
-            .background(appState.trioBackgroundColor(for: colorScheme))
-            // Set the navigation chrome unconditionally on the outer VStack so the parent
-            // NavigationStack always reserves the same .large title space, regardless of which
-            // sub-tab is rendered. AdaptProfile's nested .navigationTitle("Profiles") still
-            // overrides the visible text on the .profiles branch — this just keeps the bar
-            // dimensions stable so banner-arrival and tab-switch arrival lay out identically.
-            .navigationBarTitle("Adjustments")
-            .navigationBarTitleDisplayMode(.large)
+            }.background(appState.trioBackgroundColor(for: colorScheme))
         }
 
         var defaultText: some View {
