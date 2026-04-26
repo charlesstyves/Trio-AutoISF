@@ -93,6 +93,7 @@ class PickerSettingsProvider: ObservableObject, Injectable {
         case "B30basalFactor": return s.B30basalFactor
         case "ketoProtectBasalPercent": return s.ketoProtectBasalPercent
         case "ketoProtectBasalAbsolut": return s.ketoProtectBasalAbsolut
+        case "therapyAdjustment": return s.therapyAdjustment
         default: return nil
         }
     }

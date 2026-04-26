@@ -1,4 +1,5 @@
 Trio dev 0.7.1
+fix Therapy % Picker
 readability in Lightmode
 fixes autoISF override pickers
 JK high SMBdelRatio
