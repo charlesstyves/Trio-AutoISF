@@ -20,6 +20,83 @@ class PickerSettingsProvider: ObservableObject, Injectable {
         return DecimalPickerSettings(bolusIncrementValue: bolusIncrementValue)
     }
 
+    /// Looks up a `PickerSetting` by its `DecimalPickerSettings` property name. Used by views that
+    /// reference settings by string key (e.g. `SettingInputSection`, override forms) so all picker
+    /// rows source bounds from the same place.
+    func pickerSetting(for key: String) -> PickerSetting? {
+        let s = settings
+        switch key {
+        case "lowGlucose": return s.lowGlucose
+        case "highGlucose": return s.highGlucose
+        case "carbsRequiredThreshold": return s.carbsRequiredThreshold
+        case "individualAdjustmentFactor": return s.individualAdjustmentFactor
+        case "delay": return s.delay
+        case "timeCap": return s.timeCap
+        case "minuteInterval": return s.minuteInterval
+        case "high": return s.high
+        case "low": return s.low
+        case "hours": return s.hours
+        case "maxCarbs": return s.maxCarbs
+        case "maxMealAbsorptionTime": return s.maxMealAbsorptionTime
+        case "maxFat": return s.maxFat
+        case "maxProtein": return s.maxProtein
+        case "overrideFactor": return s.overrideFactor
+        case "fattyMealFactor": return s.fattyMealFactor
+        case "sweetMealFactor": return s.sweetMealFactor
+        case "maxIOB": return s.maxIOB
+        case "maxDailySafetyMultiplier": return s.maxDailySafetyMultiplier
+        case "currentBasalSafetyMultiplier": return s.currentBasalSafetyMultiplier
+        case "autosensMax": return s.autosensMax
+        case "autosensMin": return s.autosensMin
+        case "smbDeliveryRatio": return s.smbDeliveryRatio
+        case "smbThresholdRatio": return s.smbThresholdRatio
+        case "halfBasalExerciseTarget": return s.halfBasalExerciseTarget
+        case "maxCOB": return s.maxCOB
+        case "min5mCarbimpact": return s.min5mCarbimpact
+        case "remainingCarbsFraction": return s.remainingCarbsFraction
+        case "remainingCarbsCap": return s.remainingCarbsCap
+        case "maxSMBBasalMinutes": return s.maxSMBBasalMinutes
+        case "maxUAMSMBBasalMinutes": return s.maxUAMSMBBasalMinutes
+        case "smbInterval": return s.smbInterval
+        case "insulinPeakTime": return s.insulinPeakTime
+        case "carbsReqThreshold": return s.carbsReqThreshold
+        case "noisyCGMTargetMultiplier": return s.noisyCGMTargetMultiplier
+        case "maxDeltaBGthreshold": return s.maxDeltaBGthreshold
+        case "adjustmentFactor": return s.adjustmentFactor
+        case "adjustmentFactorSigmoid": return s.adjustmentFactorSigmoid
+        case "weightPercentage": return s.weightPercentage
+        case "enableSMB_high_bg_target": return s.enableSMB_high_bg_target
+        case "threshold_setting": return s.threshold_setting
+        case "updateInterval": return s.updateInterval
+        case "dia": return s.dia
+        case "maxBolus": return s.maxBolus
+        case "maxBasal": return s.maxBasal
+        case "autoISFmax": return s.autoISFmax
+        case "autoISFmin": return s.autoISFmin
+        case "smbMaxRangeExtension": return s.smbMaxRangeExtension
+        case "smbDeliveryRatioBGrange": return s.smbDeliveryRatioBGrange
+        case "smbDeliveryRatioMin": return s.smbDeliveryRatioMin
+        case "smbDeliveryRatioMax": return s.smbDeliveryRatioMax
+        case "autoISFhourlyChange": return s.autoISFhourlyChange
+        case "higherISFrangeWeight": return s.higherISFrangeWeight
+        case "lowerISFrangeWeight": return s.lowerISFrangeWeight
+        case "deltaISFrangeWeight": return s.deltaISFrangeWeight
+        case "postMealISFweight": return s.postMealISFweight
+        case "bgAccelISFweight": return s.bgAccelISFweight
+        case "bgBrakeISFweight": return s.bgBrakeISFweight
+        case "iobThresholdPercent": return s.iobThresholdPercent
+        case "B30iTimeStartBolus": return s.B30iTimeStartBolus
+        case "B30iTime": return s.B30iTime
+        case "B30iTimeTarget": return s.B30iTimeTarget
+        case "B30upperLimit": return s.B30upperLimit
+        case "B30upperDelta": return s.B30upperDelta
+        case "B30basalFactor": return s.B30basalFactor
+        case "ketoProtectBasalPercent": return s.ketoProtectBasalPercent
+        case "ketoProtectBasalAbsolut": return s.ketoProtectBasalAbsolut
+        default: return nil
+        }
+    }
+
     // Helper function to generate values for the picker
     func generatePickerValues(from setting: PickerSetting, units: GlucoseUnits) -> [Decimal] {
         var values: [Decimal] = []
@@ -328,5 +405,31 @@ struct PickerSetting {
         case minute
         case hour
         case percent
+    }
+
+    /// Shared formatter so callers outside `SettingInputSection` (e.g. the override
+    /// forms) render values identically to the algorithm settings editors.
+    func displayText(for value: Decimal, units: GlucoseUnits) -> Text {
+        switch type {
+        case .glucose:
+            let displayValue = units == .mmolL ? value.asMmolL : value
+            return Text("\(displayValue.description) \(units.rawValue)")
+        case .factor:
+            return Text("\(value * 100) \(String(localized: "%", comment: "Percentage symbol"))")
+        case .factorRaw:
+            return Text("\(value)")
+        case .insulinUnit:
+            return Text("\(value) \(String(localized: "U", comment: "Insulin unit abbreviation"))")
+        case .insulinUnitPerHour:
+            return Text("\(value) \(String(localized: "U/hr", comment: "Insulin unit per hour abbreviation"))")
+        case .gram:
+            return Text("\(value) \(String(localized: "g", comment: "Gram abbreviation"))")
+        case .minute:
+            return Text("\(value) \(String(localized: "min", comment: "Minutes abbreviation"))")
+        case .hour:
+            return Text("\(value) \(String(localized: "hr", comment: "Hours abbreviation"))")
+        case .percent:
+            return Text("\(value) \(String(localized: "%", comment: "Percentage symbol"))")
+        }
     }
 }

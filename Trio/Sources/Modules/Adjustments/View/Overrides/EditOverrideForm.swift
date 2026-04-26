@@ -647,7 +647,7 @@ struct EditOverrideForm: View {
                         ),
                         profileValue: state.profileIobThresholdPercent,
                         isModified: aiIobThresholdPercent != nil,
-                        range: Array(stride(from: Decimal(0.5), through: Decimal(1.5), by: Decimal(0.05))),
+                        settingKey: "iobThresholdPercent",
                         onReset: { aiIobThresholdPercent = nil
                             hasChanges = true }
                     )
@@ -657,7 +657,7 @@ struct EditOverrideForm: View {
                             hasChanges = true }),
                         profileValue: profileMin,
                         isModified: aiAutoISFmin != nil,
-                        range: Array(stride(from: Decimal(0.1), through: Decimal(1.5), by: Decimal(0.05))),
+                        settingKey: "autoISFmin",
                         onReset: { aiAutoISFmin = nil
                             hasChanges = true }
                     )
@@ -667,7 +667,7 @@ struct EditOverrideForm: View {
                             hasChanges = true }),
                         profileValue: profileMax,
                         isModified: aiAutoISFmax != nil,
-                        range: Array(stride(from: Decimal(1.0), through: Decimal(3.0), by: Decimal(0.05))),
+                        settingKey: "autoISFmax",
                         onReset: { aiAutoISFmax = nil
                             hasChanges = true }
                     )
@@ -680,7 +680,7 @@ struct EditOverrideForm: View {
                         ),
                         profileValue: state.profileAutoISFhourlyChange,
                         isModified: aiAutoISFhourlyChange != nil,
-                        range: Array(stride(from: Decimal(0), through: Decimal(1.0), by: Decimal(0.05))),
+                        settingKey: "autoISFhourlyChange",
                         onReset: { aiAutoISFhourlyChange = nil
                             hasChanges = true }
                     )
@@ -696,7 +696,7 @@ struct EditOverrideForm: View {
                         ),
                         profileValue: state.profileHigherISFrangeWeight,
                         isModified: aiHigherISFrangeWeight != nil,
-                        range: Array(stride(from: Decimal(0), through: Decimal(1.0), by: Decimal(0.05))),
+                        settingKey: "higherISFrangeWeight",
                         onReset: { aiHigherISFrangeWeight = nil
                             hasChanges = true }
                     )
@@ -712,7 +712,7 @@ struct EditOverrideForm: View {
                         ),
                         profileValue: state.profileLowerISFrangeWeight,
                         isModified: aiLowerISFrangeWeight != nil,
-                        range: Array(stride(from: Decimal(0), through: Decimal(1.0), by: Decimal(0.05))),
+                        settingKey: "lowerISFrangeWeight",
                         onReset: { aiLowerISFrangeWeight = nil
                             hasChanges = true }
                     )
@@ -728,7 +728,7 @@ struct EditOverrideForm: View {
                         ),
                         profileValue: state.profilePostMealISFweight,
                         isModified: aiPostMealISFweight != nil,
-                        range: Array(stride(from: Decimal(0), through: Decimal(0.5), by: Decimal(0.01))),
+                        settingKey: "postMealISFweight",
                         onReset: { aiPostMealISFweight = nil
                             hasChanges = true }
                     )
@@ -765,7 +765,7 @@ struct EditOverrideForm: View {
                         ),
                         profileValue: state.profileBgAccelISFweight,
                         isModified: aiBgAccelISFweight != nil,
-                        range: Array(stride(from: Decimal(0), through: Decimal(1.0), by: Decimal(0.05))),
+                        settingKey: "bgAccelISFweight",
                         onReset: { aiBgAccelISFweight = nil
                             hasChanges = true }
                     )
@@ -781,7 +781,7 @@ struct EditOverrideForm: View {
                         ),
                         profileValue: state.profileBgBrakeISFweight,
                         isModified: aiBgBrakeISFweight != nil,
-                        range: Array(stride(from: Decimal(0), through: Decimal(1.0), by: Decimal(0.05))),
+                        settingKey: "bgBrakeISFweight",
                         onReset: { aiBgBrakeISFweight = nil
                             hasChanges = true }
                     )
@@ -819,7 +819,7 @@ struct EditOverrideForm: View {
                         ),
                         profileValue: state.profileSmbDeliveryRatio,
                         isModified: aiSmbDeliveryRatio != nil,
-                        range: Array(stride(from: Decimal(0.1), through: Decimal(1.0), by: Decimal(0.05))),
+                        settingKey: "smbDeliveryRatio",
                         onReset: { aiSmbDeliveryRatio = nil
                             hasChanges = true }
                     )
@@ -839,7 +839,7 @@ struct EditOverrideForm: View {
                                 ),
                                 profileValue: state.profileSmbDeliveryRatioBGrange,
                                 isModified: aiSmbDeliveryRatioBGrange != nil,
-                                range: Array(stride(from: Decimal(0), through: Decimal(100), by: Decimal(5))),
+                                settingKey: "smbDeliveryRatioBGrange",
                                 onReset: { aiSmbDeliveryRatioBGrange = nil
                                     hasChanges = true }
                             )
@@ -855,7 +855,7 @@ struct EditOverrideForm: View {
                                 ),
                                 profileValue: state.profileSmbDeliveryRatioMin,
                                 isModified: aiSmbDeliveryRatioMin != nil,
-                                range: Array(stride(from: Decimal(0.1), through: Decimal(1.0), by: Decimal(0.05))),
+                                settingKey: "smbDeliveryRatioMin",
                                 onReset: { aiSmbDeliveryRatioMin = nil
                                     hasChanges = true }
                             )
@@ -871,7 +871,7 @@ struct EditOverrideForm: View {
                                 ),
                                 profileValue: state.profileSmbDeliveryRatioMax,
                                 isModified: aiSmbDeliveryRatioMax != nil,
-                                range: Array(stride(from: Decimal(0.1), through: Decimal(1.0), by: Decimal(0.05))),
+                                settingKey: "smbDeliveryRatioMax",
                                 onReset: { aiSmbDeliveryRatioMax = nil
                                     hasChanges = true }
                             )
@@ -912,32 +912,17 @@ struct EditOverrideForm: View {
         value: Binding<Decimal>,
         profileValue _: Decimal,
         isModified: Bool,
-        range: [Decimal],
+        settingKey: String,
         onReset: @escaping () -> Void = {}
     ) -> some View {
-        HStack {
-            Text(label)
-                .foregroundColor(isModified ? .accentColor : .secondary)
-            Spacer()
-            if isModified {
-                Button(action: onReset) {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
-                        .imageScale(.small)
-                }
-                .buttonStyle(.plain)
-            }
-            Menu {
-                Picker("", selection: value) {
-                    ForEach(range, id: \.self) { v in
-                        Text(v.formatted(.number.precision(.fractionLength(0 ... 2)))).tag(v)
-                    }
-                }
-            } label: {
-                Text(value.wrappedValue.formatted(.number.precision(.fractionLength(0 ... 2))))
-                    .foregroundColor(isModified ? .accentColor : .secondary)
-            }
-        }
+        OverrideAutoISFRow(
+            label: label,
+            value: value,
+            isModified: isModified,
+            settingKey: settingKey,
+            units: state.units,
+            onReset: onReset
+        )
     }
 
     private var hasAutoISFOverrides: Bool {

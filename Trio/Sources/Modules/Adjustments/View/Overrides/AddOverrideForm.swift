@@ -403,7 +403,7 @@ struct AddOverrideForm: View {
                         ),
                         profileValue: state.profileIobThresholdPercent,
                         isModified: state.overrideIobThresholdPercent != nil,
-                        range: Array(stride(from: Decimal(0.5), through: Decimal(1.5), by: Decimal(0.05))),
+                        settingKey: "iobThresholdPercent",
                         onReset: { state.overrideIobThresholdPercent = nil }
                     )
                     autoISFRow(
@@ -414,7 +414,7 @@ struct AddOverrideForm: View {
                         ),
                         profileValue: state.profileAutoISFmin,
                         isModified: state.overrideAutoISFmin != nil,
-                        range: Array(stride(from: Decimal(0.1), through: Decimal(1.5), by: Decimal(0.05))),
+                        settingKey: "autoISFmin",
                         onReset: { state.overrideAutoISFmin = nil }
                     )
                     autoISFRow(
@@ -425,7 +425,7 @@ struct AddOverrideForm: View {
                         ),
                         profileValue: state.profileAutoISFmax,
                         isModified: state.overrideAutoISFmax != nil,
-                        range: Array(stride(from: Decimal(1.0), through: Decimal(3.0), by: Decimal(0.05))),
+                        settingKey: "autoISFmax",
                         onReset: { state.overrideAutoISFmax = nil }
                     )
                     autoISFRow(
@@ -436,7 +436,7 @@ struct AddOverrideForm: View {
                         ),
                         profileValue: state.profileAutoISFhourlyChange,
                         isModified: state.overrideAutoISFhourlyChange != nil,
-                        range: Array(stride(from: Decimal(0), through: Decimal(1.0), by: Decimal(0.05))),
+                        settingKey: "autoISFhourlyChange",
                         onReset: { state.overrideAutoISFhourlyChange = nil }
                     )
                     autoISFRow(
@@ -450,7 +450,7 @@ struct AddOverrideForm: View {
                         ),
                         profileValue: state.profileHigherISFrangeWeight,
                         isModified: state.overrideHigherISFrangeWeight != nil,
-                        range: Array(stride(from: Decimal(0), through: Decimal(1.0), by: Decimal(0.05))),
+                        settingKey: "higherISFrangeWeight",
                         onReset: { state.overrideHigherISFrangeWeight = nil }
                     )
                     autoISFRow(
@@ -464,7 +464,7 @@ struct AddOverrideForm: View {
                         ),
                         profileValue: state.profileLowerISFrangeWeight,
                         isModified: state.overrideLowerISFrangeWeight != nil,
-                        range: Array(stride(from: Decimal(0), through: Decimal(1.0), by: Decimal(0.05))),
+                        settingKey: "lowerISFrangeWeight",
                         onReset: { state.overrideLowerISFrangeWeight = nil }
                     )
                     autoISFRow(
@@ -478,7 +478,7 @@ struct AddOverrideForm: View {
                         ),
                         profileValue: state.profilePostMealISFweight,
                         isModified: state.overridePostMealISFweight != nil,
-                        range: Array(stride(from: Decimal(0), through: Decimal(0.5), by: Decimal(0.01))),
+                        settingKey: "postMealISFweight",
                         onReset: { state.overridePostMealISFweight = nil }
                     )
                     HStack {
@@ -516,7 +516,7 @@ struct AddOverrideForm: View {
                         ),
                         profileValue: state.profileBgAccelISFweight,
                         isModified: state.overrideBgAccelISFweight != nil,
-                        range: Array(stride(from: Decimal(0), through: Decimal(1.0), by: Decimal(0.05))),
+                        settingKey: "bgAccelISFweight",
                         onReset: { state.overrideBgAccelISFweight = nil }
                     )
                     autoISFRow(
@@ -530,7 +530,7 @@ struct AddOverrideForm: View {
                         ),
                         profileValue: state.profileBgBrakeISFweight,
                         isModified: state.overrideBgBrakeISFweight != nil,
-                        range: Array(stride(from: Decimal(0), through: Decimal(1.0), by: Decimal(0.05))),
+                        settingKey: "bgBrakeISFweight",
                         onReset: { state.overrideBgBrakeISFweight = nil }
                     )
                 },
@@ -555,32 +555,17 @@ struct AddOverrideForm: View {
         value: Binding<Decimal>,
         profileValue _: Decimal,
         isModified: Bool,
-        range: [Decimal],
+        settingKey: String,
         onReset: @escaping () -> Void = {}
     ) -> some View {
-        HStack {
-            Text(label)
-                .foregroundColor(isModified ? .accentColor : .secondary)
-            Spacer()
-            if isModified {
-                Button(action: onReset) {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
-                        .imageScale(.small)
-                }
-                .buttonStyle(.plain)
-            }
-            Menu {
-                Picker("", selection: value) {
-                    ForEach(range, id: \.self) { v in
-                        Text(v.formatted(.number.precision(.fractionLength(0 ... 2)))).tag(v)
-                    }
-                }
-            } label: {
-                Text(value.wrappedValue.formatted(.number.precision(.fractionLength(0 ... 2))))
-                    .foregroundColor(isModified ? .accentColor : .secondary)
-            }
-        }
+        OverrideAutoISFRow(
+            label: label,
+            value: value,
+            isModified: isModified,
+            settingKey: settingKey,
+            units: state.units,
+            onReset: onReset
+        )
     }
 
     private var hasAutoISFOverrides: Bool {
@@ -619,7 +604,7 @@ struct AddOverrideForm: View {
                         ),
                         profileValue: state.profileSmbDeliveryRatio,
                         isModified: state.overrideSmbDeliveryRatio != nil,
-                        range: Array(stride(from: Decimal(0.1), through: Decimal(1.0), by: Decimal(0.05))),
+                        settingKey: "smbDeliveryRatio",
                         onReset: { state.overrideSmbDeliveryRatio = nil }
                     )
 
@@ -640,7 +625,7 @@ struct AddOverrideForm: View {
                                 ),
                                 profileValue: state.profileSmbDeliveryRatioBGrange,
                                 isModified: state.overrideSmbDeliveryRatioBGrange != nil,
-                                range: Array(stride(from: Decimal(0), through: Decimal(100), by: Decimal(5))),
+                                settingKey: "smbDeliveryRatioBGrange",
                                 onReset: { state.overrideSmbDeliveryRatioBGrange = nil }
                             )
                             autoISFRow(
@@ -656,7 +641,7 @@ struct AddOverrideForm: View {
                                 ),
                                 profileValue: state.profileSmbDeliveryRatioMin,
                                 isModified: state.overrideSmbDeliveryRatioMin != nil,
-                                range: Array(stride(from: Decimal(0.1), through: Decimal(1.0), by: Decimal(0.05))),
+                                settingKey: "smbDeliveryRatioMin",
                                 onReset: { state.overrideSmbDeliveryRatioMin = nil }
                             )
                             autoISFRow(
@@ -672,7 +657,7 @@ struct AddOverrideForm: View {
                                 ),
                                 profileValue: state.profileSmbDeliveryRatioMax,
                                 isModified: state.overrideSmbDeliveryRatioMax != nil,
-                                range: Array(stride(from: Decimal(0.1), through: Decimal(1.0), by: Decimal(0.05))),
+                                settingKey: "smbDeliveryRatioMax",
                                 onReset: { state.overrideSmbDeliveryRatioMax = nil }
                             )
                         },
@@ -805,5 +790,53 @@ struct AddOverrideForm: View {
         }
 
         return (false, nil)
+    }
+}
+
+/// Row used by the override forms for AutoISF / SMB numeric overrides. Mirrors
+/// the tap-to-expand wheel-picker UX from `SettingInputSection`, sourcing
+/// bounds, step and value formatting from `DecimalPickerSettings`. Adds the
+/// override-form reset button + accent-color modification indicator.
+struct OverrideAutoISFRow: View {
+    let label: String
+    @Binding var value: Decimal
+    let isModified: Bool
+    let settingKey: String
+    let units: GlucoseUnits
+    var onReset: () -> Void = {}
+
+    @ObservedObject private var pickerSettingsProvider = PickerSettingsProvider.shared
+    @State private var displayPicker: Bool = false
+
+    var body: some View {
+        if let setting = pickerSettingsProvider.pickerSetting(for: settingKey) {
+            VStack {
+                HStack {
+                    Text(label)
+                        .foregroundColor(isModified ? .accentColor : .primary)
+                    Spacer()
+                    if isModified {
+                        Button(action: onReset) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                                .imageScale(.small)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    setting.displayText(for: value, units: units)
+                        .foregroundColor(displayPicker ? .accentColor : .primary)
+                        .onTapGesture { displayPicker.toggle() }
+                }
+                if displayPicker {
+                    Picker(selection: $value, label: Text(label)) {
+                        ForEach(pickerSettingsProvider.generatePickerValues(from: setting, units: units), id: \.self) { v in
+                            setting.displayText(for: v, units: units).tag(v)
+                        }
+                    }
+                    .pickerStyle(WheelPickerStyle())
+                    .frame(maxWidth: .infinity)
+                }
+            }
+        }
     }
 }

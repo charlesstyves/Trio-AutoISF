@@ -1,4 +1,6 @@
-Trio dev 0.7.0
+Trio dev 0.7.1
+readability in Lightmode
+fixes autoISF override pickers
 JK high SMBdelRatio
 JK insulin & carb bars
 no save to pump when reverting from temp Profile
