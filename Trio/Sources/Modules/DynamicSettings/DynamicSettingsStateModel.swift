@@ -25,11 +25,15 @@ extension DynamicSettings {
                     sigmoid = false
                 }
                 if dynamicSensitivityType != .disabled {
-                    settingsManager.preferences.autoisf = false
+                    // Write through the scope so this respects DraftScope isolation
+                    // (profile draft editor) as well as LiveScope.
+                    var prefs = scope.preferences
+                    prefs.autoisf = false
                     // dynISF requires the autosens branch in determine-basal to be active
                     // (DetermineBasalGenerator substitutes the dynISF ratio into autosensData,
                     // and DetermineBasal+Helpers gates that branch on profile.enableAutosens).
-                    settingsManager.preferences.enableAutosens = true
+                    prefs.enableAutosens = true
+                    scope.preferences = prefs
                 }
             }
         }

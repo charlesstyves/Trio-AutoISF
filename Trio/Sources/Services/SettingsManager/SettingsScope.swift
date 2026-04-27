@@ -107,11 +107,34 @@ final class DraftScope: SettingsScope {
         carbRatios: CarbRatios,
         bgTargets: BGTargets
     ) {
-        self.preferences = preferences
+        // Normalize on seed so a draft loaded from a stored profile with an
+        // inconsistent combination (e.g. dynISF on + autosens off) is corrected
+        // up-front, before any editor view runs. This keeps the activated draft
+        // in sync with the rules enforced by DynamicSettings and AutoISFSettings.
+        self.preferences = Self.normalize(preferences)
         self.basalProfile = basalProfile
         self.sensitivities = sensitivities
         self.carbRatios = carbRatios
         self.bgTargets = bgTargets
+    }
+
+    /// Enforce the cross-feature consistency rules that the live editors apply via `didSet`:
+    ///
+    /// - dynISF active (`useNewFormula == true`) ⇒ `autoisf = false` and `enableAutosens = true`
+    /// - autoISF off (`autoisf == false`) ⇒ `enableAutosens = true`
+    ///
+    /// dynISF takes precedence over autoISF: they are mutually exclusive in the UI, and
+    /// the determine-basal pipeline routes the dynISF ratio through the autosens branch,
+    /// so autosens must be enabled for dynISF to take effect.
+    static func normalize(_ preferences: Preferences) -> Preferences {
+        var prefs = preferences
+        if prefs.useNewFormula {
+            prefs.autoisf = false
+            prefs.enableAutosens = true
+        } else if !prefs.autoisf {
+            prefs.enableAutosens = true
+        }
+        return prefs
     }
 
     /// Seed a draft by copying from any live source (typically a `LiveScope`).
