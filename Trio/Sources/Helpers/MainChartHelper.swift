@@ -59,8 +59,12 @@ enum MainChartHelper {
         static let carbBarMaxHeight: CGFloat = 45
 
         /// Pixel gap between the bar's arrow tip and the BG curve.
-        static let bolusAnnotationSpacing: CGFloat = 15
-        static let carbAnnotationSpacing: CGFloat = 15
+        static let bolusBarSpacing: CGFloat = 7
+        static let carbBarSpacing: CGFloat = 9
+
+        /// Pixel gap between the bar and its rotated dose/carb annotation label.
+        static let bolusAnnotationSpacing: CGFloat = 0
+        static let carbAnnotationSpacing: CGFloat = 0
 
         /// Doses below this amount render with a narrower bar (SMB-class).
         static let smbWidthThreshold: Decimal = 0.3

@@ -23,8 +23,7 @@ struct PeakLabelsOverlay: View {
     private static let maxPlacementDistance: CGFloat = 80
     private static let glucoseDotSize: CGFloat = 6
 
-    private static let barLabelHeight: CGFloat = 26
-    private static let barLabelInnerSpacing: CGFloat = 1
+    private static let barLabelHeight: CGFloat = 22
 
     var body: some View {
         GeometryReader { geo in
@@ -41,20 +40,21 @@ struct PeakLabelsOverlay: View {
                             path.move(to: CGPoint(x: p.peakX, y: p.peakY))
                             path.addLine(to: connectorAnchor(rect: p.rect, peakY: p.peakY))
                         }
-                        .stroke(p.color.opacity(0.6), lineWidth: 0.75)
+                        .stroke(Color.secondary, lineWidth: 0.75)
+                        .opacity(0.75)
 
                         Text(p.text)
-                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .font(.system(size: 11, weight: .semibold))
                             .foregroundStyle(.primary)
                             .padding(.horizontal, 4)
                             .padding(.vertical, 2)
                             .background(
-                                RoundedRectangle(cornerRadius: 3)
+                                RoundedRectangle(cornerRadius: 2)
                                     .fill(p.color.opacity(0.35))
                             )
                             .overlay(
-                                RoundedRectangle(cornerRadius: 3)
-                                    .stroke(Color.primary.opacity(0.7), lineWidth: 0.6)
+                                RoundedRectangle(cornerRadius: 2)
+                                    .stroke(Color.primary.opacity(0.7), lineWidth: 0.4)
                             )
                             .position(x: p.rect.midX, y: p.rect.midY)
                     }
@@ -188,8 +188,8 @@ struct PeakLabelsOverlay: View {
                 screenHours: screenHours
             )
             let barHeight = MainChartHelper.bolusBarHeight(amount: amount, maxAmount: maxBolus)
-            let totalHeight = MainChartHelper.Config.bolusAnnotationSpacing + barHeight + Self.barLabelInnerSpacing + Self
-                .barLabelHeight
+            let totalHeight = MainChartHelper.Config.bolusBarSpacing + barHeight + MainChartHelper.Config
+                .bolusAnnotationSpacing + Self.barLabelHeight
             rects.append(CGRect(
                 x: x - max(barWidth, 14) / 2, // widen a bit so rotated labels aren't tightly clipped
                 y: y - totalHeight,
@@ -211,8 +211,8 @@ struct PeakLabelsOverlay: View {
                   let y = proxy.position(forY: displayValue) else { continue }
 
             let barHeight = MainChartHelper.carbBarHeight(amount: Decimal(carb.carbs), maxAmount: maxCarbs)
-            let totalHeight = MainChartHelper.Config.carbAnnotationSpacing + barHeight + Self.barLabelInnerSpacing + Self
-                .barLabelHeight
+            let totalHeight = MainChartHelper.Config.carbBarSpacing + barHeight + MainChartHelper.Config
+                .carbAnnotationSpacing + Self.barLabelHeight
             rects.append(CGRect(
                 x: x - max(MainChartHelper.Config.carbBarWidth, 14) / 2,
                 y: y,
