@@ -143,7 +143,11 @@ extension DeterminationGenerator {
             }
             ratio = min(ratio, profile.autosensMax).jsRounded(scale: 2)
         } else if profile.enableAutosens, let autosens = autosens {
-            // Use autosens if present and enabled
+            // Use autosens if present and enabled.
+            // Note: when dynISF is active, DetermineBasalGenerator substitutes
+            // dynamicIsfResult.ratio into autosensData before this runs, so dynISF
+            // flows through the same branch. The UI enforces enableAutosens = true
+            // whenever dynISF is enabled (see DynamicSettingsStateModel).
             ratio = autosens.ratio
         }
 
