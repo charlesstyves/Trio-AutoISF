@@ -62,7 +62,9 @@ enum AutoISFReason {
 
         let tVertex = -(status.a_1 / (2 * status.a_2))
         let minsDelta = (abs(tVertex) * 5).jsRounded(scale: 0)
-        let extremumBG = (status.a_0 - status.a_1 * status.a_1 / (4 * status.a_2)).jsRounded(scale: 1)
+        // Round to integer mg/dL — mmol/L conversion (one decimal) is handled downstream by
+        // TagCloudView/NightscoutManager via the parabola regex + convertToMmolL.
+        let extremumBG = (status.a_0 - status.a_1 * status.a_1 / (4 * status.a_2)).jsRounded()
 
         // Sanity bounds on extremum BG and time, plus: reject a past-extrapolation whose
         // predicted slope contradicts a historically stable long-term average delta.

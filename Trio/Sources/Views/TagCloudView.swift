@@ -132,6 +132,7 @@ struct TagCloudView: View {
             "Dev:\\s*-?\\d+\\.?\\d*",
             "BGI:\\s*-?\\d+\\.?\\d*",
             "Target:\\s*-?\\d+\\.?\\d*",
+            "ISF:\\s*-?\\d+\\.?\\d*", // standalone ISF (no →), e.g. JS-side ", ISF: 112"
             "(?:minPredBG|minGuardBG|IOBpredBG|COBpredBG|UAMpredBG)\\s*-?\\d+\\.?\\d*",
             // autoISF additions
             "Avg:\\s*-?\\d+\\.?\\d*", // autoISF: dura_ISF average BG
@@ -208,6 +209,13 @@ struct TagCloudView: View {
                 let value = glucoseValueString.components(separatedBy: ":")[1].trimmingCharacters(in: .whitespaces)
                 let formattedValue = convertToMmolL(value)
                 let formattedString = "Target: \(formattedValue)"
+                updatedTag.replaceSubrange(range, with: formattedString)
+
+            } else if glucoseValueString.starts(with: "ISF:") {
+                // -- Handle standalone ISF (no →; e.g. JS-side ", ISF: 112")
+                let value = glucoseValueString.components(separatedBy: ":")[1].trimmingCharacters(in: .whitespaces)
+                let formattedValue = convertToMmolL(value)
+                let formattedString = "ISF: \(formattedValue)"
                 updatedTag.replaceSubrange(range, with: formattedString)
 
             } else if glucoseValueString.contains("predicts") || glucoseValueString.contains("saw") {

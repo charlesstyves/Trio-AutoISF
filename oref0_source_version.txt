@@ -1,6 +1,8 @@
-oref0 branch: autoISF3.01 - git version: 2e1c74a
+oref0 branch: JS-orefSwift-Campare - git version: 6f8e4a2
 
 Last commits:
+6f8e4a2 Align autoISF logs and parabolic calculations with orefSwift
+a456ff9 Neuter convert_bg, inline mmol/L target for SMB even/odd check
 2e1c74a Corrects sensitivity ratio in carb ratio adjustment logs
 0e7bd10 fix webpack
 c6eaecc Adjusts carb ratio when use_profile_csf is active
@@ -29,5 +31,3 @@ fe902c1 use iobTH without even/off
 78c308c AIMI deactivates with upperDelta or BG surpassed
 48964e7 aimiB30 ignores maxSafeBasal
 5976f60 round bg_isf to 2 decimals
-b5332a2 use round_basal for insReq
-12a4aa2 Always add minPredBG to rT object
