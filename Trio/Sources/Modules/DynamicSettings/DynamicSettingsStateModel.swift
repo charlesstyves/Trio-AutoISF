@@ -25,7 +25,11 @@ extension DynamicSettings {
                     sigmoid = false
                 }
                 if dynamicSensitivityType != .disabled {
-                    scope.preferences.autoisf = false
+                    settingsManager.preferences.autoisf = false
+                    // dynISF requires the autosens branch in determine-basal to be active
+                    // (DetermineBasalGenerator substitutes the dynISF ratio into autosensData,
+                    // and DetermineBasal+Helpers gates that branch on profile.enableAutosens).
+                    settingsManager.preferences.enableAutosens = true
                 }
             }
         }
