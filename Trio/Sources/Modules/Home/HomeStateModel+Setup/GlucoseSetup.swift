@@ -47,7 +47,7 @@ extension Home.StateModel {
 
         // Compute glucose turning points if enabled
         if showGlucosePeaks {
-            glucosePeaks = PeakPicker.pick(data: objects)
+            glucosePeaks = PeakPicker.pick(data: objects, windowHours: Double(hours) / 4)
         } else {
             glucosePeaks = []
         }

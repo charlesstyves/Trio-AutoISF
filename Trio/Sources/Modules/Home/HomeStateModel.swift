@@ -764,7 +764,7 @@ extension Home.StateModel:
         if showGlucosePeaks {
             glucosePeaks = PeakPicker.pick(
                 data: glucoseFromPersistence,
-                windowHours: Double(hours) / 2.5
+                windowHours: Double(hours) / 4
             )
         } else {
             glucosePeaks = []

@@ -29,13 +29,17 @@ struct GlucosePeaksChartView: ChartContent {
             .symbolSize(0)
             .annotation(position: annotationPosition(for: peak.type)) {
                 Text(formattedValue)
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundStyle(color)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.primary)
                     .padding(.horizontal, 4)
                     .padding(.vertical, 2)
                     .background(
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(color.opacity(0.15))
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(color.opacity(0.35))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 2)
+                            .stroke(Color.primary.opacity(0.7), lineWidth: 0.4)
                     )
             }
         }

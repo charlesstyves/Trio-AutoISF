@@ -120,8 +120,8 @@ struct CarbView: ChartContent {
             y: .value("Value", yPosition)
         )
         .symbol { Color.clear.frame(width: 0, height: 0) }
-        .annotation(position: .bottom, alignment: .center, spacing: MainChartHelper.Config.carbAnnotationSpacing) {
-            VStack(spacing: 1) {
+        .annotation(position: .bottom, alignment: .center, spacing: MainChartHelper.Config.carbBarSpacing) {
+            VStack(spacing: MainChartHelper.Config.carbAnnotationSpacing) {
                 UpArrowBarShape()
                     .fill(color)
                     .overlay(
@@ -132,7 +132,7 @@ struct CarbView: ChartContent {
                     .font(.caption2)
                     .fixedSize()
                     .rotationEffect(.degrees(-90))
-                    .frame(width: 16, height: 26)
+                    .frame(width: 16, height: 22)
                     .foregroundStyle(Color.primary)
             }
         }

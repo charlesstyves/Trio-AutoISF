@@ -1,4 +1,5 @@
 Trio dev 0.7.1
+dynISF activates autosens also via Profiles
 mmol/l tags not double converted in JS algo
 fix Therapy % Picker
 readability in Lightmode

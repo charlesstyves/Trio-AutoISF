@@ -91,7 +91,7 @@ struct InsulinView: ChartContent {
                                 .font(.caption2)
                                 .fixedSize()
                                 .rotationEffect(.degrees(-90))
-                                .frame(width: 12, height: 26)
+                                .frame(width: 12, height: 22)
                                 .foregroundStyle(Color.primary)
                         }
                     }
@@ -163,7 +163,7 @@ struct InsulinView: ChartContent {
                                 .font(.caption2)
                                 .fixedSize()
                                 .rotationEffect(.degrees(-90))
-                                .frame(width: 12, height: 26)
+                                .frame(width: 12, height: 22)
                                 .foregroundStyle(Color.primary)
                         }
                     }
@@ -204,7 +204,7 @@ struct InsulinView: ChartContent {
                         .font(.caption2)
                         .fixedSize()
                         .rotationEffect(.degrees(-90))
-                        .frame(width: 12, height: 26)
+                        .frame(width: 12, height: 22)
                         .foregroundStyle(Color.primary)
                 }
             }
@@ -226,13 +226,13 @@ struct InsulinView: ChartContent {
             y: .value("Value", yPosition)
         )
         .symbol { Color.clear.frame(width: 0, height: 0) }
-        .annotation(position: .top, alignment: .center, spacing: MainChartHelper.Config.bolusAnnotationSpacing) {
-            VStack(spacing: 1) {
+        .annotation(position: .top, alignment: .center, spacing: MainChartHelper.Config.bolusBarSpacing) {
+            VStack(spacing: MainChartHelper.Config.bolusAnnotationSpacing) {
                 Text(label)
                     .font(.caption2)
                     .fixedSize()
                     .rotationEffect(.degrees(-90))
-                    .frame(width: 12, height: 26)
+                    .frame(width: 12, height: 22)
                     .foregroundStyle(Color.primary)
                 DownArrowBarShape()
                     .fill(color)
