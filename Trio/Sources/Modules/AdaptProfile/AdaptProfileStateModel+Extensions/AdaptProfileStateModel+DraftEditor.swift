@@ -210,6 +210,10 @@ extension AdaptProfile {
                     cachedAutoISFBeforeDynISFCascade = preferences.autoisf
                 }
                 preferences.autoisf = false
+                // dynISF substitutes its ratio into autosensData, which DetermineBasal+Helpers
+                // only reads when enableAutosens is true. A draft seeded from an autoISF profile
+                // with enableAutosens=false would otherwise activate dynISF that silently no-ops.
+                preferences.enableAutosens = true
             } else {
                 if let cache = cachedAutoISFBeforeDynISFCascade {
                     preferences.autoisf = cache
