@@ -1,4 +1,3 @@
 Settings > Algorithm > Additionals has a toggle to let both Algos run, the active one (toggle above) is the one that makes decisions
 Below is a button to see results or in homeview:
 do a longpress on statistics button to see some algo statistics, also compare JS to SwiftOref
-fix xcloud buuild
