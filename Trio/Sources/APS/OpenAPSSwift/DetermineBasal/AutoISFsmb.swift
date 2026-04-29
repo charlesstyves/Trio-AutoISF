@@ -71,7 +71,7 @@ enum AutoISFsmb {
                 loopMode: .iobTHExceeded,
                 iobTHEffective: iobThEffective,
                 iobTHVirtual: iobThVirtual,
-                reason: AutoISFReason.smbBlockedIobTHExceeded
+                reason: AutoISFReason.smbBlockedIobTHExceeded(iobThEffective: iobThEffective)
             )
         }
 
@@ -152,8 +152,9 @@ enum AutoISFsmb {
     /// If autoISF is enabled, the iobTH method is on (`iob_threshold_percent != 1`),
     /// and delivering this microBolus would push current IOB past `iobTHVirtual`,
     /// the bolus is clamped so post-delivery IOB stays at `iobTHVirtual`. Returns
-    /// the (possibly reduced) bolus and a reason tail to append to the
-    /// "Microbolusing Xu" string.
+    /// the (possibly reduced) bolus, a reason tail to append to the
+    /// "Microbolusing Xu" conclusion, and a chip-cloud reason rewritten to surface
+    /// `capped by iobTH:, <eff.iobTH>` next to the other autoISF chips.
     ///
     /// The cap fires regardless of `enableSMB_EvenOn_OddOff_always` — same principle
     /// as the gate, which was decoupled from the toggle in May 2025. If the user set
@@ -163,15 +164,21 @@ enum AutoISFsmb {
         currentIob: Decimal,
         microBolus: Decimal,
         loopMode _: AutoISFLoopMode,
-        iobTHVirtual: Decimal
-    ) -> (microBolus: Decimal, reasonTail: String) {
+        iobTHEffective: Decimal,
+        iobTHVirtual: Decimal,
+        reason: String
+    ) -> (microBolus: Decimal, reasonTail: String, reason: String) {
         guard profile.autoisf,
               profile.iobThresholdPercent != 1,
               microBolus > iobTHVirtual - currentIob
         else {
-            return (microBolus, "")
+            return (microBolus, "", reason)
         }
-        return (iobTHVirtual - currentIob, AutoISFReason.smbCappedByIobTH)
+        return (
+            iobTHVirtual - currentIob,
+            AutoISFReason.smbCappedByIobTH,
+            AutoISFReason.applyIobTHCapTag(to: reason, iobThEffective: iobTHEffective)
+        )
     }
 
     /// Ports `determine_varSMBratio()` from determine-basal.js (autoISF 3.01).
