@@ -506,32 +506,30 @@ extension Home {
         var timeIntervalPanel: some View {
             HStack(alignment: .center) {
                 Spacer()
-                Button(action: {
-                    appState.statSelectedViewType = .glucose
-                    appState.statSelectedInsulinTimeInterval = .day
-                    state.showModal(for: .statistics)
-                }) {
-                    Image(systemName: "chart.bar.xaxis.ascending.badge.clock")
-                        .symbolRenderingMode(.palette)
-                        .scaleEffect(x: -1)
-                        .foregroundStyle(
-                            Color.secondary,
-                            TaiStyle.linearGradient(
-                                startPoint: .trailing, endPoint: .leading
-                            )
+                Image(systemName: "chart.bar.xaxis.ascending.badge.clock")
+                    .symbolRenderingMode(.palette)
+                    .scaleEffect(x: -1)
+                    .foregroundStyle(
+                        Color.secondary,
+                        TaiStyle.linearGradient(
+                            startPoint: .trailing, endPoint: .leading
                         )
-                        .frame(width: 24, height: 24)
-                        .background(
-                            colorScheme == .dark ? Color(red: 0.1176470588, green: 0.2352941176, blue: 0.3725490196) :
-                                Color.white
-                        )
-                        .clipShape(Circle())
-                }
-                .simultaneousGesture(
-                    LongPressGesture(minimumDuration: 0.6).onEnded { _ in
+                    )
+                    .frame(width: 24, height: 24)
+                    .background(
+                        colorScheme == .dark ? Color(red: 0.1176470588, green: 0.2352941176, blue: 0.3725490196) :
+                            Color.white
+                    )
+                    .clipShape(Circle())
+                    .contentShape(Circle())
+                    .onTapGesture {
+                        appState.statSelectedViewType = .glucose
+                        appState.statSelectedInsulinTimeInterval = .day
+                        state.showModal(for: .statistics)
+                    }
+                    .onLongPressGesture(minimumDuration: 0.6) {
                         showAlgoCompare = true
                     }
-                )
                 Spacer()
                 ForEach(timeButtons) { button in
                     Text(button.active ? button.label : button.number).onTapGesture {
