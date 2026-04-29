@@ -75,7 +75,8 @@ struct PeakLabelsOverlay: View {
         return CGPoint(x: rect.midX, y: y)
     }
 
-    private func computePlacements(obstacles _: [CGRect], plotRect _: CGRect) -> [PlacedPeak] {
+    private func computePlacements(obstacles: [CGRect], plotRect _: CGRect) -> [PlacedPeak] {
+        let sortedObstacles = obstacles.sorted { $0.minX < $1.minX }
         let labelSize = CGSize(width: 30, height: 18)
 
         return peaks.compactMap { peak -> PlacedPeak? in
@@ -89,23 +90,31 @@ struct PeakLabelsOverlay: View {
             let cyRel = cy
 
             let desiredCenterY: CGFloat
+            let side: VerticalSide
             switch peak.type {
             case .max:
                 desiredCenterY = cyRel - Self.labelDesiredOffset
+                side = .above
             case .min:
                 desiredCenterY = cyRel + Self.labelDesiredOffset
+                side = .below
             case .none:
                 desiredCenterY = cyRel
+                side = .both
             }
 
-            // Anchor labels at desired position (no lift-on-collision).
-            // Mirrors how bolus/carb bar labels stay fixed to their bar.
-            let placedRect = CGRect(
+            let desiredRect = CGRect(
                 x: cxRel - labelSize.width / 2,
                 y: desiredCenterY - labelSize.height / 2,
                 width: labelSize.width,
                 height: labelSize.height
             )
+
+            let placedRect = sortedObstacles.placeLabelCenter(
+                desiredRect: desiredRect,
+                verticalSide: side,
+                maxDistance: Self.maxPlacementDistance
+            ) ?? desiredRect
 
             return PlacedPeak(
                 rect: placedRect,
