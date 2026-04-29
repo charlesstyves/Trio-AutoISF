@@ -146,7 +146,8 @@ enum AlgoComparisonPersistence {
 
     private static func isContainer(_ value: JSONValue) -> Bool {
         switch value {
-        case .array, .object: return true
+        case .array,
+             .object: return true
         default: return false
         }
     }

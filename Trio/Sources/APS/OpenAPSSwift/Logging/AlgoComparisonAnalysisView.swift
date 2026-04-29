@@ -52,7 +52,9 @@ struct AlgoComparisonAnalysisView: View {
                 }
             }
         } message: {
-            Text("Deletes every TmpAlgoFunctionTiming and TmpAlgoLoopSummary row. This data is diagnostic only and is not used by the loop.")
+            Text(
+                "Deletes every TmpAlgoFunctionTiming and TmpAlgoLoopSummary row. This data is diagnostic only and is not used by the loop."
+            )
         }
     }
 
@@ -99,13 +101,17 @@ struct AlgoComparisonAnalysisView: View {
                             .foregroundColor(.secondary)
                     }
                     if f.swiftSampleCount > 0 {
-                        Text("Swift  p50 \(String(format: "%.1f", f.swiftP50Ms)) ms  p95 \(String(format: "%.1f", f.swiftP95Ms)) ms  (n=\(f.swiftSampleCount))")
-                            .font(.caption)
+                        Text(
+                            "Swift  p50 \(String(format: "%.1f", f.swiftP50Ms)) ms  p95 \(String(format: "%.1f", f.swiftP95Ms)) ms  (n=\(f.swiftSampleCount))"
+                        )
+                        .font(.caption)
                     }
                     if f.jsSampleCount > 0 {
-                        Text("JS     p50 \(String(format: "%.1f", f.jsP50Ms)) ms  p95 \(String(format: "%.1f", f.jsP95Ms)) ms  (n=\(f.jsSampleCount))")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        Text(
+                            "JS     p50 \(String(format: "%.1f", f.jsP50Ms)) ms  p95 \(String(format: "%.1f", f.jsP95Ms)) ms  (n=\(f.jsSampleCount))"
+                        )
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                     }
                     if f.shadowCount > 0 {
                         let pct = f.matchingRate * 100
@@ -162,9 +168,11 @@ struct AlgoComparisonAnalysisView: View {
                         }
                         HStack(spacing: 12) {
                             Text(String(format: "total %.0fms", loop.pipelineTotalMs)).font(.caption)
-                            Text(String(format: "active %.0f", loop.moduleSumActiveMs)).font(.caption2).foregroundColor(.secondary)
+                            Text(String(format: "active %.0f", loop.moduleSumActiveMs)).font(.caption2)
+                                .foregroundColor(.secondary)
                             if loop.hasShadow {
-                                Text(String(format: "shadow %.0f", loop.moduleSumShadowMs)).font(.caption2).foregroundColor(.secondary)
+                                Text(String(format: "shadow %.0f", loop.moduleSumShadowMs)).font(.caption2)
+                                    .foregroundColor(.secondary)
                             }
                             Text(String(format: "wait %.0f", loop.waitMs)).font(.caption2).foregroundColor(.secondary)
                         }
@@ -190,7 +198,9 @@ struct AlgoComparisonAnalysisView: View {
                 }
             }
         } footer: {
-            Text("This is diagnostic data for the Swift oref port. It is safe to delete and will be regenerated on the next loop.")
+            Text(
+                "This is diagnostic data for the Swift oref port. It is safe to delete and will be regenerated on the next loop."
+            )
         }
     }
 
