@@ -1,14 +1,3 @@
-Trio dev 0.7.1
-dynISF activates autosens also via Profiles (fix)
-mmol/l tags not double converted in JS algo
-fix Therapy % Picker
-readability in Lightmode
-fixes autoISF override pickers
-JK high SMBdelRatio
-JK insulin & carb bars
-no save to pump when reverting from temp Profile
-move Profiles to Adjustments
-no profile banner for users that only have 1 profile
-dura-weigt in Profiles
-fix ioBTh bug
-expose SMBThresholdRatio in Therapy > Units & Limits
+Settings > Algorithm > Additionals has a toggle to let both Algos run, the active one (toggle above) is the one that makes decisions
+Below is a button to see results or in homeview:
+do a longpress on statistics button to see some algo statistics, also compare JS to SwiftOref
