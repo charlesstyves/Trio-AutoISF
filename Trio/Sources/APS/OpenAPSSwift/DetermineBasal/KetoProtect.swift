@@ -16,13 +16,27 @@ struct KetoProtectResult {
 ///   - Variable (`ketoProtect && variableKetoProtect`): floor enforced only when net IOB is deeply
 ///     negative (< −currentBasal) AND insulin activity is still decreasing (iobActivity < 0).
 enum KetoProtect {
+    /// IOB breakdown KetoProtect needs to evaluate the variable-mode floor: bolus / basal
+    /// IOB components and the current insulin-activity slope. Threaded through DosingEngine
+    /// and TempBasalFunctions as a single value so upstream code doesn't carry three loose
+    /// parameters per call. With `.empty`, KetoProtect's variable mode evaluates as
+    /// "no IOB / no activity" — same behaviour as if it weren't passed at all.
+    struct IobInputs {
+        let bolusIOB: Decimal
+        let basalIOB: Decimal
+        let iobActivity: Decimal
+
+        static let empty = IobInputs(bolusIOB: 0, basalIOB: 0, iobActivity: 0)
+    }
+
     static func apply(
         rate: Decimal,
         profile: Profile,
-        bolusIOB: Decimal = 0,
-        basalIOB: Decimal = 0,
-        iobActivity: Decimal = 0
+        iobInputs: IobInputs = .empty
     ) -> KetoProtectResult {
+        let bolusIOB = iobInputs.bolusIOB
+        let basalIOB = iobInputs.basalIOB
+        let iobActivity = iobInputs.iobActivity
         guard profile.ketoProtect || profile.variableKetoProtect,
               let currentBasal = profile.currentBasal
         else {

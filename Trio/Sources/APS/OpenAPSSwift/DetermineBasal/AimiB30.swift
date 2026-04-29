@@ -35,9 +35,7 @@ struct B30SafetyInputs {
     let maxIob: Decimal
     let currentTemp: TempBasal
     let profile: Profile
-    let bolusIOB: Decimal
-    let basalIOB: Decimal
-    let iobActivity: Decimal
+    let iobInputs: KetoProtect.IobInputs
 }
 
 /// Evaluates whether the autoISF B30 boost-basal should activate for this loop cycle.
@@ -49,6 +47,17 @@ struct B30SafetyInputs {
 ///   - EatingSoon temp target active and equal to iTime_target
 ///   - Current BG < b30_upperBG and delta ≤ b30_upperdelta
 enum AimiB30 {
+    /// Pre-meal B30 safety guard for the "glucose falling faster than expected" branch in
+    /// DosingEngine. With B30 active, IOB is intentionally high while BG is flat or
+    /// rising, so the falling-faster branch (which keys off `minDelta < expectedDelta`)
+    /// would otherwise fire spuriously and set a low temp. This guard requires `minDelta`
+    /// to actually be negative — true "falling" — when B30 / autoISF is in play.
+    /// With autoISF off the guard is a no-op.
+    static func glucoseActuallyFalling(profile: Profile, minDelta: Decimal) -> Bool {
+        guard profile.autoisf else { return true }
+        return minDelta < 0
+    }
+
     static func evaluate(
         profile: Profile,
         pumpHistory: [PumpHistoryEvent],
@@ -142,9 +151,7 @@ enum AimiB30 {
                 targetGlucose: inputs.targetGlucose,
                 currentTemp: inputs.currentTemp,
                 determination: det,
-                bolusIOB: inputs.bolusIOB,
-                basalIOB: inputs.basalIOB,
-                iobActivity: inputs.iobActivity
+                iobInputs: inputs.iobInputs
             )
             debug(.openAPSSwift, "B30 check 1 (zeroTempSuspend): fires=\(fires)")
             if fires {
@@ -169,9 +176,7 @@ enum AimiB30 {
                 determination: det,
                 adjustedSensitivity: inputs.adjustedSensitivity,
                 overrideFactor: inputs.overrideFactor,
-                bolusIOB: inputs.bolusIOB,
-                basalIOB: inputs.basalIOB,
-                iobActivity: inputs.iobActivity
+                iobInputs: inputs.iobInputs
             )
             debug(.openAPSSwift, "B30 check 2 (lowEventualBG): fires=\(fires)")
             if fires {
@@ -192,9 +197,7 @@ enum AimiB30 {
                 smbIsEnabled: inputs.smbIsEnabled,
                 profile: inputs.profile,
                 determination: det,
-                bolusIOB: inputs.bolusIOB,
-                basalIOB: inputs.basalIOB,
-                iobActivity: inputs.iobActivity
+                iobInputs: inputs.iobInputs
             )
             debug(.openAPSSwift, "B30 check 3 (glucoseFallingFast): fires=\(fires)")
             if fires {
@@ -213,9 +216,7 @@ enum AimiB30 {
                 smbIsEnabled: inputs.smbIsEnabled,
                 profile: inputs.profile,
                 determination: det,
-                bolusIOB: inputs.bolusIOB,
-                basalIOB: inputs.basalIOB,
-                iobActivity: inputs.iobActivity
+                iobInputs: inputs.iobInputs
             )
             debug(.openAPSSwift, "B30 check 4 (eventualForecastLow): fires=\(fires)")
             if fires { return (true, d) }
@@ -230,9 +231,7 @@ enum AimiB30 {
                 basal: inputs.basal,
                 profile: inputs.profile,
                 determination: det,
-                bolusIOB: inputs.bolusIOB,
-                basalIOB: inputs.basalIOB,
-                iobActivity: inputs.iobActivity
+                iobInputs: inputs.iobInputs
             )
             debug(.openAPSSwift, "B30 check 5 (iobCap): fires=\(fires)")
             if fires { return (true, d) }

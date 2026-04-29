@@ -167,9 +167,7 @@ enum AutoISF {
         iob: Decimal,
         exerciseModeActive: Bool,
         overrideSmbIsOff: Bool,
-        bolusIOB: Decimal,
-        basalIOB: Decimal,
-        iobActivity: Decimal
+        iobInputs: KetoProtect.IobInputs
     ) throws -> B30Dispatch {
         guard b30Result.isActive else { return .notActive }
 
@@ -208,9 +206,7 @@ enum AutoISF {
         let keto = KetoProtect.apply(
             rate: b30Result.boostRate,
             profile: profile,
-            bolusIOB: bolusIOB,
-            basalIOB: basalIOB,
-            iobActivity: iobActivity
+            iobInputs: iobInputs
         )
         det.reason = keto.reason + b30Result.reason + det.reason
         det.reason = "AIMI B30, TBR \(keto.rate)U/hr" + det.reason
