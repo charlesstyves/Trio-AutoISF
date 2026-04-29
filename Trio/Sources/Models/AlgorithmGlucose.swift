@@ -68,7 +68,12 @@ struct AlgorithmGlucose: Codable {
 
         try container.encode(dateFormatter.string(from: date ?? Date()), forKey: .dateString)
 
-        let dateAsUnixTimestamp = String(format: "%.0f", (date?.timeIntervalSince1970 ?? Date().timeIntervalSince1970) * 1000)
+        // Encode `date` as a JSON number (epoch ms) so JS-side `new Date(value)`
+        // parses it correctly. Emitting it as a string makes JS treat it as an
+        // unparseable date string, producing Invalid Date and zeroing out
+        // every cob.js iob_total call where bucketed_data[0] inherits this
+        // value (the i==0 branch where currentDeviation is set).
+        let dateAsUnixTimestamp = Int64(((date?.timeIntervalSince1970 ?? Date().timeIntervalSince1970) * 1000).rounded())
         try container.encode(dateAsUnixTimestamp, forKey: .date)
 
         try container.encode(direction, forKey: .direction)
