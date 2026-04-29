@@ -79,7 +79,30 @@ enum OrefFunction: String, Codable {
                 // in Swift but not in JS
                 "timestamp",
                 "minGuardBG",
-                "minPredBG"
+                "minPredBG",
+                // JS surfaces these IOB sub-fields at the top level of the
+                // determineBasal output, Swift port does not. Pure schema
+                // mismatch.
+                "avgDelta",
+                "basalIOB",
+                "bolusIOB",
+                "iobActivity",
+                // autoISF intermediate display fields — populated unconditionally
+                // by JS regardless of whether autoISF actually adjusted ISF, but
+                // emitted with different defaults / omitted by Swift when
+                // autoISF is off. Filter to keep the comparison focused on real
+                // divergence.
+                "parabola_fit_a0",
+                "parabola_fit_a1",
+                "parabola_fit_a2",
+                "parabola_fit_last_delta",
+                "parabola_fit_next_delta",
+                "parabola_fit_minutes",
+                "parabola_fit_correlation",
+                "bg_acce",
+                "dura_avg",
+                "dura_min",
+                "iob_THeffective"
             ])
         }
     }
@@ -121,7 +144,15 @@ enum OrefFunction: String, Codable {
                 "IOB": 1.1,
                 "ZT": 1.1,
                 "UAM": 1.1,
-                "COB": 1.1
+                "COB": 1.1,
+                // autoISF sub-ratios are reported to 2 decimals in JS; sub-0.011
+                // diffs are rounding noise, not real divergence.
+                "auto_ISFratio": 0.011,
+                "bg_ISFratio": 0.011,
+                "dura_ISFratio": 0.011,
+                "acce_ISFratio": 0.011,
+                "pp_ISFratio": 0.011,
+                "CR": 0.05
             ]
         }
     }
@@ -160,6 +191,11 @@ enum OrefFunction: String, Codable {
             // Please see this issue for context on skipping lastTemp:
             // https://github.com/nightscout/Trio-dev/issues/453
             return Set(["lastTemp"])
+        case .makeProfile:
+            // JS emits explicit `max_bg: null` / `min_bg: null` for time blocks
+            // where the user has no override; Swift omits those keys. Same
+            // semantics, different JSON shape — skip during recursion.
+            return Set(["max_bg", "min_bg"])
         default:
             return Set()
         }

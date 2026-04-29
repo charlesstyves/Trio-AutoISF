@@ -241,6 +241,13 @@ final class BaseAPSManager: APSManager, Injectable {
             // Check if we can start a new loop
             // guard await self.canStartNewLoop() else { return }
 
+            // Sync algo shadow-compare flag from settings before each loop, and stamp
+            // an APS-loop-tick UUID so all serialized OpenAPS sub-pipelines
+            // (createProfiles, autosense, determineBasal) share a single umbrella ID
+            // for analyzer aggregation.
+            self.openAPS.algoShadowCompare = self.settings.algoShadowCompare
+            self.openAPS.currentApsLoopId = UUID()
+
             // Setup loop and background task
             var (loopStatRecord, backgroundTask) = await self.setupLoop()
 

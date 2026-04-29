@@ -74,6 +74,101 @@ struct ValueDifference: Codable {
 }
 
 enum JSONCompare {
+    /// Pair Swift and JS results for one oref function call, log a single
+    /// `[ALGOCMP]` line, dump differences if any, and persist a
+    /// `TmpAlgoFunctionTiming` row.
+    @discardableResult
+    static func logComparison(
+        function: OrefFunction,
+        algoContext: String,
+        loopId: UUID,
+        apsLoopId: UUID,
+        entryPoint: String,
+        activePath: String,
+        swift: OrefFunctionResult,
+        swiftDuration: TimeInterval,
+        javascript: OrefFunctionResult,
+        javascriptDuration: TimeInterval,
+        iobInputs: IobInputs? = nil,
+        mealInputs: MealInputs? = nil,
+        autosensInputs: AutosensInputs? = nil,
+        determineBasalInputs: DetermineBasalInputs? = nil,
+        makeProfileInputs: MakeProfileInputs? = nil
+    ) -> AlgorithmComparison {
+        let comparison = createComparison(
+            function: function,
+            swift: swift,
+            swiftDuration: swiftDuration,
+            javascript: javascript,
+            javascriptDuration: javascriptDuration,
+            iobInputs: iobInputs,
+            mealInputs: mealInputs,
+            autosensInputs: autosensInputs,
+            determineBasalInputs: determineBasalInputs,
+            makeProfileInputs: makeProfileInputs
+        )
+
+        let swiftMs = swiftDuration * 1000
+        let jsMs = javascriptDuration * 1000
+        let diffCount = comparison.differences?.count ?? 0
+        debug(
+            .openAPS,
+            String(
+                format: "[ALGOCMP] %@ ctx=%@ result=%@ swift=%.1fms js=%.1fms diffs=%d",
+                function.rawValue,
+                algoContext,
+                comparison.resultType.rawValue,
+                swiftMs,
+                jsMs,
+                diffCount
+            )
+        )
+
+        if let differences = comparison.differences, !differences.isEmpty {
+            prettyPrint(differences)
+        }
+
+        let activeMs = activePath == "Swift" ? swiftMs : jsMs
+        let shadowMs = activePath == "Swift" ? jsMs : swiftMs
+        AlgoComparisonPersistence.saveFunctionTiming(
+            loopId: loopId,
+            apsLoopId: apsLoopId,
+            entryPoint: entryPoint,
+            function: function,
+            algoContext: algoContext,
+            activePath: activePath,
+            activeDurationMs: activeMs,
+            shadowDurationMs: shadowMs,
+            comparison: comparison
+        )
+
+        return comparison
+    }
+
+    /// Persist a function-timing row when only the active path ran (shadow
+    /// comparison disabled).
+    static func recordActiveOnly(
+        function: OrefFunction,
+        algoContext: String,
+        loopId: UUID,
+        apsLoopId: UUID,
+        entryPoint: String,
+        activePath: String,
+        durationMs: Double
+    ) {
+        AlgoComparisonPersistence.saveFunctionTiming(
+            loopId: loopId,
+            apsLoopId: apsLoopId,
+            entryPoint: entryPoint,
+            function: function,
+            algoContext: algoContext,
+            activePath: activePath,
+            activeDurationMs: durationMs,
+            shadowDurationMs: nil,
+            comparison: nil
+        )
+    }
+
     static func createComparison(
         function: OrefFunction,
         swift: OrefFunctionResult,

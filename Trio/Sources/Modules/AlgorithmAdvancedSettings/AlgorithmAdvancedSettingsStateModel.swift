@@ -20,6 +20,7 @@ extension AlgorithmAdvancedSettings {
         @Published var remainingCarbsCap: Decimal = 90
         @Published var noisyCGMTargetMultiplier: Decimal = 1.3
         @Published var useSwiftOref: Bool = false
+        @Published var algoShadowCompare: Bool = false
         // preference
         @Published var smbDeliveryRatio: Decimal = 0.5
         @Published var smbInterval: Decimal = 3
@@ -41,6 +42,8 @@ extension AlgorithmAdvancedSettings {
                 noisyCGMTargetMultiplier = $0 }
             subscribeSetting(\.useSwiftOref, on: $useSwiftOref) {
                 useSwiftOref = $0 }
+            subscribeSetting(\.algoShadowCompare, on: $algoShadowCompare) {
+                algoShadowCompare = $0 }
             subscribePreferencesSetting(\.smbDeliveryRatio, on: $smbDeliveryRatio) { smbDeliveryRatio = $0 }
             subscribePreferencesSetting(\.smbInterval, on: $smbInterval) { smbInterval = $0 }
             subscribePreferencesSetting(\.useProfileCSF, on: $useProfileCSF) { useProfileCSF = $0 }
