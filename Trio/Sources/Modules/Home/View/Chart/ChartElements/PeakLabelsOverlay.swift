@@ -6,6 +6,8 @@ import SwiftUI
 /// glucose curve. Bars stay anchored to the curve at a fixed pixel offset; labels move
 /// to find a collision-free position via `LabelPlacement.placeLabelCenter`.
 struct PeakLabelsOverlay: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let proxy: ChartProxy
     let peaks: [(date: Date, glucose: Int16, type: ExtremumType)]
     let glucoseData: [GlucoseStored]
@@ -43,19 +45,8 @@ struct PeakLabelsOverlay: View {
                         .stroke(Color.secondary, lineWidth: 0.75)
                         .opacity(0.75)
 
-                        Text(p.text)
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(.primary)
-                            .padding(.horizontal, 4)
-                            .padding(.vertical, 2)
-                            .background(
-                                RoundedRectangle(cornerRadius: 2)
-                                    .fill(p.color.opacity(0.35))
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 2)
-                                    .stroke(Color.primary.opacity(0.7), lineWidth: 0.4)
-                            )
+                        PeakLabelBadge(text: p.text, color: p.color)
+                            .fixedSize()
                             .position(x: p.rect.midX, y: p.rect.midY)
                     }
                 }
@@ -84,9 +75,7 @@ struct PeakLabelsOverlay: View {
         return CGPoint(x: rect.midX, y: y)
     }
 
-    private func computePlacements(obstacles: [CGRect], plotRect _: CGRect) -> [PlacedPeak] {
-        let sortedObstacles = obstacles.sorted { $0.minX < $1.minX }
-
+    private func computePlacements(obstacles _: [CGRect], plotRect _: CGRect) -> [PlacedPeak] {
         let labelSize = CGSize(width: 30, height: 18)
 
         return peaks.compactMap { peak -> PlacedPeak? in
@@ -100,31 +89,23 @@ struct PeakLabelsOverlay: View {
             let cyRel = cy
 
             let desiredCenterY: CGFloat
-            let side: VerticalSide
             switch peak.type {
             case .max:
                 desiredCenterY = cyRel - Self.labelDesiredOffset
-                side = .above
             case .min:
                 desiredCenterY = cyRel + Self.labelDesiredOffset
-                side = .below
             case .none:
                 desiredCenterY = cyRel
-                side = .both
             }
 
-            let desiredRect = CGRect(
+            // Anchor labels at desired position (no lift-on-collision).
+            // Mirrors how bolus/carb bar labels stay fixed to their bar.
+            let placedRect = CGRect(
                 x: cxRel - labelSize.width / 2,
                 y: desiredCenterY - labelSize.height / 2,
                 width: labelSize.width,
                 height: labelSize.height
             )
-
-            let placedRect = sortedObstacles.placeLabelCenter(
-                desiredRect: desiredRect,
-                verticalSide: side,
-                maxDistance: Self.maxPlacementDistance
-            ) ?? desiredRect
 
             return PlacedPeak(
                 rect: placedRect,
@@ -245,6 +226,46 @@ struct PeakLabelsOverlay: View {
             return "\(glucose)"
         } else {
             return glucose.formattedAsMmolL
+        }
+    }
+}
+
+/// Shared peak-label badge used by `PeakLabelsOverlay` for both highs and lows.
+///
+/// Light mode keeps the current high-contrast design (`.primary` text on a
+/// tinted fill with a faint primary stroke). Dark mode uses the original
+/// pre-bars design (colored text on a faint colored fill, no stroke).
+struct PeakLabelBadge: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    let text: String
+    let color: Color
+
+    var body: some View {
+        if colorScheme == .dark {
+            Text(text)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(color)
+                .padding(.horizontal, 4)
+                .padding(.vertical, 2)
+                .background(
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(color.opacity(0.15))
+                )
+        } else {
+            Text(text)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.primary)
+                .padding(.horizontal, 4)
+                .padding(.vertical, 2)
+                .background(
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(color.opacity(0.35))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 2)
+                        .stroke(Color.primary.opacity(0.7), lineWidth: 0.4)
+                )
         }
     }
 }
