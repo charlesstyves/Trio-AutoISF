@@ -21,6 +21,11 @@ struct AutoISFsmbResult {
 /// standard SMB logic) and `.oref` when autoISF defers to oref's own SMB
 /// enabling logic (same fallback).
 enum AutoISFsmb {
+    /// 130 % overrun tolerance allowed by the iobTH cap — a single SMB may push
+    /// IOB at most `iobTHTolerance × iob_threshold_percent × max_iob`. Mirrors
+    /// `iobTHtolerance = 130` (percent) in determine-basal.js (autoISF 3.01).
+    static let iobTHTolerance: Decimal = 1.3
+
     static func evaluate(
         profile: Profile,
         targetBG: Decimal,
@@ -71,7 +76,7 @@ enum AutoISFsmb {
                 loopMode: .iobTHExceeded,
                 iobTHEffective: iobThEffective,
                 iobTHVirtual: iobThVirtual,
-                reason: AutoISFReason.smbBlockedIobTHExceeded
+                reason: AutoISFReason.smbBlockedIobTHExceeded(iobThEffective: iobThEffective)
             )
         }
 
@@ -133,8 +138,8 @@ enum AutoISFsmb {
     /// - `iobThEffective` = `iob_threshold_percent * max_iob * iobTH_reduction_ratio`,
     ///   clamped to `max_iob` (JS `Math.min(profile.max_iob, iobThEffective)`).
     ///   Used by the gate (disable SMB when current IOB exceeds it).
-    /// - `iobThVirtual`   = `iob_threshold_percent * 1.3 * max_iob * iobTH_reduction_ratio`.
-    ///   The 130 % overrun ceiling used by `applyIobTHcap`.
+    /// - `iobThVirtual`   = `iobTHTolerance × iob_threshold_percent × max_iob ×
+    ///   iobTH_reduction_ratio`. The overrun ceiling used by `applyIobTHcap`.
     ///
     /// `iobTH_reduction_ratio` is 1.0 here — `exercise_ratio` is not yet ported.
     static func iobTHValues(profile: Profile) -> (effective: Decimal, virtual: Decimal) {
@@ -143,38 +148,41 @@ enum AutoISFsmb {
             profile.maxIob,
             profile.iobThresholdPercent * profile.maxIob * reductionRatio
         )
-        let virtual = profile.iobThresholdPercent * Decimal(1.3) * profile.maxIob * reductionRatio
+        let virtual = profile.iobThresholdPercent * iobTHTolerance * profile.maxIob * reductionRatio
         return (effective, virtual)
     }
 
-    /// autoISF 130 % iobTH SMB cap. Mirrors determine-basal.js lines 1855-1864.
+    /// autoISF iobTH SMB cap. Mirrors determine-basal.js lines 1855-1864.
     ///
     /// If autoISF is enabled, the iobTH method is on (`iob_threshold_percent != 1`),
-    /// and delivering this microBolus would push current IOB past `iobTHVirtual`,
-    /// the bolus is clamped so post-delivery IOB stays at `iobTHVirtual`. Returns
-    /// the (possibly reduced) bolus and a reason tail to append to the
-    /// "Microbolusing Xu" string.
+    /// and delivering this microBolus would push current IOB past
+    /// `smbResult.iobTHVirtual`, the bolus is clamped so post-delivery IOB stays at
+    /// the virtual ceiling. Returns the (possibly reduced) bolus, a reason tail to
+    /// append to the "Microbolusing Xu" conclusion, and a chip-cloud reason rewritten
+    /// to surface `eff.iobTH:, capped at <X>` next to the other autoISF chips.
     ///
     /// The cap fires regardless of `enableSMB_EvenOn_OddOff_always` — same principle
     /// as the gate, which was decoupled from the toggle in May 2025. If the user set
-    /// iobTH < 100 %, they want it enforced. With autoISF disabled this is a no-op.
+    /// iobTH < 100 %, they want it enforced. Returns the inputs unchanged when
+    /// autoISF is disabled or `smbResult` is `nil`.
     static func applyIobTHcap(
         profile: Profile,
         currentIob: Decimal,
         microBolus: Decimal,
-        loopMode _: AutoISFLoopMode,
-        iobTHVirtual: Decimal
-    ) -> (microBolus: Decimal, reasonTail: String) {
+        smbResult: AutoISFsmbResult?,
+        reason: String
+    ) -> (microBolus: Decimal, reasonTail: String, reason: String) {
         guard profile.autoisf,
               profile.iobThresholdPercent != 1,
-              microBolus > iobTHVirtual - currentIob
+              let smbResult,
+              microBolus > smbResult.iobTHVirtual - currentIob
         else {
             return (microBolus, "", reason)
         }
         return (
             smbResult.iobTHVirtual - currentIob,
             AutoISFReason.smbCappedByIobTH,
-            AutoISFReason.applyIobTHCapTag(to: reason)
+            AutoISFReason.applyIobTHCapTag(to: reason, iobThEffective: smbResult.iobTHEffective)
         )
     }
 

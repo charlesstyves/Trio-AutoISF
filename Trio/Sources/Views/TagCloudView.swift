@@ -91,7 +91,7 @@ struct TagCloudView: View {
             case textTag where textTag.contains("Middleware:"),
                  textTag where textTag.contains("Smoothing: On"):
                 return .red
-            case textTag where textTag.contains("iobTH:"):
+            case textTag where textTag.contains("iobTH"):
                 return .orange
             default:
                 return .basal
