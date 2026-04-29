@@ -77,8 +77,7 @@ enum JSONCompare {
     /// Pair Swift and JS results for one oref function call, log a single
     /// `[ALGOCMP]` line, dump differences if any, and persist a
     /// `TmpAlgoFunctionTiming` row.
-    @discardableResult
-    static func logComparison(
+    @discardableResult static func logComparison(
         function: OrefFunction,
         algoContext: String,
         loopId: UUID,

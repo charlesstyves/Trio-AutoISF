@@ -925,19 +925,25 @@ final class OpenAPS {
             let (swiftResult, swiftDuration) = await timeAlgo("iob", "Swift") {
                 OpenAPSSwift.iob(pumphistory: pumphistory, profile: profile, clock: clock, autosens: autosens)
             }
-            var shadow: (result: OrefFunctionResult, duration: TimeInterval)? = nil
+            var shadow: (result: OrefFunctionResult, duration: TimeInterval)?
             if let ctx = timingCtx, ctx.hasShadow {
                 shadow = await timeShadow {
                     await self.iobJavascript(pumphistory: pumphistory, profile: profile, clock: clock, autosens: autosens)
                 }
             }
-            recordTiming(function: .iob, timingCtx: timingCtx, activeResult: swiftResult, activeDuration: swiftDuration, shadow: shadow)
+            recordTiming(
+                function: .iob,
+                timingCtx: timingCtx,
+                activeResult: swiftResult,
+                activeDuration: swiftDuration,
+                shadow: shadow
+            )
             return try swiftResult.returnOrThrow()
         } else {
             let (jsResult, jsDuration) = await timeAlgo("iob", "JS") {
                 await self.iobJavascript(pumphistory: pumphistory, profile: profile, clock: clock, autosens: autosens)
             }
-            var shadow: (result: OrefFunctionResult, duration: TimeInterval)? = nil
+            var shadow: (result: OrefFunctionResult, duration: TimeInterval)?
             if let ctx = timingCtx, ctx.hasShadow {
                 shadow = await timeShadow {
                     OpenAPSSwift.iob(pumphistory: pumphistory, profile: profile, clock: clock, autosens: autosens)
@@ -993,7 +999,7 @@ final class OpenAPS {
                     glucose: glucose
                 )
             }
-            var shadow: (result: OrefFunctionResult, duration: TimeInterval)? = nil
+            var shadow: (result: OrefFunctionResult, duration: TimeInterval)?
             if let ctx = timingCtx, ctx.hasShadow {
                 shadow = await timeShadow {
                     await self.mealJavascript(
@@ -1006,7 +1012,13 @@ final class OpenAPS {
                     )
                 }
             }
-            recordTiming(function: .meal, timingCtx: timingCtx, activeResult: swiftResult, activeDuration: swiftDuration, shadow: shadow)
+            recordTiming(
+                function: .meal,
+                timingCtx: timingCtx,
+                activeResult: swiftResult,
+                activeDuration: swiftDuration,
+                shadow: shadow
+            )
             return try swiftResult.returnOrThrow()
         } else {
             let (jsResult, jsDuration) = await timeAlgo("meal", "JS") {
@@ -1019,7 +1031,7 @@ final class OpenAPS {
                     glucose: glucose
                 )
             }
-            var shadow: (result: OrefFunctionResult, duration: TimeInterval)? = nil
+            var shadow: (result: OrefFunctionResult, duration: TimeInterval)?
             if let ctx = timingCtx, ctx.hasShadow {
                 shadow = await timeShadow {
                     OpenAPSSwift.meal(
@@ -1032,7 +1044,13 @@ final class OpenAPS {
                     )
                 }
             }
-            recordTiming(function: .meal, timingCtx: timingCtx, activeResult: jsResult, activeDuration: jsDuration, shadow: shadow)
+            recordTiming(
+                function: .meal,
+                timingCtx: timingCtx,
+                activeResult: jsResult,
+                activeDuration: jsDuration,
+                shadow: shadow
+            )
             return try jsResult.returnOrThrow()
         }
     }
@@ -1094,7 +1112,7 @@ final class OpenAPS {
                     clock: now
                 )
             }
-            var shadow: (result: OrefFunctionResult, duration: TimeInterval)? = nil
+            var shadow: (result: OrefFunctionResult, duration: TimeInterval)?
             if let ctx = timingCtx, ctx.hasShadow {
                 shadow = await timeShadow {
                     await self.autosenseJavascript(
@@ -1107,7 +1125,13 @@ final class OpenAPS {
                     )
                 }
             }
-            recordTiming(function: .autosens, timingCtx: timingCtx, activeResult: swiftResult, activeDuration: swiftDuration, shadow: shadow)
+            recordTiming(
+                function: .autosens,
+                timingCtx: timingCtx,
+                activeResult: swiftResult,
+                activeDuration: swiftDuration,
+                shadow: shadow
+            )
             return try swiftResult.returnOrThrow()
         } else {
             let (jsResult, jsDuration) = await timeAlgo("autosens", "JS") {
@@ -1120,7 +1144,7 @@ final class OpenAPS {
                     temptargets: temptargets
                 )
             }
-            var shadow: (result: OrefFunctionResult, duration: TimeInterval)? = nil
+            var shadow: (result: OrefFunctionResult, duration: TimeInterval)?
             if let ctx = timingCtx, ctx.hasShadow {
                 shadow = await timeShadow {
                     OpenAPSSwift.autosense(
@@ -1134,7 +1158,13 @@ final class OpenAPS {
                     )
                 }
             }
-            recordTiming(function: .autosens, timingCtx: timingCtx, activeResult: jsResult, activeDuration: jsDuration, shadow: shadow)
+            recordTiming(
+                function: .autosens,
+                timingCtx: timingCtx,
+                activeResult: jsResult,
+                activeDuration: jsDuration,
+                shadow: shadow
+            )
             return try jsResult.returnOrThrow()
         }
     }
@@ -1208,7 +1238,7 @@ final class OpenAPS {
                     clock: clock
                 )
             }
-            var shadow: (result: OrefFunctionResult, duration: TimeInterval)? = nil
+            var shadow: (result: OrefFunctionResult, duration: TimeInterval)?
             if let ctx = timingCtx, ctx.hasShadow {
                 shadow = await timeShadow {
                     await self.determineBasalJavascript(
@@ -1228,7 +1258,13 @@ final class OpenAPS {
                     )
                 }
             }
-            recordTiming(function: .determineBasal, timingCtx: timingCtx, activeResult: swiftResult, activeDuration: swiftDuration, shadow: shadow)
+            recordTiming(
+                function: .determineBasal,
+                timingCtx: timingCtx,
+                activeResult: swiftResult,
+                activeDuration: swiftDuration,
+                shadow: shadow
+            )
             return try swiftResult.returnOrThrow()
         } else {
             let (jsResult, jsDuration) = await timeAlgo("determineBasal", "JS") {
@@ -1248,7 +1284,7 @@ final class OpenAPS {
                     clock: clock
                 )
             }
-            var shadow: (result: OrefFunctionResult, duration: TimeInterval)? = nil
+            var shadow: (result: OrefFunctionResult, duration: TimeInterval)?
             if let ctx = timingCtx, ctx.hasShadow {
                 shadow = await timeShadow {
                     OpenAPSSwift.determineBasal(
@@ -1268,7 +1304,13 @@ final class OpenAPS {
                     )
                 }
             }
-            recordTiming(function: .determineBasal, timingCtx: timingCtx, activeResult: jsResult, activeDuration: jsDuration, shadow: shadow)
+            recordTiming(
+                function: .determineBasal,
+                timingCtx: timingCtx,
+                activeResult: jsResult,
+                activeDuration: jsDuration,
+                shadow: shadow
+            )
             return try jsResult.returnOrThrow()
         }
     }
@@ -1408,7 +1450,7 @@ final class OpenAPS {
                     clock: clock
                 )
             }
-            var shadow: (result: OrefFunctionResult, duration: TimeInterval)? = nil
+            var shadow: (result: OrefFunctionResult, duration: TimeInterval)?
             if let ctx = timingCtx, ctx.hasShadow {
                 shadow = await timeShadow {
                     await self.makeProfileJavascript(
@@ -1425,7 +1467,13 @@ final class OpenAPS {
                     )
                 }
             }
-            recordTiming(function: .makeProfile, timingCtx: timingCtx, activeResult: swiftResult, activeDuration: swiftDuration, shadow: shadow)
+            recordTiming(
+                function: .makeProfile,
+                timingCtx: timingCtx,
+                activeResult: swiftResult,
+                activeDuration: swiftDuration,
+                shadow: shadow
+            )
             return try swiftResult.returnOrThrow()
         } else {
             let (jsResult, jsDuration) = await timeAlgo("makeProfile", "JS") {
@@ -1442,7 +1490,7 @@ final class OpenAPS {
                     trioSettings: trioSettings
                 )
             }
-            var shadow: (result: OrefFunctionResult, duration: TimeInterval)? = nil
+            var shadow: (result: OrefFunctionResult, duration: TimeInterval)?
             if let ctx = timingCtx, ctx.hasShadow {
                 shadow = await timeShadow {
                     OpenAPSSwift.makeProfile(
@@ -1459,7 +1507,13 @@ final class OpenAPS {
                     )
                 }
             }
-            recordTiming(function: .makeProfile, timingCtx: timingCtx, activeResult: jsResult, activeDuration: jsDuration, shadow: shadow)
+            recordTiming(
+                function: .makeProfile,
+                timingCtx: timingCtx,
+                activeResult: jsResult,
+                activeDuration: jsDuration,
+                shadow: shadow
+            )
             return try jsResult.returnOrThrow()
         }
     }
