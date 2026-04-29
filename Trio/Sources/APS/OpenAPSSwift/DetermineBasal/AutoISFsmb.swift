@@ -26,6 +26,15 @@ enum AutoISFsmb {
     /// `iobTHtolerance = 130` (percent) in determine-basal.js (autoISF 3.01).
     static let iobTHTolerance: Decimal = 1.3
 
+    /// Multiplies the upstream-computed SMB max bolus by `smb_max_range_extension`
+    /// when autoISF is on. With autoISF off, returns the input unchanged so the
+    /// pre-autoISF cap (`current_basal × override_factor × maxSMBBasalMinutes / 60`)
+    /// is preserved exactly.
+    static func applySmbMaxRange(profile: Profile, maxBolus: Decimal) -> Decimal {
+        guard profile.autoisf else { return maxBolus }
+        return (maxBolus * profile.smbMaxRangeExtension).jsRounded(scale: 1)
+    }
+
     static func evaluate(
         profile: Profile,
         targetBG: Decimal,
