@@ -1121,6 +1121,26 @@ enum AlgorithmSettingHints {
         }
     }
 
+    static let algoShadowCompareLabel = String(localized: "Compare Swift vs JS Algorithm", comment: "Algo shadow compare")
+    static let algoShadowCompareMini = String(
+        localized: "Run both Swift and JS implementations on the same inputs each loop, log paired timings and any value differences.",
+        comment: "Algo shadow compare mini hint"
+    )
+
+    @ViewBuilder static func algoShadowCompareVerbose() -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Default: OFF").bold()
+            Text("Diagnostic only — does not affect dosing.").bold().foregroundStyle(.orange)
+            Text(
+                "When enabled, every loop runs both the active and the inactive algorithm path on the same inputs, logs paired durations as `[ALGOPERF] func[lang] active=…ms` lines, and diffs the results via `[ALGOCMP] func ctx=… result=… swift=…ms js=…ms diffs=N` lines."
+            )
+            Text(
+                "Comparison data is stored to a temporary CoreData table so the analysis screen can show p50/p95 timings, matching %, and the most divergent fields. Open it from Settings → Algorithm → Additionals or by long-pressing the statistics button on Home."
+            )
+            Text("Costs CPU and battery — disable when you don't need it.")
+        }
+    }
+
     static let useProfileCSFLabel = String(localized: "Use Profile CSF", comment: "Use Profile CSF")
     static let useProfileCSFMini = String(
         localized: "Calculate CSF from profile CR and ISF.",

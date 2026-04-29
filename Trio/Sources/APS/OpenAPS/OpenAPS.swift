@@ -10,6 +10,18 @@ final class OpenAPS {
     private let storage: FileStorage
     private let tddStorage: TDDStorage
 
+    /// When true, every loop runs both Swift and JS implementations of each
+    /// oref step on the same inputs, logs paired durations, and diffs the
+    /// results via `JSONCompare.logComparison`. The active path's result is
+    /// what's used for dosing; the inactive path is purely observational.
+    var algoShadowCompare: Bool = false
+
+    /// Set by `APSManager.loop()` once per APS tick so all entry points
+    /// (`createProfiles`, `autosense`, `determineBasal`) emitted in that
+    /// tick share a single umbrella ID. Falls back to a fresh UUID per call
+    /// when nil (e.g. standalone autosense from settings).
+    var currentApsLoopId: UUID?
+
     let context = CoreDataStack.shared.newTaskContext()
 
     let jsonConverter = JSONConverter()
@@ -406,6 +418,38 @@ final class OpenAPS {
     ) async throws -> Determination? {
         debug(.openAPS, "Start determineBasal")
 
+        // End-to-end pipeline timer + per-loop telemetry collector.
+        let pipelineStart = Date()
+        let pipelineLoopId = UUID()
+        let pipelineApsLoopId = currentApsLoopId ?? pipelineLoopId
+        let pipelineEntryPoint = "determineBasal"
+        let pipelineActivePath = useSwiftOref ? "Swift" : "JS"
+        let pipelineHasShadow = algoShadowCompare
+        let pipelineCollector = LoopTimingCollector(
+            loopId: pipelineLoopId,
+            algoContext: "",
+            activePath: pipelineActivePath,
+            hasShadow: pipelineHasShadow
+        )
+        var pipelineFinalContext: String = ""
+        defer {
+            let totalMs = Date().timeIntervalSince(pipelineStart) * 1000
+            debug(.openAPS, String(format: "[ALGOPERF] pipeline[%@] total=%.1fms", pipelineActivePath, totalMs))
+            let snap = pipelineCollector.snapshot
+            AlgoComparisonPersistence.saveLoopSummary(
+                loopId: pipelineLoopId,
+                apsLoopId: pipelineApsLoopId,
+                entryPoint: pipelineEntryPoint,
+                algoContext: pipelineFinalContext,
+                activePath: pipelineActivePath,
+                pipelineTotalMs: totalMs,
+                moduleSumActiveMs: snap.active,
+                moduleSumShadowMs: snap.shadow,
+                comparisonsCount: snap.comparisons,
+                hasShadow: pipelineHasShadow
+            )
+        }
+
         // temp_basal
         let tempBasal = currentTemp.rawJSON
 
@@ -431,7 +475,8 @@ final class OpenAPS {
             basalProfile,
             autosens,
             reservoir,
-            hasSufficientTdd
+            hasSufficientTdd,
+            initialPreferences
         ) = await (
             try parsePumpHistory(await pumpHistoryObjectIDs, simulatedBolusAmount: simulatedBolusAmount),
             try carbs,
@@ -441,7 +486,20 @@ final class OpenAPS {
             basalAsync,
             autosenseAsync,
             reservoirAsync,
-            try hasSufficientTddForDynamic
+            try hasSufficientTddForDynamic,
+            preferencesAsync
+        )
+
+        let initialAlgoContext = algoContext(useSwiftOref: useSwiftOref, preferences: initialPreferences)
+        pipelineFinalContext = initialAlgoContext
+        let initialTimingCtx = LoopTimingContext(
+            loopId: pipelineLoopId,
+            apsLoopId: pipelineApsLoopId,
+            entryPoint: pipelineEntryPoint,
+            algoContext: initialAlgoContext,
+            activePath: pipelineActivePath,
+            hasShadow: pipelineHasShadow,
+            collector: pipelineCollector
         )
 
         // Meal calculation
@@ -452,7 +510,8 @@ final class OpenAPS {
             clock: clock,
             carbs: carbsAsJSON,
             glucose: glucoseAsJSON,
-            useSwiftOref: useSwiftOref
+            useSwiftOref: useSwiftOref,
+            timingCtx: initialTimingCtx
         )
 
         // IOB calculation
@@ -461,7 +520,8 @@ final class OpenAPS {
             profile: profile,
             clock: clock,
             autosens: autosens.isEmpty ? .null : autosens,
-            useSwiftOref: useSwiftOref
+            useSwiftOref: useSwiftOref,
+            timingCtx: initialTimingCtx
         )
 
         // TODO: refactor this to core data
@@ -469,13 +529,26 @@ final class OpenAPS {
             storage.save(iob, as: Monitor.iob)
         }
 
-        var preferences = await preferencesAsync
+        var preferences = initialPreferences
 
         if !hasSufficientTdd, preferences.useNewFormula || (preferences.useNewFormula && preferences.sigmoid) {
             debug(.openAPS, "Insufficient TDD for dynamic formula; disabling for determine basal run.")
             preferences.useNewFormula = false
             preferences.sigmoid = false
         }
+
+        // Recompute context after preference mutation (e.g. dynISF disabled)
+        let determineAlgoContext = algoContext(useSwiftOref: useSwiftOref, preferences: preferences)
+        pipelineFinalContext = determineAlgoContext
+        let determineTimingCtx = LoopTimingContext(
+            loopId: pipelineLoopId,
+            apsLoopId: pipelineApsLoopId,
+            entryPoint: pipelineEntryPoint,
+            algoContext: determineAlgoContext,
+            activePath: pipelineActivePath,
+            hasShadow: pipelineHasShadow,
+            collector: pipelineCollector
+        )
 
         // Determine basal
         let orefDetermination = try await determineBasal(
@@ -491,7 +564,8 @@ final class OpenAPS {
             preferences: preferences,
             basalProfile: basalProfile,
             trioCustomOrefVariables: trioCustomOrefVariables,
-            useSwiftOref: useSwiftOref
+            useSwiftOref: useSwiftOref,
+            timingCtx: determineTimingCtx
         )
 
         debug(.openAPS, "\(simulation ? "[SIMULATION]" : "") OREF DETERMINATION: \(orefDetermination)")
@@ -624,7 +698,32 @@ final class OpenAPS {
             getTempTargets
         )
 
-        // Autosense
+        // Autosense — set up the per-call timing context so this entry point's
+        // stats roll up under the umbrella APS loop.
+        let autosensePreferences = storage
+            .retrieve(OpenAPS.Settings.preferences, as: Preferences.self) ?? Preferences()
+        let autosenseAlgoContext = algoContext(useSwiftOref: useSwiftOref, preferences: autosensePreferences)
+        let autosenseLoopId = UUID()
+        let autosenseApsLoopId = currentApsLoopId ?? autosenseLoopId
+        let autosenseEntryPoint = "autosense"
+        let autosenseActivePath = useSwiftOref ? "Swift" : "JS"
+        let autosenseHasShadow = algoShadowCompare
+        let autosenseCollector = LoopTimingCollector(
+            loopId: autosenseLoopId,
+            algoContext: autosenseAlgoContext,
+            activePath: autosenseActivePath,
+            hasShadow: autosenseHasShadow
+        )
+        let autosenseTimingCtx = LoopTimingContext(
+            loopId: autosenseLoopId,
+            apsLoopId: autosenseApsLoopId,
+            entryPoint: autosenseEntryPoint,
+            algoContext: autosenseAlgoContext,
+            activePath: autosenseActivePath,
+            hasShadow: autosenseHasShadow,
+            collector: autosenseCollector
+        )
+        let autosenseStart = Date()
         let autosenseResult = try await autosense(
             glucose: glucoseAsJSON,
             pumpHistory: pumpHistoryJSON,
@@ -632,7 +731,22 @@ final class OpenAPS {
             profile: profile,
             carbs: carbsAsJSON,
             temptargets: tempTargets,
-            useSwiftOref: useSwiftOref
+            useSwiftOref: useSwiftOref,
+            timingCtx: autosenseTimingCtx
+        )
+        let autosenseTotalMs = Date().timeIntervalSince(autosenseStart) * 1000
+        let autosenseSnap = autosenseCollector.snapshot
+        AlgoComparisonPersistence.saveLoopSummary(
+            loopId: autosenseLoopId,
+            apsLoopId: autosenseApsLoopId,
+            entryPoint: autosenseEntryPoint,
+            algoContext: autosenseAlgoContext,
+            activePath: autosenseActivePath,
+            pipelineTotalMs: autosenseTotalMs,
+            moduleSumActiveMs: autosenseSnap.active,
+            moduleSumShadowMs: autosenseSnap.shadow,
+            comparisonsCount: autosenseSnap.comparisons,
+            hasShadow: autosenseHasShadow
         )
 
         debug(.openAPS, "AUTOSENS: \(autosenseResult)")
@@ -711,6 +825,28 @@ final class OpenAPS {
         }
 
         let clock = Date()
+        let makeProfileAlgoContext = algoContext(useSwiftOref: useSwiftOref, preferences: adjustedPreferences)
+        let makeProfileLoopId = UUID()
+        let makeProfileApsLoopId = currentApsLoopId ?? makeProfileLoopId
+        let makeProfileEntryPoint = "createProfiles"
+        let makeProfileActivePath = useSwiftOref ? "Swift" : "JS"
+        let makeProfileHasShadow = algoShadowCompare
+        let makeProfileCollector = LoopTimingCollector(
+            loopId: makeProfileLoopId,
+            algoContext: makeProfileAlgoContext,
+            activePath: makeProfileActivePath,
+            hasShadow: makeProfileHasShadow
+        )
+        let makeProfileTimingCtx = LoopTimingContext(
+            loopId: makeProfileLoopId,
+            apsLoopId: makeProfileApsLoopId,
+            entryPoint: makeProfileEntryPoint,
+            algoContext: makeProfileAlgoContext,
+            activePath: makeProfileActivePath,
+            hasShadow: makeProfileHasShadow,
+            collector: makeProfileCollector
+        )
+        let makeProfileStart = Date()
         do {
             let pumpProfile = try await makeProfile(
                 preferences: adjustedPreferences,
@@ -724,7 +860,8 @@ final class OpenAPS {
                 autotune: RawJSON.null,
                 trioSettings: trioSettings,
                 useSwiftOref: useSwiftOref,
-                clock: clock
+                clock: clock,
+                timingCtx: makeProfileTimingCtx
             )
 
             let profile = try await makeProfile(
@@ -739,12 +876,28 @@ final class OpenAPS {
                 autotune: RawJSON.null,
                 trioSettings: trioSettings,
                 useSwiftOref: useSwiftOref,
-                clock: clock
+                clock: clock,
+                timingCtx: makeProfileTimingCtx
             )
 
             // Save the profiles
             await storage.saveAsync(pumpProfile, as: Settings.pumpProfile)
             await storage.saveAsync(profile, as: Settings.profile)
+
+            let makeProfileTotalMs = Date().timeIntervalSince(makeProfileStart) * 1000
+            let makeProfileSnap = makeProfileCollector.snapshot
+            AlgoComparisonPersistence.saveLoopSummary(
+                loopId: makeProfileLoopId,
+                apsLoopId: makeProfileApsLoopId,
+                entryPoint: makeProfileEntryPoint,
+                algoContext: makeProfileAlgoContext,
+                activePath: makeProfileActivePath,
+                pipelineTotalMs: makeProfileTotalMs,
+                moduleSumActiveMs: makeProfileSnap.active,
+                moduleSumShadowMs: makeProfileSnap.shadow,
+                comparisonsCount: makeProfileSnap.comparisons,
+                hasShadow: makeProfileHasShadow
+            )
         } catch {
             debug(
                 .apsManager,
@@ -754,7 +907,14 @@ final class OpenAPS {
         }
     }
 
-    private func iob(pumphistory: JSON, profile: JSON, clock: JSON, autosens: JSON, useSwiftOref: Bool) async throws -> RawJSON {
+    private func iob(
+        pumphistory: JSON,
+        profile: JSON,
+        clock: JSON,
+        autosens: JSON,
+        useSwiftOref: Bool,
+        timingCtx: LoopTimingContext? = nil
+    ) async throws -> RawJSON {
         // FIXME: For now we'll just remove duplicate suspends here (ISSUE-399)
         var pumphistory = pumphistory
         if let pumpHistoryArray = try? JSONBridge.pumpHistory(from: pumphistory) {
@@ -762,11 +922,28 @@ final class OpenAPS {
         }
 
         if useSwiftOref {
-            let swiftResult = OpenAPSSwift
-                .iob(pumphistory: pumphistory, profile: profile, clock: clock, autosens: autosens)
+            let (swiftResult, swiftDuration) = await timeAlgo("iob", "Swift") {
+                OpenAPSSwift.iob(pumphistory: pumphistory, profile: profile, clock: clock, autosens: autosens)
+            }
+            var shadow: (result: OrefFunctionResult, duration: TimeInterval)? = nil
+            if let ctx = timingCtx, ctx.hasShadow {
+                shadow = await timeShadow {
+                    await self.iobJavascript(pumphistory: pumphistory, profile: profile, clock: clock, autosens: autosens)
+                }
+            }
+            recordTiming(function: .iob, timingCtx: timingCtx, activeResult: swiftResult, activeDuration: swiftDuration, shadow: shadow)
             return try swiftResult.returnOrThrow()
         } else {
-            let jsResult = await iobJavascript(pumphistory: pumphistory, profile: profile, clock: clock, autosens: autosens)
+            let (jsResult, jsDuration) = await timeAlgo("iob", "JS") {
+                await self.iobJavascript(pumphistory: pumphistory, profile: profile, clock: clock, autosens: autosens)
+            }
+            var shadow: (result: OrefFunctionResult, duration: TimeInterval)? = nil
+            if let ctx = timingCtx, ctx.hasShadow {
+                shadow = await timeShadow {
+                    OpenAPSSwift.iob(pumphistory: pumphistory, profile: profile, clock: clock, autosens: autosens)
+                }
+            }
+            recordTiming(function: .iob, timingCtx: timingCtx, activeResult: jsResult, activeDuration: jsDuration, shadow: shadow)
             return try jsResult.returnOrThrow()
         }
     }
@@ -802,11 +979,12 @@ final class OpenAPS {
         clock: JSON,
         carbs: JSON,
         glucose: JSON,
-        useSwiftOref: Bool
+        useSwiftOref: Bool,
+        timingCtx: LoopTimingContext? = nil
     ) async throws -> RawJSON {
         if useSwiftOref {
-            let swiftResult = OpenAPSSwift
-                .meal(
+            let (swiftResult, swiftDuration) = await timeAlgo("meal", "Swift") {
+                OpenAPSSwift.meal(
                     pumphistory: pumphistory,
                     profile: profile,
                     basalProfile: basalProfile,
@@ -814,16 +992,47 @@ final class OpenAPS {
                     carbs: carbs,
                     glucose: glucose
                 )
+            }
+            var shadow: (result: OrefFunctionResult, duration: TimeInterval)? = nil
+            if let ctx = timingCtx, ctx.hasShadow {
+                shadow = await timeShadow {
+                    await self.mealJavascript(
+                        pumphistory: pumphistory,
+                        profile: profile,
+                        basalProfile: basalProfile,
+                        clock: clock,
+                        carbs: carbs,
+                        glucose: glucose
+                    )
+                }
+            }
+            recordTiming(function: .meal, timingCtx: timingCtx, activeResult: swiftResult, activeDuration: swiftDuration, shadow: shadow)
             return try swiftResult.returnOrThrow()
         } else {
-            let jsResult = await mealJavascript(
-                pumphistory: pumphistory,
-                profile: profile,
-                basalProfile: basalProfile,
-                clock: clock,
-                carbs: carbs,
-                glucose: glucose
-            )
+            let (jsResult, jsDuration) = await timeAlgo("meal", "JS") {
+                await self.mealJavascript(
+                    pumphistory: pumphistory,
+                    profile: profile,
+                    basalProfile: basalProfile,
+                    clock: clock,
+                    carbs: carbs,
+                    glucose: glucose
+                )
+            }
+            var shadow: (result: OrefFunctionResult, duration: TimeInterval)? = nil
+            if let ctx = timingCtx, ctx.hasShadow {
+                shadow = await timeShadow {
+                    OpenAPSSwift.meal(
+                        pumphistory: pumphistory,
+                        profile: profile,
+                        basalProfile: basalProfile,
+                        clock: clock,
+                        carbs: carbs,
+                        glucose: glucose
+                    )
+                }
+            }
+            recordTiming(function: .meal, timingCtx: timingCtx, activeResult: jsResult, activeDuration: jsDuration, shadow: shadow)
             return try jsResult.returnOrThrow()
         }
     }
@@ -868,29 +1077,64 @@ final class OpenAPS {
         profile: JSON,
         carbs: JSON,
         temptargets: JSON,
-        useSwiftOref: Bool
+        useSwiftOref: Bool,
+        timingCtx: LoopTimingContext? = nil
     ) async throws -> RawJSON {
+        // Use a single shared clock so paired Swift/JS runs see identical inputs.
+        let now = Date()
         if useSwiftOref {
-            let swiftResult = OpenAPSSwift
-                .autosense(
+            let (swiftResult, swiftDuration) = await timeAlgo("autosens", "Swift") {
+                OpenAPSSwift.autosense(
                     glucose: glucose,
                     pumpHistory: pumpHistory,
                     basalProfile: basalprofile,
                     profile: profile,
                     carbs: carbs,
                     tempTargets: temptargets,
-                    clock: Date()
+                    clock: now
                 )
+            }
+            var shadow: (result: OrefFunctionResult, duration: TimeInterval)? = nil
+            if let ctx = timingCtx, ctx.hasShadow {
+                shadow = await timeShadow {
+                    await self.autosenseJavascript(
+                        glucose: glucose,
+                        pumpHistory: pumpHistory,
+                        basalprofile: basalprofile,
+                        profile: profile,
+                        carbs: carbs,
+                        temptargets: temptargets
+                    )
+                }
+            }
+            recordTiming(function: .autosens, timingCtx: timingCtx, activeResult: swiftResult, activeDuration: swiftDuration, shadow: shadow)
             return try swiftResult.returnOrThrow()
         } else {
-            let jsResult = await autosenseJavascript(
-                glucose: glucose,
-                pumpHistory: pumpHistory,
-                basalprofile: basalprofile,
-                profile: profile,
-                carbs: carbs,
-                temptargets: temptargets
-            )
+            let (jsResult, jsDuration) = await timeAlgo("autosens", "JS") {
+                await self.autosenseJavascript(
+                    glucose: glucose,
+                    pumpHistory: pumpHistory,
+                    basalprofile: basalprofile,
+                    profile: profile,
+                    carbs: carbs,
+                    temptargets: temptargets
+                )
+            }
+            var shadow: (result: OrefFunctionResult, duration: TimeInterval)? = nil
+            if let ctx = timingCtx, ctx.hasShadow {
+                shadow = await timeShadow {
+                    OpenAPSSwift.autosense(
+                        glucose: glucose,
+                        pumpHistory: pumpHistory,
+                        basalProfile: basalprofile,
+                        profile: profile,
+                        carbs: carbs,
+                        tempTargets: temptargets,
+                        clock: now
+                    )
+                }
+            }
+            recordTiming(function: .autosens, timingCtx: timingCtx, activeResult: jsResult, activeDuration: jsDuration, shadow: shadow)
             return try jsResult.returnOrThrow()
         }
     }
@@ -941,43 +1185,90 @@ final class OpenAPS {
         preferences: JSON,
         basalProfile: JSON,
         trioCustomOrefVariables: JSON,
-        useSwiftOref: Bool
+        useSwiftOref: Bool,
+        timingCtx: LoopTimingContext? = nil
     ) async throws -> RawJSON {
         let clock = Date()
 
         if useSwiftOref {
-            let swiftResult = OpenAPSSwift.determineBasal(
-                glucose: glucose,
-                currentTemp: currentTemp,
-                iob: iob,
-                profile: profile,
-                autosens: autosens,
-                meal: meal,
-                microBolusAllowed: microBolusAllowed,
-                reservoir: reservoir,
-                pumpHistory: pumpHistory,
-                preferences: preferences,
-                basalProfile: basalProfile,
-                trioCustomOrefVariables: trioCustomOrefVariables,
-                clock: clock
-            )
+            let (swiftResult, swiftDuration) = await timeAlgo("determineBasal", "Swift") {
+                OpenAPSSwift.determineBasal(
+                    glucose: glucose,
+                    currentTemp: currentTemp,
+                    iob: iob,
+                    profile: profile,
+                    autosens: autosens,
+                    meal: meal,
+                    microBolusAllowed: microBolusAllowed,
+                    reservoir: reservoir,
+                    pumpHistory: pumpHistory,
+                    preferences: preferences,
+                    basalProfile: basalProfile,
+                    trioCustomOrefVariables: trioCustomOrefVariables,
+                    clock: clock
+                )
+            }
+            var shadow: (result: OrefFunctionResult, duration: TimeInterval)? = nil
+            if let ctx = timingCtx, ctx.hasShadow {
+                shadow = await timeShadow {
+                    await self.determineBasalJavascript(
+                        glucose: glucose,
+                        currentTemp: currentTemp,
+                        iob: iob,
+                        profile: profile,
+                        autosens: autosens,
+                        meal: meal,
+                        microBolusAllowed: microBolusAllowed,
+                        reservoir: reservoir,
+                        pumpHistory: pumpHistory,
+                        preferences: preferences,
+                        basalProfile: basalProfile,
+                        trioCustomOrefVariables: trioCustomOrefVariables,
+                        clock: clock
+                    )
+                }
+            }
+            recordTiming(function: .determineBasal, timingCtx: timingCtx, activeResult: swiftResult, activeDuration: swiftDuration, shadow: shadow)
             return try swiftResult.returnOrThrow()
         } else {
-            let jsResult = await determineBasalJavascript(
-                glucose: glucose,
-                currentTemp: currentTemp,
-                iob: iob,
-                profile: profile,
-                autosens: autosens,
-                meal: meal,
-                microBolusAllowed: microBolusAllowed,
-                reservoir: reservoir,
-                pumpHistory: pumpHistory,
-                preferences: preferences,
-                basalProfile: basalProfile,
-                trioCustomOrefVariables: trioCustomOrefVariables,
-                clock: clock
-            )
+            let (jsResult, jsDuration) = await timeAlgo("determineBasal", "JS") {
+                await self.determineBasalJavascript(
+                    glucose: glucose,
+                    currentTemp: currentTemp,
+                    iob: iob,
+                    profile: profile,
+                    autosens: autosens,
+                    meal: meal,
+                    microBolusAllowed: microBolusAllowed,
+                    reservoir: reservoir,
+                    pumpHistory: pumpHistory,
+                    preferences: preferences,
+                    basalProfile: basalProfile,
+                    trioCustomOrefVariables: trioCustomOrefVariables,
+                    clock: clock
+                )
+            }
+            var shadow: (result: OrefFunctionResult, duration: TimeInterval)? = nil
+            if let ctx = timingCtx, ctx.hasShadow {
+                shadow = await timeShadow {
+                    OpenAPSSwift.determineBasal(
+                        glucose: glucose,
+                        currentTemp: currentTemp,
+                        iob: iob,
+                        profile: profile,
+                        autosens: autosens,
+                        meal: meal,
+                        microBolusAllowed: microBolusAllowed,
+                        reservoir: reservoir,
+                        pumpHistory: pumpHistory,
+                        preferences: preferences,
+                        basalProfile: basalProfile,
+                        trioCustomOrefVariables: trioCustomOrefVariables,
+                        clock: clock
+                    )
+                }
+            }
+            recordTiming(function: .determineBasal, timingCtx: timingCtx, activeResult: jsResult, activeDuration: jsDuration, shadow: shadow)
             return try jsResult.returnOrThrow()
         }
     }
@@ -1099,37 +1390,161 @@ final class OpenAPS {
         autotune: JSON,
         trioSettings: JSON,
         useSwiftOref: Bool,
-        clock: Date
+        clock: Date,
+        timingCtx: LoopTimingContext? = nil
     ) async throws -> RawJSON {
         if useSwiftOref {
-            let swiftResult = OpenAPSSwift.makeProfile(
-                preferences: preferences,
-                pumpSettings: pumpSettings,
-                bgTargets: bgTargets,
-                basalProfile: basalProfile,
-                isf: isf,
-                carbRatio: carbRatio,
-                tempTargets: tempTargets,
-                model: model,
-                trioSettings: trioSettings,
-                clock: clock
-            )
+            let (swiftResult, swiftDuration) = await timeAlgo("makeProfile", "Swift") {
+                OpenAPSSwift.makeProfile(
+                    preferences: preferences,
+                    pumpSettings: pumpSettings,
+                    bgTargets: bgTargets,
+                    basalProfile: basalProfile,
+                    isf: isf,
+                    carbRatio: carbRatio,
+                    tempTargets: tempTargets,
+                    model: model,
+                    trioSettings: trioSettings,
+                    clock: clock
+                )
+            }
+            var shadow: (result: OrefFunctionResult, duration: TimeInterval)? = nil
+            if let ctx = timingCtx, ctx.hasShadow {
+                shadow = await timeShadow {
+                    await self.makeProfileJavascript(
+                        preferences: preferences,
+                        pumpSettings: pumpSettings,
+                        bgTargets: bgTargets,
+                        basalProfile: basalProfile,
+                        isf: isf,
+                        carbRatio: carbRatio,
+                        tempTargets: tempTargets,
+                        model: model,
+                        autotune: autotune,
+                        trioSettings: trioSettings
+                    )
+                }
+            }
+            recordTiming(function: .makeProfile, timingCtx: timingCtx, activeResult: swiftResult, activeDuration: swiftDuration, shadow: shadow)
             return try swiftResult.returnOrThrow()
         } else {
-            let jsResult = await makeProfileJavascript(
-                preferences: preferences,
-                pumpSettings: pumpSettings,
-                bgTargets: bgTargets,
-                basalProfile: basalProfile,
-                isf: isf,
-                carbRatio: carbRatio,
-                tempTargets: tempTargets,
-                model: model,
-                autotune: autotune,
-                trioSettings: trioSettings
-            )
+            let (jsResult, jsDuration) = await timeAlgo("makeProfile", "JS") {
+                await self.makeProfileJavascript(
+                    preferences: preferences,
+                    pumpSettings: pumpSettings,
+                    bgTargets: bgTargets,
+                    basalProfile: basalProfile,
+                    isf: isf,
+                    carbRatio: carbRatio,
+                    tempTargets: tempTargets,
+                    model: model,
+                    autotune: autotune,
+                    trioSettings: trioSettings
+                )
+            }
+            var shadow: (result: OrefFunctionResult, duration: TimeInterval)? = nil
+            if let ctx = timingCtx, ctx.hasShadow {
+                shadow = await timeShadow {
+                    OpenAPSSwift.makeProfile(
+                        preferences: preferences,
+                        pumpSettings: pumpSettings,
+                        bgTargets: bgTargets,
+                        basalProfile: basalProfile,
+                        isf: isf,
+                        carbRatio: carbRatio,
+                        tempTargets: tempTargets,
+                        model: model,
+                        trioSettings: trioSettings,
+                        clock: clock
+                    )
+                }
+            }
+            recordTiming(function: .makeProfile, timingCtx: timingCtx, activeResult: jsResult, activeDuration: jsDuration, shadow: shadow)
             return try jsResult.returnOrThrow()
         }
+    }
+
+    /// Time `work` and log a single `[ALGOPERF] name[algo] active=…ms` line.
+    private func timeAlgo<T>(_ name: String, _ algo: String, _ work: () async -> T) async -> (T, TimeInterval) {
+        let start = Date()
+        let result = await work()
+        let elapsed = Date().timeIntervalSince(start)
+        debug(.openAPS, String(format: "[ALGOPERF] %@[%@] active=%.1fms", name, algo, elapsed * 1000))
+        return (result, elapsed)
+    }
+
+    /// Time the inactive (shadow) implementation. Caller must check `algoShadowCompare`.
+    private func timeShadow<T>(_ work: () async -> T) async -> (T, TimeInterval) {
+        let start = Date()
+        let result = await work()
+        let elapsed = Date().timeIntervalSince(start)
+        return (result, elapsed)
+    }
+
+    /// Persist a per-function timing row and update the loop collector.
+    /// When `shadow` is non-nil, also runs `JSONCompare.logComparison`.
+    private func recordTiming(
+        function: OrefFunction,
+        timingCtx: LoopTimingContext?,
+        activeResult: OrefFunctionResult,
+        activeDuration: TimeInterval,
+        shadow: (result: OrefFunctionResult, duration: TimeInterval)?,
+        iobInputs: IobInputs? = nil,
+        mealInputs: MealInputs? = nil,
+        autosensInputs: AutosensInputs? = nil,
+        determineBasalInputs: DetermineBasalInputs? = nil,
+        makeProfileInputs: MakeProfileInputs? = nil
+    ) {
+        guard let ctx = timingCtx else { return }
+        let activeMs = activeDuration * 1000
+        ctx.collector.recordActive(ms: activeMs)
+
+        if let shadow = shadow {
+            let shadowMs = shadow.duration * 1000
+            ctx.collector.recordShadow(ms: shadowMs)
+            let swiftResult = ctx.activePath == "Swift" ? activeResult : shadow.result
+            let swiftDur = ctx.activePath == "Swift" ? activeDuration : shadow.duration
+            let jsResult = ctx.activePath == "Swift" ? shadow.result : activeResult
+            let jsDur = ctx.activePath == "Swift" ? shadow.duration : activeDuration
+            _ = JSONCompare.logComparison(
+                function: function,
+                algoContext: ctx.algoContext,
+                loopId: ctx.loopId,
+                apsLoopId: ctx.apsLoopId,
+                entryPoint: ctx.entryPoint,
+                activePath: ctx.activePath,
+                swift: swiftResult,
+                swiftDuration: swiftDur,
+                javascript: jsResult,
+                javascriptDuration: jsDur,
+                iobInputs: iobInputs,
+                mealInputs: mealInputs,
+                autosensInputs: autosensInputs,
+                determineBasalInputs: determineBasalInputs,
+                makeProfileInputs: makeProfileInputs
+            )
+        } else {
+            JSONCompare.recordActiveOnly(
+                function: function,
+                algoContext: ctx.algoContext,
+                loopId: ctx.loopId,
+                apsLoopId: ctx.apsLoopId,
+                entryPoint: ctx.entryPoint,
+                activePath: ctx.activePath,
+                durationMs: activeMs
+            )
+        }
+    }
+
+    /// Build a context tag describing which oref flavor is in effect for this loop.
+    private func algoContext(useSwiftOref: Bool, preferences: Preferences) -> String {
+        var parts: [String] = [useSwiftOref ? "swift" : "js"]
+        if preferences.autoisf { parts.append("autoisf") }
+        if preferences.useNewFormula {
+            parts.append(preferences.sigmoid ? "sigmoid" : "log")
+        }
+        if parts.count == 1 { parts.append("vanilla") }
+        return parts.joined(separator: "+")
     }
 
     private func loadJSON(name: String) -> String {

@@ -39,6 +39,7 @@ extension Home {
         @State var showPumpSelection: Bool = false
         @State var showCGMSelection: Bool = false
         @State var notificationsDisabled = false
+        @State private var showAlgoCompare: Bool = false
         @State var timeButtons: [TimePicker] = [
             TimePicker(
                 label: String(localized: "2 hours", comment: "Time range button on Home chart — show last 2 hours"),
@@ -526,6 +527,11 @@ extension Home {
                         )
                         .clipShape(Circle())
                 }
+                .simultaneousGesture(
+                    LongPressGesture(minimumDuration: 0.6).onEnded { _ in
+                        showAlgoCompare = true
+                    }
+                )
                 Spacer()
                 ForEach(timeButtons) { button in
                     Text(button.active ? button.label : button.number).onTapGesture {
@@ -1332,6 +1338,16 @@ extension Home {
             }
             .sheet(isPresented: $state.isLegendPresented) {
                 ChartLegendView(state: state)
+            }
+            .sheet(isPresented: $showAlgoCompare) {
+                NavigationView {
+                    AlgoComparisonAnalysisView()
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("Done") { showAlgoCompare = false }
+                            }
+                        }
+                }
             }
             // PUMP RELATED
             .confirmationDialog("Pump Model", isPresented: $showPumpSelection) {

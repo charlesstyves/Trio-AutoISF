@@ -86,9 +86,10 @@ extension DeterminationGenerator {
             }
         }
 
-        // compute means (or zero)
-        let lastDelta: Decimal = lastDeltas.mean
+        // compute means; JS oref's glucose-get-last falls back to `shortAvgDelta`
+        // when `lastDeltas` is empty (no readings land in the 2.5-7.5 min window).
         let shortAvg: Decimal = shortDeltas.mean
+        let lastDelta: Decimal = lastDeltas.isEmpty ? shortAvg : lastDeltas.mean
         let longAvg: Decimal = longDeltas.mean
 
         return GlucoseStatus(

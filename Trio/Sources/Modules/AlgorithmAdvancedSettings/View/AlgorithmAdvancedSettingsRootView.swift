@@ -50,6 +50,30 @@ extension AlgorithmAdvancedSettings {
 
                 SettingInputSection(
                     decimalValue: $decimalPlaceholder,
+                    booleanValue: $state.algoShadowCompare,
+                    shouldDisplayHint: $shouldDisplayHint,
+                    selectedVerboseHint: Binding(
+                        get: { selectedVerboseHint },
+                        set: {
+                            selectedVerboseHint = $0.map { AnyView($0) }
+                            hintLabel = AlgorithmSettingHints.algoShadowCompareLabel
+                        }
+                    ),
+                    units: state.units,
+                    type: .boolean,
+                    label: AlgorithmSettingHints.algoShadowCompareLabel,
+                    miniHint: AlgorithmSettingHints.algoShadowCompareMini,
+                    verboseHint: AlgorithmSettingHints.algoShadowCompareVerbose()
+                )
+
+                Section {
+                    NavigationLink(destination: AlgoComparisonAnalysisView()) {
+                        Text("Algo Compare Analysis")
+                    }
+                }.listRowBackground(Color.chart)
+
+                SettingInputSection(
+                    decimalValue: $decimalPlaceholder,
                     booleanValue: $state.useProfileCSF,
                     shouldDisplayHint: $shouldDisplayHint,
                     selectedVerboseHint: Binding(
