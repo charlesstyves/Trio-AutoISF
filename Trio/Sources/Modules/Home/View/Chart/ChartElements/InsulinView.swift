@@ -7,13 +7,9 @@ struct InsulinView: ChartContent {
     let insulinData: [PumpEventStored]
     let units: GlucoseUnits
     let bolusIncrement: Decimal
-    let peaks: [(date: Date, glucose: Int16, type: ExtremumType)]
     let useBars: Bool
     let screenHours: Int16
     let bolusDisplayThreshold: BolusDisplayThreshold
-
-    /// Time proximity (seconds) within which a bolus/SMB is considered to collide with a peak label.
-    private static let proximityWindow: TimeInterval = 15 * 60
 
     /// Scaling reference for bar height: max bolus amount across the visible insulin data.
     /// Floor of 1 keeps short windows from blowing tiny SMBs up to full bar height.
@@ -26,16 +22,6 @@ struct InsulinView: ChartContent {
         drawBoluses()
         drawSMBs()
         drawExternals()
-    }
-
-    /// Returns the nearby peak's `ExtremumType` if `date` is within ±15 min of any peak, otherwise `nil`.
-    private func nearbyPeakType(for date: Date) -> ExtremumType? {
-        peaks.first(where: { abs($0.date.timeIntervalSince(date)) <= Self.proximityWindow && $0.type != .none })?.type
-    }
-
-    /// Extra vertical offset applied when an insulin marker collides with a peak label.
-    private var collisionOffset: Decimal {
-        MainChartHelper.bolusOffset(units: units) * Decimal(1.3)
     }
 
     private func drawBoluses() -> some ChartContent {
@@ -71,9 +57,9 @@ struct InsulinView: ChartContent {
                             color: Color(red: 0.05, green: 0.32, blue: 0.62)
                         )
                     } else {
-                        // Legacy circle mode keeps the existing peak-collision shift.
-                        let nearPeak = nearbyPeakType(for: bolusDate)
-                        let yPosition = nearPeak == .max ? baseY + collisionOffset : baseY
+                        // Anchor at curve. Peak labels are fixed-position too, so the
+                        // legacy peak-collision shift is no longer needed.
+                        let yPosition = baseY
                         let size = (sqrt(CGFloat(amount) / .pi) * MainChartHelper.Config.bolusScale * 2)
 
                         PointMark(
@@ -83,7 +69,7 @@ struct InsulinView: ChartContent {
                         .symbol {
                             Image(systemName: "circle.fill").font(.system(size: size)).foregroundStyle(Color.teal)
                                 .overlay(
-                                    Circle().stroke(Color.primary, lineWidth: 1)
+                                    Circle().stroke(Color.primary, lineWidth: 0.4)
                                 )
                         }
                         .annotation(position: .top, spacing: 2) {
@@ -138,11 +124,9 @@ struct InsulinView: ChartContent {
                             MainChartHelper.Config.bolusSize + CGFloat(truncating: amount) * MainChartHelper.Config
                                 .bolusScale
                         )
-                        // Original position (glucose + 1× offset); shift up extra if near a peak-max label
-                        let baseY = (units == .mgdL ? Decimal(glucose) : Decimal(glucose).asMmolL) + MainChartHelper
+                        // Fixed offset above the curve; no peak-collision shift needed.
+                        let yPosition = (units == .mgdL ? Decimal(glucose) : Decimal(glucose).asMmolL) + MainChartHelper
                             .bolusOffset(units: units)
-                        let nearPeak = nearbyPeakType(for: bolusDate)
-                        let yPosition = nearPeak == .max ? baseY + collisionOffset : baseY
 
                         PointMark(
                             x: .value("Time", bolusDate, unit: .second),

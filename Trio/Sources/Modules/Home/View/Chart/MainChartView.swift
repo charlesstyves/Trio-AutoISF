@@ -152,7 +152,6 @@ extension MainChartView {
                     insulinData: state.insulinFromPersistence,
                     units: state.units,
                     bolusIncrement: state.bolusIncrement,
-                    peaks: state.showGlucosePeaks ? state.glucosePeaks : [],
                     useBars: state.useChartBars,
                     screenHours: screenHours,
                     bolusDisplayThreshold: state.bolusDisplayThreshold
@@ -165,7 +164,6 @@ extension MainChartView {
                     fpuData: state.fpusFromPersistence,
                     minValue: units == .mgdL ? state.minYAxisValue : state.minYAxisValue
                         .asMmolL,
-                    peaks: state.showGlucosePeaks ? state.glucosePeaks : [],
                     useBars: state.useChartBars,
                     screenHours: screenHours
                 )
