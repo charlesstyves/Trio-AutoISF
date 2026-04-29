@@ -149,25 +149,25 @@ enum AutoISFsmb {
 
     /// autoISF 130 % iobTH SMB cap. Mirrors determine-basal.js lines 1855-1864.
     ///
-    /// Single entry point for DosingEngine: returns the (possibly reduced) bolus,
-    /// the reason tail for the "Microbolusing Xu" line, and the updated reason text
-    /// (with the `even TT` / `even Target` chip rewritten to `capped by iobTH` when
-    /// the cap fires). With autoISF disabled or no `smbResult`, this is a no-op.
+    /// If autoISF is enabled, the iobTH method is on (`iob_threshold_percent != 1`),
+    /// and delivering this microBolus would push current IOB past `iobTHVirtual`,
+    /// the bolus is clamped so post-delivery IOB stays at `iobTHVirtual`. Returns
+    /// the (possibly reduced) bolus and a reason tail to append to the
+    /// "Microbolusing Xu" string.
     ///
-    /// Keeping the cap, the chip rewrite, and the autoISF gating all in one place
-    /// here means DosingEngine only has to ask for the result.
+    /// The cap fires regardless of `enableSMB_EvenOn_OddOff_always` — same principle
+    /// as the gate, which was decoupled from the toggle in May 2025. If the user set
+    /// iobTH < 100 %, they want it enforced. With autoISF disabled this is a no-op.
     static func applyIobTHcap(
         profile: Profile,
         currentIob: Decimal,
         microBolus: Decimal,
-        smbResult: AutoISFsmbResult?,
-        reason: String
-    ) -> (microBolus: Decimal, reasonTail: String, reason: String) {
+        loopMode _: AutoISFLoopMode,
+        iobTHVirtual: Decimal
+    ) -> (microBolus: Decimal, reasonTail: String) {
         guard profile.autoisf,
               profile.iobThresholdPercent != 1,
-              let smbResult,
-              smbResult.loopMode == .fullLoop || smbResult.loopMode == .enforced,
-              microBolus > smbResult.iobTHVirtual - currentIob
+              microBolus > iobTHVirtual - currentIob
         else {
             return (microBolus, "", reason)
         }

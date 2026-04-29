@@ -1,6 +1,7 @@
-oref0 branch: JS-orefSwift-Campare - git version: 6f8e4a2
+oref0 branch: JS-orefSwift-Campare - git version: f2d53e3
 
 Last commits:
+f2d53e3 fix(autoISF): apply iobTH 130% cap regardless of even/odd toggle
 6f8e4a2 Align autoISF logs and parabolic calculations with orefSwift
 a456ff9 Neuter convert_bg, inline mmol/L target for SMB even/odd check
 2e1c74a Corrects sensitivity ratio in carb ratio adjustment logs
@@ -30,4 +31,3 @@ a38f052 Rename output library to trio_[name]
 fe902c1 use iobTH without even/off
 78c308c AIMI deactivates with upperDelta or BG surpassed
 48964e7 aimiB30 ignores maxSafeBasal
-5976f60 round bg_isf to 2 decimals
