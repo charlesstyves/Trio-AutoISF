@@ -147,23 +147,11 @@ extension MainChartView {
                     glucoseColorScheme: state.glucoseColorScheme
                 )
 
-                if state.showGlucosePeaks, !state.useChartBars {
-                    GlucosePeaksChartView(
-                        peaks: state.glucosePeaks,
-                        units: state.units,
-                        highGlucose: state.highGlucose,
-                        lowGlucose: state.lowGlucose,
-                        glucoseColorScheme: state.glucoseColorScheme,
-                        currentGlucoseTarget: state.currentGlucoseTarget
-                    )
-                }
-
                 InsulinView(
                     glucoseData: state.glucoseFromPersistence,
                     insulinData: state.insulinFromPersistence,
                     units: state.units,
                     bolusIncrement: state.bolusIncrement,
-                    peaks: state.showGlucosePeaks ? state.glucosePeaks : [],
                     useBars: state.useChartBars,
                     screenHours: screenHours,
                     bolusDisplayThreshold: state.bolusDisplayThreshold
@@ -176,7 +164,6 @@ extension MainChartView {
                     fpuData: state.fpusFromPersistence,
                     minValue: units == .mgdL ? state.minYAxisValue : state.minYAxisValue
                         .asMmolL,
-                    peaks: state.showGlucosePeaks ? state.glucosePeaks : [],
                     useBars: state.useChartBars,
                     screenHours: screenHours
                 )
@@ -228,7 +215,7 @@ extension MainChartView {
                 "cob": Color.orange
             ])
             .chartOverlay { proxy in
-                if state.showGlucosePeaks, state.useChartBars {
+                if state.showGlucosePeaks {
                     PeakLabelsOverlay(
                         proxy: proxy,
                         peaks: state.glucosePeaks,
