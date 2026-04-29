@@ -280,9 +280,7 @@ enum DosingEngine {
         targetGlucose: Decimal,
         currentTemp: TempBasal,
         determination: Determination,
-        bolusIOB: Decimal = 0,
-        basalIOB: Decimal = 0,
-        iobActivity: Decimal = 0
+        iobInputs: KetoProtect.IobInputs = .empty
     ) throws -> (shouldSetTempBasal: Bool, determination: Determination) {
         var newDetermination = determination
 
@@ -323,9 +321,7 @@ enum DosingEngine {
                 profile: profile,
                 determination: newDetermination,
                 currentTemp: currentTemp,
-                bolusIOB: bolusIOB,
-                basalIOB: basalIOB,
-                iobActivity: iobActivity
+                iobInputs: iobInputs
             )
             return (shouldSetTempBasal: true, determination: finalDetermination)
         }
@@ -344,9 +340,7 @@ enum DosingEngine {
         clock: Date,
         currentTemp: TempBasal,
         determination: Determination,
-        bolusIOB: Decimal = 0,
-        basalIOB: Decimal = 0,
-        iobActivity: Decimal = 0
+        iobInputs: KetoProtect.IobInputs = .empty
     ) throws -> (shouldSetTempBasal: Bool, determination: Determination) {
         guard profile.skipNeutralTemps else {
             return (shouldSetTempBasal: false, determination: determination)
@@ -373,9 +367,7 @@ enum DosingEngine {
                 profile: profile,
                 determination: newDetermination,
                 currentTemp: currentTemp,
-                bolusIOB: bolusIOB,
-                basalIOB: basalIOB,
-                iobActivity: iobActivity
+                iobInputs: iobInputs
             )
             return (shouldSetTempBasal: true, determination: finalDetermination)
         } else {
@@ -405,9 +397,7 @@ enum DosingEngine {
         determination: Determination,
         adjustedSensitivity: Decimal,
         overrideFactor: Decimal,
-        bolusIOB: Decimal = 0,
-        basalIOB: Decimal = 0,
-        iobActivity: Decimal = 0
+        iobInputs: KetoProtect.IobInputs = .empty
     ) throws -> (shouldSetTempBasal: Bool, determination: Determination) {
         guard eventualGlucose < minGlucose else {
             return (shouldSetTempBasal: false, determination: determination)
@@ -432,9 +422,7 @@ enum DosingEngine {
                     profile: profile,
                     determination: newDetermination,
                     currentTemp: currentTemp,
-                    bolusIOB: bolusIOB,
-                    basalIOB: basalIOB,
-                    iobActivity: iobActivity
+                    iobInputs: iobInputs
                 )
                 return (shouldSetTempBasal: true, determination: finalDetermination)
             }
@@ -464,9 +452,7 @@ enum DosingEngine {
                     profile: profile,
                     determination: newDetermination,
                     currentTemp: currentTemp,
-                    bolusIOB: bolusIOB,
-                    basalIOB: basalIOB,
-                    iobActivity: iobActivity
+                    iobInputs: iobInputs
                 )
                 return (shouldSetTempBasal: true, determination: finalDetermination)
             }
@@ -499,9 +485,7 @@ enum DosingEngine {
                 profile: profile,
                 determination: newDetermination,
                 currentTemp: currentTemp,
-                bolusIOB: bolusIOB,
-                basalIOB: basalIOB,
-                iobActivity: iobActivity
+                iobInputs: iobInputs
             )
             return (shouldSetTempBasal: true, determination: finalDetermination)
         }
@@ -533,9 +517,7 @@ enum DosingEngine {
                         profile: profile,
                         determination: newDetermination,
                         currentTemp: currentTemp,
-                        bolusIOB: bolusIOB,
-                        basalIOB: basalIOB,
-                        iobActivity: iobActivity
+                        iobInputs: iobInputs
                     )
                     return (shouldSetTempBasal: true, determination: finalDetermination)
                 }
@@ -549,9 +531,7 @@ enum DosingEngine {
                 profile: profile,
                 determination: newDetermination,
                 currentTemp: currentTemp,
-                bolusIOB: bolusIOB,
-                basalIOB: basalIOB,
-                iobActivity: iobActivity
+                iobInputs: iobInputs
             )
             return (shouldSetTempBasal: true, determination: finalDetermination)
         }
@@ -573,13 +553,15 @@ enum DosingEngine {
         smbIsEnabled: Bool,
         profile: Profile,
         determination: Determination,
-        bolusIOB: Decimal = 0,
-        basalIOB: Decimal = 0,
-        iobActivity: Decimal = 0
+        iobInputs: KetoProtect.IobInputs = .empty
     ) throws -> (shouldSetTempBasal: Bool, determination: Determination) {
-        // Must actually be falling (minDelta negative), not just "rising slower than expected".
-        // Otherwise this fires during pre-meal B30 windows where BG is flat/rising but IOB is high.
-        guard minDelta < expectedDelta, minDelta < 0 else {
+        guard minDelta < expectedDelta else {
+            return (shouldSetTempBasal: false, determination: determination)
+        }
+        // autoISF/B30 safety: must actually be falling (minDelta < 0), not just
+        // "rising slower than expected". Otherwise this fires during pre-meal B30
+        // windows where BG is flat/rising but IOB is high.
+        guard AimiB30.glucoseActuallyFalling(profile: profile, minDelta: minDelta) else {
             return (shouldSetTempBasal: false, determination: determination)
         }
 
@@ -611,9 +593,7 @@ enum DosingEngine {
                     profile: profile,
                     determination: newDetermination,
                     currentTemp: currentTemp,
-                    bolusIOB: bolusIOB,
-                    basalIOB: basalIOB,
-                    iobActivity: iobActivity
+                    iobInputs: iobInputs
                 )
                 return (shouldSetTempBasal: true, determination: finalDetermination)
             }
@@ -636,9 +616,7 @@ enum DosingEngine {
         smbIsEnabled: Bool,
         profile: Profile,
         determination: Determination,
-        bolusIOB: Decimal = 0,
-        basalIOB: Decimal = 0,
-        iobActivity: Decimal = 0
+        iobInputs: KetoProtect.IobInputs = .empty
     ) throws -> (shouldSetTempBasal: Bool, determination: Determination) {
         guard min(eventualGlucose, minForecastGlucose) < maxGlucose else {
             return (shouldSetTempBasal: false, determination: determination)
@@ -666,9 +644,7 @@ enum DosingEngine {
                     profile: profile,
                     determination: newDetermination,
                     currentTemp: currentTemp,
-                    bolusIOB: bolusIOB,
-                    basalIOB: basalIOB,
-                    iobActivity: iobActivity
+                    iobInputs: iobInputs
                 )
                 return (shouldSetTempBasal: true, determination: finalDetermination)
             }
@@ -689,9 +665,7 @@ enum DosingEngine {
         basal: Decimal,
         profile: Profile,
         determination: Determination,
-        bolusIOB: Decimal = 0,
-        basalIOB: Decimal = 0,
-        iobActivity: Decimal = 0
+        iobInputs: KetoProtect.IobInputs = .empty
     ) throws -> (shouldSetTempBasal: Bool, determination: Determination) {
         guard iob > maxIob else {
             return (shouldSetTempBasal: false, determination: determination)
@@ -714,9 +688,7 @@ enum DosingEngine {
                 profile: profile,
                 determination: newDetermination,
                 currentTemp: currentTemp,
-                bolusIOB: bolusIOB,
-                basalIOB: basalIOB,
-                iobActivity: iobActivity
+                iobInputs: iobInputs
             )
             return (shouldSetTempBasal: true, determination: finalDetermination)
         }
@@ -777,20 +749,21 @@ enum DosingEngine {
             uamMinutesSetting = trioCustomOrefVariables.uamMinutes
         }
 
-        // smbMaxRangeExtension (JS: smb_max_range_extension) lets autoISF users extend the
-        // SMB basal-minutes cap beyond the default 30 min. Ignored when autoISF is off.
-        let smbMaxRange: Decimal = profile.autoisf ? profile.smbMaxRangeExtension : 1
-
-        if currentIob > mealInsulinRequired, currentIob > 0 {
-            if uamMinutesSetting > 0 {
-                return (smbMaxRange * currentBasal * overrideFactor * uamMinutesSetting / 60).jsRounded(scale: 1)
+        // upstream Sam-King maxBolus computation, preserved verbatim inside the closure
+        let baseMaxBolus: Decimal = {
+            if currentIob > mealInsulinRequired, currentIob > 0 {
+                if uamMinutesSetting > 0 {
+                    return (currentBasal * overrideFactor * uamMinutesSetting / 60).jsRounded(scale: 1)
+                } else {
+                    // Note: It should be impossible to have uamMinutesSetting of 0 so this shouldn't execute
+                    return (currentBasal * overrideFactor * 30 / 60).jsRounded(scale: 1)
+                }
             } else {
-                // Note: It should be impossible to have uamMinutesSetting of 0 so this shouldn't execute
-                return (smbMaxRange * currentBasal * overrideFactor * 30 / 60).jsRounded(scale: 1)
+                return (currentBasal * overrideFactor * smbMinutesSetting / 60).jsRounded(scale: 1)
             }
-        } else {
-            return (smbMaxRange * currentBasal * overrideFactor * smbMinutesSetting / 60).jsRounded(scale: 1)
-        }
+        }()
+        // autoISF SMB-range extension (smb_max_range_extension) — no-op without autoISF.
+        return AutoISFsmb.applySmbMaxRange(profile: profile, maxBolus: baseMaxBolus)
     }
 
     /// Determines if a Super Micro Bolus (SMB) should be delivered and calculates its size and associated temp basal.
@@ -815,9 +788,8 @@ enum DosingEngine {
         adjustedSensitivity: Decimal,
         adjustedCarbRatio: Decimal,
         basal: Decimal,
-        smbDeliveryRatio: Decimal,
-        autoISFLoopMode: AutoISFLoopMode = .oref,
-        autoISFiobTHVirtual: Decimal = 0,
+        autoISFSmbRatio: Decimal? = nil,
+        autoISFSmbResult: AutoISFsmbResult? = nil,
         determination: Determination
     ) throws -> (shouldSetTempBasal: Bool, determination: Determination) {
         var newDetermination = determination
@@ -843,25 +815,29 @@ enum DosingEngine {
             trioCustomOrefVariables: trioCustomOrefVariables
         )
 
-        let roundSmbTo = 1 / profile.bolusIncrement
-        let initialMicroBolus = min(insulinRequired * smbDeliveryRatio, maxBolus)
+        var smbDeliveryRatio = min(profile.smbDeliveryRatio, 1)
+        // autoISF override (no-op when autoISF is off and `autoISFSmbRatio` is nil)
+        smbDeliveryRatio = autoISFSmbRatio ?? smbDeliveryRatio
 
-        // autoISF iobTH 130 % overrun cap (no-op without autoISF). The autoISF module
-        // also rewrites the chip-cloud reason to surface `capped by iobTH:, <eff.iobTH>`
-        // when the cap fires, so we just hand the current reason in and accept it back.
-        let iobThEffective = (autoISFiobTHVirtual / Decimal(1.3)).jsRounded(scale: 1)
+        let roundSmbTo = 1 / profile.bolusIncrement
+        var microBolusWithoutRounding = min(insulinRequired * smbDeliveryRatio, maxBolus)
+
+        // autoISF iobTH overrun cap (no-op without autoISF). The autoISF module
+        // pulls eff.iobTH / virtual ceiling out of `autoISFSmbResult` and also
+        // rewrites the chip-cloud reason to surface `eff.iobTH:, capped at <X>`
+        // when the cap fires, so DosingEngine just hands the reason in and out.
         let capped = AutoISFsmb.applyIobTHcap(
             profile: profile,
             currentIob: currentIob,
-            microBolus: initialMicroBolus,
-            loopMode: autoISFLoopMode,
-            iobTHEffective: iobThEffective,
-            iobTHVirtual: autoISFiobTHVirtual,
+            microBolus: microBolusWithoutRounding,
+            smbResult: autoISFSmbResult,
             reason: newDetermination.reason
         )
+        microBolusWithoutRounding = capped.microBolus
         newDetermination.reason = capped.reason
         let iobTHCapReason = capped.reasonTail
-        let microBolus = (capped.microBolus * roundSmbTo).floor() / roundSmbTo
+
+        let microBolus = (microBolusWithoutRounding * roundSmbTo).floor() / roundSmbTo
 
         let worstCaseInsulinRequired = (targetGlucose - (naiveEventualGlucose + minIOBForecastedGlucose) / 2) /
             adjustedSensitivity
@@ -947,9 +923,7 @@ enum DosingEngine {
         profile: Profile,
         currentTemp: TempBasal,
         determination: Determination,
-        bolusIOB: Decimal = 0,
-        basalIOB: Decimal = 0,
-        iobActivity: Decimal = 0
+        iobInputs: KetoProtect.IobInputs = .empty
     ) throws -> Determination {
         var newDetermination = determination
         var rate = basal + (2 * insulinRequired)
@@ -973,9 +947,7 @@ enum DosingEngine {
                 profile: profile,
                 determination: newDetermination,
                 currentTemp: currentTemp,
-                bolusIOB: bolusIOB,
-                basalIOB: basalIOB,
-                iobActivity: iobActivity
+                iobInputs: iobInputs
             )
             return finalDetermination
         }
@@ -988,9 +960,7 @@ enum DosingEngine {
                 profile: profile,
                 determination: newDetermination,
                 currentTemp: currentTemp,
-                bolusIOB: bolusIOB,
-                basalIOB: basalIOB,
-                iobActivity: iobActivity
+                iobInputs: iobInputs
             )
             return finalDetermination
         }
@@ -1010,9 +980,7 @@ enum DosingEngine {
             profile: profile,
             determination: newDetermination,
             currentTemp: currentTemp,
-            bolusIOB: bolusIOB,
-            basalIOB: basalIOB,
-            iobActivity: iobActivity
+            iobInputs: iobInputs
         )
         return finalDetermination
     }

@@ -355,10 +355,15 @@ enum DeterminationGenerator {
             throw DeterminationError.missingIob
         }
 
-        // Split IOB and activity for KetoProtect (mirrors JS rT.bolusIOB / rT.basalIOB / rT.iobActivity).
-        let bolusIOB = iobData.first?.bolusiob ?? 0
-        let basalIOB = iobData.first?.basaliob ?? 0
-        let iobActivity = iobData.first?.activity ?? 0
+        // KetoProtect IOB inputs: split IOB and activity (mirrors JS rT.bolusIOB /
+        // rT.basalIOB / rT.iobActivity). Bundled into a single value so it threads through
+        // DosingEngine and TempBasalFunctions without three loose parameters at every
+        // callsite.
+        let iobInputs = KetoProtect.IobInputs(
+            bolusIOB: iobData.first?.bolusiob ?? 0,
+            basalIOB: iobData.first?.basaliob ?? 0,
+            iobActivity: iobData.first?.activity ?? 0
+        )
 
         let naiveEventualGlucose: Decimal
         if currentIob > 0 {
@@ -584,9 +589,7 @@ enum DeterminationGenerator {
                 maxIob: profile.maxIob,
                 currentTemp: currentTemp,
                 profile: profile,
-                bolusIOB: bolusIOB,
-                basalIOB: basalIOB,
-                iobActivity: iobActivity
+                iobInputs: iobInputs
             )
             let dispatch = try AutoISF.dispatchB30(
                 b30Result: b30Result,
@@ -599,9 +602,7 @@ enum DeterminationGenerator {
                 iob: iobData.first?.iob ?? 0,
                 exerciseModeActive: exerciseModeActive,
                 overrideSmbIsOff: overrideDisablesSmb,
-                bolusIOB: bolusIOB,
-                basalIOB: basalIOB,
-                iobActivity: iobActivity
+                iobInputs: iobInputs
             )
             switch dispatch {
             case .notActive:
@@ -625,9 +626,7 @@ enum DeterminationGenerator {
             targetGlucose: adjustedGlucoseTargets.targetGlucose,
             currentTemp: currentTemp,
             determination: determination,
-            bolusIOB: bolusIOB,
-            basalIOB: basalIOB,
-            iobActivity: iobActivity
+            iobInputs: iobInputs
         )
         determination = lowGlucoseSuspendDetermination
         if shouldSetTempBasalForLowGlucoseSuspend {
@@ -640,9 +639,7 @@ enum DeterminationGenerator {
             clock: currentTime,
             currentTemp: currentTemp,
             determination: determination,
-            bolusIOB: bolusIOB,
-            basalIOB: basalIOB,
-            iobActivity: iobActivity
+            iobInputs: iobInputs
         )
         determination = skipNeutralTempDetermination
         if shouldSetTempBasalForSkipNeutralTemp {
@@ -665,9 +662,7 @@ enum DeterminationGenerator {
                 determination: determination,
                 adjustedSensitivity: adjustedSensitivity,
                 overrideFactor: trioCustomOrefVariables.overrideFactor(),
-                bolusIOB: bolusIOB,
-                basalIOB: basalIOB,
-                iobActivity: iobActivity
+                iobInputs: iobInputs
             )
         determination = lowEventualGlucoseDetermination
         if shouldSetTempBasalForLowEventualGlucose {
@@ -688,9 +683,7 @@ enum DeterminationGenerator {
             smbIsEnabled: smbIsEnabled,
             profile: profile,
             determination: determination,
-            bolusIOB: bolusIOB,
-            basalIOB: basalIOB,
-            iobActivity: iobActivity
+            iobInputs: iobInputs
         )
         determination = glucoseFallingFasterThanExpectedDetermination
         if shouldSetTempBasalForGlucoseFallingFasterThanExpected {
@@ -709,9 +702,7 @@ enum DeterminationGenerator {
             smbIsEnabled: smbIsEnabled,
             profile: profile,
             determination: determination,
-            bolusIOB: bolusIOB,
-            basalIOB: basalIOB,
-            iobActivity: iobActivity
+            iobInputs: iobInputs
         )
         determination = eventualOrForecastGlucoseLessThanMaxDetermination
         if shouldSetTempBasalEventualOrForecastGlucoseLessThanMax {
@@ -731,9 +722,7 @@ enum DeterminationGenerator {
             basal: basal,
             profile: profile,
             determination: determination,
-            bolusIOB: bolusIOB,
-            basalIOB: basalIOB,
-            iobActivity: iobActivity
+            iobInputs: iobInputs
         )
         determination = iobGreaterThanMaxDetermination
         if shouldSetTempBasalForIobGreaterThanMax {
@@ -774,9 +763,8 @@ enum DeterminationGenerator {
             adjustedSensitivity: adjustedSensitivity,
             adjustedCarbRatio: forecastResult.adjustedCarbRatio,
             basal: basal,
-            smbDeliveryRatio: autoISFResult.smbRatio,
-            autoISFLoopMode: autoISFResult.smbResult?.loopMode ?? .oref,
-            autoISFiobTHVirtual: autoISFResult.smbResult?.iobTHVirtual ?? 0,
+            autoISFSmbRatio: autoISFResult.smbResult.map { _ in autoISFResult.smbRatio },
+            autoISFSmbResult: autoISFResult.smbResult,
             determination: determination
         )
         determination = smbDetermination
@@ -791,9 +779,7 @@ enum DeterminationGenerator {
             profile: profile,
             currentTemp: currentTemp,
             determination: determination,
-            bolusIOB: bolusIOB,
-            basalIOB: basalIOB,
-            iobActivity: iobActivity
+            iobInputs: iobInputs
         )
     }
 
