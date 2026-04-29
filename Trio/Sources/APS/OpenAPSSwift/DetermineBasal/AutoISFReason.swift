@@ -108,7 +108,10 @@ enum AutoISFReason {
 
     static let smbBlockedOverride = "SMB disabled:, Override"
     static let smbBlockedB30Running = "SMB disabled:, B30 running"
-    static let smbBlockedIobTHExceeded = "autoISF-SMB disabled:, iobTH exceeded"
+    static func smbBlockedIobTHExceeded(iobThEffective: Decimal) -> String {
+        "autoISF-SMB disabled:, eff.iobTH:, \(iobThEffective) exceeded"
+    }
+
     static let smbBlockedOddTarget = "autoISF-SMB disabled:, odd Target"
     static let smbBlockedMaxIobZero = "autoISF-SMB disabled:, maxIOB=0"
 
@@ -125,21 +128,32 @@ enum AutoISFReason {
     }
 
     /// SMB-section chip text used when the autoISF iobTH 130 % cap reduced the SMB.
-    /// Replaces the `even TT` / `even Target` segment in-place via `applyIobTHCapTag`.
-    static let smbCappedByIobTHTag = "capped by iobTH"
+    /// Shows the effective iobTH (`iob_threshold_percent * max_iob`) that triggered
+    /// the cap — the resulting capped microbolus value is already shown in the
+    /// "Microbolusing <X>U" conclusion line, so we don't repeat it here.
+    static func smbCappedByIobTHTag(iobThEffective: Decimal) -> String {
+        "eff.iobTH:, capped at \(iobThEffective)"
+    }
 
-    /// Replaces the `even TT` / `even Target` chip in an autoISF SMB reason with
-    /// `capped by iobTH`. No-op if neither marker is present (defensive — a future
-    /// reason format change would simply leave the reason untouched rather than
-    /// silently corrupting it).
-    static func applyIobTHCapTag(to reason: String) -> String {
+    /// Tags an autoISF SMB reason as having been capped by the iobTH 130 % overrun cap.
+    /// - When the even/odd toggle is on, the reason already carries an `, even TT,` /
+    ///   `, even Target,` chip — we replace that chip in-place with `capped by iobTH:, <X>`.
+    /// - When the toggle is off, no such chip exists; we insert a fresh
+    ///   `, capped by iobTH:, <X>` chip immediately before the first `; ` conclusion
+    ///   separator, so the chip cloud (which keys off `; `) renders it next to the
+    ///   other chips.
+    static func applyIobTHCapTag(to reason: String, iobThEffective: Decimal) -> String {
+        let tag = smbCappedByIobTHTag(iobThEffective: iobThEffective)
         if reason.contains(", even TT,") {
-            return reason.replacingOccurrences(of: ", even TT,", with: ", \(smbCappedByIobTHTag),")
+            return reason.replacingOccurrences(of: ", even TT,", with: ", \(tag),")
         }
         if reason.contains(", even Target,") {
-            return reason.replacingOccurrences(of: ", even Target,", with: ", \(smbCappedByIobTHTag),")
+            return reason.replacingOccurrences(of: ", even Target,", with: ", \(tag),")
         }
-        return reason
+        guard let separatorRange = reason.range(of: "; ") else {
+            return reason + ", \(tag)"
+        }
+        return reason.replacingCharacters(in: separatorRange, with: ", \(tag); ")
     }
 
     // MARK: - ISF adjustment fragments (AutoISFAdjust outputs)

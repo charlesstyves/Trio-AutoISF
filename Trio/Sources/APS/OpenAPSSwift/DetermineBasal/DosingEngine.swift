@@ -843,17 +843,24 @@ enum DosingEngine {
         )
 
         let roundSmbTo = 1 / profile.bolusIncrement
-        // autoISF iobTH 130 % overrun cap. Encapsulated in AutoISFsmb so the standard
-        // (non-autoISF) path stays one-liner; with autoISF off `cap` is a no-op.
-        let cap = AutoISFsmb.applyIobTHcap(
+        var microBolusWithoutRounding = min(insulinRequired * smbDeliveryRatio, maxBolus)
+
+        // autoISF iobTH overrun cap (no-op without autoISF). The autoISF module
+        // pulls eff.iobTH / virtual ceiling out of `autoISFSmbResult` and also
+        // rewrites the chip-cloud reason to surface `eff.iobTH:, capped at <X>`
+        // when the cap fires, so DosingEngine just hands the reason in and out.
+        let capped = AutoISFsmb.applyIobTHcap(
             profile: profile,
             currentIob: currentIob,
-            microBolus: min(insulinRequired * smbDeliveryRatio, maxBolus),
+            microBolus: microBolusWithoutRounding,
             smbResult: autoISFSmbResult,
             reason: newDetermination.reason
         )
-        newDetermination.reason = cap.reason
-        let microBolus = (cap.microBolus * roundSmbTo).floor() / roundSmbTo
+        microBolusWithoutRounding = capped.microBolus
+        newDetermination.reason = capped.reason
+        let iobTHCapReason = capped.reasonTail
+
+        let microBolus = (microBolusWithoutRounding * roundSmbTo).floor() / roundSmbTo
 
         let worstCaseInsulinRequired = (targetGlucose - (naiveEventualGlucose + minIOBForecastedGlucose) / 2) /
             adjustedSensitivity
