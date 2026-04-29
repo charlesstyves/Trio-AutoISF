@@ -150,23 +150,23 @@ enum AutoISFsmb {
     /// autoISF 130 % iobTH SMB cap. Mirrors determine-basal.js lines 1855-1864.
     ///
     /// If autoISF is enabled, the iobTH method is on (`iob_threshold_percent != 1`),
-    /// the loop mode is `.fullLoop` or `.enforced`, and delivering this microBolus
-    /// would push current IOB past `iobTHVirtual`, the bolus is clamped so post-
-    /// delivery IOB stays at `iobTHVirtual`. Returns the (possibly reduced) bolus
-    /// and a reason tail to append to the "Microbolusing Xu" string.
+    /// and delivering this microBolus would push current IOB past `iobTHVirtual`,
+    /// the bolus is clamped so post-delivery IOB stays at `iobTHVirtual`. Returns
+    /// the (possibly reduced) bolus and a reason tail to append to the
+    /// "Microbolusing Xu" string.
     ///
-    /// With autoISF disabled, this is a no-op by design — standard oref SMB path
-    /// is preserved unchanged.
+    /// The cap fires regardless of `enableSMB_EvenOn_OddOff_always` — same principle
+    /// as the gate, which was decoupled from the toggle in May 2025. If the user set
+    /// iobTH < 100 %, they want it enforced. With autoISF disabled this is a no-op.
     static func applyIobTHcap(
         profile: Profile,
         currentIob: Decimal,
         microBolus: Decimal,
-        loopMode: AutoISFLoopMode,
+        loopMode _: AutoISFLoopMode,
         iobTHVirtual: Decimal
     ) -> (microBolus: Decimal, reasonTail: String) {
         guard profile.autoisf,
               profile.iobThresholdPercent != 1,
-              loopMode == .fullLoop || loopMode == .enforced,
               microBolus > iobTHVirtual - currentIob
         else {
             return (microBolus, "")
