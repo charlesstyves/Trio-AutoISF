@@ -56,6 +56,9 @@ enum AlgoComparisonPersistence {
     }
 
     /// Persist the loop-level summary at the end of a public OpenAPS entry point.
+    /// `subSections` holds the per-loop sub-section breakdown captured by
+    /// `OrefSubTimer` (e.g. `determineBasal.AutoISF.run`, `autoISFGlucose.calculateParabolaFit`).
+    /// Serialized as JSON so the analyzer can decode it without a relationship.
     static func saveLoopSummary(
         loopId: UUID,
         apsLoopId: UUID,
@@ -66,7 +69,8 @@ enum AlgoComparisonPersistence {
         moduleSumActiveMs: Double,
         moduleSumShadowMs: Double,
         comparisonsCount: Int,
-        hasShadow: Bool
+        hasShadow: Bool,
+        subSections: [String: Double] = [:]
     ) {
         let context = CoreDataStack.shared.newTaskContext()
         context.perform {
@@ -84,6 +88,12 @@ enum AlgoComparisonPersistence {
             row.waitMs = max(0, pipelineTotalMs - moduleSumActiveMs - moduleSumShadowMs)
             row.comparisonsCount = Int32(comparisonsCount)
             row.hasShadow = hasShadow
+            if !subSections.isEmpty,
+               let data = try? JSONSerialization.data(withJSONObject: subSections, options: []),
+               let jsonString = String(data: data, encoding: .utf8)
+            {
+                row.subSectionsJSON = jsonString
+            }
 
             do {
                 if context.hasChanges { try context.save() }

@@ -338,6 +338,7 @@
 		AC10000000000000000000B1 /* LoopTimingCollector.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC10000000000000000000B2 /* LoopTimingCollector.swift */; };
 		AC10000000000000000000C1 /* AlgoComparisonAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC10000000000000000000C2 /* AlgoComparisonAnalyzer.swift */; };
 		AC10000000000000000000D1 /* AlgoComparisonAnalysisView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC10000000000000000000D2 /* AlgoComparisonAnalysisView.swift */; };
+		AC10000000000000000000E1 /* OrefSubTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC10000000000000000000E2 /* OrefSubTimer.swift */; };
 		3BEDC9932EEB27B600AC6492 /* IobConsecutiveEventsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BEDC9922EEB27B600AC6492 /* IobConsecutiveEventsTests.swift */; };
 		3BEF6AB12D9731660076089D /* MealHistoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BEF6AB02D9731530076089D /* MealHistoryTests.swift */; };
 		3BEF6AB32D97316F0076089D /* MealTotalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BEF6AB22D97316A0076089D /* MealTotalTests.swift */; };
@@ -1345,6 +1346,7 @@
 		AC10000000000000000000B2 /* LoopTimingCollector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopTimingCollector.swift; sourceTree = "<group>"; };
 		AC10000000000000000000C2 /* AlgoComparisonAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlgoComparisonAnalyzer.swift; sourceTree = "<group>"; };
 		AC10000000000000000000D2 /* AlgoComparisonAnalysisView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlgoComparisonAnalysisView.swift; sourceTree = "<group>"; };
+		AC10000000000000000000E2 /* OrefSubTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrefSubTimer.swift; sourceTree = "<group>"; };
 		3BEA3ADE2D58F79700A67A1D /* OrefFunction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrefFunction.swift; sourceTree = "<group>"; };
 		3BEDC9922EEB27B600AC6492 /* IobConsecutiveEventsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IobConsecutiveEventsTests.swift; sourceTree = "<group>"; };
 		3BEF6AB02D9731530076089D /* MealHistoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealHistoryTests.swift; sourceTree = "<group>"; };
@@ -3190,6 +3192,7 @@
 				3BEA3ADC2D58F79700A67A1D /* JSONCompare.swift */,
 				AC10000000000000000000B2 /* LoopTimingCollector.swift */,
 				3BEA3ADE2D58F79700A67A1D /* OrefFunction.swift */,
+				AC10000000000000000000E2 /* OrefSubTimer.swift */,
 			);
 			path = Logging;
 			sourceTree = "<group>";
@@ -5174,6 +5177,7 @@
 				AC10000000000000000000B1 /* LoopTimingCollector.swift in Sources */,
 				AC10000000000000000000C1 /* AlgoComparisonAnalyzer.swift in Sources */,
 				AC10000000000000000000D1 /* AlgoComparisonAnalysisView.swift in Sources */,
+				AC10000000000000000000E1 /* OrefSubTimer.swift in Sources */,
 				BD47FD1B2D88AB4F0043966B /* OnboardingStateModel.swift in Sources */,
 				3811DE0C25C9D32F00A708ED /* BaseProvider.swift in Sources */,
 				CE95BF5A2BA62E4A00DC3DE3 /* PluginSource.swift in Sources */,

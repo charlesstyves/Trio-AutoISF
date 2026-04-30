@@ -29,6 +29,11 @@ final class LoopTimingCollector {
     private var activeSumMs: Double = 0
     private var shadowSumMs: Double = 0
     private var comparisons: Int = 0
+    /// Sub-section name → cumulative ms within this loop. Sub-section names are
+    /// the dotted paths emitted by `OrefSubTimer.time` (e.g.
+    /// "determineBasal.AutoISF.run", "autoISFGlucose.calculateParabolaFit").
+    /// Multiple invocations of the same sub-section in one loop accumulate.
+    private var subSections: [String: Double] = [:]
 
     init(loopId: UUID, algoContext: String, activePath: String, hasShadow: Bool) {
         self.loopId = loopId
@@ -50,9 +55,21 @@ final class LoopTimingCollector {
         comparisons += 1
     }
 
+    func recordSubSection(name: String, ms: Double) {
+        lock.lock()
+        defer { lock.unlock() }
+        subSections[name, default: 0] += ms
+    }
+
     var snapshot: (active: Double, shadow: Double, comparisons: Int) {
         lock.lock()
         defer { lock.unlock() }
         return (activeSumMs, shadowSumMs, comparisons)
+    }
+
+    var subSectionsSnapshot: [String: Double] {
+        lock.lock()
+        defer { lock.unlock() }
+        return subSections
     }
 }

@@ -65,28 +65,32 @@ enum AutoISF {
         )
 
         // SMB control: runs whenever autoISF is enabled, independent of dynISF
-        let smbResult = AutoISFsmb.evaluate(
-            profile: profile,
-            targetBG: targetBG,
-            microBolusAllowed: microBolusAllowed,
-            iob: iob,
-            b30IsActive: b30IsActive,
-            exerciseModeActive: exerciseModeActive,
-            overrideSmbIsOff: overrideSmbIsOff
-        )
+        let smbResult = OrefSubTimer.time("autoISF.AutoISFsmb.evaluate") {
+            AutoISFsmb.evaluate(
+                profile: profile,
+                targetBG: targetBG,
+                microBolusAllowed: microBolusAllowed,
+                iob: iob,
+                b30IsActive: b30IsActive,
+                exerciseModeActive: exerciseModeActive,
+                overrideSmbIsOff: overrideSmbIsOff
+            )
+        }
         let smbEnabled: Bool? = smbResult.flatMap { $0.loopMode != .oref ? $0.smbEnabled : nil }
 
         // Effective SMB delivery ratio (fixed or BG-range-ramped), pre-computed once so
         // DosingEngine and Determination can read the same value.
-        let smbRatio = min(
-            AutoISFsmb.variableSMBRatio(
-                profile: profile,
-                currentGlucose: currentGlucose,
-                targetGlucose: targetBG,
-                loopMode: smbResult?.loopMode ?? .oref
-            ),
-            1
-        )
+        let smbRatio = OrefSubTimer.time("autoISF.AutoISFsmb.variableSMBRatio") {
+            min(
+                AutoISFsmb.variableSMBRatio(
+                    profile: profile,
+                    currentGlucose: currentGlucose,
+                    targetGlucose: targetBG,
+                    loopMode: smbResult?.loopMode ?? .oref
+                ),
+                1
+            )
+        }
 
         // ISF adjustment: only when dynISF is inactive and glucose status is available
         guard !dynamicIsfActive, let status = autoISFStatus else {
@@ -101,16 +105,18 @@ enum AutoISF {
             )
         }
 
-        let adjustResult = AutoISFAdjust.calculate(
-            sens: adjustedSensitivity,
-            profileSens: profileSens,
-            targetBG: targetBG,
-            profile: profile,
-            glucoseStatus: status,
-            sensitivityRatio: sensitivityRatio,
-            exerciseModeActive: exerciseModeActive,
-            resistanceModeActive: resistanceModeActive
-        )
+        let adjustResult = OrefSubTimer.time("autoISF.AutoISFAdjust.calculate") {
+            AutoISFAdjust.calculate(
+                sens: adjustedSensitivity,
+                profileSens: profileSens,
+                targetBG: targetBG,
+                profile: profile,
+                glucoseStatus: status,
+                sensitivityRatio: sensitivityRatio,
+                exerciseModeActive: exerciseModeActive,
+                resistanceModeActive: resistanceModeActive
+            )
+        }
 
         let isfReason: String
         if let adjustResult = adjustResult {

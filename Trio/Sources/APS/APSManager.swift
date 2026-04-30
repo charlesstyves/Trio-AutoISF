@@ -246,6 +246,7 @@ final class BaseAPSManager: APSManager, Injectable {
             // (createProfiles, autosense, determineBasal) share a single umbrella ID
             // for analyzer aggregation.
             self.openAPS.algoShadowCompare = self.settings.algoShadowCompare
+            OrefSubTimer.enabled = self.settings.algoShadowCompare
             self.openAPS.currentApsLoopId = UUID()
 
             // Setup loop and background task

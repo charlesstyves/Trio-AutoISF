@@ -446,7 +446,8 @@ final class OpenAPS {
                 moduleSumActiveMs: snap.active,
                 moduleSumShadowMs: snap.shadow,
                 comparisonsCount: snap.comparisons,
-                hasShadow: pipelineHasShadow
+                hasShadow: pipelineHasShadow,
+                subSections: pipelineCollector.subSectionsSnapshot
             )
         }
 
@@ -746,7 +747,8 @@ final class OpenAPS {
             moduleSumActiveMs: autosenseSnap.active,
             moduleSumShadowMs: autosenseSnap.shadow,
             comparisonsCount: autosenseSnap.comparisons,
-            hasShadow: autosenseHasShadow
+            hasShadow: autosenseHasShadow,
+            subSections: autosenseCollector.subSectionsSnapshot
         )
 
         debug(.openAPS, "AUTOSENS: \(autosenseResult)")
@@ -896,7 +898,8 @@ final class OpenAPS {
                 moduleSumActiveMs: makeProfileSnap.active,
                 moduleSumShadowMs: makeProfileSnap.shadow,
                 comparisonsCount: makeProfileSnap.comparisons,
-                hasShadow: makeProfileHasShadow
+                hasShadow: makeProfileHasShadow,
+                subSections: makeProfileCollector.subSectionsSnapshot
             )
         } catch {
             debug(
@@ -926,7 +929,7 @@ final class OpenAPS {
                 OpenAPSSwift.iob(pumphistory: pumphistory, profile: profile, clock: clock, autosens: autosens)
             }
             var shadow: (result: OrefFunctionResult, duration: TimeInterval)?
-            if let ctx = timingCtx, ctx.hasShadow {
+            if let ctx = timingCtx, ctx.hasShadow, OrefFunction.iob.shadowEnabled {
                 shadow = await timeShadow {
                     await self.iobJavascript(pumphistory: pumphistory, profile: profile, clock: clock, autosens: autosens)
                 }
@@ -944,7 +947,7 @@ final class OpenAPS {
                 await self.iobJavascript(pumphistory: pumphistory, profile: profile, clock: clock, autosens: autosens)
             }
             var shadow: (result: OrefFunctionResult, duration: TimeInterval)?
-            if let ctx = timingCtx, ctx.hasShadow {
+            if let ctx = timingCtx, ctx.hasShadow, OrefFunction.iob.shadowEnabled {
                 shadow = await timeShadow {
                     OpenAPSSwift.iob(pumphistory: pumphistory, profile: profile, clock: clock, autosens: autosens)
                 }
@@ -1000,7 +1003,7 @@ final class OpenAPS {
                 )
             }
             var shadow: (result: OrefFunctionResult, duration: TimeInterval)?
-            if let ctx = timingCtx, ctx.hasShadow {
+            if let ctx = timingCtx, ctx.hasShadow, OrefFunction.meal.shadowEnabled {
                 shadow = await timeShadow {
                     await self.mealJavascript(
                         pumphistory: pumphistory,
@@ -1032,7 +1035,7 @@ final class OpenAPS {
                 )
             }
             var shadow: (result: OrefFunctionResult, duration: TimeInterval)?
-            if let ctx = timingCtx, ctx.hasShadow {
+            if let ctx = timingCtx, ctx.hasShadow, OrefFunction.meal.shadowEnabled {
                 shadow = await timeShadow {
                     OpenAPSSwift.meal(
                         pumphistory: pumphistory,
@@ -1113,7 +1116,7 @@ final class OpenAPS {
                 )
             }
             var shadow: (result: OrefFunctionResult, duration: TimeInterval)?
-            if let ctx = timingCtx, ctx.hasShadow {
+            if let ctx = timingCtx, ctx.hasShadow, OrefFunction.autosens.shadowEnabled {
                 shadow = await timeShadow {
                     await self.autosenseJavascript(
                         glucose: glucose,
@@ -1145,7 +1148,7 @@ final class OpenAPS {
                 )
             }
             var shadow: (result: OrefFunctionResult, duration: TimeInterval)?
-            if let ctx = timingCtx, ctx.hasShadow {
+            if let ctx = timingCtx, ctx.hasShadow, OrefFunction.autosens.shadowEnabled {
                 shadow = await timeShadow {
                     OpenAPSSwift.autosense(
                         glucose: glucose,
@@ -1221,6 +1224,10 @@ final class OpenAPS {
         let clock = Date()
 
         if useSwiftOref {
+            // Route OrefSubTimer accumulations into this loop's collector while
+            // the Swift determineBasal active path runs, then clear so unrelated
+            // work doesn't pollute the loop's sub-section dict.
+            OrefSubTimer.currentCollector = timingCtx?.collector
             let (swiftResult, swiftDuration) = await timeAlgo("determineBasal", "Swift") {
                 OpenAPSSwift.determineBasal(
                     glucose: glucose,
@@ -1238,6 +1245,7 @@ final class OpenAPS {
                     clock: clock
                 )
             }
+            OrefSubTimer.currentCollector = nil
             var shadow: (result: OrefFunctionResult, duration: TimeInterval)?
             if let ctx = timingCtx, ctx.hasShadow {
                 shadow = await timeShadow {
@@ -1286,6 +1294,10 @@ final class OpenAPS {
             }
             var shadow: (result: OrefFunctionResult, duration: TimeInterval)?
             if let ctx = timingCtx, ctx.hasShadow {
+                // Route sub-timer accumulations into this loop's collector
+                // around the Swift shadow run too, so the shadow path also
+                // contributes its sub-section breakdown when JS is primary.
+                OrefSubTimer.currentCollector = ctx.collector
                 shadow = await timeShadow {
                     OpenAPSSwift.determineBasal(
                         glucose: glucose,
@@ -1303,6 +1315,7 @@ final class OpenAPS {
                         clock: clock
                     )
                 }
+                OrefSubTimer.currentCollector = nil
             }
             recordTiming(
                 function: .determineBasal,
@@ -1451,7 +1464,7 @@ final class OpenAPS {
                 )
             }
             var shadow: (result: OrefFunctionResult, duration: TimeInterval)?
-            if let ctx = timingCtx, ctx.hasShadow {
+            if let ctx = timingCtx, ctx.hasShadow, OrefFunction.makeProfile.shadowEnabled {
                 shadow = await timeShadow {
                     await self.makeProfileJavascript(
                         preferences: preferences,
@@ -1491,7 +1504,7 @@ final class OpenAPS {
                 )
             }
             var shadow: (result: OrefFunctionResult, duration: TimeInterval)?
-            if let ctx = timingCtx, ctx.hasShadow {
+            if let ctx = timingCtx, ctx.hasShadow, OrefFunction.makeProfile.shadowEnabled {
                 shadow = await timeShadow {
                     OpenAPSSwift.makeProfile(
                         preferences: preferences,
@@ -1519,11 +1532,16 @@ final class OpenAPS {
     }
 
     /// Time `work` and log a single `[ALGOPERF] name[algo] active=…ms` line.
+    /// Functions with `shouldMeasure == false` (iob, meal, makeProfile) skip
+    /// the log line — they're dropped completely from diagnostic logging.
     private func timeAlgo<T>(_ name: String, _ algo: String, _ work: () async -> T) async -> (T, TimeInterval) {
         let start = Date()
         let result = await work()
         let elapsed = Date().timeIntervalSince(start)
-        debug(.openAPS, String(format: "[ALGOPERF] %@[%@] active=%.1fms", name, algo, elapsed * 1000))
+        let measured = OrefFunction(rawValue: name)?.shouldMeasure ?? true
+        if measured {
+            debug(.openAPS, String(format: "[ALGOPERF] %@[%@] active=%.1fms", name, algo, elapsed * 1000))
+        }
         return (result, elapsed)
     }
 
@@ -1549,6 +1567,10 @@ final class OpenAPS {
         determineBasalInputs: DetermineBasalInputs? = nil,
         makeProfileInputs: MakeProfileInputs? = nil
     ) {
+        // Functions tagged `shouldMeasure == false` (iob, meal, makeProfile)
+        // are dropped completely — no CoreData persistence, no comparison,
+        // no roll-up into the loop summary.
+        guard function.shouldMeasure else { return }
         guard let ctx = timingCtx else { return }
         let activeMs = activeDuration * 1000
         ctx.collector.recordActive(ms: activeMs)

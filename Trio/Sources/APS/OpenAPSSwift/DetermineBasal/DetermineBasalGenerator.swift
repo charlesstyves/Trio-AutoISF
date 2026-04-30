@@ -74,16 +74,20 @@ enum DeterminationGenerator {
             }
         }
 
-        let glucoseStatus = try Self.getGlucoseStatus(glucoseReadings: glucose)
+        let glucoseStatus = try OrefSubTimer.time("determineBasal.getGlucoseStatus") {
+            try Self.getGlucoseStatus(glucoseReadings: glucose)
+        }
         guard let glucoseStatus = glucoseStatus else { throw DeterminationError.missingInputs }
 
         // Calculate autoISF status if enabled (this is where we have glucose data available)
         debug(.openAPSSwift, "determineBasal: profile.autoisf = \(profile.autoisf)")
-        let autoISFStatus: AutoISFGlucoseStatus? = profile.autoisf ?
-            glucoseStatus.getAutoISFGlucoseStatus(
-                glucoseReadings: glucose,
-                profile
-            ) : nil
+        let autoISFStatus: AutoISFGlucoseStatus? = OrefSubTimer.time("determineBasal.autoISFStatus") {
+            profile.autoisf ?
+                glucoseStatus.getAutoISFGlucoseStatus(
+                    glucoseReadings: glucose,
+                    profile
+                ) : nil
+        }
         debug(.openAPSSwift, "determineBasal: autoISFStatus = \(autoISFStatus != nil ? "populated" : "nil")")
         if let status = autoISFStatus {
             debug(.openAPSSwift, "  dura_p=\(status.dura_p), delta_pl=\(status.delta_pl), delta_pn=\(status.delta_pn)")
@@ -91,21 +95,23 @@ enum DeterminationGenerator {
             debug(.openAPSSwift, "  dura_ISF_minutes=\(status.dura_ISF_minutes), dura_ISF_average=\(status.dura_ISF_average)")
         }
 
-        return try determineBasal(
-            profile: profile,
-            preferences: preferences,
-            currentTemp: currentTemp,
-            iobData: iobData,
-            mealData: mealData,
-            autosensData: autosensData,
-            reservoirData: reservoirData,
-            glucoseStatus: glucoseStatus,
-            pumpHistory: pumpHistory,
-            microBolusAllowed: microBolusAllowed,
-            autoISFStatus: autoISFStatus,
-            trioCustomOrefVariables: trioCustomOrefVariables,
-            currentTime: currentTime
-        )
+        return try OrefSubTimer.time("determineBasal.body") {
+            try determineBasal(
+                profile: profile,
+                preferences: preferences,
+                currentTemp: currentTemp,
+                iobData: iobData,
+                mealData: mealData,
+                autosensData: autosensData,
+                reservoirData: reservoirData,
+                glucoseStatus: glucoseStatus,
+                pumpHistory: pumpHistory,
+                microBolusAllowed: microBolusAllowed,
+                autoISFStatus: autoISFStatus,
+                trioCustomOrefVariables: trioCustomOrefVariables,
+                currentTime: currentTime
+            )
+        }
     }
 
     /// Internal function to implement the core determine basal logic. We have a separate function
@@ -208,12 +214,14 @@ enum DeterminationGenerator {
             )
         }
 
-        let dynamicIsfResult = DynamicISF.calculate(
-            profile: profile,
-            preferences: preferences,
-            currentGlucose: currentGlucose,
-            trioCustomOrefVariables: trioCustomOrefVariables
-        )
+        let dynamicIsfResult = OrefSubTimer.time("determineBasal.DynamicISF.calculate") {
+            DynamicISF.calculate(
+                profile: profile,
+                preferences: preferences,
+                currentGlucose: currentGlucose,
+                trioCustomOrefVariables: trioCustomOrefVariables
+            )
+        }
 
         if let dynamicIsfResult = dynamicIsfResult {
             autosensData = Autosens(
@@ -223,14 +231,16 @@ enum DeterminationGenerator {
                 timestamp: autosensData.timestamp
             )
         }
-        let (sensitivityRatio, updateAutosensRatio) = calculateSensitivityRatio(
-            currentGlucose: currentGlucose,
-            profile: profile,
-            autosens: autosensData,
-            targetGlucose: profile.profileTarget(trioCustomOrefVariables: trioCustomOrefVariables) ?? 120,
-            temptargetSet: profile.temptargetSet ?? false,
-            dynamicIsfResult: dynamicIsfResult
-        )
+        let (sensitivityRatio, updateAutosensRatio) = OrefSubTimer.time("determineBasal.calculateSensitivityRatio") {
+            calculateSensitivityRatio(
+                currentGlucose: currentGlucose,
+                profile: profile,
+                autosens: autosensData,
+                targetGlucose: profile.profileTarget(trioCustomOrefVariables: trioCustomOrefVariables) ?? 120,
+                temptargetSet: profile.temptargetSet ?? false,
+                dynamicIsfResult: dynamicIsfResult
+            )
+        }
         if updateAutosensRatio {
             autosensData = Autosens(
                 ratio: sensitivityRatio,
@@ -265,16 +275,18 @@ enum DeterminationGenerator {
             trioCustomOrefVariables: trioCustomOrefVariables
         )
 
-        let (adjustedGlucoseTargets, threshold) = adjustGlucoseTargets(
-            profile: profile,
-            autosens: autosensData,
-            trioCustomOrefVariables: trioCustomOrefVariables,
-            temptargetSet: profile.temptargetSet ?? false,
-            targetGlucose: profile.minBg ?? 100,
-            minGlucose: profile.minBg ?? 70, // TODO: can we force unwrap?
-            maxGlucose: profile.maxBg ?? 180,
-            noise: 1
-        )
+        let (adjustedGlucoseTargets, threshold) = OrefSubTimer.time("determineBasal.adjustGlucoseTargets") {
+            adjustGlucoseTargets(
+                profile: profile,
+                autosens: autosensData,
+                trioCustomOrefVariables: trioCustomOrefVariables,
+                temptargetSet: profile.temptargetSet ?? false,
+                targetGlucose: profile.minBg ?? 100,
+                minGlucose: profile.minBg ?? 70, // TODO: can we force unwrap?
+                maxGlucose: profile.maxBg ?? 180,
+                noise: 1
+            )
+        }
 
         // autoISF and dynISF are mutually exclusive: run autoISF only when dynISF is not active.
         // exerciseModeActive / resistanceModeActive mirror the JS determine_basal conditions.
@@ -287,15 +299,17 @@ enum DeterminationGenerator {
             && tempTargetSet
             && adjustedGlucoseTargets.targetGlucose < baseProfileTarget
 
-        let b30Result = AimiB30.evaluate(
-            profile: profile,
-            pumpHistory: pumpHistory,
-            currentTime: currentTime,
-            targetBG: adjustedGlucoseTargets.targetGlucose,
-            currentBG: glucoseStatus.glucose,
-            bgDelta: glucoseStatus.delta,
-            basal: basal
-        )
+        let b30Result = OrefSubTimer.time("determineBasal.AimiB30.evaluate") {
+            AimiB30.evaluate(
+                profile: profile,
+                pumpHistory: pumpHistory,
+                currentTime: currentTime,
+                targetBG: adjustedGlucoseTargets.targetGlucose,
+                currentBG: glucoseStatus.glucose,
+                bgDelta: glucoseStatus.delta,
+                basal: basal
+            )
+        }
 
         let originalSensitivity = profile.profileSensitivity(at: currentTime, trioCustomOrefVaribales: trioCustomOrefVariables)
         // Override disables SMB either flat (smbIsOff) or via schedule window (smbIsScheduledOff + clock).
@@ -304,33 +318,39 @@ enum DeterminationGenerator {
                 trioCustomOrefVariables: trioCustomOrefVariables,
                 clock: currentTime
             )) ?? false)
-        let autoISFResult = AutoISF.run(
-            profile: profile,
-            dynamicIsfActive: dynamicIsfResult != nil,
-            adjustedSensitivity: adjustedSensitivity,
-            profileSens: originalSensitivity,
-            targetBG: adjustedGlucoseTargets.targetGlucose,
-            currentGlucose: currentGlucose,
-            sensitivityRatio: sensitivityRatio,
-            originalSensitivity: originalSensitivity,
-            exerciseModeActive: exerciseModeActive,
-            resistanceModeActive: resistanceModeActive,
-            microBolusAllowed: microBolusAllowed,
-            iob: iobData.first?.iob ?? 0,
-            b30IsActive: b30Result.isActive,
-            autoISFStatus: autoISFStatus,
-            overrideSmbIsOff: overrideDisablesSmb
-        )
+        let autoISFResult = OrefSubTimer.time("determineBasal.AutoISF.run") {
+            AutoISF.run(
+                profile: profile,
+                dynamicIsfActive: dynamicIsfResult != nil,
+                adjustedSensitivity: adjustedSensitivity,
+                profileSens: originalSensitivity,
+                targetBG: adjustedGlucoseTargets.targetGlucose,
+                currentGlucose: currentGlucose,
+                sensitivityRatio: sensitivityRatio,
+                originalSensitivity: originalSensitivity,
+                exerciseModeActive: exerciseModeActive,
+                resistanceModeActive: resistanceModeActive,
+                microBolusAllowed: microBolusAllowed,
+                iob: iobData.first?.iob ?? 0,
+                b30IsActive: b30Result.isActive,
+                autoISFStatus: autoISFStatus,
+                overrideSmbIsOff: overrideDisablesSmb
+            )
+        }
         if let adjusted = autoISFResult.adjustedSensitivity {
             adjustedSensitivity = adjusted
         }
 
-        let glucoseImpactSeries = buildGlucoseImpactSeries(iobDataSeries: iobData, sensitivity: adjustedSensitivity)
-        let glucoseImpactSeriesWithZeroTemp = buildGlucoseImpactSeries(
-            iobDataSeries: iobData,
-            sensitivity: adjustedSensitivity,
-            withZeroTemp: true
-        )
+        let glucoseImpactSeries = OrefSubTimer.time("determineBasal.buildGlucoseImpactSeries") {
+            buildGlucoseImpactSeries(iobDataSeries: iobData, sensitivity: adjustedSensitivity)
+        }
+        let glucoseImpactSeriesWithZeroTemp = OrefSubTimer.time("determineBasal.buildGlucoseImpactSeries.zeroTemp") {
+            buildGlucoseImpactSeries(
+                iobDataSeries: iobData,
+                sensitivity: adjustedSensitivity,
+                withZeroTemp: true
+            )
+        }
 
         guard let currentGlucoseImpact = glucoseImpactSeries.first?.jsRounded(scale: 2) else {
             throw DeterminationError.determinationError
@@ -391,27 +411,29 @@ enum DeterminationGenerator {
             throw DeterminationError.eventualGlucoseCalculationError(sensitivity: adjustedSensitivity, deviation: deviation)
         }
 
-        let forecastResult = ForecastGenerator.generate(
-            glucose: currentGlucose,
-            glucoseStatus: glucoseStatus,
-            currentGlucoseImpact: currentGlucoseImpact,
-            glucoseImpactSeries: glucoseImpactSeries,
-            glucoseImpactSeriesWithZeroTemp: glucoseImpactSeriesWithZeroTemp,
-            iobData: iobData,
-            mealData: mealData,
-            profile: profile,
-            preferences: preferences,
-            trioCustomOrefVariables: trioCustomOrefVariables,
-            dynamicIsfResult: dynamicIsfResult,
-            targetGlucose: adjustedGlucoseTargets.targetGlucose,
-            adjustedSensitivity: adjustedSensitivity,
-            profileSensitivity: originalSensitivity,
-            sensitivityRatio: sensitivityRatio,
-            naiveEventualGlucose: naiveEventualGlucose,
-            eventualGlucose: eventualGlucose,
-            threshold: threshold,
-            currentTime: currentTime
-        )
+        let forecastResult = OrefSubTimer.time("determineBasal.ForecastGenerator.generate") {
+            ForecastGenerator.generate(
+                glucose: currentGlucose,
+                glucoseStatus: glucoseStatus,
+                currentGlucoseImpact: currentGlucoseImpact,
+                glucoseImpactSeries: glucoseImpactSeries,
+                glucoseImpactSeriesWithZeroTemp: glucoseImpactSeriesWithZeroTemp,
+                iobData: iobData,
+                mealData: mealData,
+                profile: profile,
+                preferences: preferences,
+                trioCustomOrefVariables: trioCustomOrefVariables,
+                dynamicIsfResult: dynamicIsfResult,
+                targetGlucose: adjustedGlucoseTargets.targetGlucose,
+                adjustedSensitivity: adjustedSensitivity,
+                profileSensitivity: originalSensitivity,
+                sensitivityRatio: sensitivityRatio,
+                naiveEventualGlucose: naiveEventualGlucose,
+                eventualGlucose: eventualGlucose,
+                threshold: threshold,
+                currentTime: currentTime
+            )
+        }
 
         // used for pre dosing decision sanity later on
         let expectedDelta = calculateExpectedDelta(
@@ -457,33 +479,37 @@ enum DeterminationGenerator {
                 tddReason += ", Basal ratio: \(dynamicIsfResult.tddRatio)"
             }
         }
-        let dosingInputs = DosingEngine.prepareDosingInputs(
-            profile: profile,
-            mealData: mealData,
-            forecast: forecastResult,
-            naiveEventualGlucose: naiveEventualGlucose,
-            threshold: threshold,
-            glucoseImpact: currentGlucoseImpact,
-            deviation: deviation,
-            currentBasal: profile.currentBasal ?? profile.basalFor(time: currentTime),
-            overrideFactor: trioCustomOrefVariables.overrideFactor(),
-            adjustedSensitivity: adjustedSensitivity,
-            isfReason: isfReason,
-            tddReason: tddReason,
-            targetLog: targetLog
-        )
+        let dosingInputs = OrefSubTimer.time("determineBasal.DosingEngine.prepareDosingInputs") {
+            DosingEngine.prepareDosingInputs(
+                profile: profile,
+                mealData: mealData,
+                forecast: forecastResult,
+                naiveEventualGlucose: naiveEventualGlucose,
+                threshold: threshold,
+                glucoseImpact: currentGlucoseImpact,
+                deviation: deviation,
+                currentBasal: profile.currentBasal ?? profile.basalFor(time: currentTime),
+                overrideFactor: trioCustomOrefVariables.overrideFactor(),
+                adjustedSensitivity: adjustedSensitivity,
+                isfReason: isfReason,
+                tddReason: tddReason,
+                targetLog: targetLog
+            )
+        }
 
-        let smbDecision = try DosingEngine.makeSMBDosingDecision(
-            profile: profile,
-            meal: mealData,
-            currentGlucose: currentGlucose,
-            adjustedTargetGlucose: adjustedGlucoseTargets.targetGlucose,
-            minGuardGlucose: forecastResult.minGuardGlucose,
-            threshold: threshold,
-            glucoseStatus: glucoseStatus,
-            trioCustomOrefVariables: trioCustomOrefVariables,
-            clock: currentTime
-        )
+        let smbDecision = try OrefSubTimer.time("determineBasal.DosingEngine.makeSMBDosingDecision") {
+            try DosingEngine.makeSMBDosingDecision(
+                profile: profile,
+                meal: mealData,
+                currentGlucose: currentGlucose,
+                adjustedTargetGlucose: adjustedGlucoseTargets.targetGlucose,
+                minGuardGlucose: forecastResult.minGuardGlucose,
+                threshold: threshold,
+                glucoseStatus: glucoseStatus,
+                trioCustomOrefVariables: trioCustomOrefVariables,
+                clock: currentTime
+            )
+        }
 
         var smbIsEnabled = smbDecision.isEnabled
         if let override = autoISFResult.smbEnabled {

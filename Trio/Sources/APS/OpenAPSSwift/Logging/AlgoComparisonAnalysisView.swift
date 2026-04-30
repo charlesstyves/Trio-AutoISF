@@ -27,6 +27,9 @@ struct AlgoComparisonAnalysisView: View {
                 if !snap.perFunction.isEmpty {
                     perFunctionSection(snap.perFunction)
                 }
+                if !snap.subSectionStats.isEmpty {
+                    subSectionStatsSection(snap.subSectionStats)
+                }
                 if !snap.topDivergentFields.isEmpty {
                     divergentFieldsSection(snap.topDivergentFields)
                 }
@@ -126,6 +129,22 @@ struct AlgoComparisonAnalysisView: View {
                             }
                         }
                     }
+                }
+                .padding(.vertical, 2)
+            }
+        }
+    }
+
+    @ViewBuilder private func subSectionStatsSection(_ stats: [AlgoComparisonAnalyzer.SubSectionStats]) -> some View {
+        Section("DetermineBasal sub-sections") {
+            ForEach(stats) { s in
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(s.name).font(.caption.monospaced())
+                    Text(
+                        "p50 \(String(format: "%.2f", s.p50Ms)) ms  p95 \(String(format: "%.2f", s.p95Ms)) ms  avg \(String(format: "%.2f", s.avgMs)) ms  (n=\(s.sampleCount))"
+                    )
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
                 }
                 .padding(.vertical, 2)
             }

@@ -27,6 +27,37 @@ enum OrefFunction: String, Codable {
     case makeProfile
     case determineBasal
 
+    /// Whether to run the JS shadow path alongside the active (Swift) path
+    /// for this function. Disabled for the four functions where Swift is
+    /// already faster than JS and the comparison stayed matching across
+    /// rolling windows — running the JS shadow there only burns loop time.
+    /// `determineBasal` keeps the shadow because that's the slow one we're
+    /// still investigating sub-section timings for.
+    var shadowEnabled: Bool {
+        switch self {
+        case .determineBasal: return true
+        case .autosens,
+             .iob,
+             .makeProfile,
+             .meal: return false
+        }
+    }
+
+    /// Whether this function participates in `[ALGOPERF]` logging, CoreData
+    /// persistence (`TmpAlgoFunctionTiming`) and the analysis screen at all.
+    /// `iob`, `meal`, `makeProfile` are dropped completely — Swift is already
+    /// faster than JS for those and we don't want them noising up the
+    /// determineBasal-focused diagnostic view.
+    var shouldMeasure: Bool {
+        switch self {
+        case .autosens,
+             .determineBasal: return true
+        case .iob,
+             .makeProfile,
+             .meal: return false
+        }
+    }
+
     // since we're removing some keys from our Profile that exist in Javascript
     // we need to let the difference function know which keys to ignore when
     // calculating differences
