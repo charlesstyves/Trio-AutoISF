@@ -76,13 +76,19 @@ enum AutoISFGlucose {
         guard let mostRecentDate = sorted.first?.date else { return nil }
 
         // Calculate cgmFlatMinutes (minutes where glucose is relatively flat)
-        let cgmFlatMinutes = calculateCGMFlatMinutes(from: sorted, referenceDate: mostRecentDate)
+        let cgmFlatMinutes = OrefSubTimer.time("autoISFGlucose.calculateCGMFlatMinutes") {
+            calculateCGMFlatMinutes(from: sorted, referenceDate: mostRecentDate)
+        }
 
         // Calculate dura_ISF values (moving average window)
-        let (dura_ISF_minutes, dura_ISF_average) = calculateDuraISF(from: sorted, referenceDate: mostRecentDate)
+        let (dura_ISF_minutes, dura_ISF_average) = OrefSubTimer.time("autoISFGlucose.calculateDuraISF") {
+            calculateDuraISF(from: sorted, referenceDate: mostRecentDate)
+        }
 
         // Calculate parabola fit (quadratic regression)
-        let parabolaResult = calculateParabolaFit(from: sorted, referenceDate: mostRecentDate)
+        let parabolaResult = OrefSubTimer.time("autoISFGlucose.calculateParabolaFit") {
+            calculateParabolaFit(from: sorted, referenceDate: mostRecentDate)
+        }
 
         // Build debug string matching JavaScript ppDebug format
         let debugInfo = buildDebugString(

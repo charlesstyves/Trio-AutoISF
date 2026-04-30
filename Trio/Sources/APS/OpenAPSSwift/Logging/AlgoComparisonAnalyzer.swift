@@ -37,6 +37,18 @@ enum AlgoComparisonAnalyzer {
         let recentLoops: [LoopRow]
         let topDivergentFields: [DivergentField]
         let pipelineStats: PipelineStats?
+        /// Aggregated `OrefSubTimer` sub-section timings across the window's
+        /// loops — sorted by p50 descending so the slow ones surface first.
+        let subSectionStats: [SubSectionStats]
+    }
+
+    struct SubSectionStats: Identifiable {
+        let name: String
+        var id: String { name }
+        let sampleCount: Int
+        let p50Ms: Double
+        let p95Ms: Double
+        let avgMs: Double
     }
 
     struct FunctionStats: Identifiable {
@@ -232,6 +244,36 @@ enum AlgoComparisonAnalyzer {
                 )
             }()
 
+            // Aggregate sub-section timings by name across all summary rows in
+            // the window. Each row holds the per-loop accumulated ms; we
+            // collect the per-loop values for each sub-section into a samples
+            // array, then derive p50/p95/avg.
+            var subSectionSamples: [String: [Double]] = [:]
+            for s in summaries {
+                guard let json = s.subSectionsJSON,
+                      let data = json.data(using: .utf8),
+                      let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+                else { continue }
+                for (name, value) in dict {
+                    if let v = value as? Double {
+                        subSectionSamples[name, default: []].append(v)
+                    } else if let n = value as? NSNumber {
+                        subSectionSamples[name, default: []].append(n.doubleValue)
+                    }
+                }
+            }
+            let subSectionStats: [SubSectionStats] = subSectionSamples
+                .map { name, samples in
+                    SubSectionStats(
+                        name: name,
+                        sampleCount: samples.count,
+                        p50Ms: percentile(samples, p: 0.5),
+                        p95Ms: percentile(samples, p: 0.95),
+                        avgMs: average(samples)
+                    )
+                }
+                .sorted { $0.p50Ms > $1.p50Ms }
+
             return Snapshot(
                 window: window,
                 totalLoops: totalLoops,
@@ -242,7 +284,8 @@ enum AlgoComparisonAnalyzer {
                 perFunction: perFunction,
                 recentLoops: recentLoops,
                 topDivergentFields: topDivergentFields,
-                pipelineStats: pipelineStats
+                pipelineStats: pipelineStats,
+                subSectionStats: subSectionStats
             )
         }
     }
