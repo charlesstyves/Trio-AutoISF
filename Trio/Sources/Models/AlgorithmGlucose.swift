@@ -73,7 +73,7 @@ struct AlgorithmGlucose: Codable {
         // unparseable date string, producing Invalid Date and zeroing out
         // every cob.js iob_total call where bucketed_data[0] inherits this
         // value (the i==0 branch where currentDeviation is set).
-        let dateAsUnixTimestamp = Int64(((date?.timeIntervalSince1970 ?? Date().timeIntervalSince1970) * 1000).rounded())
+        let dateAsUnixTimestamp = Int64((date?.timeIntervalSince1970 ?? Date().timeIntervalSince1970) * 1000)
         try container.encode(dateAsUnixTimestamp, forKey: .date)
 
         try container.encode(direction, forKey: .direction)
