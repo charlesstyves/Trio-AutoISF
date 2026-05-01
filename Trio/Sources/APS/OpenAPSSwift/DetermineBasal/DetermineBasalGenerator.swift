@@ -210,7 +210,10 @@ enum DeterminationGenerator {
                 parabolaFitA2: nil,
                 duraMin: nil,
                 duraAvg: nil,
-                bgAcce: nil
+                bgAcce: nil,
+                bgi: nil,
+                deviation: nil,
+                iobActivity: nil
             )
         }
 
@@ -586,6 +589,10 @@ enum DeterminationGenerator {
             duraMin: autoISFResult.glucoseStatus?.dura_ISF_minutes,
             duraAvg: autoISFResult.glucoseStatus?.dura_ISF_average,
             bgAcce: autoISFResult.glucoseStatus?.bg_acceleration,
+            // Glucose-impact pipeline (mirrors JS rT.BGI / rT.deviation / rT.iobActivity)
+            bgi: currentGlucoseImpact.jsRounded(),
+            deviation: deviation,
+            iobActivity: iobData.first?.activity
         )
 
         // MARK: - Core dosing logic
@@ -944,7 +951,10 @@ enum DeterminationGenerator {
                 parabolaFitA2: nil,
                 duraMin: nil,
                 duraAvg: nil,
-                bgAcce: nil
+                bgAcce: nil,
+                bgi: nil,
+                deviation: nil,
+                iobActivity: nil
             )
         } else if currentTemp.rate == 0, currentTemp.duration > 30 {
             // Shorten long zero temp to 30m
@@ -996,7 +1006,10 @@ enum DeterminationGenerator {
                 parabolaFitA2: nil,
                 duraMin: nil,
                 duraAvg: nil,
-                bgAcce: nil
+                bgAcce: nil,
+                bgi: nil,
+                deviation: nil,
+                iobActivity: nil
             )
         } else {
             // Do nothing (temp already safe)
@@ -1048,7 +1061,10 @@ enum DeterminationGenerator {
                 parabolaFitA2: nil,
                 duraMin: nil,
                 duraAvg: nil,
-                bgAcce: nil
+                bgAcce: nil,
+                bgi: nil,
+                deviation: nil,
+                iobActivity: nil
             )
         }
     }

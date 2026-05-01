@@ -60,16 +60,31 @@ enum AutoISFAdjust {
         var acceISF: Decimal = 1
         if profile.enableBGacceleration, fitCorr >= Decimal(0.9) {
             let fitShare = 10 * (fitCorr - Decimal(0.9)) // 0 at r²=0.9, 1 at r²=1.0
-            var acceWeight: Decimal = 0
+            // JS uses acceWeight=1 as a "not yet set" sentinel — predictive brake can
+            // pre-empt the standard branch by assigning before the acceWeight==1 check.
+            var acceWeight: Decimal = 1
             var capWeight: Decimal = 1
-            if bg < targetBG { // below target: acceleration goes towards target
+
+            // Predictive brake: parabola predicts BG dropping below target within 30 min.
+            // Mirrors determine-basal.js (autoISF 3.01) lines 393-407.
+            if glucoseStatus.a_2 != 0 {
+                let minmaxDeltaUnrounded = -(glucoseStatus.a_1 / (2 * glucoseStatus.a_2)) * 5
+                let minmaxValue = glucoseStatus.a_0
+                    - minmaxDeltaUnrounded * minmaxDeltaUnrounded / 25 * glucoseStatus.a_2
+                let minmaxDelta = minmaxDeltaUnrounded.jsRounded(scale: 0)
+                if minmaxDelta > 0, bgAcce > 0, minmaxDelta <= 30, minmaxValue < targetBG {
+                    acceWeight = -profile.bgBrakeISFweight
+                }
+            }
+
+            if acceWeight == 1, bg < targetBG { // below target: acceleration goes towards target
                 if bgAcce > 0 {
                     if bgAcce > 1 { capWeight = Decimal(0.5) }
                     acceWeight = profile.bgBrakeISFweight
                 } else if bgAcce < 0 {
                     acceWeight = profile.bgAccelISFweight
                 }
-            } else { // above target: acceleration goes away from target
+            } else if acceWeight == 1 { // above target: acceleration goes away from target
                 if bgAcce < 0 {
                     acceWeight = profile.bgBrakeISFweight
                 } else if bgAcce > 0 {
@@ -122,6 +137,9 @@ enum AutoISFAdjust {
         // ---- pp_ISF: post-prandial delta (only above target+10 and on rising BG) ----
         var ppISF: Decimal = 1
         var sensModified = bgISF > 1 // bgISF already above target counts as modification
+        // Mirrors determine-basal.js (autoISF 3.01) line 443: acce_ISF != 1 also triggers
+        // sens_modified, so a pure acceleration brake (no bg/pp/dura signal) still adjusts ISF.
+        if acceISF != 1 { sensModified = true }
         if bgOff <= 0, shortAvgDelta >= 0 {
             ppISF = 1 + max(0, bgDelta * profile.postMealISFweight)
             if ppISF != 1 { sensModified = true }

@@ -208,7 +208,12 @@ final class BaseDeterminationStorage: DeterminationStorage, Injectable {
                         parabolaFitA2: self.decimal(from: orefDetermination.parabolaFitA2),
                         duraMin: self.decimal(from: orefDetermination.duraMin),
                         duraAvg: self.decimal(from: orefDetermination.duraAvg),
-                        bgAcce: self.decimal(from: orefDetermination.bgAcce)
+                        bgAcce: self.decimal(from: orefDetermination.bgAcce),
+                        // BGI / deviation / iobActivity are not persisted in CoreData;
+                        // only used in live JS↔Swift compare so reload-from-storage emits nil.
+                        bgi: nil,
+                        deviation: nil,
+                        iobActivity: nil
                     )
                 }
             } catch {

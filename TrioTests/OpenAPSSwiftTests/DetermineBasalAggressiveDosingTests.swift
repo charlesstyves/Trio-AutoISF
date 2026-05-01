@@ -38,7 +38,28 @@ import Testing
             minPredBG: nil,
             threshold: nil,
             carbRatio: nil,
-            received: nil
+            received: nil,
+            smbRatio: nil,
+            duraISFratio: nil,
+            bgISFratio: nil,
+            ppISFratio: nil,
+            acceISFratio: nil,
+            autoISFratio: nil,
+            iobTH: nil,
+            tick: nil,
+            parabolaFitMinutes: nil,
+            parabolaFitLastDelta: nil,
+            parabolaFitNextDelta: nil,
+            parabolaFitCorrelation: nil,
+            parabolaFitA0: nil,
+            parabolaFitA1: nil,
+            parabolaFitA2: nil,
+            duraMin: nil,
+            duraAvg: nil,
+            bgAcce: nil,
+            bgi: nil,
+            deviation: nil,
+            iobActivity: nil
         )
 
         return DosingEngine.calculateInsulinRequired(
@@ -206,7 +227,28 @@ import Testing
             minPredBG: nil,
             threshold: nil,
             carbRatio: nil,
-            received: nil
+            received: nil,
+            smbRatio: nil,
+            duraISFratio: nil,
+            bgISFratio: nil,
+            ppISFratio: nil,
+            acceISFratio: nil,
+            autoISFratio: nil,
+            iobTH: nil,
+            tick: nil,
+            parabolaFitMinutes: nil,
+            parabolaFitLastDelta: nil,
+            parabolaFitNextDelta: nil,
+            parabolaFitCorrelation: nil,
+            parabolaFitA0: nil,
+            parabolaFitA1: nil,
+            parabolaFitA2: nil,
+            duraMin: nil,
+            duraAvg: nil,
+            bgAcce: nil,
+            bgi: nil,
+            deviation: nil,
+            iobActivity: nil
         )
 
         var finalTrioCustomOrefVariables: TrioCustomOrefVariables
@@ -767,7 +809,28 @@ import Testing
             minPredBG: nil,
             threshold: nil,
             carbRatio: nil,
-            received: nil
+            received: nil,
+            smbRatio: nil,
+            duraISFratio: nil,
+            bgISFratio: nil,
+            ppISFratio: nil,
+            acceISFratio: nil,
+            autoISFratio: nil,
+            iobTH: nil,
+            tick: nil,
+            parabolaFitMinutes: nil,
+            parabolaFitLastDelta: nil,
+            parabolaFitNextDelta: nil,
+            parabolaFitCorrelation: nil,
+            parabolaFitA0: nil,
+            parabolaFitA1: nil,
+            parabolaFitA2: nil,
+            duraMin: nil,
+            duraAvg: nil,
+            bgAcce: nil,
+            bgi: nil,
+            deviation: nil,
+            iobActivity: nil
         )
 
         return try DosingEngine.determineHighTempBasal(

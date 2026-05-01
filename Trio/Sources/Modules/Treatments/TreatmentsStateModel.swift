@@ -901,7 +901,10 @@ extension Treatments.StateModel {
                     parabolaFitA2: 0,
                     duraMin: 0,
                     duraAvg: 0,
-                    bgAcce: 0
+                    bgAcce: 0,
+                    bgi: 0,
+                    deviation: 0,
+                    iobActivity: 0
                 )
             }
 
