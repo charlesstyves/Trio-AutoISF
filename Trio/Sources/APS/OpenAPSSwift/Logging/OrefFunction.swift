@@ -88,52 +88,35 @@ enum OrefFunction: String, Codable {
         case .autosens:
             return Set(["deviationsUnsorted", "debugInfo"])
         case .determineBasal:
-            // We ignore some properties that aren't used downstream
+            // Strategy: ignore only what is genuinely incomparable (UUIDs, free-form
+            // strings, schema-mismatched fields). Computed values — including all
+            // autoISF intermediates and TDD / minDelta — are kept in the comparison
+            // with tolerances in `approximateMatchingNumbers` so port omissions
+            // (e.g. acceISF brake) surface immediately.
             return Set([
-                // Not used, ignore
+                // UUIDs and pass-throughs from inputs
                 "id",
                 "temp",
                 "reservoir",
-                "ISF",
-                "TDD",
-                "minDelta",
                 "received",
                 "deliverAt",
-                // intentionally removed from Swift, but in JS
+                // free-form reason string — change-prone wording, not a numeric output
+                "reason",
+                // intentionally removed from Swift, but emitted by JS
                 "insulinForManualBolus",
                 "manualBolusErrorString",
-                // in JS but not in Swift
+                // JS-only schema (Swift uses different keys / doesn't surface)
                 "tick",
-                "BGI",
                 "target_bg",
-                "deviation",
-                // in Swift but not in JS
+                // Swift-only schema (no JS counterpart)
                 "timestamp",
                 "minGuardBG",
                 "minPredBG",
-                // JS surfaces these IOB sub-fields at the top level of the
-                // determineBasal output, Swift port does not. Pure schema
-                // mismatch.
+                // JS surfaces these IOB sub-fields at the top level; Swift port does
+                // not (kept inside iobData). Pure schema mismatch.
                 "avgDelta",
                 "basalIOB",
-                "bolusIOB",
-                "iobActivity",
-                // autoISF intermediate display fields — populated unconditionally
-                // by JS regardless of whether autoISF actually adjusted ISF, but
-                // emitted with different defaults / omitted by Swift when
-                // autoISF is off. Filter to keep the comparison focused on real
-                // divergence.
-                "parabola_fit_a0",
-                "parabola_fit_a1",
-                "parabola_fit_a2",
-                "parabola_fit_last_delta",
-                "parabola_fit_next_delta",
-                "parabola_fit_minutes",
-                "parabola_fit_correlation",
-                "bg_acce",
-                "dura_avg",
-                "dura_min",
-                "iob_THeffective"
+                "bolusIOB"
             ])
         }
     }
@@ -183,7 +166,37 @@ enum OrefFunction: String, Codable {
                 "dura_ISFratio": 0.011,
                 "acce_ISFratio": 0.011,
                 "pp_ISFratio": 0.011,
-                "CR": 0.05
+                // ISF (post-autoISF adjusted sens, mg/dL). JS rounds to integer; Swift
+                // computes via Decimal then rounds. ±2 mg/dL absorbs Decimal/Double
+                // boundary rounding without masking real autoISF port omissions.
+                "ISF": 2,
+                "CR": 0.05,
+                // Pipeline inputs that drive dynISF / autoISF — wide enough to absorb
+                // the Decimal/Double rounding gap, narrow enough to flag a real
+                // divergence in the upstream calc.
+                "TDD": 0.2,
+                "minDelta": 0.5,
+                // Glucose-impact fields surfaced at the JS top level. iobActivity is
+                // an insulin activity rate (very small numbers); BGI/deviation are
+                // mg/dL/5min rounded to integers in JS.
+                "BGI": 0.2,
+                "deviation": 0.5,
+                "iobActivity": 0.001,
+                // autoISF intermediates. Previously hidden via keysToIgnore — now
+                // compared with tolerances tuned to the natural value scale.
+                // iobTH (effective gate threshold) is functional, not display: a
+                // divergence here would shift when SMB is suppressed.
+                "iob_THeffective": 0.05,
+                "bg_acce": 0.01,
+                "dura_avg": 0.5,
+                "dura_min": 1,
+                "parabola_fit_correlation": 0.001,
+                "parabola_fit_minutes": 1,
+                "parabola_fit_last_delta": 0.5,
+                "parabola_fit_next_delta": 0.5,
+                "parabola_fit_a0": 0.5,
+                "parabola_fit_a1": 0.05,
+                "parabola_fit_a2": 0.005
             ]
         }
     }

@@ -148,6 +148,7 @@ import Testing
             reservoirData: inputs.reservoirData,
             glucoseStatus: inputs.glucoseStatus,
             microBolusAllowed: inputs.microBolusAllowed,
+            autoISFStatus: nil,
             trioCustomOrefVariables: inputs.trioCustomOrefVariables,
             currentTime: inputs.currentTime
         )
@@ -169,6 +170,7 @@ import Testing
             reservoirData: inputs.reservoirData,
             glucoseStatus: inputs.glucoseStatus,
             microBolusAllowed: inputs.microBolusAllowed,
+            autoISFStatus: nil,
             trioCustomOrefVariables: inputs.trioCustomOrefVariables,
             currentTime: inputs.currentTime
         )

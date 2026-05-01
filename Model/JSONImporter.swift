@@ -546,6 +546,9 @@ extension Determination: Codable {
         case duraMin = "dura_min"
         case duraAvg = "dura_avg"
         case bgAcce = "bg_acce"
+        case bgi = "BGI"
+        case deviation
+        case iobActivity
     }
 
     init(from decoder: Decoder) throws {
@@ -606,6 +609,9 @@ extension Determination: Codable {
         duraMin = try container.decodeIfPresent(Decimal.self, forKey: .duraMin)
         duraAvg = try container.decodeIfPresent(Decimal.self, forKey: .duraAvg)
         bgAcce = try container.decodeIfPresent(Decimal.self, forKey: .bgAcce)
+        bgi = try container.decodeIfPresent(Decimal.self, forKey: .bgi)
+        deviation = try container.decodeIfPresent(Decimal.self, forKey: .deviation)
+        iobActivity = try container.decodeIfPresent(Decimal.self, forKey: .iobActivity)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -658,6 +664,9 @@ extension Determination: Codable {
         try container.encodeIfPresent(duraMin, forKey: .duraMin)
         try container.encodeIfPresent(duraAvg, forKey: .duraAvg)
         try container.encodeIfPresent(bgAcce, forKey: .bgAcce)
+        try container.encodeIfPresent(bgi, forKey: .bgi)
+        try container.encodeIfPresent(deviation, forKey: .deviation)
+        try container.encodeIfPresent(iobActivity, forKey: .iobActivity)
     }
 
     func checkForRequiredFields() throws {

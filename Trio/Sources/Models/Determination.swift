@@ -56,6 +56,11 @@ struct Determination: JSON, Equatable {
     let duraMin: Decimal?
     let duraAvg: Decimal?
     let bgAcce: Decimal?
+    // Mirrors JS rT.BGI / rT.deviation / rT.iobActivity. Surfaced so the JS↔Swift
+    // algo-compare can verify the glucose-impact pipeline end-to-end.
+    let bgi: Decimal?
+    let deviation: Decimal?
+    let iobActivity: Decimal?
 }
 
 struct Predictions: JSON, Equatable {
@@ -114,6 +119,9 @@ extension Determination {
         case duraMin = "dura_min"
         case duraAvg = "dura_avg"
         case bgAcce = "bg_acce"
+        case bgi = "BGI"
+        case deviation
+        case iobActivity
     }
 }
 

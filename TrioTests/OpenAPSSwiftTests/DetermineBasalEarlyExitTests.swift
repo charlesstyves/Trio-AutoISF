@@ -161,6 +161,7 @@ import Testing
                 reservoirData: reservoirData,
                 glucoseStatus: glucoseStatus,
                 microBolusAllowed: microBolusAllowed,
+                autoISFStatus: nil,
                 trioCustomOrefVariables: trioCustomOrefVariables,
                 currentTime: currentTime
             )
@@ -205,6 +206,7 @@ import Testing
             reservoirData: reservoirData,
             glucoseStatus: glucoseStatus,
             microBolusAllowed: microBolusAllowed,
+            autoISFStatus: nil,
             trioCustomOrefVariables: trioCustomOrefVariables,
             currentTime: currentTime
         )
@@ -253,6 +255,7 @@ import Testing
             reservoirData: reservoirData,
             glucoseStatus: glucoseStatus,
             microBolusAllowed: microBolusAllowed,
+            autoISFStatus: nil,
             trioCustomOrefVariables: trioCustomOrefVariables,
             currentTime: currentTime
         )
@@ -301,6 +304,7 @@ import Testing
             reservoirData: reservoirData,
             glucoseStatus: glucoseStatus,
             microBolusAllowed: microBolusAllowed,
+            autoISFStatus: nil,
             trioCustomOrefVariables: trioCustomOrefVariables,
             currentTime: currentTime
         )
@@ -338,6 +342,7 @@ import Testing
                 reservoirData: reservoirData,
                 glucoseStatus: glucoseStatus,
                 microBolusAllowed: microBolusAllowed,
+                autoISFStatus: nil,
                 trioCustomOrefVariables: trioCustomOrefVariables,
                 currentTime: currentTime
             )
@@ -383,6 +388,7 @@ import Testing
             reservoirData: reservoirData,
             glucoseStatus: glucoseStatus,
             microBolusAllowed: microBolusAllowed,
+            autoISFStatus: nil,
             trioCustomOrefVariables: trioCustomOrefVariables,
             currentTime: currentTime
         )
@@ -436,6 +442,7 @@ import Testing
             reservoirData: reservoirData,
             glucoseStatus: glucoseStatus,
             microBolusAllowed: microBolusAllowed,
+            autoISFStatus: nil,
             trioCustomOrefVariables: trioCustomOrefVariables,
             currentTime: currentTime
         )
@@ -477,6 +484,7 @@ import Testing
                 reservoirData: reservoirData,
                 glucoseStatus: glucoseStatus,
                 microBolusAllowed: microBolusAllowed,
+                autoISFStatus: nil,
                 trioCustomOrefVariables: trioCustomOrefVariables,
                 currentTime: currentTime
             )
@@ -520,6 +528,7 @@ import Testing
             reservoirData: reservoirData,
             glucoseStatus: glucoseStatus,
             microBolusAllowed: microBolusAllowed,
+            autoISFStatus: nil,
             trioCustomOrefVariables: trioCustomOrefVariables,
             currentTime: currentTime
         )
@@ -562,6 +571,7 @@ import Testing
             reservoirData: reservoirData,
             glucoseStatus: glucoseStatus,
             microBolusAllowed: microBolusAllowed,
+            autoISFStatus: nil,
             trioCustomOrefVariables: trioCustomOrefVariables,
             currentTime: currentTime
         )
