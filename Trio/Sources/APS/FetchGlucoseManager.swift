@@ -660,7 +660,7 @@ extension BaseFetchGlucoseManager {
                     guard let date = stored.date else { return nil }
                     let direction = stored.direction.flatMap { BloodGlucose.Direction(from: $0) }
                     return BloodGlucose(
-                        _id: stored.id?.uuidString ?? UUID().uuidString,
+                        id: stored.id?.uuidString ?? UUID().uuidString,
                         sgv: Int(stored.glucose),
                         direction: direction,
                         date: Decimal(date.timeIntervalSince1970 * 1000), // milliseconds
