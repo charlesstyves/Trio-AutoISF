@@ -30,6 +30,13 @@ struct AutoISFEngineResult {
     let smbResult: AutoISFsmbResult?
     /// AutoISF glucose status (for Determination parabola / dura / acce fields).
     let glucoseStatus: AutoISFGlucoseStatus?
+    /// True when the autoISF ISF-adjustment path was bypassed — either because
+    /// autoISF is disabled in the profile or because exercise mode + autoISF_off_Sport
+    /// triggered the early return. Mirrors JS, where the parabola/dura/bg_acce/
+    /// acce_ISF/bg_ISF/pp_ISF/dura_ISF globals retain their default value of 1
+    /// when `autoISF()` short-circuits. Determination telemetry should emit 1
+    /// for those fields so the JSON output matches JS byte-for-byte.
+    let isfAdjustBypassed: Bool
 }
 
 /// Coordinates all autoISF sub-modules for a single loop iteration.
@@ -64,6 +71,10 @@ enum AutoISF {
             adjustedSensitivity: adjustedSensitivity
         )
 
+        // Mirrors JS `var exercise_ratio = 1; if (exerciseModeActive || resistanceModeActive) exercise_ratio = sensitivityRatio`.
+        // Drives the iobTH reduction inside AutoISFsmb when iob_threshold_percent != 1.
+        let exerciseRatio: Decimal = (exerciseModeActive || resistanceModeActive) ? sensitivityRatio : 1
+
         // SMB control: runs whenever autoISF is enabled, independent of dynISF
         let smbResult = OrefSubTimer.time("autoISF.AutoISFsmb.evaluate") {
             AutoISFsmb.evaluate(
@@ -72,7 +83,7 @@ enum AutoISF {
                 microBolusAllowed: microBolusAllowed,
                 iob: iob,
                 b30IsActive: b30IsActive,
-                exerciseModeActive: exerciseModeActive,
+                exerciseRatio: exerciseRatio,
                 overrideSmbIsOff: overrideSmbIsOff
             )
         }
@@ -92,6 +103,11 @@ enum AutoISF {
             )
         }
 
+        // Mirrors the two early-return branches in JS `autoISF()`: `!profile.use_autoisf`
+        // and `profile.autoISF_off_Sport && exerciseModeActive`. Used to drive sentinel-1
+        // telemetry in the determination so it matches JS bypass output.
+        let isfAdjustBypassed = !profile.autoisf || (profile.autoISFoffSport && exerciseModeActive)
+
         // ISF adjustment: only when dynISF is inactive and glucose status is available
         guard !dynamicIsfActive, let status = autoISFStatus else {
             return AutoISFEngineResult(
@@ -101,7 +117,8 @@ enum AutoISF {
                 smbRatio: smbRatio,
                 adjustResult: nil,
                 smbResult: smbResult,
-                glucoseStatus: autoISFStatus
+                glucoseStatus: autoISFStatus,
+                isfAdjustBypassed: isfAdjustBypassed
             )
         }
 
@@ -142,7 +159,8 @@ enum AutoISF {
             smbRatio: smbRatio,
             adjustResult: adjustResult,
             smbResult: smbResult,
-            glucoseStatus: status
+            glucoseStatus: status,
+            isfAdjustBypassed: isfAdjustBypassed || adjustResult == nil
         )
     }
 
@@ -171,7 +189,7 @@ enum AutoISF {
         currentGlucose: Decimal,
         microBolusAllowed: Bool,
         iob: Decimal,
-        exerciseModeActive: Bool,
+        exerciseRatio: Decimal,
         overrideSmbIsOff: Bool,
         iobInputs: KetoProtect.IobInputs
     ) throws -> B30Dispatch {
@@ -190,7 +208,7 @@ enum AutoISF {
                 microBolusAllowed: microBolusAllowed,
                 iob: iob,
                 b30IsActive: false,
-                exerciseModeActive: exerciseModeActive,
+                exerciseRatio: exerciseRatio,
                 overrideSmbIsOff: overrideSmbIsOff
             )
             blocked.smbRatio = min(

@@ -570,25 +570,29 @@ enum DeterminationGenerator {
             carbRatio: forecastResult.adjustedCarbRatio.jsRounded(scale: 1),
             received: false,
             smbRatio: autoISFResult.smbRatio,
-            duraISFratio: autoISFResult.adjustResult?.duraISFratio,
-            bgISFratio: autoISFResult.adjustResult?.bgISFratio,
-            ppISFratio: autoISFResult.adjustResult?.ppISFratio,
-            acceISFratio: autoISFResult.adjustResult?.acceISFratio,
+            // When autoISF's ISF-adjustment path is bypassed (autoISF off or
+            // exercise + autoISF_off_Sport), JS leaves its parabola/dura/bg_acce/
+            // acce_ISF/bg_ISF/pp_ISF/dura_ISF globals at their default value of 1.
+            // Mirror that sentinel here so the determination JSON matches JS output.
+            duraISFratio: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.adjustResult?.duraISFratio,
+            bgISFratio: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.adjustResult?.bgISFratio,
+            ppISFratio: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.adjustResult?.ppISFratio,
+            acceISFratio: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.adjustResult?.acceISFratio,
             autoISFratio: autoISFResult.adjustResult?.autoISFratio,
             iobTH: autoISFResult.smbResult?.iobTHEffective,
             tick: 0, // to be removed
             // acce calc (parabola fit metrics from glucose analysis)
-            parabolaFitMinutes: autoISFResult.glucoseStatus?.dura_p,
-            parabolaFitLastDelta: autoISFResult.glucoseStatus?.delta_pl,
-            parabolaFitNextDelta: autoISFResult.glucoseStatus?.delta_pn,
-            parabolaFitCorrelation: autoISFResult.glucoseStatus?.r_squ,
-            parabolaFitA0: autoISFResult.glucoseStatus?.a_0,
-            parabolaFitA1: autoISFResult.glucoseStatus?.a_1,
-            parabolaFitA2: autoISFResult.glucoseStatus?.a_2,
+            parabolaFitMinutes: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.glucoseStatus?.dura_p,
+            parabolaFitLastDelta: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.glucoseStatus?.delta_pl,
+            parabolaFitNextDelta: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.glucoseStatus?.delta_pn,
+            parabolaFitCorrelation: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.glucoseStatus?.r_squ,
+            parabolaFitA0: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.glucoseStatus?.a_0,
+            parabolaFitA1: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.glucoseStatus?.a_1,
+            parabolaFitA2: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.glucoseStatus?.a_2,
             // Duration ISF window metrics
-            duraMin: autoISFResult.glucoseStatus?.dura_ISF_minutes,
-            duraAvg: autoISFResult.glucoseStatus?.dura_ISF_average,
-            bgAcce: autoISFResult.glucoseStatus?.bg_acceleration,
+            duraMin: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.glucoseStatus?.dura_ISF_minutes,
+            duraAvg: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.glucoseStatus?.dura_ISF_average,
+            bgAcce: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.glucoseStatus?.bg_acceleration,
             // Glucose-impact pipeline (mirrors JS rT.BGI / rT.deviation / rT.iobActivity)
             bgi: currentGlucoseImpact.jsRounded(),
             deviation: deviation,
@@ -633,7 +637,7 @@ enum DeterminationGenerator {
                 currentGlucose: currentGlucose,
                 microBolusAllowed: microBolusAllowed,
                 iob: iobData.first?.iob ?? 0,
-                exerciseModeActive: exerciseModeActive,
+                exerciseRatio: (exerciseModeActive || resistanceModeActive) ? sensitivityRatio : 1,
                 overrideSmbIsOff: overrideDisablesSmb,
                 iobInputs: iobInputs
             )

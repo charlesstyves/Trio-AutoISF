@@ -41,14 +41,14 @@ enum AutoISFsmb {
         microBolusAllowed: Bool,
         iob: Decimal,
         b30IsActive: Bool,
-        exerciseModeActive _: Bool,
+        exerciseRatio: Decimal,
         overrideSmbIsOff: Bool
     ) -> AutoISFsmbResult? {
         guard profile.autoisf else { return nil }
 
         // iob_threshold_percent == 1 (100 %) disables the iobTH method
         let useIobTH = profile.iobThresholdPercent != 1
-        let (iobThEffective, iobThVirtual) = iobTHValues(profile: profile)
+        let (iobThEffective, iobThVirtual) = iobTHValues(profile: profile, exerciseRatio: exerciseRatio)
 
         // Override disabling SMB wins over all autoISF SMB logic
         if overrideSmbIsOff {
@@ -150,9 +150,11 @@ enum AutoISFsmb {
     /// - `iobThVirtual`   = `iobTHTolerance × iob_threshold_percent × max_iob ×
     ///   iobTH_reduction_ratio`. The overrun ceiling used by `applyIobTHcap`.
     ///
-    /// `iobTH_reduction_ratio` is 1.0 here — `exercise_ratio` is not yet ported.
-    static func iobTHValues(profile: Profile) -> (effective: Decimal, virtual: Decimal) {
-        let reductionRatio: Decimal = 1.0
+    /// `iobTH_reduction_ratio` mirrors JS: equals `exercise_ratio` (sensitivityRatio
+    /// from the temp-target half-basal curve when exercise/resistance mode is active,
+    /// else 1) when `iob_threshold_percent != 1`, else 1.
+    static func iobTHValues(profile: Profile, exerciseRatio: Decimal) -> (effective: Decimal, virtual: Decimal) {
+        let reductionRatio: Decimal = profile.iobThresholdPercent != 1 ? exerciseRatio : 1
         let effective = min(
             profile.maxIob,
             profile.iobThresholdPercent * profile.maxIob * reductionRatio
