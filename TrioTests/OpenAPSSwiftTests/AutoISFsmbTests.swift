@@ -43,7 +43,7 @@ import Testing
             microBolusAllowed: true,
             iob: 0,
             b30IsActive: false,
-            exerciseModeActive: false,
+            exerciseRatio: 1,
             overrideSmbIsOff: false
         )
 
@@ -59,7 +59,7 @@ import Testing
             microBolusAllowed: true,
             iob: 0,
             b30IsActive: false,
-            exerciseModeActive: false,
+            exerciseRatio: 1,
             overrideSmbIsOff: true
         )!
 
@@ -76,7 +76,7 @@ import Testing
             microBolusAllowed: true,
             iob: 0,
             b30IsActive: true,
-            exerciseModeActive: false,
+            exerciseRatio: 1,
             overrideSmbIsOff: false
         )!
 
@@ -93,7 +93,7 @@ import Testing
             microBolusAllowed: false,
             iob: 0,
             b30IsActive: false,
-            exerciseModeActive: false,
+            exerciseRatio: 1,
             overrideSmbIsOff: false
         )!
 
@@ -110,7 +110,7 @@ import Testing
             microBolusAllowed: true,
             iob: 8,
             b30IsActive: false,
-            exerciseModeActive: false,
+            exerciseRatio: 1,
             overrideSmbIsOff: false
         )!
 
@@ -127,7 +127,7 @@ import Testing
             microBolusAllowed: true,
             iob: 0,
             b30IsActive: false,
-            exerciseModeActive: false,
+            exerciseRatio: 1,
             overrideSmbIsOff: false
         )!
 
@@ -143,7 +143,7 @@ import Testing
             microBolusAllowed: true,
             iob: 0,
             b30IsActive: false,
-            exerciseModeActive: false,
+            exerciseRatio: 1,
             overrideSmbIsOff: false
         )!
 
@@ -159,7 +159,7 @@ import Testing
             microBolusAllowed: true,
             iob: 0,
             b30IsActive: false,
-            exerciseModeActive: false,
+            exerciseRatio: 1,
             overrideSmbIsOff: false
         )!
 
@@ -175,7 +175,7 @@ import Testing
             microBolusAllowed: true,
             iob: 0,
             b30IsActive: false,
-            exerciseModeActive: false,
+            exerciseRatio: 1,
             overrideSmbIsOff: false
         )!
 
@@ -192,7 +192,7 @@ import Testing
             microBolusAllowed: true,
             iob: 0,
             b30IsActive: false,
-            exerciseModeActive: false,
+            exerciseRatio: 1,
             overrideSmbIsOff: false
         )!
 
@@ -210,7 +210,7 @@ import Testing
             microBolusAllowed: true,
             iob: 0,
             b30IsActive: false,
-            exerciseModeActive: false,
+            exerciseRatio: 1,
             overrideSmbIsOff: false
         )!
 
@@ -223,7 +223,7 @@ import Testing
     @Test("iobTHValues computes effective and virtual ceilings") func iobTHValuesComputed() throws {
         // maxIob=10, iobThresholdPercent=0.5 → effective=5, virtual=6.5
         let profile = makeProfile(iobThresholdPercent: Decimal(string: "0.5")!)
-        let values = AutoISFsmb.iobTHValues(profile: profile)
+        let values = AutoISFsmb.iobTHValues(profile: profile, exerciseRatio: 1)
 
         #expect(values.effective == 5)
         #expect(values.virtual == Decimal(string: "6.5"))
@@ -232,7 +232,7 @@ import Testing
     @Test("iobTHValues clamps effective ceiling to maxIob") func iobTHValuesClampedToMaxIob() throws {
         // iobThresholdPercent=1.5 would give 15 — clamped to maxIob=10
         let profile = makeProfile(iobThresholdPercent: Decimal(string: "1.5")!)
-        let values = AutoISFsmb.iobTHValues(profile: profile)
+        let values = AutoISFsmb.iobTHValues(profile: profile, exerciseRatio: 1)
 
         #expect(values.effective == 10)
     }
