@@ -135,7 +135,7 @@ import Testing
 
     @Test("bg_ISF below target triggers early decelerating return path") func bgISFBelowTargetEarlyReturn() throws {
         // glucose=80, target=100 → bgOff=30, xdata=70 → rawVal=-0.4, lowerWeight=1 → bgISF=0.6 (<1)
-        // finalISF clamped to autoISFmin=0.7, adjustedSens = round(50/0.7) = 71
+        // finalISF clamped to autoISFmin=0.7, adjustedSens = round(50/0.7, 1) = 71.4
         let (profile, status, sens, profileSens, targetBG, sensitivityRatio) = createDependencies(
             lowerISFrangeWeight: 1,
             glucose: 80
@@ -153,7 +153,7 @@ import Testing
         )!
 
         #expect(result.bgISFratio.rounded(toPlaces: 2) == Decimal(string: "0.6"))
-        #expect(result.adjustedSens == 71)
+        #expect(result.adjustedSens == Decimal(string: "71.4"))
         #expect(result.autoISFratio.rounded(toPlaces: 2) == Decimal(string: "0.7"))
         #expect(result.ppISFratio == 1)
         #expect(result.duraISFratio == 1)
@@ -162,7 +162,7 @@ import Testing
     @Test("pp_ISF triggers above target on rising glucose") func ppISFActivation() throws {
         // glucose=130, target=100, bgOff=-20, shortAvgDelta>=0, delta=10, ppWeight=0.05
         // ppISF = 1 + 10*0.05 = 1.5 → clamped to autoISFmax=1.2
-        // adjustedSens = round(50/1.2) = 42
+        // adjustedSens = round(50/1.2, 1) = 41.7
         let (profile, status, sens, profileSens, targetBG, sensitivityRatio) = createDependencies(
             postMealISFweight: 0.05,
             glucose: 130,
@@ -182,14 +182,14 @@ import Testing
         )!
 
         #expect(result.ppISFratio.rounded(toPlaces: 2) == Decimal(string: "1.5"))
-        #expect(result.adjustedSens == 42)
-        #expect(result.autoISFratio.rounded(toPlaces: 2) == Decimal(string: "1.19"))
+        #expect(result.adjustedSens == Decimal(string: "41.7"))
+        #expect(result.autoISFratio.rounded(toPlaces: 2) == Decimal(string: "1.2"))
     }
 
     @Test("dura_ISF triggers when sustained above target") func duraISFActivation() throws {
         // dura=30 min, avg=110 (>target 100), hourlyChange=5
         // duraISF = 1 + (30/60)*(5/100)*(110-100) = 1 + 0.5*0.05*10 = 1.25
-        // clamped to autoISFmax=1.2 → adjustedSens = round(50/1.2) = 42
+        // clamped to autoISFmax=1.2 → adjustedSens = round(50/1.2, 1) = 41.7
         let (profile, status, sens, profileSens, targetBG, sensitivityRatio) = createDependencies(
             autoISFhourlyChange: 5,
             glucose: 120,
@@ -209,8 +209,8 @@ import Testing
         )!
 
         #expect(result.duraISFratio.rounded(toPlaces: 2) == Decimal(string: "1.25"))
-        #expect(result.adjustedSens == 42)
-        #expect(result.autoISFratio.rounded(toPlaces: 2) == Decimal(string: "1.19"))
+        #expect(result.adjustedSens == Decimal(string: "41.7"))
+        #expect(result.autoISFratio.rounded(toPlaces: 2) == Decimal(string: "1.2"))
     }
 
     @Test("Acceleration above target with reliable fit applies brake weight") func accelerationBrake() throws {
@@ -218,7 +218,7 @@ import Testing
         // fitShare = 10*(0.95-0.9) = 0.5; acceISF = 1 + (-0.5)*1*0.5*0.5 = 0.875
         // higherISFrangeWeight=1: bgISF rises (xdata=140 → rawVal=0.375 → bgISF=1.38)
         // sensModified=true (bgISF>1); liftISF = 1.38 * 0.875 = 1.2075 (acce<1 brakes)
-        // clamped to 1.2 → adjustedSens = 42
+        // clamped to 1.2 → adjustedSens = round(50/1.2, 1) = 41.7
         let (profile, status, sens, profileSens, targetBG, sensitivityRatio) = createDependencies(
             higherISFrangeWeight: 1,
             enableBGacceleration: true,
@@ -241,7 +241,7 @@ import Testing
 
         #expect(result.acceISFratio.rounded(toPlaces: 2) == Decimal(string: "0.88"))
         #expect(result.bgISFratio.rounded(toPlaces: 2) == Decimal(string: "1.38"))
-        #expect(result.adjustedSens == 42)
+        #expect(result.adjustedSens == Decimal(string: "41.7"))
     }
 
     @Test("Acceleration brake alone modifies adjustedSens") func accelerationAloneTriggersModification() throws {
@@ -249,7 +249,7 @@ import Testing
         // No bg/pp/dura signal, but acceISF=0.875 from a pure brake → adjustedSens must change.
         // glucose=150 (above target), bgAcce=-0.5, brakeWeight=0.5, r²=0.95 → acceISF=0.875
         // liftISF = max(1,1,0.875,1) * 0.875 = 0.875 (acce<1 brakes); finalISF=0.875
-        // adjustedSens = round(50/0.875) = 57
+        // adjustedSens = round(50/0.875, 1) = 57.1
         let (profile, status, sens, profileSens, targetBG, sensitivityRatio) = createDependencies(
             enableBGacceleration: true,
             bgBrakeISFweight: 0.5,
@@ -271,7 +271,7 @@ import Testing
 
         #expect(result.acceISFratio.rounded(toPlaces: 2) == Decimal(string: "0.88"))
         #expect(result.bgISFratio == 1)
-        #expect(result.adjustedSens == 57)
+        #expect(result.adjustedSens == Decimal(string: "57.1"))
     }
 
     @Test("Predictive brake fires when parabola predicts BG below target soon") func predictiveBrake() throws {
@@ -354,7 +354,7 @@ import Testing
     @Test("Exercise mode multiplies autoISF and autosens factors") func exerciseModeMultiplies() throws {
         // ppISF=1.5 trigger; sensitivityRatio=0.8, exerciseModeActive=true
         // finalISF = clamp(1.5, [0.7, 1.2]) * sensitivityRatio = 1.2 * 0.8 = 0.96
-        // adjustedSens = round(50/0.96) = 52
+        // adjustedSens = round(50/0.96, 1) = 52.1
         let (profile, status, sens, profileSens, targetBG, _) = createDependencies(
             postMealISFweight: 0.05,
             glucose: 130,
@@ -373,7 +373,7 @@ import Testing
             resistanceModeActive: false
         )!
 
-        #expect(result.adjustedSens == 52)
+        #expect(result.adjustedSens == Decimal(string: "52.1"))
         #expect(result.autoISFratio.rounded(toPlaces: 2) == Decimal(string: "0.96"))
     }
 
@@ -397,7 +397,7 @@ import Testing
             resistanceModeActive: false
         )!
 
-        #expect(result.adjustedSens == 42) // 50/1.2 rounded
-        #expect(result.autoISFratio.rounded(toPlaces: 2) == Decimal(string: "1.19"))
+        #expect(result.adjustedSens == Decimal(string: "41.7")) // 50/1.2 rounded to 1 decimal
+        #expect(result.autoISFratio.rounded(toPlaces: 2) == Decimal(string: "1.2"))
     }
 }
