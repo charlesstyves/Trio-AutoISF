@@ -788,6 +788,8 @@ enum DosingEngine {
         adjustedSensitivity: Decimal,
         adjustedCarbRatio: Decimal,
         basal: Decimal,
+        currentTemp: TempBasal,
+        iobInputs: KetoProtect.IobInputs = .empty,
         autoISFSmbRatio: Decimal? = nil,
         autoISFSmbResult: AutoISFsmbResult? = nil,
         determination: Determination
@@ -906,9 +908,22 @@ enum DosingEngine {
         }
 
         if durationRequired > 0 {
-            newDetermination.rate = smbLowTempRequired
-            newDetermination.duration = durationRequired
-            return (true, newDetermination)
+            // Mirrors JS line 1899: `setTempBasal(smbLowTempReq, durationReq, ...)`. JS uses a
+            // 2-decimal pre-rounded value for the reason text but routes the actual rate through
+            // setTempBasal, which calls round_basal(rate, profile) — snapping to the pump's
+            // delivery increment (0.05 U for Omnipod / Medtronic at U100, 0.005 U at U10, etc.).
+            // Without this routing the field carries values like 0.42 or 0.27 that the pump
+            // can't deliver, and the keto-protect / "no change necessary" / skip-neutral-temps
+            // logic inside setTempBasal is also bypassed.
+            let finalDetermination = try TempBasalFunctions.setTempBasal(
+                rate: smbLowTempRequired,
+                duration: durationRequired,
+                profile: profile,
+                determination: newDetermination,
+                currentTemp: currentTemp,
+                iobInputs: iobInputs
+            )
+            return (true, finalDetermination)
         }
 
         return (false, newDetermination)
