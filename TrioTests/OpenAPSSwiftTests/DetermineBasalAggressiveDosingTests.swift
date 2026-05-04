@@ -279,6 +279,7 @@ import Testing
             )
         }
 
+        let zeroTemp = TempBasal(duration: 0, rate: 0, temp: .absolute, timestamp: Date())
         return try DosingEngine.determineSMBDelivery(
             insulinRequired: insulinRequired,
             microBolusAllowed: microBolusAllowed,
@@ -296,7 +297,7 @@ import Testing
             adjustedSensitivity: profile.sens ?? 40,
             adjustedCarbRatio: adjustedCarbRatio,
             basal: basal,
-            smbDeliveryRatio: 0.5,
+            currentTemp: zeroTemp,
             determination: determination
         )
     }

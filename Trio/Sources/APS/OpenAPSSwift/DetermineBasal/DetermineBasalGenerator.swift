@@ -800,6 +800,8 @@ enum DeterminationGenerator {
             adjustedSensitivity: adjustedSensitivity,
             adjustedCarbRatio: forecastResult.adjustedCarbRatio,
             basal: basal,
+            currentTemp: currentTemp,
+            iobInputs: iobInputs,
             autoISFSmbRatio: autoISFResult.smbResult.map { _ in autoISFResult.smbRatio },
             autoISFSmbResult: autoISFResult.smbResult,
             determination: determination
