@@ -115,7 +115,10 @@ enum AutoISFAdjust {
                 exerciseModeActive: exerciseModeActive,
                 resistanceModeActive: resistanceModeActive
             )
-            let adjustedSens = min(720, (profileSens / finalISF).jsRounded())
+            // Mirrors JS lib/determine-basal/determine-basal.js:464 — `round(profile.sens / final_ISF, 1)`.
+            // Integer-rounding here loses up to 0.5 mg/dL of sens precision, which propagates into
+            // CR (= profile.carb_ratio × sens / profile.sens), flipping the 1-decimal CR field.
+            let adjustedSens = min(720, (profileSens / finalISF).jsRounded(scale: 1))
             let autoISFratio = adjustedSens > 0 ? (profileSens / adjustedSens).jsRounded(scale: 2) : 1
             return AutoISFAdjustResult(
                 adjustedSens: adjustedSens,
@@ -181,7 +184,8 @@ enum AutoISFAdjust {
             resistanceModeActive: resistanceModeActive
         )
 
-        let adjustedSens = (profileSens / finalISF).jsRounded()
+        // Mirrors JS lib/determine-basal/determine-basal.js:515 — `round(profile.sens / final_ISF, 1)`.
+        let adjustedSens = (profileSens / finalISF).jsRounded(scale: 1)
         let autoISFratio = adjustedSens > 0 ? (profileSens / adjustedSens).jsRounded(scale: 2) : 1
 
         return AutoISFAdjustResult(
