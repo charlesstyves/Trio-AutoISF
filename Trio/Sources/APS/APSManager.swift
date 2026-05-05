@@ -396,7 +396,7 @@ final class BaseAPSManager: APSManager, Injectable {
     }
 
     private func adjustPumpedRateToU100(_ rate: Decimal) -> Decimal {
-        guard settings.insulinConcentration != 1 else { return rate }
+        guard settings.insulinConcentration != 1 else { return rate.precisionRounded() }
         let u100Rate = (rate * settings.insulinConcentration)
             .precisionRounded()
             .roundedWithIncrement(
