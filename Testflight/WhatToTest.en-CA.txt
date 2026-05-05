@@ -1,1 +1,2 @@
-fix some more differences in SO & JS, cosmetics
+fix more differences in SO & JS, cosmetics
+update all submodule incl. Medtrum
