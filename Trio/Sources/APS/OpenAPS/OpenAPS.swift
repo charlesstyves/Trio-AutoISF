@@ -667,10 +667,6 @@ final class OpenAPS {
                 overrideSmbDeliveryRatioMax: activeOverride?.smbDeliveryRatioMax?.decimalValue,
                 overrideEnableBGacceleration: activeOverride?.enableBGacceleration?.boolValue
             )
-            debug(
-                .openAPS,
-                "Trio custom oref variables data shouldProtectDueToHIGH: \(trioCustomOrefVariablesData.shouldProtectDueToHIGH)"
-            )
 
             // Save and return contents of Trio's custom oref variables
             self.storage.save(trioCustomOrefVariablesData, as: OpenAPS.Monitor.trio_custom_oref_variables)
