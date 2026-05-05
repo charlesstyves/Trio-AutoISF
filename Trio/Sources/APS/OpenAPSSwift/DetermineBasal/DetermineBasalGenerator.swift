@@ -291,14 +291,11 @@ enum DeterminationGenerator {
             )
         }
 
-        // Mirrors github.com/nightscout/Trio-oref `dev` branch
-        // lib/determine-basal/determine-basal.js:500-509. The TT-exercise comparison is
-        // against the literal `normalTarget = 100` ("evaluate high/low temptarget against
-        // 100, not scheduled target (which might change)"), NOT `profile.min_bg`. Using
-        // min_bg here was a latent bug: when a TT is active, profile.minBg has been
-        // overwritten with the TT target (e.g. 199 by Targets.lookup), so
-        // `targetGlucose > min_bg` reduces to `199 > 199 = false` and the TT-exercise
-        // modifier in calculateSensitivityRatio never fires.
+        // The TT-exercise comparison must be against a fixed reference (100 mg/dL),
+        // not profile.minBg. When a TT is active, Targets.lookup has already overwritten
+        // profile.minBg with the TT target itself (e.g. 199), so a comparison against
+        // min_bg reduces to `199 > 199 = false` and the TT-exercise modifier in
+        // calculateSensitivityRatio never fires.
         let tempTargetSet = profile.temptargetSet ?? false
         let normalTarget: Decimal = 100
         let exerciseModeActive = profile.highTemptargetRaisesSensitivity
@@ -564,16 +561,13 @@ enum DeterminationGenerator {
             temp: .absolute,
             bg: currentGlucose,
             reservoir: nil,
-            // Mirrors JS lib/determine-basal/determine-basal.js:1432 — `rT.ISF = round(sens, 0)`.
-            // Internal calcs keep the 1-decimal `adjustedSensitivity` (commit 6ee139103);
-            // only the determination output field is integer-rounded.
+            // Output field is integer-rounded; internal calcs keep the 1-decimal value.
             isf: adjustedSensitivity.jsRounded(),
             timestamp: currentTime,
             tdd: nil,
             current_target: adjustedGlucoseTargets.targetGlucose,
-            // Mirrors JS lib/determine-basal/determine-basal.js:1435 — `rT.minDelta = minDelta`,
-            // where `minDelta = Math.min(delta, shortAvgDelta)`. Was storing just `delta`,
-            // which produced 30+ false-positive minDelta diffs whenever short_avgdelta < delta.
+            // min(delta, shortAvgDelta) — using just `delta` produced false-positive
+            // minDelta output whenever shortAvgDelta < delta.
             minDelta: minDelta,
             expectedDelta: expectedDelta,
             minGuardBG: smbDecision.minGuardGlucose ?? forecastResult.minGuardGlucose,
@@ -582,21 +576,16 @@ enum DeterminationGenerator {
             carbRatio: forecastResult.adjustedCarbRatio.jsRounded(scale: 1),
             received: false,
             smbRatio: autoISFResult.smbRatio,
-            // When autoISF's ISF-adjustment path is bypassed (autoISF off or
-            // exercise + autoISF_off_Sport), JS leaves its parabola/dura/bg_acce/
-            // acce_ISF/bg_ISF/pp_ISF/dura_ISF globals at their default value of 1.
-            // Mirror that sentinel here so the determination JSON matches JS output.
+            // When autoISF's ISF-adjustment is bypassed (autoISF off, or exercise with
+            // autoISF_off_Sport), the parabola/dura/bg_acce/acce/bg/pp/dura ratio fields
+            // collapse to a sentinel value of 1 — there's no real adaptation to report.
             duraISFratio: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.adjustResult?.duraISFratio,
             bgISFratio: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.adjustResult?.bgISFratio,
             ppISFratio: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.adjustResult?.ppISFratio,
             acceISFratio: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.adjustResult?.acceISFratio,
-            // Mirrors JS lib/determine-basal/determine-basal.js:1431 —
-            // `rT.auto_ISFratio = round(profile.sens / sens, 2)`. JS sets this regardless
-            // of whether autoISF() ran or bypassed: `sens` is the post-TT-modifier value
-            // either way. When autoISF bypasses (autoISF off, or autoISF_off_Sport in
-            // exercise mode), `adjustedSensitivity` keeps the value `computeAdjustedSensitivity`
-            // produced from sensitivityRatio — so `profileSens/adjustedSens` here yields the
-            // JS-equivalent ratio (e.g. 65/217 = 0.3 for TT=199 + autoISF_off_Sport).
+            // auto_ISFratio is profileSens/adjustedSens regardless of bypass — when
+            // autoISF bypasses, adjustedSensitivity carries the TT-modifier-widened value,
+            // so this still yields a meaningful ratio (profileSens/widenedSens).
             autoISFratio: autoISFResult.isfAdjustBypassed
                 ? (adjustedSensitivity > 0 ? (originalSensitivity / adjustedSensitivity).jsRounded(scale: 2) : 1)
                 : autoISFResult.adjustResult?.autoISFratio,

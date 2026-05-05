@@ -93,12 +93,10 @@ extension DeterminationGenerator {
         let longAvg: Decimal = longDeltas.mean
 
         return GlucoseStatus(
-            // Mirrors JS glucose-get-last.js:336-338 which rounds these to 4 decimals
-            // (`Math.round(x * 10000) / 10000`). The two extra digits matter: when raw
-            // delta lands near a 0.005 boundary, the 2-decimal pre-round here cascades
-            // through `deviation = round(6 × (minDelta − bgi))` and into BGI / autoISF
-            // ratios / ISF / CR — flipping integer rounds and producing 1 mg/dL drift
-            // in deviation, which then propagates through the forecast.
+            // 4-decimal precision: when raw delta lands near a 0.005 boundary, a 2-decimal
+            // pre-round here cascades through deviation = round(6 × (minDelta − bgi)) and
+            // into BGI / autoISF ratios / ISF / CR — flipping integer rounds and producing
+            // 1 mg/dL drift that then propagates through the forecast.
             delta: lastDelta.jsRounded(scale: 4),
             glucose: mostRecentGlucoseReading,
             noise: Int(sorted[0].noise ?? 0),

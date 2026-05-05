@@ -908,13 +908,11 @@ enum DosingEngine {
         }
 
         if durationRequired > 0 {
-            // Mirrors JS line 1899: `setTempBasal(smbLowTempReq, durationReq, ...)`. JS uses a
-            // 2-decimal pre-rounded value for the reason text but routes the actual rate through
-            // setTempBasal, which calls round_basal(rate, profile) — snapping to the pump's
-            // delivery increment (0.05 U for Omnipod / Medtronic at U100, 0.005 U at U10, etc.).
-            // Without this routing the field carries values like 0.42 or 0.27 that the pump
-            // can't deliver, and the keto-protect / "no change necessary" / skip-neutral-temps
-            // logic inside setTempBasal is also bypassed.
+            // Route through setTempBasal so the rate is snapped to the pump's delivery
+            // increment (0.05 U for Omnipod / Medtronic at U100, 0.005 U at U10, etc.) —
+            // smbLowTempRequired is 2-decimal-precision, fine for the reason text but
+            // not directly deliverable. Routing also picks up keto-protect, the "no change
+            // necessary" 80–120% currentTemp window, and skip-neutral-temps.
             let finalDetermination = try TempBasalFunctions.setTempBasal(
                 rate: smbLowTempRequired,
                 duration: durationRequired,
