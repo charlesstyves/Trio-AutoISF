@@ -61,7 +61,6 @@ extension Profile {
 
         // Bool properties
         highTemptargetRaisesSensitivity = preferences.highTemptargetRaisesSensitivity
-        exerciseMode = preferences.exerciseMode
         lowTemptargetLowersSensitivity = preferences.lowTemptargetLowersSensitivity
         sensitivityRaisesTarget = preferences.sensitivityRaisesTarget
         resistanceLowersTarget = preferences.resistanceLowersTarget

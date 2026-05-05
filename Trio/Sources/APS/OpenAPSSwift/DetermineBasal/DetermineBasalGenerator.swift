@@ -292,17 +292,15 @@ enum DeterminationGenerator {
         }
 
         // autoISF and dynISF are mutually exclusive: run autoISF only when dynISF is not active.
-        // Mirrors JS lib/determine-basal/determine-basal.js:660-664 — both `exercise_mode`
-        // and `high_temptarget_raises_sensitivity` trigger the TT exercise modifier; the
-        // comparison is against the literal `normalTarget = 100`, not the user's basal target.
+        // exerciseModeActive / resistanceModeActive mirror the JS determine_basal conditions.
         let tempTargetSet = profile.temptargetSet ?? false
-        let normalTarget: Decimal = 100
-        let exerciseModeActive = (profile.exerciseMode || profile.highTemptargetRaisesSensitivity)
+        let baseProfileTarget = profile.minBg ?? 100
+        let exerciseModeActive = profile.highTemptargetRaisesSensitivity
             && tempTargetSet
-            && adjustedGlucoseTargets.targetGlucose > normalTarget
+            && adjustedGlucoseTargets.targetGlucose > baseProfileTarget
         let resistanceModeActive = profile.lowTemptargetLowersSensitivity
             && tempTargetSet
-            && adjustedGlucoseTargets.targetGlucose < normalTarget
+            && adjustedGlucoseTargets.targetGlucose < baseProfileTarget
 
         let b30Result = OrefSubTimer.time("determineBasal.AimiB30.evaluate") {
             AimiB30.evaluate(

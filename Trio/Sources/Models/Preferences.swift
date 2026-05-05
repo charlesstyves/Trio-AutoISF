@@ -9,8 +9,6 @@ struct Preferences: JSON, Equatable {
     var autosensMin: Decimal = 0.7
     var rewindResetsAutosens: Bool = true
     var highTemptargetRaisesSensitivity: Bool = true
-    var exerciseMode: Bool = false // Synonym for high_temptarget_raises_sensitivity in JS oref —
-    // `(exercise_mode || high_temptarget_raises_sensitivity)` triggers the TT exercise modifier.
     var lowTemptargetLowersSensitivity: Bool = false
     var sensitivityRaisesTarget: Bool = false
     var resistanceLowersTarget: Bool = false
@@ -105,7 +103,6 @@ extension Preferences {
         case smbDeliveryRatio = "smb_delivery_ratio"
         case rewindResetsAutosens = "rewind_resets_autosens"
         case highTemptargetRaisesSensitivity = "high_temptarget_raises_sensitivity"
-        case exerciseMode = "exercise_mode"
         case lowTemptargetLowersSensitivity = "low_temptarget_lowers_sensitivity"
         case sensitivityRaisesTarget = "sensitivity_raises_target"
         case resistanceLowersTarget = "resistance_lowers_target"
@@ -231,10 +228,6 @@ extension Preferences: Decodable {
 
         if let highTemptargetRaisesSensitivity = try? container.decode(Bool.self, forKey: .highTemptargetRaisesSensitivity) {
             preferences.highTemptargetRaisesSensitivity = highTemptargetRaisesSensitivity
-        }
-
-        if let exerciseMode = try? container.decode(Bool.self, forKey: .exerciseMode) {
-            preferences.exerciseMode = exerciseMode
         }
 
         if let lowTemptargetLowersSensitivity = try? container.decode(Bool.self, forKey: .lowTemptargetLowersSensitivity) {

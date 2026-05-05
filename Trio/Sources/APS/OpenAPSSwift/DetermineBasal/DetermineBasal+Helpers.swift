@@ -138,10 +138,8 @@ extension DeterminationGenerator {
         var ratio: Decimal = 1
         var updateAutosensRatio = false
 
-        // High temp target raises sensitivity or low temp lowers it.
-        // Mirrors JS lib/determine-basal/determine-basal.js:663 — both `exercise_mode`
-        // and `high_temptarget_raises_sensitivity` trigger the modifier.
-        if ((profile.exerciseMode || profile.highTemptargetRaisesSensitivity) && temptargetSet && targetGlucose > normalTarget) ||
+        // High temp target raises sensitivity or low temp lowers it
+        if (profile.highTemptargetRaisesSensitivity && temptargetSet && targetGlucose > normalTarget) ||
             (profile.lowTemptargetLowersSensitivity && temptargetSet && targetGlucose < normalTarget)
         {
             let c = halfBasalTarget - normalTarget

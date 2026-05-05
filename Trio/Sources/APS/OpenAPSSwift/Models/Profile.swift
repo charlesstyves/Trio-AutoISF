@@ -17,11 +17,6 @@ struct Profile: Codable {
     var maxDailySafetyMultiplier: Decimal = 3
     var currentBasalSafetyMultiplier: Decimal = 4
     var highTemptargetRaisesSensitivity: Bool = false // raise sensitivity for temptargets >= 101
-    // JS oref treats `exercise_mode` as a synonym for `high_temptarget_raises_sensitivity`:
-    // `(profile.exercise_mode || profile.high_temptarget_raises_sensitivity)` triggers the
-    // TT exercise modifier (lib/determine-basal/determine-basal.js:663). Without this field
-    // Swift misses users who set only `exercise_mode`.
-    var exerciseMode: Bool = false
     var lowTemptargetLowersSensitivity: Bool = false // lower sensitivity for temptargets <= 99
     var sensitivityRaisesTarget: Bool = false // raise BG target when autosens detects sensitivity
     var resistanceLowersTarget: Bool = false // lower BG target when autosens detects resistance
@@ -128,7 +123,6 @@ struct Profile: Codable {
         case maxDailySafetyMultiplier = "max_daily_safety_multiplier"
         case currentBasalSafetyMultiplier = "current_basal_safety_multiplier"
         case highTemptargetRaisesSensitivity = "high_temptarget_raises_sensitivity"
-        case exerciseMode = "exercise_mode"
         case lowTemptargetLowersSensitivity = "low_temptarget_lowers_sensitivity"
         case sensitivityRaisesTarget = "sensitivity_raises_target"
         case resistanceLowersTarget = "resistance_lowers_target"
