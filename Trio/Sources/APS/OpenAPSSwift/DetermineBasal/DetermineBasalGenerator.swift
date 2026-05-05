@@ -558,11 +558,17 @@ enum DeterminationGenerator {
             temp: .absolute,
             bg: currentGlucose,
             reservoir: nil,
-            isf: adjustedSensitivity,
+            // Mirrors JS lib/determine-basal/determine-basal.js:1432 — `rT.ISF = round(sens, 0)`.
+            // Internal calcs keep the 1-decimal `adjustedSensitivity` (commit 6ee139103);
+            // only the determination output field is integer-rounded.
+            isf: adjustedSensitivity.jsRounded(),
             timestamp: currentTime,
             tdd: nil,
             current_target: adjustedGlucoseTargets.targetGlucose,
-            minDelta: glucoseStatus.delta,
+            // Mirrors JS lib/determine-basal/determine-basal.js:1435 — `rT.minDelta = minDelta`,
+            // where `minDelta = Math.min(delta, shortAvgDelta)`. Was storing just `delta`,
+            // which produced 30+ false-positive minDelta diffs whenever short_avgdelta < delta.
+            minDelta: minDelta,
             expectedDelta: expectedDelta,
             minGuardBG: smbDecision.minGuardGlucose ?? forecastResult.minGuardGlucose,
             minPredBG: forecastResult.minForecastedGlucose,
