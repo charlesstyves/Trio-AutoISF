@@ -30,12 +30,10 @@ struct AutoISFEngineResult {
     let smbResult: AutoISFsmbResult?
     /// AutoISF glucose status (for Determination parabola / dura / acce fields).
     let glucoseStatus: AutoISFGlucoseStatus?
-    /// True when the autoISF ISF-adjustment path was bypassed — either because
-    /// autoISF is disabled in the profile or because exercise mode + autoISF_off_Sport
-    /// triggered the early return. Mirrors JS, where the parabola/dura/bg_acce/
-    /// acce_ISF/bg_ISF/pp_ISF/dura_ISF globals retain their default value of 1
-    /// when `autoISF()` short-circuits. Determination telemetry should emit 1
-    /// for those fields so the JSON output matches JS byte-for-byte.
+    /// True when the autoISF ISF-adjustment path was bypassed — autoISF disabled
+    /// in the profile, or exercise mode plus autoISF_off_Sport. Drives the
+    /// sentinel-1 telemetry on the parabola/dura/bg_acce/acce_ISF/bg_ISF/pp_ISF/
+    /// dura_ISF determination fields so the bypass output is well-defined.
     let isfAdjustBypassed: Bool
 }
 
@@ -56,7 +54,7 @@ enum AutoISF {
         targetBG: Decimal,
         currentGlucose: Decimal,
         sensitivityRatio: Decimal,
-        originalSensitivity: Decimal,
+        originalSensitivity _: Decimal,
         exerciseModeActive: Bool,
         resistanceModeActive: Bool,
         microBolusAllowed: Bool,
@@ -65,15 +63,22 @@ enum AutoISF {
         autoISFStatus: AutoISFGlucoseStatus?,
         overrideSmbIsOff: Bool
     ) -> AutoISFEngineResult {
-        let autosensReason = AutoISFReason.autosensOnlyReason(
-            ratio: sensitivityRatio,
-            originalSensitivity: originalSensitivity,
-            adjustedSensitivity: adjustedSensitivity
-        )
-
-        // Mirrors JS `var exercise_ratio = 1; if (exerciseModeActive || resistanceModeActive) exercise_ratio = sensitivityRatio`.
         // Drives the iobTH reduction inside AutoISFsmb when iob_threshold_percent != 1.
         let exerciseRatio: Decimal = (exerciseModeActive || resistanceModeActive) ? sensitivityRatio : 1
+        // The TT half-basal-target modifier owns sensitivityRatio iff it fired
+        // (DetermineBasalGenerator gate). Drives the "Ratio TT:" vs "autosens:" chip label.
+        let ratioFromTempTarget = exerciseModeActive || resistanceModeActive
+
+        // Bypass-path reason builder: emits the chip set for the
+        // (Ratio TT or autosens, autoISF disabled[ (exercise)], Standard) cluster.
+        func bypassReason(cause: AutoISFReason.AutoISFBypassCause?) -> String {
+            AutoISFReason.autosensOnlyReason(
+                ratio: sensitivityRatio,
+                fromTempTarget: ratioFromTempTarget,
+                bypassCause: cause,
+                smbFragment: ""
+            )
+        }
 
         // SMB control: runs whenever autoISF is enabled, independent of dynISF
         let smbResult = OrefSubTimer.time("autoISF.AutoISFsmb.evaluate") {
@@ -103,17 +108,18 @@ enum AutoISF {
             )
         }
 
-        // Mirrors the two early-return branches in JS `autoISF()`: `!profile.use_autoisf`
-        // and `profile.autoISF_off_Sport && exerciseModeActive`. Used to drive sentinel-1
-        // telemetry in the determination so it matches JS bypass output.
+        // True when the autoISF ISF-adjustment path is bypassed: autoISF disabled in
+        // preferences, or exercise mode plus autoISF_off_Sport. Used to drive the
+        // sentinel-1 telemetry on the determination output.
         let isfAdjustBypassed = !profile.autoisf || (profile.autoISFoffSport && exerciseModeActive)
 
-        // ISF adjustment: only when dynISF is inactive and glucose status is available
+        // ISF adjustment runs only when dynISF is inactive and glucose status is
+        // available; otherwise emit the bypass-path chip cluster.
         guard !dynamicIsfActive, let status = autoISFStatus else {
             return AutoISFEngineResult(
                 adjustedSensitivity: nil,
                 smbEnabled: smbEnabled,
-                isfReason: autosensReason,
+                isfReason: bypassReason(cause: !profile.autoisf ? .preferenceDisabled : nil),
                 smbRatio: smbRatio,
                 adjustResult: nil,
                 smbResult: smbResult,
@@ -140,6 +146,7 @@ enum AutoISF {
             isfReason = AutoISFReason.isfReason(
                 autosensEnabled: profile.enableAutosens,
                 sensitivityRatio: sensitivityRatio,
+                fromTempTarget: ratioFromTempTarget,
                 smbFragment: smbResult?.reason ?? "",
                 parabolaFragment: AutoISFReason.parabolaFitTag(
                     enabled: profile.enableBGacceleration,
@@ -149,7 +156,11 @@ enum AutoISF {
                 adjustReason: adjustResult.reason
             )
         } else {
-            isfReason = autosensReason
+            // AutoISFAdjust returned nil — pick the matching disabled-cause for the chip.
+            let cause: AutoISFReason.AutoISFBypassCause = (profile.autoISFoffSport && exerciseModeActive)
+                ? .exerciseDisabled
+                : .preferenceDisabled
+            isfReason = bypassReason(cause: cause)
         }
 
         return AutoISFEngineResult(

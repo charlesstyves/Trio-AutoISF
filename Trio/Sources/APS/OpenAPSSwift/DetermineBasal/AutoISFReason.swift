@@ -25,20 +25,43 @@ enum AutoISFReason {
         "SMB Del.Ratio:, \(ratio.jsRounded(scale: 2)), "
     }
 
-    /// "autosens:, <ratio>, " — the sensitivity ratio at the start of the reason,
-    /// shown when autosens is enabled.
-    static func autosensTag(ratio: Decimal) -> String {
-        "autosens:, \(ratio.jsRounded(scale: 2)), "
+    /// Sensitivity-ratio chip at the start of the reason. Labels are mutually exclusive —
+    /// `Ratio TT:` when the ratio came from the temp-target half-basal-target curve,
+    /// `autosens:` when it came from autosens.
+    static func sensitivityRatioTag(ratio: Decimal, fromTempTarget: Bool) -> String {
+        if fromTempTarget {
+            return "Ratio TT:, \(ratio.jsRounded(scale: 2)), "
+        }
+        return "autosens:, \(ratio.jsRounded(scale: 2)), "
     }
 
-    /// "autosens:, <ratio>, ISF: <orig>→<adj>" — fallback autosens-only reason used when
-    /// the full autoISF adjustment pipeline isn't available.
+    /// Bypass cause for the autoISF adjustment path — drives the disabled-state chip.
+    enum AutoISFBypassCause {
+        /// autoISF disabled in preferences.
+        case preferenceDisabled
+        /// autoISF_off_Sport active and exercise mode triggered.
+        case exerciseDisabled
+    }
+
+    /// Reason fragment for the autoISF-bypass paths. Produces something like
+    /// `"[smbFragment, ]Ratio TT:, 0.3, autoISF disabled (exercise), Standard"` when
+    /// the TT modifier fires and autoISF_off_Sport is active.
     static func autosensOnlyReason(
         ratio: Decimal,
-        originalSensitivity: Decimal,
-        adjustedSensitivity: Decimal
+        fromTempTarget: Bool,
+        bypassCause: AutoISFBypassCause?,
+        smbFragment: String
     ) -> String {
-        "autosens:, \(ratio.jsRounded(scale: 2)), ISF: \(originalSensitivity.jsRounded())→\(adjustedSensitivity.jsRounded())"
+        let smbStr = smbFragment.isEmpty ? "" : "\(smbFragment), "
+        let ratioStr = sensitivityRatioTag(ratio: ratio, fromTempTarget: fromTempTarget)
+        let bypassStr: String = {
+            switch bypassCause {
+            case .exerciseDisabled: return "autoISF disabled (exercise), "
+            case .preferenceDisabled: return "autoISF disabled, "
+            case .none: return ""
+            }
+        }()
+        return "\(smbStr)\(ratioStr)\(bypassStr)Standard"
     }
 
     /// "Parabolic Fit:, …, " — displayed when BG-acceleration ISF is actually adjusting
@@ -87,17 +110,21 @@ enum AutoISFReason {
         }
     }
 
-    /// Assembles the full ISF reason: `[autosens] [smb] [parabola] <adjust>, Standard`.
+    /// Assembles the full ISF reason: `[ratio] [smb] [parabola] <adjust>, Standard`.
+    /// `fromTempTarget=true` swaps the leading `autosens:` chip for `Ratio TT:`.
     static func isfReason(
         autosensEnabled: Bool,
         sensitivityRatio: Decimal,
+        fromTempTarget: Bool,
         smbFragment: String,
         parabolaFragment: String,
         adjustReason: String
     ) -> String {
-        let autosensStr = autosensEnabled ? autosensTag(ratio: sensitivityRatio) : ""
+        let ratioStr: String = (autosensEnabled || fromTempTarget)
+            ? sensitivityRatioTag(ratio: sensitivityRatio, fromTempTarget: fromTempTarget)
+            : ""
         let smbStr = smbFragment.isEmpty ? "" : "\(smbFragment), "
-        return "\(autosensStr)\(smbStr)\(parabolaFragment)\(adjustReason), Standard"
+        return "\(ratioStr)\(smbStr)\(parabolaFragment)\(adjustReason), Standard"
     }
 
     // MARK: - SMB control fragments (AutoISFsmb outputs)
