@@ -291,16 +291,22 @@ enum DeterminationGenerator {
             )
         }
 
-        // autoISF and dynISF are mutually exclusive: run autoISF only when dynISF is not active.
-        // exerciseModeActive / resistanceModeActive mirror the JS determine_basal conditions.
+        // Mirrors github.com/nightscout/Trio-oref `dev` branch
+        // lib/determine-basal/determine-basal.js:500-509. The TT-exercise comparison is
+        // against the literal `normalTarget = 100` ("evaluate high/low temptarget against
+        // 100, not scheduled target (which might change)"), NOT `profile.min_bg`. Using
+        // min_bg here was a latent bug: when a TT is active, profile.minBg has been
+        // overwritten with the TT target (e.g. 199 by Targets.lookup), so
+        // `targetGlucose > min_bg` reduces to `199 > 199 = false` and the TT-exercise
+        // modifier in calculateSensitivityRatio never fires.
         let tempTargetSet = profile.temptargetSet ?? false
-        let baseProfileTarget = profile.minBg ?? 100
+        let normalTarget: Decimal = 100
         let exerciseModeActive = profile.highTemptargetRaisesSensitivity
             && tempTargetSet
-            && adjustedGlucoseTargets.targetGlucose > baseProfileTarget
+            && adjustedGlucoseTargets.targetGlucose > normalTarget
         let resistanceModeActive = profile.lowTemptargetLowersSensitivity
             && tempTargetSet
-            && adjustedGlucoseTargets.targetGlucose < baseProfileTarget
+            && adjustedGlucoseTargets.targetGlucose < normalTarget
 
         let b30Result = OrefSubTimer.time("determineBasal.AimiB30.evaluate") {
             AimiB30.evaluate(
