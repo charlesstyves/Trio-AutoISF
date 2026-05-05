@@ -590,7 +590,16 @@ enum DeterminationGenerator {
             bgISFratio: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.adjustResult?.bgISFratio,
             ppISFratio: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.adjustResult?.ppISFratio,
             acceISFratio: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.adjustResult?.acceISFratio,
-            autoISFratio: autoISFResult.adjustResult?.autoISFratio,
+            // Mirrors JS lib/determine-basal/determine-basal.js:1431 —
+            // `rT.auto_ISFratio = round(profile.sens / sens, 2)`. JS sets this regardless
+            // of whether autoISF() ran or bypassed: `sens` is the post-TT-modifier value
+            // either way. When autoISF bypasses (autoISF off, or autoISF_off_Sport in
+            // exercise mode), `adjustedSensitivity` keeps the value `computeAdjustedSensitivity`
+            // produced from sensitivityRatio — so `profileSens/adjustedSens` here yields the
+            // JS-equivalent ratio (e.g. 65/217 = 0.3 for TT=199 + autoISF_off_Sport).
+            autoISFratio: autoISFResult.isfAdjustBypassed
+                ? (adjustedSensitivity > 0 ? (originalSensitivity / adjustedSensitivity).jsRounded(scale: 2) : 1)
+                : autoISFResult.adjustResult?.autoISFratio,
             iobTH: autoISFResult.smbResult?.iobTHEffective,
             tick: 0, // to be removed
             // acce calc (parabola fit metrics from glucose analysis)
