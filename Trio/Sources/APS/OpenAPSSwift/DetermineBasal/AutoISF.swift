@@ -46,6 +46,20 @@ struct AutoISFEngineResult {
 /// SMB control runs whenever autoISF is enabled, regardless of dynISF.
 /// ISF adjustment only runs when dynISF is inactive.
 enum AutoISF {
+    /// TT half-basal-target mode flags for the given profile and target.
+    /// `targetBG` is the post-TT-overwrite target (i.e. the user's TT value when one is active).
+    /// Predicate matches JS oref's `target_bg > normalTarget` / `< normalTarget` literal-100 gate.
+    static func tempTargetMode(
+        profile: Profile,
+        targetBG: Decimal
+    ) -> (exerciseModeActive: Bool, resistanceModeActive: Bool) {
+        let normalTarget: Decimal = 100
+        let temptargetSet = profile.temptargetSet ?? false
+        let exerciseModeActive = profile.highTemptargetRaisesSensitivity && temptargetSet && targetBG > normalTarget
+        let resistanceModeActive = profile.lowTemptargetLowersSensitivity && temptargetSet && targetBG < normalTarget
+        return (exerciseModeActive, resistanceModeActive)
+    }
+
     static func run(
         profile: Profile,
         dynamicIsfActive: Bool,
@@ -55,26 +69,22 @@ enum AutoISF {
         currentGlucose: Decimal,
         sensitivityRatio: Decimal,
         originalSensitivity _: Decimal,
-        exerciseModeActive: Bool,
-        resistanceModeActive: Bool,
         microBolusAllowed: Bool,
         iob: Decimal,
         b30IsActive: Bool,
         autoISFStatus: AutoISFGlucoseStatus?,
         overrideSmbIsOff: Bool
     ) -> AutoISFEngineResult {
+        let (exerciseModeActive, resistanceModeActive) = tempTargetMode(profile: profile, targetBG: targetBG)
         // Drives the iobTH reduction inside AutoISFsmb when iob_threshold_percent != 1.
         let exerciseRatio: Decimal = (exerciseModeActive || resistanceModeActive) ? sensitivityRatio : 1
-        // The TT half-basal-target modifier owns sensitivityRatio iff it fired
-        // (DetermineBasalGenerator gate). Drives the "Ratio TT:" vs "autosens:" chip label.
-        let ratioFromTempTarget = exerciseModeActive || resistanceModeActive
 
         // Bypass-path reason builder: emits the chip set for the
         // (Ratio TT or autosens, autoISF disabled[ (exercise)], Standard) cluster.
         func bypassReason(cause: AutoISFReason.AutoISFBypassCause?) -> String {
             AutoISFReason.autosensOnlyReason(
                 ratio: sensitivityRatio,
-                fromTempTarget: ratioFromTempTarget,
+                fromTempTarget: exerciseModeActive || resistanceModeActive,
                 bypassCause: cause,
                 smbFragment: ""
             )
@@ -146,7 +156,7 @@ enum AutoISF {
             isfReason = AutoISFReason.isfReason(
                 autosensEnabled: profile.enableAutosens,
                 sensitivityRatio: sensitivityRatio,
-                fromTempTarget: ratioFromTempTarget,
+                fromTempTarget: exerciseModeActive || resistanceModeActive,
                 smbFragment: smbResult?.reason ?? "",
                 parabolaFragment: AutoISFReason.parabolaFitTag(
                     enabled: profile.enableBGacceleration,
@@ -200,7 +210,7 @@ enum AutoISF {
         currentGlucose: Decimal,
         microBolusAllowed: Bool,
         iob: Decimal,
-        exerciseRatio: Decimal,
+        sensitivityRatio: Decimal,
         overrideSmbIsOff: Bool,
         iobInputs: KetoProtect.IobInputs
     ) throws -> B30Dispatch {
@@ -213,6 +223,9 @@ enum AutoISF {
 
         if suppressed {
             var blocked = afterSafeguards
+            let (exerciseModeActive, resistanceModeActive) = tempTargetMode(profile: profile, targetBG: targetBG)
+            // Drives the iobTH reduction inside AutoISFsmb when iob_threshold_percent != 1.
+            let exerciseRatio: Decimal = (exerciseModeActive || resistanceModeActive) ? sensitivityRatio : 1
             let updatedSmb = AutoISFsmb.evaluate(
                 profile: profile,
                 targetBG: targetBG,
