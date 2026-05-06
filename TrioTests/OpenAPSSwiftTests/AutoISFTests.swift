@@ -65,8 +65,7 @@ import Testing
         microBolusAllowed: Bool = true,
         iob: Decimal = 0,
         b30IsActive: Bool = false,
-        overrideSmbIsOff: Bool = false,
-        exerciseModeActive: Bool = false
+        overrideSmbIsOff: Bool = false
     ) -> AutoISFEngineResult {
         AutoISF.run(
             profile: profile,
@@ -77,8 +76,6 @@ import Testing
             currentGlucose: currentGlucose,
             sensitivityRatio: 1,
             originalSensitivity: 50,
-            exerciseModeActive: exerciseModeActive,
-            resistanceModeActive: false,
             microBolusAllowed: microBolusAllowed,
             iob: iob,
             b30IsActive: b30IsActive,

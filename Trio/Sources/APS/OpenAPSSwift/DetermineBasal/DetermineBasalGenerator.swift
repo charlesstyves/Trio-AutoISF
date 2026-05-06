@@ -291,20 +291,6 @@ enum DeterminationGenerator {
             )
         }
 
-        // The TT-exercise comparison must be against a fixed reference (100 mg/dL),
-        // not profile.minBg. When a TT is active, Targets.lookup has already overwritten
-        // profile.minBg with the TT target itself (e.g. 199), so a comparison against
-        // min_bg reduces to `199 > 199 = false` and the TT-exercise modifier in
-        // calculateSensitivityRatio never fires.
-        let tempTargetSet = profile.temptargetSet ?? false
-        let normalTarget: Decimal = 100
-        let exerciseModeActive = profile.highTemptargetRaisesSensitivity
-            && tempTargetSet
-            && adjustedGlucoseTargets.targetGlucose > normalTarget
-        let resistanceModeActive = profile.lowTemptargetLowersSensitivity
-            && tempTargetSet
-            && adjustedGlucoseTargets.targetGlucose < normalTarget
-
         let b30Result = OrefSubTimer.time("determineBasal.AimiB30.evaluate") {
             AimiB30.evaluate(
                 profile: profile,
@@ -334,8 +320,6 @@ enum DeterminationGenerator {
                 currentGlucose: currentGlucose,
                 sensitivityRatio: sensitivityRatio,
                 originalSensitivity: originalSensitivity,
-                exerciseModeActive: exerciseModeActive,
-                resistanceModeActive: resistanceModeActive,
                 microBolusAllowed: microBolusAllowed,
                 iob: iobData.first?.iob ?? 0,
                 b30IsActive: b30Result.isActive,
@@ -647,7 +631,7 @@ enum DeterminationGenerator {
                 currentGlucose: currentGlucose,
                 microBolusAllowed: microBolusAllowed,
                 iob: iobData.first?.iob ?? 0,
-                exerciseRatio: (exerciseModeActive || resistanceModeActive) ? sensitivityRatio : 1,
+                sensitivityRatio: sensitivityRatio,
                 overrideSmbIsOff: overrideDisablesSmb,
                 iobInputs: iobInputs
             )
