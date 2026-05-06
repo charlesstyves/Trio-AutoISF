@@ -46,6 +46,58 @@ struct AutoISFEngineResult {
 /// SMB control runs whenever autoISF is enabled, regardless of dynISF.
 /// ISF adjustment only runs when dynISF is inactive.
 enum AutoISF {
+    /// Apply override values from `trioCustomOrefVariables` onto the autoISF/SMB
+    /// fields of `profile`. No-op when `useOverride` is false; per-field guard
+    /// preserves the profile value whenever the override is nil.
+    static func applyProfileOverrides(
+        _ profile: inout Profile,
+        from trioCustomOrefVariables: TrioCustomOrefVariables
+    ) {
+        guard trioCustomOrefVariables.useOverride else { return }
+        if let override = trioCustomOrefVariables.overrideAutoISFmin {
+            profile.autoISFmin = override
+        }
+        if let override = trioCustomOrefVariables.overrideAutoISFmax {
+            profile.autoISFmax = override
+        }
+        if let override = trioCustomOrefVariables.overrideAutoISFhourlyChange {
+            profile.autoISFhourlyChange = override
+        }
+        if let override = trioCustomOrefVariables.overrideHigherISFrangeWeight {
+            profile.higherISFrangeWeight = override
+        }
+        if let override = trioCustomOrefVariables.overrideLowerISFrangeWeight {
+            profile.lowerISFrangeWeight = override
+        }
+        if let override = trioCustomOrefVariables.overridePostMealISFweight {
+            profile.postMealISFweight = override
+        }
+        if let override = trioCustomOrefVariables.overrideBgAccelISFweight {
+            profile.bgAccelISFweight = override
+        }
+        if let override = trioCustomOrefVariables.overrideBgBrakeISFweight {
+            profile.bgBrakeISFweight = override
+        }
+        if let override = trioCustomOrefVariables.overrideIobThresholdPercent {
+            profile.iobThresholdPercent = override
+        }
+        if let override = trioCustomOrefVariables.overrideSmbDeliveryRatio {
+            profile.smbDeliveryRatio = override
+        }
+        if let override = trioCustomOrefVariables.overrideSmbDeliveryRatioBGrange {
+            profile.smbDeliveryRatioBGrange = override
+        }
+        if let override = trioCustomOrefVariables.overrideSmbDeliveryRatioMin {
+            profile.smbDeliveryRatioMin = override
+        }
+        if let override = trioCustomOrefVariables.overrideSmbDeliveryRatioMax {
+            profile.smbDeliveryRatioMax = override
+        }
+        if let override = trioCustomOrefVariables.overrideEnableBGacceleration {
+            profile.enableBGacceleration = override
+        }
+    }
+
     /// TT half-basal-target mode flags for the given profile and target.
     /// `targetBG` is the post-TT-overwrite target (i.e. the user's TT value when one is active).
     /// Predicate matches JS oref's `target_bg > normalTarget` / `< normalTarget` literal-100 gate.
