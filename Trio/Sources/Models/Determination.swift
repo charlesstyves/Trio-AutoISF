@@ -38,29 +38,29 @@ struct Determination: JSON, Equatable {
     let received: Bool?
     //    autoISF
     var smbRatio: Decimal?
-    let duraISFratio: Decimal?
-    let bgISFratio: Decimal?
-    let ppISFratio: Decimal?
-    let acceISFratio: Decimal?
-    let autoISFratio: Decimal?
+    var duraISFratio: Decimal?
+    var bgISFratio: Decimal?
+    var ppISFratio: Decimal?
+    var acceISFratio: Decimal?
+    var autoISFratio: Decimal?
     var iobTH: Decimal?
     let tick: Int?
     // acce calc
-    let parabolaFitMinutes: Decimal?
-    let parabolaFitLastDelta: Decimal?
-    let parabolaFitNextDelta: Decimal?
-    let parabolaFitCorrelation: Decimal?
-    let parabolaFitA0: Decimal?
-    let parabolaFitA1: Decimal?
-    let parabolaFitA2: Decimal?
-    let duraMin: Decimal?
-    let duraAvg: Decimal?
-    let bgAcce: Decimal?
+    var parabolaFitMinutes: Decimal?
+    var parabolaFitLastDelta: Decimal?
+    var parabolaFitNextDelta: Decimal?
+    var parabolaFitCorrelation: Decimal?
+    var parabolaFitA0: Decimal?
+    var parabolaFitA1: Decimal?
+    var parabolaFitA2: Decimal?
+    var duraMin: Decimal?
+    var duraAvg: Decimal?
+    var bgAcce: Decimal?
     // Mirrors JS rT.BGI / rT.deviation / rT.iobActivity. Surfaced so the JS↔Swift
     // algo-compare can verify the glucose-impact pipeline end-to-end.
-    let bgi: Decimal?
-    let deviation: Decimal?
-    let iobActivity: Decimal?
+    var bgi: Decimal?
+    var deviation: Decimal?
+    var iobActivity: Decimal?
 }
 
 struct Predictions: JSON, Equatable {

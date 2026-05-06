@@ -27,52 +27,7 @@ enum DeterminationGenerator {
         currentTime: Date
     ) throws -> Determination? {
         var profile = profile
-
-        // Apply override parameters if enabled
-        if trioCustomOrefVariables.useOverride {
-            if let override = trioCustomOrefVariables.overrideAutoISFmin {
-                profile.autoISFmin = override
-            }
-            if let override = trioCustomOrefVariables.overrideAutoISFmax {
-                profile.autoISFmax = override
-            }
-            if let override = trioCustomOrefVariables.overrideAutoISFhourlyChange {
-                profile.autoISFhourlyChange = override
-            }
-            if let override = trioCustomOrefVariables.overrideHigherISFrangeWeight {
-                profile.higherISFrangeWeight = override
-            }
-            if let override = trioCustomOrefVariables.overrideLowerISFrangeWeight {
-                profile.lowerISFrangeWeight = override
-            }
-            if let override = trioCustomOrefVariables.overridePostMealISFweight {
-                profile.postMealISFweight = override
-            }
-            if let override = trioCustomOrefVariables.overrideBgAccelISFweight {
-                profile.bgAccelISFweight = override
-            }
-            if let override = trioCustomOrefVariables.overrideBgBrakeISFweight {
-                profile.bgBrakeISFweight = override
-            }
-            if let override = trioCustomOrefVariables.overrideIobThresholdPercent {
-                profile.iobThresholdPercent = override
-            }
-            if let override = trioCustomOrefVariables.overrideSmbDeliveryRatio {
-                profile.smbDeliveryRatio = override
-            }
-            if let override = trioCustomOrefVariables.overrideSmbDeliveryRatioBGrange {
-                profile.smbDeliveryRatioBGrange = override
-            }
-            if let override = trioCustomOrefVariables.overrideSmbDeliveryRatioMin {
-                profile.smbDeliveryRatioMin = override
-            }
-            if let override = trioCustomOrefVariables.overrideSmbDeliveryRatioMax {
-                profile.smbDeliveryRatioMax = override
-            }
-            if let override = trioCustomOrefVariables.overrideEnableBGacceleration {
-                profile.enableBGacceleration = override
-            }
-        }
+        AutoISF.applyProfileOverrides(&profile, from: trioCustomOrefVariables)
 
         let glucoseStatus = try OrefSubTimer.time("determineBasal.getGlucoseStatus") {
             try Self.getGlucoseStatus(glucoseReadings: glucose)
@@ -559,36 +514,34 @@ enum DeterminationGenerator {
             threshold: threshold.jsRounded(),
             carbRatio: forecastResult.adjustedCarbRatio.jsRounded(scale: 1),
             received: false,
-            smbRatio: autoISFResult.smbRatio,
-            // When autoISF's ISF-adjustment is bypassed (autoISF off, or exercise with
-            // autoISF_off_Sport), the parabola/dura/bg_acce/acce/bg/pp/dura ratio fields
-            // collapse to a sentinel value of 1 — there's no real adaptation to report.
-            duraISFratio: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.adjustResult?.duraISFratio,
-            bgISFratio: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.adjustResult?.bgISFratio,
-            ppISFratio: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.adjustResult?.ppISFratio,
-            acceISFratio: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.adjustResult?.acceISFratio,
-            // auto_ISFratio is profileSens/adjustedSens regardless of bypass — when
-            // autoISF bypasses, adjustedSensitivity carries the TT-modifier-widened value,
-            // so this still yields a meaningful ratio (profileSens/widenedSens).
-            autoISFratio: autoISFResult.isfAdjustBypassed
-                ? (adjustedSensitivity > 0 ? (originalSensitivity / adjustedSensitivity).jsRounded(scale: 2) : 1)
-                : autoISFResult.adjustResult?.autoISFratio,
-            iobTH: autoISFResult.smbResult?.iobTHEffective,
+            // autoISF telemetry fields populated below via applyAutoISF.
+            smbRatio: nil,
+            duraISFratio: nil,
+            bgISFratio: nil,
+            ppISFratio: nil,
+            acceISFratio: nil,
+            autoISFratio: nil,
+            iobTH: nil,
             tick: 0, // to be removed
-            // acce calc (parabola fit metrics from glucose analysis)
-            parabolaFitMinutes: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.glucoseStatus?.dura_p,
-            parabolaFitLastDelta: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.glucoseStatus?.delta_pl,
-            parabolaFitNextDelta: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.glucoseStatus?.delta_pn,
-            parabolaFitCorrelation: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.glucoseStatus?.r_squ,
-            parabolaFitA0: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.glucoseStatus?.a_0,
-            parabolaFitA1: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.glucoseStatus?.a_1,
-            parabolaFitA2: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.glucoseStatus?.a_2,
-            // Duration ISF window metrics
-            duraMin: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.glucoseStatus?.dura_ISF_minutes,
-            duraAvg: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.glucoseStatus?.dura_ISF_average,
-            bgAcce: autoISFResult.isfAdjustBypassed ? 1 : autoISFResult.glucoseStatus?.bg_acceleration,
-            // Glucose-impact pipeline (mirrors JS rT.BGI / rT.deviation / rT.iobActivity)
-            bgi: currentGlucoseImpact.jsRounded(),
+            parabolaFitMinutes: nil,
+            parabolaFitLastDelta: nil,
+            parabolaFitNextDelta: nil,
+            parabolaFitCorrelation: nil,
+            parabolaFitA0: nil,
+            parabolaFitA1: nil,
+            parabolaFitA2: nil,
+            duraMin: nil,
+            duraAvg: nil,
+            bgAcce: nil,
+            bgi: nil,
+            deviation: nil,
+            iobActivity: nil
+        )
+        determination.applyAutoISF(
+            result: autoISFResult,
+            originalSensitivity: originalSensitivity,
+            adjustedSensitivity: adjustedSensitivity,
+            glucoseImpact: currentGlucoseImpact,
             deviation: deviation,
             iobActivity: iobData.first?.activity
         )
