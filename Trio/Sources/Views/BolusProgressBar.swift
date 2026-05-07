@@ -1,0 +1,24 @@
+import SwiftUI
+
+struct BolusProgressBar: View {
+    let progress: Decimal
+
+    var body: some View {
+        GeometryReader { geo in
+            RoundedRectangle(cornerRadius: 15)
+                .frame(height: 6)
+                .foregroundColor(.clear)
+                .background(
+                    TaiStyle.linearGradient(
+                        startPoint: .trailing,
+                        endPoint: .leading
+                    )
+                    .mask(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 15)
+                            .frame(width: geo.size.width * CGFloat(progress))
+                    }
+                )
+        }
+        .frame(height: 6)
+    }
+}
