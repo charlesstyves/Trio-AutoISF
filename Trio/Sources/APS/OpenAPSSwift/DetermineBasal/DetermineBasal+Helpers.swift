@@ -61,18 +61,8 @@ extension DeterminationGenerator {
             // compute mg/dL per 5 m as a Decimal:
             let change = mostRecentGlucoseReading - Decimal(entry.glucose)
 
-            // very-recent (<2.5 m) smooths "now"
-            if minutesAgo > -2, minutesAgo <= 2.5 {
-                mostRecentGlucoseReading = (mostRecentGlucoseReading + Decimal(entry.glucose)) / 2
-                mostRecentGlucoseDate = Date(
-                    timeIntervalSince1970: (
-                        mostRecentGlucoseDate.timeIntervalSince1970 + entry.date
-                            .timeIntervalSince1970
-                    ) / 2
-                )
-            }
-            // short window (~5–15 m)
-            else if minutesAgo > 2.5, minutesAgo <= 17.5 {
+            // short window (~5-15 m)
+            if minutesAgo > 2.5, minutesAgo <= 17.5 {
                 let avgDelta = (change / Decimal(minutesAgo)) * Decimal(5)
                 shortDeltas.append(avgDelta)
                 if minutesAgo < 7.5 {
