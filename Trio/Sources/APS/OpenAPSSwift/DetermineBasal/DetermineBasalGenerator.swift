@@ -785,8 +785,10 @@ enum DeterminationGenerator {
         guard profile.profileTarget(trioCustomOrefVariables: trioCustomOrefVariables) != nil else {
             throw DeterminationError.invalidProfileTarget
         }
-        // we have to allow 38 values so that we can cancel high temps
-        if glucoseStatus.glucose < 38 || glucoseStatus.glucose > 600 {
+        // no low-side throw; ≤10 and ==38 are now both classified by handleTempBasalCases
+        // as error states and emit a determination; 11-37 are real lows handled by the
+        // main dosing logic downstream.
+        if glucoseStatus.glucose > 600 {
             throw DeterminationError.glucoseOutOfRange(glucose: glucoseStatus.glucose)
         }
         guard let _ = iobData else {
