@@ -900,7 +900,7 @@ enum DosingEngine {
             if lastBolusAge > smbInterval {
                 if microBolus > 0 {
                     newDetermination.units = microBolus
-                    newDetermination.reason += "Microbolusing \(microBolus)U\(cap.reasonTail). "
+                    newDetermination.reason += "Microbolusing \(microBolus)U\(iobTHCapReason). "
                 }
             } else {
                 newDetermination.reason += "Waiting \(nextBolusMinutes)m \(nextBolusSeconds)s to microbolus again. "

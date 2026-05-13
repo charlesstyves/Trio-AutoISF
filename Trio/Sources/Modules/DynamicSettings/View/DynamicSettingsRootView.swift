@@ -5,13 +5,37 @@ extension DynamicSettings {
     struct RootView: BaseView {
         let resolver: Resolver
         @StateObject var state = StateModel()
-        @State private var shouldDisplayHint: Bool = false
-        @State private var showDynamicISFHint: Bool = false
         @State var hintDetent = PresentationDetent.large
-        @State var selectedVerboseHint: AnyView?
-        @State var hintLabel: String?
+        @State private var shouldDisplayHint: Bool = false
+        @State private var hintPayload: HintPayload?
         @State private var decimalPlaceholder: Decimal = 0.0
         @State private var booleanPlaceholder: Bool = false
+
+        private struct HintPayload: Identifiable {
+            let id = UUID()
+            let label: String
+            let content: AnyView
+        }
+
+        private var shouldDisplayHintBinding: Binding<Bool> {
+            Binding(
+                get: { hintPayload != nil },
+                set: { newValue in if !newValue { hintPayload = nil } }
+            )
+        }
+
+        private func verboseHintBinding(label: String) -> Binding<(any View)?> {
+            Binding(
+                get: { hintPayload?.content },
+                set: { newView in
+                    if let view = newView {
+                        hintPayload = HintPayload(label: label, content: AnyView(view))
+                    } else {
+                        hintPayload = nil
+                    }
+                }
+            )
+        }
 
         private var conversionFormatter: NumberFormatter {
             let formatter = NumberFormatter()
@@ -76,7 +100,57 @@ extension DynamicSettings {
 
                                 Spacer()
                                 Button(
-                                    action: { showDynamicISFHint = true },
+                                    action: {
+                                        hintPayload = HintPayload(
+                                            label: String(localized: "Dynamic Insulin Sensitivity"),
+                                            content: AnyView(
+                                                VStack(alignment: .leading, spacing: 10) {
+                                                    Text("Default: Disabled").bold()
+                                                    Text(
+                                                        "Enabling this feature allows Trio to calculate a new Insulin Sensitivity Factor with each loop cycle dynamically. Trio offers two dynamic formulas:"
+                                                    )
+                                                    VStack(alignment: .leading, spacing: 10) {
+                                                        Text("Logarithmic Dynamic ISF").bold()
+                                                        Text(
+                                                            "Enabling this feature allows Trio to calculate a new Insulin Sensitivity Factor with each loop cycle by considering your current glucose, the weighted total daily dose of insulin, the set adjustment factor, and a few other data points. This helps tailor your insulin response more accurately in real time."
+                                                        )
+                                                        Text(
+                                                            "Dynamic ISF produces a Dynamic Ratio, replacing the Autosens Ratio, determining how much your profile ISF will be adjusted every loop cycle, ensuring it stays within safe limits set by your Autosens Min/Max settings. It provides more precise insulin dosing by responding to changes in insulin needs throughout the day."
+                                                        )
+                                                        Text(
+                                                            "You can influence the adjustments made by Dynamic ISF primarily by adjusting Autosens Max, Autosens Min, and Adjustment Factor. Other settings also influence Dynamic ISF's response, such as Glucose Target, Profile ISF, Peak Insulin Time, and Weighted Average of TDD."
+                                                        )
+                                                        Text(
+                                                            "Warning: Before adjusting these settings, make sure you are fully aware of the impact those changes will have."
+                                                        )
+                                                        .bold()
+                                                    }
+
+                                                    VStack(alignment: .leading, spacing: 10) {
+                                                        Text("Sigmoid Dynamic ISF").bold()
+                                                        Text(
+                                                            "Turning on the Sigmoid Formula setting alters how your Dynamic Ratio, and thus your New ISF, are calculated using a sigmoid curve."
+                                                        )
+                                                        Text(
+                                                            "The curve's steepness is influenced by the Adjustment Factor, while the Autosens Min/Max settings determine the limits of the ratio adjustment, which can also influence the steepness of the sigmoid curve."
+                                                        )
+                                                        Text(
+                                                            "When using the Sigmoid Formula, the weighted Total Daily Dose has a much lower impact on the dynamic adjustments to sensitivity."
+                                                        )
+                                                        Text(
+                                                            "Careful tuning is essential to avoid overly aggressive insulin changes."
+                                                        )
+                                                        Text(
+                                                            "It is not recommended to set Autosens Max above 150% to maintain safe insulin dosing."
+                                                        )
+                                                        Text(
+                                                            "There has been no empirical data analysis to support the use of the Sigmoid Formula for dynamic sensitivity determination."
+                                                        ).bold()
+                                                    }
+                                                }
+                                            )
+                                        )
+                                    },
                                     label: {
                                         HStack {
                                             Image(systemName: "questionmark.circle")
@@ -84,55 +158,6 @@ extension DynamicSettings {
                                     }
                                 )
                                 .buttonStyle(BorderlessButtonStyle())
-                                .sheet(isPresented: $showDynamicISFHint) {
-                                    SettingInputHintView(
-                                        hintDetent: $hintDetent,
-                                        shouldDisplayHint: $showDynamicISFHint,
-                                        hintLabel: String(localized: "Dynamic ISF"),
-                                        hintText: VStack(alignment: .leading, spacing: 10) {
-                                            Text("Default: Disabled").bold()
-                                            Text(
-                                                "Enabling this feature allows Trio to calculate a new Insulin Sensitivity Factor with each loop cycle dynamically. Trio offers two dynamic formulas:"
-                                            )
-                                            VStack(alignment: .leading, spacing: 10) {
-                                                Text("Logarithmic Dynamic ISF").bold()
-                                                Text(
-                                                    "Enabling this feature allows Trio to calculate a new Insulin Sensitivity Factor with each loop cycle by considering your current glucose, the weighted total daily dose of insulin, the set adjustment factor, and a few other data points. This helps tailor your insulin response more accurately in real time."
-                                                )
-                                                Text(
-                                                    "Dynamic ISF produces a Dynamic Ratio, replacing the Autosens Ratio, determining how much your profile ISF will be adjusted every loop cycle, ensuring it stays within safe limits set by your Autosens Min/Max settings. It provides more precise insulin dosing by responding to changes in insulin needs throughout the day."
-                                                )
-                                                Text(
-                                                    "You can influence the adjustments made by Dynamic ISF primarily by adjusting Autosens Max, Autosens Min, and Adjustment Factor. Other settings also influence Dynamic ISF's response, such as Glucose Target, Profile ISF, Peak Insulin Time, and Weighted Average of TDD."
-                                                )
-                                                Text(
-                                                    "Warning: Before adjusting these settings, make sure you are fully aware of the impact those changes will have."
-                                                )
-                                                .bold()
-                                            }
-                                            VStack(alignment: .leading, spacing: 10) {
-                                                Text("Sigmoid Dynamic ISF").bold()
-                                                Text(
-                                                    "Turning on the Sigmoid Formula setting alters how your Dynamic Ratio, and thus your New ISF, are calculated using a sigmoid curve."
-                                                )
-                                                Text(
-                                                    "The curve's steepness is influenced by the Adjustment Factor, while the Autosens Min/Max settings determine the limits of the ratio adjustment, which can also influence the steepness of the sigmoid curve."
-                                                )
-                                                Text(
-                                                    "When using the Sigmoid Formula, the weighted Total Daily Dose has a much lower impact on the dynamic adjustments to sensitivity."
-                                                )
-                                                Text("Careful tuning is essential to avoid overly aggressive insulin changes.")
-                                                Text(
-                                                    "It is not recommended to set Autosens Max above 150% to maintain safe insulin dosing."
-                                                )
-                                                Text(
-                                                    "There has been no empirical data analysis to support the use of the Sigmoid Formula for dynamic sensitivity determination."
-                                                ).bold()
-                                            }
-                                        },
-                                        sheetTitle: String(localized: "Help", comment: "Help sheet title")
-                                    )
-                                }
                             }.padding(.top)
                         }.padding(.bottom)
                     }
@@ -143,14 +168,8 @@ extension DynamicSettings {
                         SettingInputSection(
                             decimalValue: $state.adjustmentFactor,
                             booleanValue: $booleanPlaceholder,
-                            shouldDisplayHint: $shouldDisplayHint,
-                            selectedVerboseHint: Binding(
-                                get: { selectedVerboseHint },
-                                set: {
-                                    selectedVerboseHint = $0.map { AnyView($0) }
-                                    hintLabel = String(localized: "Adjustment Factor (AF)")
-                                }
-                            ),
+                            shouldDisplayHint: shouldDisplayHintBinding,
+                            selectedVerboseHint: verboseHintBinding(label: String(localized: "Adjustment Factor (AF)")),
                             // TODO?: include conditional links to Desmos logarithmic graphs based on which .glucose setting is used
                             units: state.units,
                             type: .decimal("adjustmentFactor"),
@@ -174,14 +193,8 @@ extension DynamicSettings {
                         SettingInputSection(
                             decimalValue: $state.weightPercentage,
                             booleanValue: $booleanPlaceholder,
-                            shouldDisplayHint: $shouldDisplayHint,
-                            selectedVerboseHint: Binding(
-                                get: { selectedVerboseHint },
-                                set: {
-                                    selectedVerboseHint = $0.map { AnyView($0) }
-                                    hintLabel = String(localized: "Weighted Average of TDD")
-                                }
-                            ),
+                            shouldDisplayHint: shouldDisplayHintBinding,
+                            selectedVerboseHint: verboseHintBinding(label: String(localized: "Weighted Average of TDD")),
                             units: state.units,
                             type: .decimal("weightPercentage"),
                             label: String(localized: "Weighted Average of TDD"),
@@ -203,14 +216,8 @@ extension DynamicSettings {
                         SettingInputSection(
                             decimalValue: $state.adjustmentFactorSigmoid,
                             booleanValue: $booleanPlaceholder,
-                            shouldDisplayHint: $shouldDisplayHint,
-                            selectedVerboseHint: Binding(
-                                get: { selectedVerboseHint },
-                                set: {
-                                    selectedVerboseHint = $0.map { AnyView($0) }
-                                    hintLabel = String(localized: "Sigmoid Adjustment Factor")
-                                }
-                            ),
+                            shouldDisplayHint: shouldDisplayHintBinding,
+                            selectedVerboseHint: verboseHintBinding(label: String(localized: "Sigmoid Adjustment Factor")),
                             units: state.units,
                             type: .decimal("adjustmentFactorSigmoid"),
                             label: String(localized: "Sigmoid Adjustment Factor"),
@@ -235,16 +242,33 @@ extension DynamicSettings {
                     }
 
                     SettingInputSection(
+                        decimalValue: $state.weightPercentage,
+                        booleanValue: $booleanPlaceholder,
+                        shouldDisplayHint: shouldDisplayHintBinding,
+                        selectedVerboseHint: verboseHintBinding(label: String(localized: "Weighted Average of TDD")),
+                        units: state.units,
+                        type: .decimal("weightPercentage"),
+                        label: String(localized: "Weighted Average of TDD"),
+                        miniHint: String(localized: "Weight of 24-hr TDD against 10-day TDD."),
+                        verboseHint:
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Default: 35%").bold()
+                            Text(
+                                "This setting adjusts how much weight is given to your recent total daily insulin dose when calculating Dynamic ISF and Dynamic CR."
+                            )
+                            Text(
+                                "At the default setting, 35% of the calculation is based on the last 24 hours of insulin use, with the remaining 65% considering the last 10 days of data."
+                            )
+                            Text("Setting this to 100% means only the past 24 hours will be used.")
+                            Text("A lower value smooths out these variations for more stability.")
+                        }
+                    )
+
+                    SettingInputSection(
                         decimalValue: $decimalPlaceholder,
                         booleanValue: $state.tddAdjBasal,
-                        shouldDisplayHint: $shouldDisplayHint,
-                        selectedVerboseHint: Binding(
-                            get: { selectedVerboseHint },
-                            set: {
-                                selectedVerboseHint = $0.map { AnyView($0) }
-                                hintLabel = String(localized: "Adjust Basal")
-                            }
-                        ),
+                        shouldDisplayHint: shouldDisplayHintBinding,
+                        selectedVerboseHint: verboseHintBinding(label: String(localized: "Adjust Basal")),
                         units: state.units,
                         type: .boolean,
                         label: String(localized: "Adjust Basal"),
@@ -265,12 +289,12 @@ extension DynamicSettings {
                 }
             }
             .listSectionSpacing(sectionSpacing)
-            .sheet(isPresented: $shouldDisplayHint) {
+            .sheet(item: $hintPayload) { payload in
                 SettingInputHintView(
                     hintDetent: $hintDetent,
-                    shouldDisplayHint: $shouldDisplayHint,
-                    hintLabel: hintLabel ?? "",
-                    hintText: selectedVerboseHint ?? AnyView(EmptyView()),
+                    shouldDisplayHint: shouldDisplayHintBinding,
+                    hintLabel: payload.label,
+                    hintText: payload.content,
                     sheetTitle: String(localized: "Help", comment: "Help sheet title")
                 )
             }

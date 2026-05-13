@@ -96,6 +96,7 @@ struct TrioSettings: JSON, Equatable, Encodable {
     var useSwiftOref: Bool = false
     var algoShadowCompare: Bool = false
     var useChartBars: Bool = false
+    var requireAdjustmentsConfirmation: Bool = false
 
     /// Selected Garmin watchface (Trio or SwissAlpine)
     var garminWatchface: GarminWatchface = .trio
@@ -407,6 +408,10 @@ extension TrioSettings: Decodable {
 
         if let useChartBars = try? container.decode(Bool.self, forKey: .useChartBars) {
             settings.useChartBars = useChartBars
+        }
+
+        if let requireAdjustmentsConfirmation = try? container.decode(Bool.self, forKey: .requireAdjustmentsConfirmation) {
+            settings.requireAdjustmentsConfirmation = requireAdjustmentsConfirmation
         }
 
         if let garminWatchface = try? container.decode(GarminWatchface.self, forKey: .garminWatchface) {

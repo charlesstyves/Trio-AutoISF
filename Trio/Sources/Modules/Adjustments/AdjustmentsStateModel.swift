@@ -13,6 +13,9 @@ extension Adjustments {
         @ObservationIgnored @Injected() var overrideStorage: OverrideStorage!
         @ObservationIgnored @Injected() var nightscoutManager: NightscoutManager!
 
+        var requireAdjustmentsConfirmation: Bool = false
+        var shouldDisplayPresetStartConfirmDialog: Bool = false
+
         // MARK: - Override and Temp Target Properties
 
         var overridePercentage: Double = 100
@@ -196,6 +199,7 @@ extension Adjustments {
                 autosensMax: autosensMax
             )
             loadAutoISFProfileDefaults()
+            requireAdjustmentsConfirmation = settingsManager.settings.requireAdjustmentsConfirmation
             Task {
                 await getCurrentGlucoseTarget()
             }
@@ -309,6 +313,7 @@ extension Adjustments.StateModel: SettingsObserver, PreferencesObserver {
     func settingsDidChange(_: TrioSettings) {
         units = settingsManager.settings.units
         useSwiftOref = settingsManager.settings.useSwiftOref
+        requireAdjustmentsConfirmation = settingsManager.settings.requireAdjustmentsConfirmation
         Task {
             await getCurrentGlucoseTarget()
         }
