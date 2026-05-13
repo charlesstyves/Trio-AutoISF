@@ -492,7 +492,7 @@ extension Treatments {
         }
 
         var treatmentButton: some View {
-            let shouldDisplayBolusProgress = state.isBolusInProgress && state.amount > 0 &&
+            let shouldDisplayBolusProgress = state.isBolusInProgress &&
                 !state.externalInsulin && (state.carbs == 0 || state.fat == 0 || state.protein == 0)
 
             var treatmentButtonBackground = Color(.systemBlue)
@@ -565,7 +565,7 @@ extension Treatments {
                 guard let bolusTotal = bolusTotal else { return String(localized: "Bolus In Progress...") }
                 return (bolusProgressFormatter.string(from: bolusFraction as NSNumber) ?? "0")
                     + String(localized: " of ", comment: "Bolus string partial message: 'x U of y U' in home view")
-                    + (Formatter.decimalFormatterWithThreeFractionDigits.string(from: bolusTotal as NSNumber) ?? "0")
+                    + (bolusProgressFormatter.string(from: bolusTotal as NSNumber) ?? "0")
                     + String(localized: " U", comment: "Insulin unit")
             }()
 
@@ -575,8 +575,10 @@ extension Treatments {
                     .fill(
                         colorScheme == .dark
                             ? Color(red: 0.03921568627, green: 0.133333333, blue: 0.2156862745)
-                            : Color.insulin.opacity(0.2)
+                            : Color.insulin.opacity(0.1)
                     )
+                    .background(.ultraThinMaterial.opacity(colorScheme == .dark ? 0.35 : 0))
+                    .clipShape(RoundedRectangle(cornerRadius: 15))
                     .frame(height: 56)
                     .shadow(
                         color: colorScheme == .dark
@@ -587,18 +589,19 @@ extension Treatments {
 
                 // bolus content
                 HStack {
-                    Image(systemName: "cross.vial.fill")
-                        .font(.system(size: 25))
+                    Image("bolus")
+                        .renderingMode(.template)
+                        .resizable()
+                        .frame(width: 25, height: 25)
+                        .foregroundColor(Color(red: 0.262745098, green: 0.7333333333, blue: 0.9137254902))
 
                     Spacer()
 
-                    VStack {
+                    Group {
                         Text("Bolusing")
                             .font(.subheadline)
-                            .frame(maxWidth: .infinity, alignment: .leading)
                         Text(bolusString)
-                            .font(.caption)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .font(.subheadline)
                     }
                     .padding(.leading, 5)
 
@@ -607,20 +610,20 @@ extension Treatments {
                     Button { state.cancelBolus() } label: {
                         Image(systemName: "xmark.app")
                             .font(.system(size: 25))
-                    }.tint(Color.tabBar)
-                        .buttonStyle(.borderless)
-                        .accessibilityLabel("Cancel bolus")
+                            .foregroundStyle(Color.primary, Color(red: 0.262745098, green: 0.7333333333, blue: 0.9137254902))
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel("Cancel bolus")
                 }
                 .padding(.horizontal, 10)
-                .padding(.trailing, 8)
             }
-            .padding(.horizontal, 10)
             .overlay(alignment: .bottom) {
                 BolusProgressBar(progress: progress)
-                    .padding(.horizontal, 18)
+                    .padding(.horizontal, 28)
                     .padding(.bottom, 1)
             }
             .clipShape(RoundedRectangle(cornerRadius: 15))
+            .frame(height: 56)
         }
 
         private var taskButtonLabel: some View {
