@@ -23,7 +23,6 @@ struct AlgorithmSettings: BaseView {
                 content: {
                     Text("Autosens").navigationLink(to: .autosensSettings, from: self)
                     Text("Super Micro Bolus (SMB)").navigationLink(to: .smbSettings, from: self)
-//                    Text("Dynamic Settings").navigationLink(to: .dynamicISF, from: self)
                     Text("Target Behavior").navigationLink(to: .targetBehavior, from: self)
                     Text("Additionals").navigationLink(to: .algorithmAdvancedSettings, from: self)
                 }
@@ -31,6 +30,7 @@ struct AlgorithmSettings: BaseView {
             Section(
                 header: Text("Extensions"),
                 content: {
+                    Text("DynamicISF").navigationLink(to: .dynamicISF, from: self)
                     Text("autoISF").navigationLink(to: .autoISFSettings, from: self)
                     Text("AIMI B30").navigationLink(to: .B30Conf, from: self)
                     Text("Keto Protection").navigationLink(to: .KetoConfig, from: self)

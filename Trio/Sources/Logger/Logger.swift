@@ -132,6 +132,7 @@ final class Logger {
     static let service = Logger(category: .service, reporter: baseReporter)
     static let businessLogic = Logger(category: .businessLogic, reporter: baseReporter)
     static let openAPS = Logger(category: .openAPS, reporter: baseReporter)
+    static let openAPSSwift = Logger(category: .openAPSSwift, reporter: baseReporter)
     static let deviceManager = Logger(category: .deviceManager, reporter: baseReporter)
     static let apsManager = Logger(category: .apsManager, reporter: baseReporter)
     static let nightscout = Logger(category: .nightscout, reporter: baseReporter)
@@ -146,6 +147,7 @@ final class Logger {
         case service
         case businessLogic
         case openAPS
+        case openAPSSwift
         case deviceManager
         case apsManager
         case nightscout
@@ -165,6 +167,7 @@ final class Logger {
             case .service: return .service
             case .businessLogic: return .businessLogic
             case .openAPS: return .openAPS
+            case .openAPSSwift: return .openAPSSwift
             case .deviceManager: return .deviceManager
             case .apsManager: return .apsManager
             case .nightscout: return .nightscout
@@ -187,6 +190,7 @@ final class Logger {
                  .deviceManager,
                  .nightscout,
                  .openAPS,
+                 .openAPSSwift,
                  .remoteControl,
                  .service,
                  .storage,

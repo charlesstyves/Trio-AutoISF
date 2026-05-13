@@ -38,6 +38,7 @@ extension Home {
         @State var showPumpSelection: Bool = false
         @State var showCGMSelection: Bool = false
         @State var notificationsDisabled = false
+        @State private var showAlgoCompare: Bool = false
         @State var timeButtons: [TimePicker] = [
             TimePicker(label: String(localized: "2 hours"), number: "2", active: false, hours: 2),
             TimePicker(label: String(localized: "4 hours"), number: "4", active: false, hours: 4),
@@ -187,7 +188,11 @@ extension Home {
                 timerDate: state.timerDate,
                 pumpStatusHighlightMessage: state.pumpStatusHighlightMessage,
                 battery: state.batteryFromPersistence,
-                autoISFratio: (state.enactedAndNonEnactedDeterminations.first?.autoISFratio ?? 1) as Decimal,
+                autoISFratio: (
+                    state.autoisfEnabled
+                        ? (state.enactedAndNonEnactedDeterminations.first?.autoISFratio ?? 1)
+                        : (state.enactedAndNonEnactedDeterminations.first?.sensitivityRatio ?? 1)
+                ) as Decimal,
                 totalDaily: state.fetchedTDDs.first?.totalDailyDose ?? 0,
                 autoisfEnabled: state.autoisfEnabled,
                 showPumpSelection: $showPumpSelection,
@@ -358,7 +363,7 @@ extension Home {
                 autosensMax: state.autosensMax
             ) ?? state.settingHalfBasalTarget
             var showPercentage = false
-            if target > 100, state.isExerciseModeActive || state.highTTraisesSens { showPercentage = true }
+            if target > 100, state.highTTraisesSens { showPercentage = true }
             if target < 100, state.lowTTlowersSens, state.autosensMax > 1 { showPercentage = true }
             if showPercentage {
                 percentageString =
@@ -458,27 +463,30 @@ extension Home {
         var timeIntervalPanel: some View {
             HStack(alignment: .center) {
                 Spacer()
-                Button(action: {
-                    appState.statSelectedViewType = .glucose
-                    appState.statSelectedInsulinTimeInterval = .day
-                    state.showModal(for: .statistics)
-                }) {
-                    Image(systemName: "chart.bar.xaxis.ascending.badge.clock")
-                        .symbolRenderingMode(.palette)
-                        .scaleEffect(x: -1)
-                        .foregroundStyle(
-                            Color.secondary,
-                            TaiStyle.linearGradient(
-                                startPoint: .trailing, endPoint: .leading
-                            )
+                Image(systemName: "chart.bar.xaxis.ascending.badge.clock")
+                    .symbolRenderingMode(.palette)
+                    .scaleEffect(x: -1)
+                    .foregroundStyle(
+                        Color.secondary,
+                        TaiStyle.linearGradient(
+                            startPoint: .trailing, endPoint: .leading
                         )
-                        .frame(width: 24, height: 24)
-                        .background(
-                            colorScheme == .dark ? Color(red: 0.1176470588, green: 0.2352941176, blue: 0.3725490196) :
-                                Color.white
-                        )
-                        .clipShape(Circle())
-                }
+                    )
+                    .frame(width: 24, height: 24)
+                    .background(
+                        colorScheme == .dark ? Color(red: 0.1176470588, green: 0.2352941176, blue: 0.3725490196) :
+                            Color.white
+                    )
+                    .clipShape(Circle())
+                    .contentShape(Circle())
+                    .onTapGesture {
+                        appState.statSelectedViewType = .glucose
+                        appState.statSelectedInsulinTimeInterval = .day
+                        state.showModal(for: .statistics)
+                    }
+                    .onLongPressGesture(minimumDuration: 0.6) {
+                        showAlgoCompare = true
+                    }
                 Spacer()
                 ForEach(timeButtons) { button in
                     Text(button.active ? button.label : button.number).onTapGesture {
@@ -711,7 +719,7 @@ extension Home {
                 }
             }
             .onTapGesture {
-                selectedTab = 2
+                selectedTab = 3
             }
         }
 
@@ -733,7 +741,7 @@ extension Home {
                 }
             }
             .onTapGesture {
-                selectedTab = 2
+                selectedTab = 3
             }
         }
 
@@ -816,7 +824,7 @@ extension Home {
                     // clear color for the icon
                     .foregroundStyle(Color.clear)
             }.onTapGesture {
-                selectedTab = 2
+                selectedTab = 3
             }
         }
 
@@ -1157,6 +1165,16 @@ extension Home {
             .sheet(isPresented: $state.isLegendPresented) {
                 ChartLegendView(state: state)
             }
+            .sheet(isPresented: $showAlgoCompare) {
+                NavigationView {
+                    AlgoComparisonAnalysisView()
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("Done") { showAlgoCompare = false }
+                            }
+                        }
+                }
+            }
             // PUMP RELATED
             .confirmationDialog("Pump Model", isPresented: $showPumpSelection) {
                 Button("Medtronic") { state.addPump(.minimed) }
@@ -1256,21 +1274,29 @@ extension Home {
                     NavigationStack { History.RootView(resolver: resolver) }
                         .tabItem { Label("History", systemImage: historySFSymbol) }.tag(1)
 
-                    Spacer()
+                    // Tag-2 placeholder for the central "+" button slot. iOS divides the
+                    // bar into 5 equal slots; without an explicit tag here, the strips of
+                    // this slot to the left/right of the 42pt "+" icon route taps to an
+                    // untagged Spacer and surface an empty view (black screen). Tagging
+                    // lets `onChange(of: selectedTab)` intercept the tap and treat it as
+                    // a "+" press. Mirrors nightscout/Trio PR #764.
+                    Color.clear
+                        .tabItem {}
+                        .tag(2)
 
                     NavigationStack { Adjustments.RootView(resolver: resolver) }
                         .tabItem {
                             Label(
                                 "Adjustments",
                                 systemImage: "slider.horizontal.2.gobackward"
-                            ) }.tag(2)
+                            ) }.tag(3)
 
                     NavigationStack(path: self.$settingsPath) {
                         Settings.RootView(resolver: resolver) }
                         .tabItem { Label(
                             "Settings",
                             systemImage: "gear"
-                        ) }.tag(3)
+                        ) }.tag(4)
                 }
                 .tint(Color.tabBar)
 
@@ -1292,8 +1318,23 @@ extension Home {
                     }
                 )
             }.ignoresSafeArea(.keyboard, edges: .bottom).blur(radius: state.waitForSuggestion ? 8 : 0)
-                .onChange(of: selectedTab) {
-                    if !settingsPath.isEmpty {
+                .onChange(of: selectedTab) { oldValue, newValue in
+                    // Tag-2 is the placeholder slot under the central "+". If a tap lands
+                    // on the strips around the 42pt "+" icon, treat it as a "+" press:
+                    // open the Treatment sheet, then bounce selection back. The 1s delay
+                    // lets the modal animation start before SwiftUI flips the tab —
+                    // immediate revert can race the sheet presentation. Same pattern as
+                    // nightscout/Trio PR #764.
+                    if newValue == 2 {
+                        state.showModal(for: .treatmentView)
+                        Task {
+                            try? await Task.sleep(for: .seconds(1))
+                            selectedTab = oldValue
+                        }
+                        return
+                    }
+                    // Don't clear settingsPath when bouncing back from the placeholder.
+                    if oldValue != 2, !settingsPath.isEmpty {
                         settingsPath = NavigationPath()
                     }
                 }
@@ -1322,8 +1363,9 @@ extension Home {
                 dateFormatter.timeStyle = .short
 
                 // Check if the determination is from suggested or enacted source
+                let algo = state.useSwiftOref ? "Swift" : "JS"
                 if state.determinationsFromSuggestion.first?.objectID == determination?.objectID {
-                    var title = String(localized: "Algorithm suggested at", comment: "Headline in suggested popup") +
+                    var title = "\(algo) " + String(localized: "Algorithm suggested at", comment: "Headline in suggested popup") +
                         " " + dateFormatter.string(from: determination?.deliverAt ?? Date())
 
                     // Add warning if the loop is not closed or if it's a manual temp basal
@@ -1332,7 +1374,7 @@ extension Home {
                     }
                     return title
                 } else {
-                    return String(localized: "Algorithm enacted at", comment: "Headline in enacted popup") +
+                    return "\(algo) " + String(localized: "Algorithm enacted at", comment: "Headline in enacted popup") +
                         " " + dateFormatter.string(from: determination?.deliverAt ?? Date())
                 }
             }()
@@ -1375,7 +1417,7 @@ extension Home {
                         .animation(.none, value: false)
                         Text("Algorithm reasoning").font(.headline).foregroundColor(.primary)
                             .padding(.vertical, 4)
-                        Text(determination.reasonConclusion)
+                        Text(parseReasonConclusion(determination.reasonConclusion, isMmolL: state.units == .mmolL))
                             .font(.subheadline).foregroundColor(.primary)
                     }
                 } else {
@@ -1406,8 +1448,10 @@ extension Home {
             dateFormatter.timeStyle = .short
 
             // Check if the determination is from suggested or enacted source
+            let algo = state.useSwiftOref ? "Swift" : "JS"
             if state.determinationsFromSuggestion.first?.objectID == determination?.objectID {
-                statusTitlePopup = String(localized: "Algorithm suggested at", comment: "Headline in suggested popup") +
+                statusTitlePopup = "\(algo) " +
+                    String(localized: "Algorithm suggested at", comment: "Headline in suggested popup") +
                     " " + dateFormatter.string(from: determination?.deliverAt ?? Date())
 
                 // Add warning if the loop is not closed or if it's a manual temp basal
@@ -1415,7 +1459,7 @@ extension Home {
                     statusTitlePopup += " - not enacted!"
                 }
             } else {
-                statusTitlePopup = String(localized: "Algorithm enacted at", comment: "Headline in enacted popup") +
+                statusTitlePopup = "\(algo) " + String(localized: "Algorithm enacted at", comment: "Headline in enacted popup") +
                     " " + dateFormatter.string(from: determination?.deliverAt ?? Date())
             }
 
@@ -1423,6 +1467,98 @@ extension Home {
         }
 
         // Helper function to determine the most recent determination
+        // TODO: Consolidate all mmol parsing methods (in TagCloudView, NightscoutManager and HomeRootView) to one central func
+        private func parseReasonConclusion(_ reasonConclusion: String, isMmolL: Bool) -> String {
+            let patterns = [
+                "minGuardBG\\s*-?\\d+\\.?\\d*<-?\\d+\\.?\\d*", // minGuardBG x<y
+                "Eventual BG\\s*-?\\d+\\.?\\d*\\s*>=\\s*-?\\d+\\.?\\d*", // Eventual BG x >= target
+                "Eventual BG\\s*-?\\d+\\.?\\d*\\s*<\\s*-?\\d+\\.?\\d*", // Eventual BG x < target
+                "(\\S+)\\s+(-?\\d+\\.?\\d*)\\s*>\\s*(\\d+)%\\s+of\\s+BG\\s+(-?\\d+\\.?\\d*)" // maxDelta x > y% of BG z
+            ]
+            let pattern = patterns.joined(separator: "|")
+            let regex = try! NSRegularExpression(pattern: pattern)
+
+            func convertToMmolL(_ value: String) -> String {
+                if let glucoseValue = Double(value.replacingOccurrences(of: "[^\\d.-]", with: "", options: .regularExpression)) {
+                    let mmolValue = Decimal(glucoseValue).asMmolL
+                    return mmolValue.description
+                }
+                return value
+            }
+
+            let matches = regex.matches(
+                in: reasonConclusion,
+                range: NSRange(reasonConclusion.startIndex..., in: reasonConclusion)
+            )
+            var updatedConclusion = reasonConclusion
+
+            for match in matches.reversed() {
+                guard let range = Range(match.range, in: reasonConclusion) else { continue }
+                let matchedString = String(reasonConclusion[range])
+
+                if isMmolL {
+                    if matchedString.contains("<"), matchedString.contains("Eventual BG"), !matchedString.contains("=") {
+                        // Handle "Eventual BG x < target" pattern
+                        let parts = matchedString.components(separatedBy: "<")
+                        if parts.count == 2 {
+                            let bgPart = parts[0].replacingOccurrences(of: "Eventual BG", with: "")
+                                .trimmingCharacters(in: .whitespaces)
+                            let targetValue = parts[1].trimmingCharacters(in: .whitespaces)
+                            let formattedBGPart = convertToMmolL(bgPart)
+                            let formattedTargetValue = convertToMmolL(targetValue)
+                            let formattedString = "Eventual BG \(formattedBGPart)<\(formattedTargetValue)"
+                            updatedConclusion.replaceSubrange(range, with: formattedString)
+                        }
+                    } else if matchedString.contains("<"), matchedString.contains("minGuardBG") {
+                        // Handle "minGuardBG x<y" pattern
+                        let parts = matchedString.components(separatedBy: "<")
+                        if parts.count == 2 {
+                            let firstValue = parts[0].trimmingCharacters(in: .whitespaces)
+                            let secondValue = parts[1].trimmingCharacters(in: .whitespaces)
+                            let formattedFirstValue = convertToMmolL(firstValue)
+                            let formattedSecondValue = convertToMmolL(secondValue)
+                            let formattedString = "minGuardBG \(formattedFirstValue)<\(formattedSecondValue)"
+                            updatedConclusion.replaceSubrange(range, with: formattedString)
+                        }
+                    } else if matchedString.contains(">=") {
+                        // Handle "Eventual BG x >= target" pattern
+                        let parts = matchedString.components(separatedBy: " >= ")
+                        if parts.count == 2 {
+                            let firstValue = parts[0].replacingOccurrences(of: "Eventual BG", with: "")
+                                .trimmingCharacters(in: .whitespaces)
+                            let secondValue = parts[1].trimmingCharacters(in: .whitespaces)
+                            let formattedFirstValue = convertToMmolL(firstValue)
+                            let formattedSecondValue = convertToMmolL(secondValue)
+                            let formattedString = "Eventual BG \(formattedFirstValue) >= \(formattedSecondValue)"
+                            updatedConclusion.replaceSubrange(range, with: formattedString)
+                        }
+                    } else if let localMatch = regex.firstMatch(
+                        in: matchedString,
+                        range: NSRange(matchedString.startIndex..., in: matchedString)
+                    ) {
+                        // Handle "maxDelta 37 > 20% of BG 95" style
+                        if match.numberOfRanges == 5 {
+                            let metric = String(matchedString[Range(localMatch.range(at: 1), in: matchedString)!])
+                            let firstValue = String(matchedString[Range(localMatch.range(at: 2), in: matchedString)!])
+                            let percentage = String(matchedString[Range(localMatch.range(at: 3), in: matchedString)!])
+                            let bgValue = String(matchedString[Range(localMatch.range(at: 4), in: matchedString)!])
+
+                            let formattedFirstValue = convertToMmolL(firstValue)
+                            let formattedBGValue = convertToMmolL(bgValue)
+
+                            let formattedString = "\(metric) \(formattedFirstValue) > \(percentage)% of BG \(formattedBGValue)"
+                            updatedConclusion.replaceSubrange(range, with: formattedString)
+                        }
+                    }
+                } else {
+                    // When isMmolL is false, ensure the original value is retained without duplication
+                    updatedConclusion.replaceSubrange(range, with: matchedString)
+                }
+            }
+
+            return updatedConclusion.capitalizingFirstLetter()
+        }
+
         private func getMostRecentDetermination() -> OrefDetermination? {
             let enacted = state.determinationsFromPersistence.first
             let suggested = state.determinationsFromSuggestion.first

@@ -13,6 +13,8 @@ struct SelectionPopoverView: ChartContent {
     let glucoseColorScheme: GlucoseColorScheme
     let isSmoothingEnabled: Bool
 
+    @Environment(\.colorScheme) private var colorScheme
+
     private var glucoseToDisplay: Decimal {
         units == .mgdL ? Decimal(selectedGlucose.glucose) : Decimal(selectedGlucose.glucose).asMmolL
     }
@@ -75,6 +77,7 @@ struct SelectionPopoverView: ChartContent {
             }
             .foregroundStyle(pointMarkColor)
             .font(.body)
+            .shadow(color: colorScheme == .light ? Color.black.opacity(0.5) : Color.clear, radius: 1, x: 1, y: 1)
 
             if isSmoothingEnabled, let smoothedGlucose = selectedGlucose.smoothedGlucose {
                 var smoothedGlucoseToDisplay: Decimal {
@@ -118,7 +121,7 @@ struct SelectionPopoverView: ChartContent {
         .padding(.vertical, 2)
         .background {
             RoundedRectangle(cornerRadius: 4)
-                .fill(Color.chart.opacity(0.85))
+                .fill(Color(.systemGray5).opacity(0.95))
                 .shadow(color: Color.secondary, radius: 2)
                 .overlay(
                     RoundedRectangle(cornerRadius: 4)

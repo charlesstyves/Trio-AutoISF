@@ -52,7 +52,7 @@ final class BasePumpHistoryStorage: PumpHistoryStorage, Injectable {
     typealias TempType = PumpEventStored.TempType
 
     private func adjustPumpedVolumeToU100(pumpedVolume: Double) -> Decimal {
-        guard settings.insulinConcentration != 1 else { return Decimal(pumpedVolume) }
+        guard settings.insulinConcentration != 1 else { return Decimal(pumpedVolume).precisionRounded() }
 
         let concentration = settings.insulinConcentration
         let roundedVolume = Decimal(pumpedVolume).precisionRounded()
@@ -70,7 +70,7 @@ final class BasePumpHistoryStorage: PumpHistoryStorage, Injectable {
     }
 
     private func adjustPumpedRateToU100(pumpedRate: Decimal) -> Decimal {
-        guard settings.insulinConcentration != 1 else { return pumpedRate }
+        guard settings.insulinConcentration != 1 else { return pumpedRate.precisionRounded() }
 
         let concentration = settings.insulinConcentration
         let u100Rate = (pumpedRate * concentration)

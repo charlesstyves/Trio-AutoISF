@@ -1,10 +1,7 @@
 Trio dev 0.7.0
-fix smoothing and introduce Unscented Kalman Filter
-introduce CSF profile as helper for CR
-Add switch for Dynamic CR in Algorithm > Additionals
-Adapt oref accordingly
-fix glucose fetching crash
-isfRatios to NS
-change CSF profile to 10g carb scale
-use adj CR on stable CSF for insReq in oref
-big help texts for CSF and CR profile
+orefswift with all fixes
+overrides with autoISF & SMB Dell.Ratio settings
+stable CSF toggle (CR changes with ISF)
+popup tags in mmol/L and more UI fixes
+high SMBdelRatio
+

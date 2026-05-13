@@ -51,7 +51,6 @@ extension Home {
         var pumpActivatedAtDate: Date?
         var highTTraisesSens: Bool = false
         var lowTTlowersSens: Bool = false
-        var isExerciseModeActive: Bool = false
         var settingHalfBasalTarget: Decimal = 160
         var percentage: Int = 100
         var shouldDisplayPumpSetupSheet = false
@@ -70,6 +69,7 @@ extension Home {
         var alarm: GlucoseAlarm?
         var manualTempBasal = false
         var isSmoothingEnabled = false
+        var useSwiftOref = false
         var autoisfEnabled = false
         var maxIOB: Decimal = 0.0
         var currentIOB: Decimal = 0.0
@@ -84,6 +84,8 @@ extension Home {
         var thresholdLines: Bool = false
         var showGlucosePeaks: Bool = false
         var glucosePeaks: [(date: Date, glucose: Int16, type: ExtremumType)] = []
+        var useChartBars: Bool = false
+        var bolusDisplayThreshold: BolusDisplayThreshold = .allUnits
         var hours: Int16 = 6
         var totalBolus: Decimal = 0
         var isStatusPopupPresented: Bool = false
@@ -424,6 +426,7 @@ extension Home {
             alarm = provider.glucoseStorage.alarm
             manualTempBasal = apsManager.isManualTempBasal
             isSmoothingEnabled = settingsManager.settings.smoothGlucose
+            useSwiftOref = settingsManager.settings.useSwiftOref
             glucoseColorScheme = settingsManager.settings.glucoseColorScheme
             autosensMax = settingsManager.preferences.autosensMax
             lowGlucose = settingsManager.settings.low
@@ -435,9 +438,10 @@ extension Home {
             displayYgridLines = settingsManager.settings.yGridLines
             thresholdLines = settingsManager.settings.rulerMarks
             showGlucosePeaks = settingsManager.settings.showGlucosePeaks
+            useChartBars = settingsManager.settings.useChartBars
+            bolusDisplayThreshold = settingsManager.settings.bolusDisplayThreshold
             showCarbsRequiredBadge = settingsManager.settings.showCarbsRequiredBadge
             forecastDisplayType = settingsManager.settings.forecastDisplayType
-            isExerciseModeActive = settingsManager.preferences.exerciseMode
             highTTraisesSens = settingsManager.preferences.highTemptargetRaisesSensitivity
             lowTTlowersSens = settingsManager.preferences.lowTemptargetLowersSensitivity
             settingHalfBasalTarget = settingsManager.preferences.halfBasalExerciseTarget
@@ -738,6 +742,7 @@ extension Home.StateModel:
         hideInsulinBadge = settingsManager.settings.hideInsulinBadge
         manualTempBasal = apsManager.isManualTempBasal
         isSmoothingEnabled = settingsManager.settings.smoothGlucose
+        useSwiftOref = settingsManager.settings.useSwiftOref
         lowGlucose = settingsManager.settings.low
         highGlucose = settingsManager.settings.high
         Task {
@@ -753,10 +758,15 @@ extension Home.StateModel:
         thresholdLines = settingsManager.settings.rulerMarks
         showGlucosePeaks = settingsManager.settings.showGlucosePeaks
         if showGlucosePeaks {
-            glucosePeaks = PeakPicker.pick(data: glucoseFromPersistence)
+            glucosePeaks = PeakPicker.pick(
+                data: glucoseFromPersistence,
+                windowHours: Double(hours) / 4
+            )
         } else {
             glucosePeaks = []
         }
+        useChartBars = settingsManager.settings.useChartBars
+        bolusDisplayThreshold = settingsManager.settings.bolusDisplayThreshold
         showCarbsRequiredBadge = settingsManager.settings.showCarbsRequiredBadge
         forecastDisplayType = settingsManager.settings.forecastDisplayType
         cgmAvailable = (fetchGlucoseManager.cgmGlucoseSourceType != CGMType.none)
@@ -784,7 +794,6 @@ extension Home.StateModel:
         autoisfEnabled = settingsManager.preferences.autoisf
         settingHalfBasalTarget = settingsManager.preferences.halfBasalExerciseTarget
         highTTraisesSens = settingsManager.preferences.highTemptargetRaisesSensitivity
-        isExerciseModeActive = settingsManager.preferences.exerciseMode
         lowTTlowersSens = settingsManager.preferences.lowTemptargetLowersSensitivity
         maxIOB = settingsManager.preferences.maxIOB
         let oldBolusIncrement = bolusIncrement

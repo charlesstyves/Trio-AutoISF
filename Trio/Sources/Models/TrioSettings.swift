@@ -74,6 +74,7 @@ struct TrioSettings: JSON, Equatable, Encodable {
     var insulinConcentration: Decimal = 1
     var showCobIobChart: Bool = true
     var rulerMarks: Bool = true
+    var bolusDisplayThreshold: BolusDisplayThreshold = .allUnits
     var forecastDisplayType: ForecastDisplayType = .cone
     var maxCarbs: Decimal = 250
     var maxFat: Decimal = 250
@@ -92,6 +93,9 @@ struct TrioSettings: JSON, Equatable, Encodable {
     var bolusShortcut: BolusShortcutLimit = .notAllowed
     var timeInRangeType: TimeInRangeType = .timeInTightRange
     var showGlucosePeaks: Bool = false
+    var useSwiftOref: Bool = false
+    var algoShadowCompare: Bool = false
+    var useChartBars: Bool = false
     var requireAdjustmentsConfirmation: Bool = false
 
     /// Selected Garmin watchface (Trio or SwissAlpine)
@@ -334,6 +338,10 @@ extension TrioSettings: Decodable {
             settings.rulerMarks = rulerMarks
         }
 
+        if let bolusDisplayThreshold = try? container.decode(BolusDisplayThreshold.self, forKey: .bolusDisplayThreshold) {
+            settings.bolusDisplayThreshold = bolusDisplayThreshold
+        }
+
         if let forecastDisplayType = try? container.decode(ForecastDisplayType.self, forKey: .forecastDisplayType) {
             settings.forecastDisplayType = forecastDisplayType
         }
@@ -388,6 +396,18 @@ extension TrioSettings: Decodable {
 
         if let showGlucosePeaks = try? container.decode(Bool.self, forKey: .showGlucosePeaks) {
             settings.showGlucosePeaks = showGlucosePeaks
+        }
+
+        if let useSwiftOref = try? container.decode(Bool.self, forKey: .useSwiftOref) {
+            settings.useSwiftOref = useSwiftOref
+        }
+
+        if let algoShadowCompare = try? container.decode(Bool.self, forKey: .algoShadowCompare) {
+            settings.algoShadowCompare = algoShadowCompare
+        }
+
+        if let useChartBars = try? container.decode(Bool.self, forKey: .useChartBars) {
+            settings.useChartBars = useChartBars
         }
 
         if let requireAdjustmentsConfirmation = try? container.decode(Bool.self, forKey: .requireAdjustmentsConfirmation) {

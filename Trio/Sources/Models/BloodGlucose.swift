@@ -79,7 +79,6 @@ struct BloodGlucose: JSON, Identifiable, Hashable, Codable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-
         let legacyId = try container.decodeIfPresent(String.self, forKey: .legacyId)
         let explicitId = try container.decodeIfPresent(String.self, forKey: .id)
 
@@ -104,8 +103,14 @@ struct BloodGlucose: JSON, Identifiable, Hashable, Codable {
         }
 
         direction = try container.decodeIfPresent(Direction.self, forKey: .direction)
-        date = try container.decode(Decimal.self, forKey: .date)
         dateString = try container.decode(Date.self, forKey: .dateString)
+
+        do {
+            date = try container.decode(Decimal.self, forKey: .date)
+        } catch {
+            date = Decimal(dateString.timeIntervalSince1970 * 1000).rounded()
+        }
+
         unfiltered = try container.decodeIfPresent(Decimal.self, forKey: .unfiltered)
         filtered = try container.decodeIfPresent(Decimal.self, forKey: .filtered)
         noise = try container.decodeIfPresent(Int.self, forKey: .noise)

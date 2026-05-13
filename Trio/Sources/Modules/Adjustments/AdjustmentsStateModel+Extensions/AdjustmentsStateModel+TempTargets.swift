@@ -402,8 +402,8 @@ extension Adjustments.StateModel {
     /// Determines if sensitivity adjustment is enabled based on target.
     func isAdjustSensEnabled(usingTarget initialTarget: Decimal? = nil) -> Bool {
         let target = initialTarget ?? tempTargetTarget
-        if target < TempTargetCalculations.normalTarget, lowTTlowersSens && autosensMax > 1 { return true }
-        if target > TempTargetCalculations.normalTarget, highTTraisesSens || isExerciseModeActive { return true }
+        if target < TempTargetCalculations.normalTarget, lowTTlowersSens, autosensMax > 1 { return true }
+        if target > TempTargetCalculations.normalTarget, highTTraisesSens { return true }
         return false
     }
 

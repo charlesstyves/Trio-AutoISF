@@ -6,7 +6,6 @@ extension TargetBehavoir {
         @Injected() var storage: FileStorage!
 
         @Published var units: GlucoseUnits = .mgdL
-        @Published var exerciseMode: Bool = false
         @Published var highTemptargetRaisesSensitivity: Bool = false
         @Published var lowTemptargetLowersSensitivity: Bool = false
         @Published var sensitivityRaisesTarget: Bool = false
@@ -24,8 +23,6 @@ extension TargetBehavoir {
             subscribePreferencesSetting(\.sensitivityRaisesTarget, on: $sensitivityRaisesTarget) { sensitivityRaisesTarget = $0 }
             subscribePreferencesSetting(\.resistanceLowersTarget, on: $resistanceLowersTarget) { resistanceLowersTarget = $0 }
             subscribePreferencesSetting(\.halfBasalExerciseTarget, on: $halfBasalExerciseTarget) { halfBasalExerciseTarget = $0 }
-            // Always set exerciseMode to false, regardless of user input
-            subscribePreferencesSetting(\.exerciseMode, on: $exerciseMode) { _ in exerciseMode = false }
         }
     }
 }

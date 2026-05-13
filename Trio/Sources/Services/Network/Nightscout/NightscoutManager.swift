@@ -420,7 +420,7 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
         )
 
         let tdd: Decimal? = await backgroundContext.perform {
-            (results as? [TDDStored])?.first?.total as? Decimal
+            ((results as? [TDDStored])?.first?.total as? Decimal)?.jsRounded(scale: 1)
         }
 
         // Suggested / Enacted
@@ -454,15 +454,12 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
         if var suggestion = fetchedSuggestedDetermination {
             suggestion.timestamp = suggestion.deliverAt
 
-            // if settingsManager.settings.units == .mmolL {
-            //     // suggestion.reason = parseReasonGlucoseValuesToMmolL(suggestion.reason)
-            //     // TODO: verify that these parsings are needed for 3rd party apps, e.g., LoopFollow
-            //     suggestion.current_target = suggestion.current_target?.asMmolL
-            //     suggestion.minGuardBG = suggestion.minGuardBG?.asMmolL
-            //     suggestion.minPredBG = suggestion.minPredBG?.asMmolL
-            //     suggestion.threshold = suggestion.threshold?.asMmolL
-            //     suggestion.bg = suggestion.bg?.asMmolL
-            // }
+            if settingsManager.settings.units == .mmolL {
+                // Reason is human-readable, so its embedded glucose values get translated to
+                // mmol/L. The numeric fields below stay in mg/dL — Nightscout / 3rd-party
+                // consumers expect raw mg/dL there and apply their own unit handling.
+                suggestion.reason = parseReasonGlucoseValuesToMmolL(suggestion.reason)
+            }
 
             suggestion.reason = injectTDD(into: suggestion.reason, tdd: tdd)
             suggestion.tdd = tdd
@@ -478,15 +475,10 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
         }
 
         if var enacted = fetchedEnactedDetermination {
-            // if settingsManager.settings.units == .mmolL {
-            //     // enacted.reason = parseReasonGlucoseValuesToMmolL(enacted.reason)
-            //     // TODO: verify that these parsings are needed for 3rd party apps, e.g., LoopFollow
-            //     enacted.current_target = enacted.current_target?.asMmolL
-            //     enacted.minGuardBG = enacted.minGuardBG?.asMmolL
-            //     enacted.minPredBG = enacted.minPredBG?.asMmolL
-            //     enacted.threshold = enacted.threshold?.asMmolL
-            //     enacted.bg = enacted.bg?.asMmolL
-            // }
+            if settingsManager.settings.units == .mmolL {
+                // Numeric BG fields stay in mg/dL (see suggestion block above).
+                enacted.reason = parseReasonGlucoseValuesToMmolL(enacted.reason)
+            }
 
             enacted.reason = injectTDD(into: enacted.reason, tdd: tdd)
             enacted.tdd = tdd
@@ -1203,11 +1195,15 @@ extension BaseNightscoutManager {
     // TODO: Consolidate all mmol parsing methods (in TagCloudView, NightscoutManager and HomeRootView) to one central func
     func parseReasonGlucoseValuesToMmolL(_ reason: String) -> String {
         let patterns = [
-            "(?:ISF|Target):\\s*-?\\d+\\.?\\d*(?:→-?\\d+\\.?\\d*)+",
-            // ISF or Target with any number of “→value” segments after the first number
+            // ISF or Target with any number of "→value" segments. `,?` after the colon
+            // accepts Swift autoISF's `final ISF:,` (and `Target:,`) chip-separator form.
+            "(?:ISF|Target):,?\\s*-?\\d+\\.?\\d*(?:→-?\\d+\\.?\\d*)+",
             "Dev:\\s*-?\\d+\\.?\\d*", // Dev pattern
             "BGI:\\s*-?\\d+\\.?\\d*", // BGI pattern
-            "Target:\\s*-?\\d+\\.?\\d*", // Target pattern
+            "Target:\\s*-?\\d+\\.?\\d*", // Target pattern (standalone)
+            "ISF:\\s*-?\\d+\\.?\\d*", // ISF (standalone, no →) — JS-side `, ISF: 112`
+            "Avg:\\s*-?\\d+\\.?\\d*", // autoISF: dura_ISF average BG
+            "(?:predicts|saw)\\s+(?:Max|Min)\\s+of\\s+-?\\d+(?:\\.\\d+)?", // autoISF: parabolic fit extremumBG
             "(?:minPredBG|minGuardBG|IOBpredBG|COBpredBG|UAMpredBG)\\s+-?\\d+\\.?\\d*(?:<-?\\d+\\.?\\d*)?", // minPredBG, etc.
             "minGuardBG\\s+-?\\d+\\.?\\d*<-?\\d+\\.?\\d*", // minGuardBG x<y
             "Eventual BG\\s+-?\\d+\\.?\\d*\\s*>=\\s*-?\\d+\\.?\\d*", // Eventual BG x >= target
@@ -1279,6 +1275,17 @@ extension BaseNightscoutManager {
                     let formattedFirstValue = convertToMmolL(firstValue)
                     let formattedSecondValue = convertToMmolL(secondValue)
                     let formattedString = "Eventual BG \(formattedFirstValue) >= \(formattedSecondValue)"
+                    updatedReason.replaceSubrange(range, with: formattedString)
+                }
+
+            } else if glucoseValueString.contains("predicts") || glucoseValueString.contains("saw") {
+                // autoISF: handle parabolic-fit extremum (e.g. "predicts Max of 95" or "saw Min of 134")
+                let parts = glucoseValueString.components(separatedBy: .whitespaces)
+                if parts.count >= 4, let value = parts.last {
+                    let action = parts[0] // "predicts" or "saw"
+                    let extremum = parts[1] // "Max" or "Min"
+                    let formattedValue = convertToMmolL(value)
+                    let formattedString = "\(action) \(extremum) of \(formattedValue)"
                     updatedReason.replaceSubrange(range, with: formattedString)
                 }
 

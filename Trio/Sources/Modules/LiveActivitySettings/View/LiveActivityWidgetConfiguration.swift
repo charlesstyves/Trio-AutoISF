@@ -389,7 +389,7 @@ enum LiveActivityItem: String, CaseIterable, Identifiable {
         case .iob:
             return "Insulin on Board (IOB)"
         case .cob:
-            return "Carbs on Board (IOB)"
+            return "Carbs on Board (COB)"
         case .updatedLabel:
             return "Last Updated"
         case .totalDailyDose:

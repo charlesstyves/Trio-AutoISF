@@ -42,6 +42,39 @@ extension Adjustments {
         var defaultSmbMinutes: Decimal = 0
         var defaultUamMinutes: Decimal = 0
         var selectedTab: Tab = .tempTargets
+
+        // AutoISF profile injection overrides — nil means use profile default
+        var overrideAutoISFmin: Decimal?
+        var overrideAutoISFmax: Decimal?
+        var overrideAutoISFhourlyChange: Decimal?
+        var overrideHigherISFrangeWeight: Decimal?
+        var overrideLowerISFrangeWeight: Decimal?
+        var overridePostMealISFweight: Decimal?
+        var overrideBgAccelISFweight: Decimal?
+        var overrideBgBrakeISFweight: Decimal?
+        var overrideIobThresholdPercent: Decimal?
+        var overrideSmbDeliveryRatio: Decimal?
+        var overrideSmbDeliveryRatioBGrange: Decimal?
+        var overrideSmbDeliveryRatioMin: Decimal?
+        var overrideSmbDeliveryRatioMax: Decimal?
+        var overrideEnableBGacceleration: Bool?
+        // Profile defaults for color comparison in UI
+        var profileAutoISFmin: Decimal = 0.5
+        var profileAutoISFmax: Decimal = 2
+        var profileAutoISFhourlyChange: Decimal = 0
+        var profileHigherISFrangeWeight: Decimal = 0
+        var profileLowerISFrangeWeight: Decimal = 0
+        var profilePostMealISFweight: Decimal = 0
+        var profileBgAccelISFweight: Decimal = 0.15
+        var profileBgBrakeISFweight: Decimal = 0.15
+        var profileIobThresholdPercent: Decimal = 1
+        var profileSmbDeliveryRatio: Decimal = 0.5
+        var profileSmbDeliveryRatioBGrange: Decimal = 0
+        var profileSmbDeliveryRatioMin: Decimal = 0.5
+        var profileSmbDeliveryRatioMax: Decimal = 0.8
+        var profileEnableBGacceleration: Bool = true
+        var useSwiftOref: Bool = false
+        var useAutoISF: Bool = false
         var activeOverrideName: String = ""
         var currentActiveOverride: OverrideStored?
         var activeTempTargetName: String = ""
@@ -65,7 +98,6 @@ extension Adjustments {
         var halfBasalTarget: Decimal = 160
         var settingHalfBasalTarget: Decimal = 160
         var highTTraisesSens: Bool = false
-        var isExerciseModeActive: Bool = false
         var lowTTlowersSens: Bool = false
         var didSaveSettings: Bool = false
 
@@ -152,23 +184,43 @@ extension Adjustments {
         /// Configures various settings from the settings manager.
         private func setupSettings() {
             units = settingsManager.settings.units
+            useSwiftOref = settingsManager.settings.useSwiftOref
+            useAutoISF = settingsManager.preferences.autoisf
             defaultSmbMinutes = settingsManager.preferences.maxSMBBasalMinutes
             defaultUamMinutes = settingsManager.preferences.maxUAMSMBBasalMinutes
             autosensMax = settingsManager.preferences.autosensMax
             settingHalfBasalTarget = settingsManager.preferences.halfBasalExerciseTarget
             halfBasalTarget = settingsManager.preferences.halfBasalExerciseTarget
             highTTraisesSens = settingsManager.preferences.highTemptargetRaisesSensitivity
-            isExerciseModeActive = settingsManager.preferences.exerciseMode
             lowTTlowersSens = settingsManager.preferences.lowTemptargetLowersSensitivity
             percentage = TempTargetCalculations.computeAdjustedPercentage(
                 halfBasalTarget: halfBasalTarget,
                 target: tempTargetTarget,
                 autosensMax: autosensMax
             )
+            loadAutoISFProfileDefaults()
             requireAdjustmentsConfirmation = settingsManager.settings.requireAdjustmentsConfirmation
             Task {
                 await getCurrentGlucoseTarget()
             }
+        }
+
+        func loadAutoISFProfileDefaults() {
+            let prefs = settingsManager.preferences
+            profileAutoISFmin = prefs.autoISFmin
+            profileAutoISFmax = prefs.autoISFmax
+            profileAutoISFhourlyChange = prefs.autoISFhourlyChange
+            profileHigherISFrangeWeight = prefs.higherISFrangeWeight
+            profileLowerISFrangeWeight = prefs.lowerISFrangeWeight
+            profilePostMealISFweight = prefs.postMealISFweight
+            profileBgAccelISFweight = prefs.bgAccelISFweight
+            profileBgBrakeISFweight = prefs.bgBrakeISFweight
+            profileIobThresholdPercent = prefs.iobThresholdPercent
+            profileSmbDeliveryRatio = prefs.smbDeliveryRatio
+            profileSmbDeliveryRatioBGrange = prefs.smbDeliveryRatioBGrange
+            profileSmbDeliveryRatioMin = prefs.smbDeliveryRatioMin
+            profileSmbDeliveryRatioMax = prefs.smbDeliveryRatioMax
+            profileEnableBGacceleration = prefs.enableBGacceleration
         }
 
         /// Reorders Override Presets and updates the view.
@@ -260,6 +312,7 @@ extension Adjustments.StateModel: SettingsObserver, PreferencesObserver {
     /// Updates settings when they change.
     func settingsDidChange(_: TrioSettings) {
         units = settingsManager.settings.units
+        useSwiftOref = settingsManager.settings.useSwiftOref
         requireAdjustmentsConfirmation = settingsManager.settings.requireAdjustmentsConfirmation
         Task {
             await getCurrentGlucoseTarget()
@@ -268,13 +321,13 @@ extension Adjustments.StateModel: SettingsObserver, PreferencesObserver {
 
     /// Updates preferences when they change.
     func preferencesDidChange(_: Preferences) {
+        useAutoISF = settingsManager.preferences.autoisf
         defaultSmbMinutes = settingsManager.preferences.maxSMBBasalMinutes
         defaultUamMinutes = settingsManager.preferences.maxUAMSMBBasalMinutes
         autosensMax = settingsManager.preferences.autosensMax
         settingHalfBasalTarget = settingsManager.preferences.halfBasalExerciseTarget
         halfBasalTarget = settingsManager.preferences.halfBasalExerciseTarget
         highTTraisesSens = settingsManager.preferences.highTemptargetRaisesSensitivity
-        isExerciseModeActive = settingsManager.preferences.exerciseMode
         lowTTlowersSens = settingsManager.preferences.lowTemptargetLowersSensitivity
         percentage = TempTargetCalculations.computeAdjustedPercentage(
             halfBasalTarget: halfBasalTarget,
