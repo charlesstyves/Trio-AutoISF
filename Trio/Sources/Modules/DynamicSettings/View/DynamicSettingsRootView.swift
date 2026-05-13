@@ -6,6 +6,7 @@ extension DynamicSettings {
         let resolver: Resolver
         @StateObject var state = StateModel()
         @State var hintDetent = PresentationDetent.large
+        @State private var shouldDisplayHint: Bool = false
         @State private var hintPayload: HintPayload?
         @State private var decimalPlaceholder: Decimal = 0.0
         @State private var booleanPlaceholder: Bool = false
@@ -155,7 +156,8 @@ extension DynamicSettings {
                                             Image(systemName: "questionmark.circle")
                                         }
                                     }
-                                ).buttonStyle(BorderlessButtonStyle())
+                                )
+                                .buttonStyle(BorderlessButtonStyle())
                             }.padding(.top)
                         }.padding(.bottom)
                     }
