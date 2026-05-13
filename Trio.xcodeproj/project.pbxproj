@@ -190,6 +190,7 @@
 		38E98A3725F5509500C0CED0 /* String+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38E98A3625F5509500C0CED0 /* String+Extensions.swift */; };
 		38EA05DA261F6E7C0064E39B /* SimpleLogReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38EA05D9261F6E7C0064E39B /* SimpleLogReporter.swift */; };
 		38EA0600262091870064E39B /* BolusProgressViewStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38EA05FF262091870064E39B /* BolusProgressViewStyle.swift */; };
+		DDB0BBA02026050100000001 /* BolusProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDB0BBA02026050100000002 /* BolusProgressBar.swift */; };
 		38F37828261260DC009DB701 /* Color+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38F37827261260DC009DB701 /* Color+Extensions.swift */; };
 		38F3B2EF25ED8E2A005C48AA /* TempTargetsStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38F3B2EE25ED8E2A005C48AA /* TempTargetsStorage.swift */; };
 		38FCF3D625E8FDF40078B0D1 /* MD5.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38FCF3D525E8FDF40078B0D1 /* MD5.swift */; };
@@ -793,6 +794,19 @@
 		FE41E4D629463EE20047FD55 /* NightscoutPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE41E4D529463EE20047FD55 /* NightscoutPreferences.swift */; };
 		FE66D16B291F74F8005D6F77 /* Bundle+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE66D16A291F74F8005D6F77 /* Bundle+Extensions.swift */; };
 		FEFFA7A22929FE49007B8193 /* UIDevice+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEFFA7A12929FE49007B8193 /* UIDevice+Extensions.swift */; };
+		BD175EBE0000100000000001 /* HistoryDataFlow+Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE0000100000000001 /* HistoryDataFlow+Models.swift */; };
+		BD175EBE0000100000000002 /* HistoryDeletionTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE0000100000000002 /* HistoryDeletionTarget.swift */; };
+		BD175EBE0000100000000003 /* HistoryStateModel+Glucose.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE0000100000000003 /* HistoryStateModel+Glucose.swift */; };
+		BD175EBE0000100000000004 /* HistoryStateModel+Carbs.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE0000100000000004 /* HistoryStateModel+Carbs.swift */; };
+		BD175EBE0000100000000005 /* HistoryStateModel+Insulin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE0000100000000005 /* HistoryStateModel+Insulin.swift */; };
+		BD175EBE0000100000000006 /* HistoryStateModel+CarbEditing.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE0000100000000006 /* HistoryStateModel+CarbEditing.swift */; };
+		BD175EBE0000100000000007 /* HistoryRootView+Treatments.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE0000100000000007 /* HistoryRootView+Treatments.swift */; };
+		BD175EBE0000100000000008 /* HistoryRootView+Meals.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE0000100000000008 /* HistoryRootView+Meals.swift */; };
+		BD175EBE0000100000000009 /* HistoryRootView+Glucose.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE0000100000000009 /* HistoryRootView+Glucose.swift */; };
+		BD175EBE000010000000000A /* HistoryRootView+Adjustments.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE000010000000000A /* HistoryRootView+Adjustments.swift */; };
+		BD175EBE000010000000000B /* HistoryRootView+Filters.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE000010000000000B /* HistoryRootView+Filters.swift */; };
+		BD175EBE000010000000000C /* HistoryRootView+AddGlucose.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE000010000000000C /* HistoryRootView+AddGlucose.swift */; };
+		BD175EBE000010000000000D /* HistoryRootView+Confirmations.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE000010000000000D /* HistoryRootView+Confirmations.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1093,6 +1107,7 @@
 		38E98A3625F5509500C0CED0 /* String+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Extensions.swift"; sourceTree = "<group>"; };
 		38EA05D9261F6E7C0064E39B /* SimpleLogReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleLogReporter.swift; sourceTree = "<group>"; };
 		38EA05FF262091870064E39B /* BolusProgressViewStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusProgressViewStyle.swift; sourceTree = "<group>"; };
+		DDB0BBA02026050100000002 /* BolusProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusProgressBar.swift; sourceTree = "<group>"; };
 		38F37827261260DC009DB701 /* Color+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Extensions.swift"; sourceTree = "<group>"; };
 		38F3783A2613555C009DB701 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		38F3B2EE25ED8E2A005C48AA /* TempTargetsStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempTargetsStorage.swift; sourceTree = "<group>"; };
@@ -1669,6 +1684,19 @@
 		FE41E4D529463EE20047FD55 /* NightscoutPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightscoutPreferences.swift; sourceTree = "<group>"; };
 		FE66D16A291F74F8005D6F77 /* Bundle+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Bundle+Extensions.swift"; sourceTree = "<group>"; };
 		FEFFA7A12929FE49007B8193 /* UIDevice+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIDevice+Extensions.swift"; sourceTree = "<group>"; };
+		BD175EFE0000100000000001 /* HistoryDataFlow+Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryDataFlow+Models.swift"; sourceTree = "<group>"; };
+		BD175EFE0000100000000002 /* HistoryDeletionTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryDeletionTarget.swift; sourceTree = "<group>"; };
+		BD175EFE0000100000000003 /* HistoryStateModel+Glucose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryStateModel+Glucose.swift"; sourceTree = "<group>"; };
+		BD175EFE0000100000000004 /* HistoryStateModel+Carbs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryStateModel+Carbs.swift"; sourceTree = "<group>"; };
+		BD175EFE0000100000000005 /* HistoryStateModel+Insulin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryStateModel+Insulin.swift"; sourceTree = "<group>"; };
+		BD175EFE0000100000000006 /* HistoryStateModel+CarbEditing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryStateModel+CarbEditing.swift"; sourceTree = "<group>"; };
+		BD175EFE0000100000000007 /* HistoryRootView+Treatments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryRootView+Treatments.swift"; sourceTree = "<group>"; };
+		BD175EFE0000100000000008 /* HistoryRootView+Meals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryRootView+Meals.swift"; sourceTree = "<group>"; };
+		BD175EFE0000100000000009 /* HistoryRootView+Glucose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryRootView+Glucose.swift"; sourceTree = "<group>"; };
+		BD175EFE000010000000000A /* HistoryRootView+Adjustments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryRootView+Adjustments.swift"; sourceTree = "<group>"; };
+		BD175EFE000010000000000B /* HistoryRootView+Filters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryRootView+Filters.swift"; sourceTree = "<group>"; };
+		BD175EFE000010000000000C /* HistoryRootView+AddGlucose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryRootView+AddGlucose.swift"; sourceTree = "<group>"; };
+		BD175EFE000010000000000D /* HistoryRootView+Confirmations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryRootView+Confirmations.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -1692,6 +1720,9 @@
 				3E54EF2C2E476DA40006F54D /* MedtrumKit.framework in Frameworks */,
 				3B4BA7902D8DC0EC0069D5B8 /* TidepoolServiceKitUI.framework in Frameworks */,
 				3B4BA76A2D8DBD690069D5B8 /* CGMBLEKit.framework in Frameworks */,
+				3B4BA7822D8DBD690069D5B8 /* RileyLinkBLEKit.framework in Frameworks */,
+				3B4BA7842D8DBD690069D5B8 /* RileyLinkKit.framework in Frameworks */,
+				3B4BA7862D8DBD690069D5B8 /* RileyLinkKitUI.framework in Frameworks */,
 				3B4BA77C2D8DBD690069D5B8 /* OmniBLE.framework in Frameworks */,
 				38E87403274F78C000975559 /* libswiftCoreNFC.tbd in Frameworks */,
 				38E87401274F77E400975559 /* CoreNFC.framework in Frameworks */,
@@ -1705,17 +1736,14 @@
 				CE95BF5B2BA770C300DC3DE3 /* LoopKit.framework in Frameworks */,
 				38B17B6625DD90E0005CAE3D /* SwiftDate in Frameworks */,
 				3833B46D26012030003021B3 /* Algorithms in Frameworks */,
-				3B4BA7822D8DBD690069D5B8 /* RileyLinkBLEKit.framework in Frameworks */,
 				3B4BA76E2D8DBD690069D5B8 /* DanaKit.framework in Frameworks */,
 				3B47C6102DA0A28F00B0E5EF /* FirebaseCrashlytics in Frameworks */,
-				3B4BA7862D8DBD690069D5B8 /* RileyLinkKitUI.framework in Frameworks */,
 				CEB434FD28B90B7C00B70274 /* SwiftCharts in Frameworks */,
 				CE95BF5F2BA7715800DC3DE3 /* MockKit.framework in Frameworks */,
 				DD17A0292E3FE0BD008E1BF0 /* SwiftJWT in Frameworks */,
 				3BD9687F2D8DDD8800899469 /* CryptoSwift in Frameworks */,
 				38DF1789276FC8C400B3528F /* SwiftMessages in Frameworks */,
 				3B4BA7802D8DBD690069D5B8 /* OmniKitUI.framework in Frameworks */,
-				3B4BA7842D8DBD690069D5B8 /* RileyLinkKit.framework in Frameworks */,
 				CE95BF612BA7715900DC3DE3 /* MockKitUI.framework in Frameworks */,
 				E0CC2C5C275B9F0F00A7BC71 /* HealthKit.framework in Frameworks */,
 				CE95BF5D2BA770C300DC3DE3 /* LoopKitUI.framework in Frameworks */,
@@ -1800,6 +1828,13 @@
 			children = (
 				BDA7593D2D37CFC000E649A4 /* CarbEntryEditorView.swift */,
 				881E04BA5E0A003DE8E0A9C6 /* HistoryRootView.swift */,
+				BD175EFE0000100000000007 /* HistoryRootView+Treatments.swift */,
+				BD175EFE0000100000000008 /* HistoryRootView+Meals.swift */,
+				BD175EFE0000100000000009 /* HistoryRootView+Glucose.swift */,
+				BD175EFE000010000000000A /* HistoryRootView+Adjustments.swift */,
+				BD175EFE000010000000000B /* HistoryRootView+Filters.swift */,
+				BD175EFE000010000000000C /* HistoryRootView+AddGlucose.swift */,
+				BD175EFE000010000000000D /* HistoryRootView+Confirmations.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -2404,6 +2439,7 @@
 				383420D825FFEB3F002D46C1 /* Popup.swift */,
 				389ECDFD2601061500D86C4F /* View+Snapshot.swift */,
 				38EA05FF262091870064E39B /* BolusProgressViewStyle.swift */,
+				DDB0BBA02026050100000002 /* BolusProgressBar.swift */,
 				38DF1785276A73D400B3528F /* TagCloudView.swift */,
 				DD88C8E12C50420800F2D558 /* DefinitionRow.swift */,
 				DD1745282C55642100211FAC /* SettingInputSection.swift */,
@@ -3054,11 +3090,25 @@
 			isa = PBXGroup;
 			children = (
 				A401509D21F7F35D4E109EDA /* HistoryDataFlow.swift */,
+				BD175EFE0000100000000001 /* HistoryDataFlow+Models.swift */,
+				BD175EFE0000100000000002 /* HistoryDeletionTarget.swift */,
 				60744C3E9BB3652895C908CC /* HistoryProvider.swift */,
 				9455FA2D92E77A6C4AFED8A3 /* HistoryStateModel.swift */,
+				BD175EC00000100000000001 /* HistoryStateModel+Deletion */,
 				0EE66DD474AFFD4FD787D5B9 /* View */,
 			);
 			path = History;
+			sourceTree = "<group>";
+		};
+		BD175EC00000100000000001 /* HistoryStateModel+Deletion */ = {
+			isa = PBXGroup;
+			children = (
+				BD175EFE0000100000000003 /* HistoryStateModel+Glucose.swift */,
+				BD175EFE0000100000000004 /* HistoryStateModel+Carbs.swift */,
+				BD175EFE0000100000000005 /* HistoryStateModel+Insulin.swift */,
+				BD175EFE0000100000000006 /* HistoryStateModel+CarbEditing.swift */,
+			);
+			path = "HistoryStateModel+Deletion";
 			sourceTree = "<group>";
 		};
 		A42F1FEDFFD0DDE00AAD54D3 /* BasalProfileEditor */ = {
@@ -4074,8 +4124,6 @@
 				3BD9687B2D8DDD4600899469 /* SlideButton */,
 				3BD9687E2D8DDD8800899469 /* CryptoSwift */,
 				3B47C60F2DA0A28F00B0E5EF /* FirebaseCrashlytics */,
-				3BD9687B2D8DDD4600899469 /* SlideButton */,
-				3BD9687E2D8DDD8800899469 /* CryptoSwift */,
 				DD17A0282E3FE0BD008E1BF0 /* SwiftJWT */,
 				3E28F2AA2EB5337F00FB9EEB /* ConnectIQ */,
 			);
@@ -4254,8 +4302,6 @@
 				3BD9687A2D8DDD4600899469 /* XCRemoteSwiftPackageReference "SlideButton" */,
 				3BD9687D2D8DDD8800899469 /* XCRemoteSwiftPackageReference "CryptoSwift" */,
 				3B47C60E2DA0A28F00B0E5EF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
-				3BD9687A2D8DDD4600899469 /* XCRemoteSwiftPackageReference "SlideButton" */,
-				3BD9687D2D8DDD8800899469 /* XCRemoteSwiftPackageReference "CryptoSwift" */,
 				DD868FD92E381E1C005D3308 /* XCRemoteSwiftPackageReference "Swift-JWT" */,
 				3E28F2A92EB5337F00FB9EEB /* XCRemoteSwiftPackageReference "connectiq-companion-app-sdk-ios" */,
 			);
@@ -4787,6 +4833,7 @@
 				19A910362A24D6D700C8951B /* DateFilter.swift in Sources */,
 				E06B911A275B5EEA003C04B6 /* Array+Extension.swift in Sources */,
 				38EA0600262091870064E39B /* BolusProgressViewStyle.swift in Sources */,
+				DDB0BBA02026050100000001 /* BolusProgressBar.swift in Sources */,
 				389ECDFE2601061500D86C4F /* View+Snapshot.swift in Sources */,
 				38FEF3FE2738083E00574A46 /* CGMSettingsProvider.swift in Sources */,
 				38E98A3725F5509500C0CED0 /* String+Extensions.swift in Sources */,
@@ -4819,7 +4866,6 @@
 				CA370FC152BC98B3D1832968 /* BasalProfileEditorRootView.swift in Sources */,
 				195D80BB2AF6980B00D25097 /* DynamicSettingsStateModel.swift in Sources */,
 				E00EEC0327368630002FF094 /* ServiceAssembly.swift in Sources */,
-				499FF44A2E917B0100C76622 /* GarminWatchSettings.swift in Sources */,
 				38192E07261BA9960094D973 /* FetchTreatmentsManager.swift in Sources */,
 				19012CDC291D2CB900FB8210 /* LoopStats.swift in Sources */,
 				6632A0DC746872439A858B44 /* ISFEditorDataFlow.swift in Sources */,
@@ -4831,7 +4877,6 @@
 				3B2F77882D7E5387005ED9FA /* CurrentTDDSetup.swift in Sources */,
 				DBA5254DBB2586C98F61220C /* ISFEditorProvider.swift in Sources */,
 				BDF34EBE2C0A31D100D51995 /* CustomNotification.swift in Sources */,
-				498ED7BE2D80811800D18CAF /* HorizontalPumpView.swift in Sources */,
 				DDC38E102D9B377800ADCB46 /* OnboardingView+Util.swift in Sources */,
 				BDC2EA472C3045AD00E5BBD0 /* Override.swift in Sources */,
 				1BBB001DAD60F3B8CEA4B1C7 /* ISFEditorStateModel.swift in Sources */,
@@ -4868,7 +4913,6 @@
 				DD6B7CB42C7B71F700B75029 /* ForecastDisplayType.swift in Sources */,
 				BD47FD172D88AAF50043966B /* CompletedStepView.swift in Sources */,
 				DD4AFFF12DADB59100AB7387 /* AlgorithmSettingsContentsStepView.swift in Sources */,
-				DDEBB05C2D89E9050032305D /* TimeInRangeType.swift in Sources */,
 				DDEBB05C2D89E9050032305D /* TimeInRangeType.swift in Sources */,
 				DD5DC9F32CF3D9DD00AB8703 /* AdjustmentsStateModel+TempTargets.swift in Sources */,
 				BD47FDDB2D8B659B0043966B /* BasalProfileStepView.swift in Sources */,
@@ -4908,10 +4952,8 @@
 				49F299352D2D82EA00E4C00D /* B30SettingsProvider.swift in Sources */,
 				49F299362D2D82EA00E4C00D /* B30SettingsStateModel.swift in Sources */,
 				49F299372D2D82EA00E4C00D /* B30SettingsRootView.swift in Sources */,
-				BD2FF1A02AE29D43005D1C5D /* ToggleStyles.swift in Sources */,
 				DDD163162C4C690300CD525A /* AdjustmentsDataFlow.swift in Sources */,
 				49B21BBD2D7F102100D0B6C3 /* MainChartHelper.swift in Sources */,
-				490566652D9AB1C1005C45F7 /* AlertEntry.swift in Sources */,
 				BDF34F932C10D0E100D51995 /* LiveActivityAttributes+Helper.swift in Sources */,
 				E0D4F80527513ECF00BDF1FE /* HealthKitSample.swift in Sources */,
 				38AAF85525FFF846004AF583 /* CurrentGlucoseView.swift in Sources */,
@@ -5009,7 +5051,6 @@
 				DDE179572C910127003CDDB7 /* BolusStored+CoreDataProperties.swift in Sources */,
 				BD4D738D2D15A4080052227B /* TDDStored+CoreDataClass.swift in Sources */,
 				BD4D738E2D15A4080052227B /* TDDStored+CoreDataProperties.swift in Sources */,
-				4963550D2EA22A2E002EDB9E /* WatchConfigGarminAppConfigView.swift in Sources */,
 				498ED7092D80516F00D18CAF /* InsulinConcentrationRootView.swift in Sources */,
 				DDE179582C910127003CDDB7 /* ForecastValue+CoreDataClass.swift in Sources */,
 				DDE179592C910127003CDDB7 /* ForecastValue+CoreDataProperties.swift in Sources */,
@@ -5030,7 +5071,6 @@
 				DDE179682C910127003CDDB7 /* TempBasalStored+CoreDataClass.swift in Sources */,
 				DDE179692C910127003CDDB7 /* TempBasalStored+CoreDataProperties.swift in Sources */,
 				BD4D73A22D15A42A0052227B /* TDDStorage.swift in Sources */,
-				49C782A72F73D9870062B0DD /* AlertEntry.swift in Sources */,
 				DDE1796C2C910127003CDDB7 /* OverrideRunStored+CoreDataClass.swift in Sources */,
 				DDE1796D2C910127003CDDB7 /* OverrideRunStored+CoreDataProperties.swift in Sources */,
 				DDE1796E2C910127003CDDB7 /* OrefDetermination+CoreDataClass.swift in Sources */,
@@ -5050,6 +5090,19 @@
 				8194B80890CDD6A3C13B0FEE /* SnoozeStateModel.swift in Sources */,
 				BDA25EE42D260CD500035F34 /* AppleWatchManager.swift in Sources */,
 				0437CE46C12535A56504EC19 /* SnoozeRootView.swift in Sources */,
+				BD175EBE0000100000000001 /* HistoryDataFlow+Models.swift in Sources */,
+				BD175EBE0000100000000002 /* HistoryDeletionTarget.swift in Sources */,
+				BD175EBE0000100000000003 /* HistoryStateModel+Glucose.swift in Sources */,
+				BD175EBE0000100000000004 /* HistoryStateModel+Carbs.swift in Sources */,
+				BD175EBE0000100000000005 /* HistoryStateModel+Insulin.swift in Sources */,
+				BD175EBE0000100000000006 /* HistoryStateModel+CarbEditing.swift in Sources */,
+				BD175EBE0000100000000007 /* HistoryRootView+Treatments.swift in Sources */,
+				BD175EBE0000100000000008 /* HistoryRootView+Meals.swift in Sources */,
+				BD175EBE0000100000000009 /* HistoryRootView+Glucose.swift in Sources */,
+				BD175EBE000010000000000A /* HistoryRootView+Adjustments.swift in Sources */,
+				BD175EBE000010000000000B /* HistoryRootView+Filters.swift in Sources */,
+				BD175EBE000010000000000C /* HistoryRootView+AddGlucose.swift in Sources */,
+				BD175EBE000010000000000D /* HistoryRootView+Confirmations.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5831,7 +5884,7 @@
 			repositoryURL = "https://github.com/garmin/connectiq-companion-app-sdk-ios";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.7.0;
+				minimumVersion = 1.8.0;
 			};
 		};
 		B958F1B52BA0711600484851 /* XCRemoteSwiftPackageReference "MKRingProgressView" */ = {
