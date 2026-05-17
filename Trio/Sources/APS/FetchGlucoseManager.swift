@@ -239,9 +239,12 @@ final class BaseFetchGlucoseManager: FetchGlucoseManager, Injectable {
                 UserDefaults.standard.set(newLoopInterval, forKey: "Config_LoopInterval")
                 // Set filter time in FetchGlucoseManager to 10s so that new glucose values don't get filtered out
                 UserDefaults.standard.set(10, forKey: "Config_FilterTime")
+                // Allow sub-39 values from the simulator for testing
+                UserDefaults.standard.set(1, forKey: "Config_MinimumGlucose")
             } else {
                 UserDefaults.standard.set(3.minutes.timeInterval, forKey: "Config_LoopInterval")
                 UserDefaults.standard.set(3.5 * 60, forKey: "Config_FilterTime")
+                UserDefaults.standard.set(39, forKey: "Config_MinimumGlucose")
             }
         }
     }

@@ -44,6 +44,11 @@ final class BaseGlucoseStorage: GlucoseStorage, Injectable {
         static var filterTime: TimeInterval {
             UserDefaults.standard.double(forKey: "Config_FilterTime")
         }
+
+        static var minimumGlucose: Int {
+            let v = UserDefaults.standard.integer(forKey: "Config_MinimumGlucose")
+            return v > 0 ? v : 39
+        }
     }
 
     private let context: NSManagedObjectContext
@@ -78,10 +83,11 @@ final class BaseGlucoseStorage: GlucoseStorage, Injectable {
     ///  it isn't within 3.5 minutes of an existing glucose reading, which is simple but not perfect.
     ///  But since this is a corner case that really shouldn't happen often, it's good enough.
     func backfillGlucose(_ glucose: [BloodGlucose]) async throws {
+        let clamped = clampToMinimum(glucose)
         try await context.perform {
             // remove already deleted glucose values
             let withoutDeletedGlucose = self.filterGlucoseValues(
-                glucose,
+                clamped,
                 fetchRequest: DeletedGlucoseStored.fetchRequest(),
                 timeBuffer: 1
             )
@@ -108,9 +114,10 @@ final class BaseGlucoseStorage: GlucoseStorage, Injectable {
     }
 
     func storeGlucose(_ glucose: [BloodGlucose]) async throws {
+        let clamped = clampToMinimum(glucose)
         try await context.perform {
             // Get new glucose values that don't exist yet
-            let newGlucose = self.filterGlucoseValues(glucose, fetchRequest: GlucoseStored.fetchRequest(), timeBuffer: 1)
+            let newGlucose = self.filterGlucoseValues(clamped, fetchRequest: GlucoseStored.fetchRequest(), timeBuffer: 1)
             guard !newGlucose.isEmpty else { return }
 
             do {
@@ -124,7 +131,24 @@ final class BaseGlucoseStorage: GlucoseStorage, Injectable {
             }
 
             // Store CGM state if needed
-            self.storeCGMState(glucose)
+            self.storeCGMState(clamped)
+        }
+    }
+
+    private func clampToMinimum(_ glucose: [BloodGlucose]) -> [BloodGlucose] {
+        glucose.map { entry in
+            var clamped = entry
+            if let raw = entry.glucose, raw < Config.minimumGlucose {
+                debug(
+                    .deviceManager,
+                    "Clamping sub-\(Config.minimumGlucose) glucose: raw=\(raw) at \(entry.dateString) -> \(Config.minimumGlucose)"
+                )
+                clamped.glucose = Config.minimumGlucose
+            }
+            if let raw = entry.sgv, raw < Config.minimumGlucose {
+                clamped.sgv = Config.minimumGlucose
+            }
+            return clamped
         }
     }
 
