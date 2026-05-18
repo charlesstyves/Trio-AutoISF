@@ -35,6 +35,12 @@ struct SettingInputSection<VerboseHint: View>: View {
     var footerText: String?
     var isToggleDisabled: Bool = false
     var miniHintColor: Color = .secondary
+    /// When `true`, the label text is tinted with the accent color. Used by the profile draft
+    /// editor to mark values that differ from the source profile.
+    var isChanged: Bool = false
+    /// When non-nil AND `isChanged` is true, a small circle-x button is shown next to the value
+    /// that invokes this closure to reset the field to its source value.
+    var onReset: (() -> Void)? = nil
 
     @ObservedObject private var pickerSettingsProvider = PickerSettingsProvider.shared
     @State private var displayPicker: Bool = false
@@ -100,7 +106,15 @@ struct SettingInputSection<VerboseHint: View>: View {
         VStack {
             HStack {
                 Text(label)
+                    .foregroundColor(isChanged ? .accentColor : .primary)
                 Spacer()
+                if isChanged, let onReset = onReset {
+                    Button(action: onReset) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(BorderlessButtonStyle())
+                }
                 displayText(for: setting, decimalValue: decimalValue.wrappedValue)
                     .foregroundColor(!displayPicker.wrappedValue ? .primary : .accentColor)
                     .onTapGesture {
@@ -139,6 +153,8 @@ struct SettingInputSection<VerboseHint: View>: View {
             return Text("\(decimalValue) \(String(localized: "min", comment: "Minutes abbreviation"))")
         case .hour:
             return Text("\(decimalValue) \(String(localized: "hr", comment: "Hours abbreviation"))")
+        case .percent:
+            return Text("\(decimalValue) \(String(localized: "%", comment: "Percentage symbol"))")
         }
     }
 
@@ -146,6 +162,14 @@ struct SettingInputSection<VerboseHint: View>: View {
         HStack {
             Toggle(isOn: isOn) {
                 Text(label)
+                    .foregroundColor(isChanged ? .accentColor : .primary)
+            }
+            if isChanged, let onReset = onReset {
+                Button(action: onReset) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(BorderlessButtonStyle())
             }
         }.padding(.top)
     }

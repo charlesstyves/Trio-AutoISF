@@ -164,21 +164,36 @@ struct LoopStatusView: View {
 
             if deliverAt < Date().addingTimeInterval(-5 * 60) {
                 let roundedMinutes = Int(minutesAgo.rounded())
-                statusTitle = "\(algo) Algorithm — not looped in \(roundedMinutes) minutes."
+                statusTitle = String(
+                    localized: "\(algo) Algorithm — not looped in \(roundedMinutes) minutes.",
+                    comment: "Loop status popup title when no recent loop — first interpolation is algorithm name (Swift/JS), second is minutes count"
+                )
             } else {
-                statusTitle = "\(algo) Algorithm enacted at \(Formatter.dateFormatter.string(from: deliverAt))"
+                statusTitle = String(
+                    localized: "\(algo) Algorithm enacted at \(Formatter.dateFormatter.string(from: deliverAt))",
+                    comment: "Loop status popup title when a recent loop has enacted — first interpolation is algorithm name (Swift/JS), second is a clock time"
+                )
             }
         } else if let determination = lastDetermination, let deliverAt = determination.deliverAt {
             let minutesAgo = abs(deliverAt.timeIntervalSinceNow) / 60
 
             if deliverAt < Date().addingTimeInterval(-5 * 60) {
                 let roundedMinutes = Int(minutesAgo.rounded())
-                statusTitle = "\(algo) Algorithm — not looped in \(roundedMinutes) minutes."
+                statusTitle = String(
+                    localized: "\(algo) Algorithm — not looped in \(roundedMinutes) minutes.",
+                    comment: "Loop status popup title when no recent loop — first interpolation is algorithm name (Swift/JS), second is minutes count"
+                )
             } else {
-                statusTitle = "\(algo) Algorithm enacted at \(Formatter.dateFormatter.string(from: deliverAt))"
+                statusTitle = String(
+                    localized: "\(algo) Algorithm enacted at \(Formatter.dateFormatter.string(from: deliverAt))",
+                    comment: "Loop status popup title when a recent loop has enacted — first interpolation is algorithm name (Swift/JS), second is a clock time"
+                )
             }
         } else {
-            statusTitle = String(localized: "Not looping.")
+            statusTitle = String(
+                localized: "Not looping.",
+                comment: "Loop-status popup title shown on Home when no determination is available and the loop isn't running"
+            )
         }
     }
 
@@ -278,11 +293,15 @@ struct LoopStatusView: View {
         var tags: [String] = determination.reasonParts
 
         if state.isSmoothingEnabled {
-            tags.append("Smoothing: On")
+            tags
+                .append(String(
+                    localized: "Smoothing: On",
+                    comment: "Tag chip in Loop status popup — glucose smoothing is enabled"
+                ))
         }
 
         if let currentTDD = state.fetchedTDDs.first?.totalDailyDose, currentTDD != 0 {
-            tags.append("TDD: \(currentTDD)")
+            tags.append(String(localized: "TDD: \(currentTDD)", comment: "Tag chip in Loop status popup — total daily dose"))
         }
 
         return tags

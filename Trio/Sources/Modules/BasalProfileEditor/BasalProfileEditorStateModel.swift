@@ -36,8 +36,8 @@ extension BasalProfileEditor {
         }
 
         var preferences: Preferences {
-            get { settingsManager.preferences }
-            set { settingsManager.preferences = newValue }
+            get { scope.preferences }
+            set { scope.preferences = newValue }
         }
 
         var roundingHint: Bool = false
@@ -161,10 +161,7 @@ extension BasalProfileEditor {
                 return BasalProfileEntry(start: fotmatter.string(from: date), minutes: minutes, rate: rate)
             }
 
-            var profileWith24hours = profile.map(\.minutes)
-            profileWith24hours.append(24 * 60)
-            let pr2 = zip(profile, profileWith24hours.dropFirst())
-            total = pr2.reduce(0) { $0 + (Decimal($1.1 - $1.0.minutes) / 60) * $1.0.rate }
+            total = profile.totalDailyBasal
         }
 
         func add() {

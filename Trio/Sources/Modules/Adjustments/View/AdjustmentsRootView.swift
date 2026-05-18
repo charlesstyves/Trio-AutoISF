@@ -89,56 +89,114 @@ extension Adjustments {
                             state.selectedTab = .overrides
                         }
                     }
+                    HStack {
+                        Spacer()
+                        Image(systemName: "person.2", variableValue: 0.58)
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(Color.blue, Color.white, Color.white)
+                            .font(.system(size: 13, weight: .regular))
+                            .frame(width: 22, height: 22)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .stroke(Color.blue, lineWidth: 1.5)
+                            )
+                        Text(Adjustments.Tab.profiles.name)
+                            .font(.subheadline)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                        Spacer()
+                    }
+                    .padding(.vertical, 6)
+                    .background(state.selectedTab == .profiles ? Color.loopGray.opacity(0.4) : Color.clear)
+                    .cornerRadius(8)
+                    .onTapGesture {
+                        withAnimation {
+                            state.selectedTab = .profiles
+                        }
+                    }
                 }
                 .background(Color.gray.opacity(0.2))
                 .cornerRadius(8)
                 .padding(.horizontal)
 
-                List {
+                Group {
                     switch state.selectedTab {
-                    case .overrides: overrides()
-                    case .tempTargets: tempTargets()
+                    case .profiles:
+                        // Embed the existing Profiles screen as the third tab. AdaptProfile.RootView
+                        // owns its own List, toolbar, and "Profiles" navigation title — those take
+                        // over while this tab is active. The Adjustments-side toolbar/title below is
+                        // skipped on this tab to avoid stacking.
+                        AdaptProfile.RootView(resolver: resolver)
+                    case .overrides,
+                         .tempTargets:
+                        List {
+                            switch state.selectedTab {
+                            case .overrides: overrides()
+                            case .tempTargets: tempTargets()
+                            case .profiles: EmptyView()
+                            }
+                        }
+                        .listSectionSpacing(10)
+                        .safeAreaInset(
+                            edge: .bottom,
+                            spacing: shouldDisplayStickyOverrideStopButton || shouldDisplayStickyTempTargetStopButton ? 30 : 0
+                        ) {
+                            if shouldDisplayStickyOverrideStopButton, state.selectedTab == .overrides {
+                                stickyStopOverrideButton
+                            } else if shouldDisplayStickyTempTargetStopButton, state.selectedTab == .tempTargets {
+                                stickyStopTempTargetButton
+                            } else {
+                                EmptyView()
+                            }
+                        }
+                        .scrollContentBackground(.hidden)
+                        .background(appState.trioBackgroundColor(for: colorScheme))
+                        .navigationBarTitle("Adjustments")
+                        .navigationBarTitleDisplayMode(.large)
+                        .toolbar {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                Group {
+                                    switch state.selectedTab {
+                                    case .overrides:
+                                        Button(action: {
+                                            showOverrideCreationSheet = true
+                                        }, label: {
+                                            HStack {
+                                                Text("Add Override")
+                                                Image(systemName: "plus")
+                                            }
+                                        })
+                                    case .tempTargets:
+                                        Button(action: {
+                                            showTempTargetCreationSheet = true
+                                        }, label: {
+                                            HStack {
+                                                Text("Add Temp Target")
+                                                Image(systemName: "plus")
+                                            }
+                                        })
+                                    case .profiles:
+                                        EmptyView()
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-                .listSectionSpacing(10)
-                .safeAreaInset(
-                    edge: .bottom,
-                    spacing: shouldDisplayStickyOverrideStopButton || shouldDisplayStickyTempTargetStopButton ? 30 : 0
-                ) {
-                    if shouldDisplayStickyOverrideStopButton, state.selectedTab == .overrides {
-                        stickyStopOverrideButton
-                    } else if shouldDisplayStickyTempTargetStopButton, state.selectedTab == .tempTargets {
-                        stickyStopTempTargetButton
-                    } else {
-                        EmptyView()
-                    }
-                }
-                .scrollContentBackground(.hidden)
-                .background(appState.trioBackgroundColor(for: colorScheme))
-                .onAppear(perform: configureView)
-                .navigationBarTitle("Adjustments")
-                .navigationBarTitleDisplayMode(.large)
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        switch state.selectedTab {
-                        case .overrides:
-                            Button(action: {
-                                showOverrideCreationSheet = true
-                            }, label: {
-                                HStack {
-                                    Text("Add Override")
-                                    Image(systemName: "plus")
-                                }
-                            })
-                        case .tempTargets:
-                            Button(action: {
-                                showTempTargetCreationSheet = true
-                            }, label: {
-                                HStack {
-                                    Text("Add Temp Target")
-                                    Image(systemName: "plus")
-                                }
-                            })
+                .onAppear {
+                    configureView()
+                    // Banner-arrival path: let the view first render on the default tab so the
+                    // NavigationStack chrome and List layout settle exactly the same way they
+                    // would on any normal mount, then animate the swap to .profiles. This makes
+                    // the banner path go through the identical "tab switch" code path the user
+                    // would trigger by tapping the pill manually — eliminating the layout
+                    // mismatch we got from setting .profiles before/during first render.
+                    if UserDefaults.standard.bool(forKey: Adjustments.pendingProfilesTabKey) {
+                        UserDefaults.standard.removeObject(forKey: Adjustments.pendingProfilesTabKey)
+                        DispatchQueue.main.async {
+                            withAnimation {
+                                state.selectedTab = .profiles
+                            }
                         }
                     }
                 }
@@ -248,11 +306,13 @@ extension Adjustments {
                         .textCase(nil)
                         .foregroundStyle(.secondary)
                     }
+                case .profiles:
+                    EmptyView()
                 }
             }
         }
 
-        var currentActiveAdjustment: some View {
+        @ViewBuilder var currentActiveAdjustment: some View {
             switch state.selectedTab {
             case .overrides:
                 Section {
@@ -304,10 +364,12 @@ extension Adjustments {
                     }
                 }
                 .listRowBackground(Color.loopGreen.opacity(0.8))
+            case .profiles:
+                EmptyView()
             }
         }
 
-        var cancelAdjustmentButton: some View {
+        @ViewBuilder var cancelAdjustmentButton: some View {
             switch state.selectedTab {
             case .overrides:
                 Button(action: {
@@ -331,6 +393,8 @@ extension Adjustments {
                     .disabled(!state.isTempTargetEnabled)
                     .listRowBackground(!state.isTempTargetEnabled ? Color(.systemGray4) : Color(.systemRed))
                     .tint(.white)
+            case .profiles:
+                EmptyView()
             }
         }
 

@@ -230,6 +230,69 @@
             <fetchIndexElement property="isPreset" type="Binary" order="ascending"/>
         </fetchIndex>
     </entity>
+    <entity name="ProfileStored" representedClassName="ProfileStored" syncable="YES">
+        <attribute name="activatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="appliedPercent" optional="YES" attributeType="Decimal" defaultValueString="100"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="expiresAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isActive" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="orderPosition" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="preferencesJSON" optional="YES" attributeType="Binary"/>
+        <attribute name="previousProfileID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="sourceProfileID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="therapyJSON" optional="YES" attributeType="Binary"/>
+        <relationship name="profileRun" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProfileRunStored" inverseName="profile" inverseEntity="ProfileRunStored"/>
+        <fetchIndex name="byCreatedAt">
+            <fetchIndexElement property="createdAt" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="byIsActive">
+            <fetchIndexElement property="isActive" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="byOrderPosition">
+            <fetchIndexElement property="orderPosition" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="ProfileScheduleStored" representedClassName="ProfileScheduleStored" syncable="YES">
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="durationJSON" optional="YES" attributeType="Binary"/>
+        <attribute name="enabled" optional="YES" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="firesAtJSON" optional="YES" attributeType="Binary"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="lastFiredAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="orderPosition" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="pendingOccurrence" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="profileID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="repeatRuleJSON" optional="YES" attributeType="Binary"/>
+        <fetchIndex name="byCreatedAt">
+            <fetchIndexElement property="createdAt" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="byEnabled">
+            <fetchIndexElement property="enabled" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="byOrderPosition">
+            <fetchIndexElement property="orderPosition" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byProfileID">
+            <fetchIndexElement property="profileID" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="ProfileRunStored" representedClassName="ProfileRunStored" syncable="YES">
+        <attribute name="endDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isUploadedToNS" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="startDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="preferencesTuned" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="targetsTuned" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="wasIndefinite" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <relationship name="profile" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProfileStored" inverseName="profileRun" inverseEntity="ProfileStored"/>
+        <fetchIndex name="byDate">
+            <fetchIndexElement property="startDate" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
     <entity name="PumpEventStored" representedClassName="PumpEventStored" syncable="YES">
         <attribute name="id" optional="YES" attributeType="String"/>
         <attribute name="isUploadedToHealth" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>

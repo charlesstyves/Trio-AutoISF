@@ -192,7 +192,7 @@ struct EditTempTargetForm: View {
                         content: {
                             Picker("Sensitivity Adjustment", selection: $tempTargetSensitivityAdjustmentType) {
                                 ForEach(TempTargetSensitivityAdjustmentType.allCases, id: \.self) { option in
-                                    Text(option.rawValue).tag(option)
+                                    Text(option.displayName).tag(option)
                                 }
                                 .pickerStyle(MenuPickerStyle())
                                 .onChange(of: tempTargetSensitivityAdjustmentType) { _, newValue in

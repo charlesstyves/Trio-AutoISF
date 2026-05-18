@@ -338,7 +338,11 @@ extension Home {
 
             timer.eventHandler = {
                 DispatchQueue.main.async { [weak self] in
-                    self?.timerDate = Date()
+                    guard let self = self else { return }
+                    self.timerDate = Date()
+                    Task { @MainActor [weak self] in
+                        await self?.checkExpiredProfileAndAutoRevert()
+                    }
                 }
             }
             timer.resume()

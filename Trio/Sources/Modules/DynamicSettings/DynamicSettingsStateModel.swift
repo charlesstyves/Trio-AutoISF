@@ -25,11 +25,15 @@ extension DynamicSettings {
                     sigmoid = false
                 }
                 if dynamicSensitivityType != .disabled {
-                    settingsManager.preferences.autoisf = false
+                    // Write through the scope so this respects DraftScope isolation
+                    // (profile draft editor) as well as LiveScope.
+                    var prefs = scope.preferences
+                    prefs.autoisf = false
                     // dynISF requires the autosens branch in determine-basal to be active
                     // (DetermineBasalGenerator substitutes the dynISF ratio into autosensData,
                     // and DetermineBasal+Helpers gates that branch on profile.enableAutosens).
-                    settingsManager.preferences.enableAutosens = true
+                    prefs.enableAutosens = true
+                    scope.preferences = prefs
                 }
             }
         }
@@ -53,8 +57,8 @@ extension DynamicSettings {
 
             /// DynamicISF handling
             /// Initially, load once from storage and infer `dynamicSensitivityType` based on values of `useNewFormula` (log) and/or `sigmoid`
-            let storedUseNewFormula = settingsManager.preferences.useNewFormula
-            let storedSigmoid = settingsManager.preferences.sigmoid
+            let storedUseNewFormula = scope.preferences.useNewFormula
+            let storedSigmoid = scope.preferences.sigmoid
             inferDynamicSensitivityType(useNewFormula: storedUseNewFormula, sigmoid: storedSigmoid)
             /// Subsequently, subscribe to changes from the UI and persist them in the (kept for now) two variables
             subscribePreferencesSetting(\.useNewFormula, on: $useNewFormula) { _ in }
@@ -145,13 +149,13 @@ extension DynamicSettings {
         var displayName: String {
             switch self {
             case .disabled:
-                return String(localized: "Disabled")
+                return String(localized: "Disabled", comment: "Dynamic ISF picker option — feature disabled")
 
             case .logarithmic:
-                return String(localized: "Logarithmic")
+                return String(localized: "Logarithmic", comment: "Dynamic ISF picker option — logarithmic formula")
 
             case .sigmoid:
-                return String(localized: "Sigmoid")
+                return String(localized: "Sigmoid", comment: "Dynamic ISF picker option — sigmoid formula")
             }
         }
     }

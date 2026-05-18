@@ -21,7 +21,7 @@ extension AutosensSettings {
         @Published var rewindResetsAutosens: Bool = true
 
         var preferences: Preferences {
-            settingsManager.preferences
+            scope.preferences
         }
 
         override func subscribe() {

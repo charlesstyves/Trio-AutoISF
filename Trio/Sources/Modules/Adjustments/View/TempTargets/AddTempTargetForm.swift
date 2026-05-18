@@ -84,7 +84,10 @@ struct AddTempTargetForm: View {
                 let settingsProvider = PickerSettingsProvider.shared
                 let glucoseSetting = PickerSetting(value: 0, step: targetStep, min: 80, max: 200, type: .glucose)
                 TargetPicker(
-                    label: String(localized: "Target Glucose"),
+                    label: String(
+                        localized: "Target Glucose",
+                        comment: "Label for the target-glucose row on Add Temp Target form"
+                    ),
                     selection: Binding(
                         get: { state.tempTargetTarget },
                         set: { state.tempTargetTarget = $0 }
@@ -126,7 +129,7 @@ struct AddTempTargetForm: View {
                         content: {
                             Picker("Sensitivity Adjustment", selection: $tempTargetSensitivityAdjustmentType) {
                                 ForEach(TempTargetSensitivityAdjustmentType.allCases, id: \.self) { option in
-                                    Text(option.rawValue).tag(option)
+                                    Text(option.displayName).tag(option)
                                 }
                                 .pickerStyle(MenuPickerStyle())
                                 .onChange(of: tempTargetSensitivityAdjustmentType) { _, newValue in
@@ -225,14 +228,20 @@ struct AddTempTargetForm: View {
         let targetZero = state.tempTargetTarget < 80
 
         if noDurationSpecified {
-            return (true, String(localized: "Set a duration!"))
+            return (
+                true,
+                String(localized: "Set a duration!", comment: "Validation error on Add Temp Target form when duration is zero")
+            )
         }
 
         if targetZero {
             return (
                 true,
                 "\(state.units == .mgdL ? "80 " : "4.4 ")" + state.units
-                    .rawValue + String(localized: " needed as min. Glucose Target)!")
+                    .rawValue + String(
+                        localized: " needed as min. Glucose Target)!",
+                        comment: "Trailing fragment of Add Temp Target validation error — concatenated with a minimum-glucose value and unit"
+                    )
             )
         }
 
@@ -248,7 +257,13 @@ struct AddTempTargetForm: View {
         }
 
         if isDateInFuture {
-            return (true, String(localized: "Presets cannot be saved with a future date!"))
+            return (
+                true,
+                String(
+                    localized: "Presets cannot be saved with a future date!",
+                    comment: "Validation error when saving a temp target preset with a future start date"
+                )
+            )
         }
 
         return (false, nil)

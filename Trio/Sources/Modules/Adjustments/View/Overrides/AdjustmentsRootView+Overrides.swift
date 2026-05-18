@@ -32,11 +32,14 @@ extension Adjustments.RootView {
         Section {
             ForEach(state.overridePresets) { preset in
                 overridesView(for: preset, showCheckMark: showOverrideCheckmark) {
-                    requestOverridePresetActivation(preset)
+                    if state.useSwiftOref {
+                        requestOverridePresetActivation(preset)
+                    }
                 }
                 .contextMenu {
                     actionButtonsForOverrides(for: preset)
                 }
+                .opacity(state.useSwiftOref ? 1.0 : 0.5)
                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                     actionButtonsForOverrides(for: preset)
                 }
