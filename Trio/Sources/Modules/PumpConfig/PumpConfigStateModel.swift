@@ -8,6 +8,7 @@ extension PumpConfig {
     final class StateModel: BaseStateModel<Provider> {
         @Injected() var settings: SettingsManager!
         @Injected() var nightscout: NightscoutManager!
+        @Injected() private var tidepoolManager: TidepoolManager!
 
         @Published var setupPump = false
         private(set) var setupPumpType: PumpType = .minimed
@@ -95,6 +96,10 @@ extension PumpConfig {
                                     "\(DebuggingIdentifiers.failed) failed to upload DIA to Nightscout: \(error.localizedDescription)"
                                 )
                             }
+                        }
+
+                        Task.detached(priority: .low) {
+                            await self.tidepoolManager.uploadSettings()
                         }
                     } receiveValue: {}
                     .store(in: &lifetime)
