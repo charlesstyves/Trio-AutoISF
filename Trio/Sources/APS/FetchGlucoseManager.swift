@@ -425,7 +425,7 @@ extension BaseFetchGlucoseManager {
             throw CoreDataError.fetchError(function: #function, file: #file)
         }
 
-        return glucoseArray.map(\.objectID).reversed()
+        return Array(glucoseArray.map(\.objectID).reversed())
     }
 
     /// Main smoothing entry point - dispatches to exponential or UKF based on settings.
