@@ -446,7 +446,7 @@ extension BaseFetchGlucoseManager {
     /// CoreData-friendly AAPS exponential smoothing + storage.
     /// - Important: Only stores `smoothedGlucose`. UI/alerts should still use `glucose`.
     ///
-    private func exponentialSmoothingGlucose(context: NSManagedObjectContext) async {
+    func exponentialSmoothingGlucose(context: NSManagedObjectContext) async {
         let startTime = Date()
 
         do {
