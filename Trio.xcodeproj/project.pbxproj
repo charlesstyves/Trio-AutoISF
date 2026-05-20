@@ -384,11 +384,8 @@
 		495A42D12F8911D7005B0044 /* CSFEditorProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495A42D02F8911D7005B0044 /* CSFEditorProvider.swift */; };
 		495A42D32F8911F0005B0044 /* CSFEditorStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495A42D22F8911F0005B0044 /* CSFEditorStateModel.swift */; };
 		495A42D52F89121A005B0044 /* CSFEditorRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495A42D42F89121A005B0044 /* CSFEditorRootView.swift */; };
-		4961C4AA2DD26E1900A02420 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 19DA487F29CD2B8400EEA1E7 /* Assets.xcassets */; };
 		4963550D2EA22A2E002EDB9E /* WatchConfigGarminAppConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4963550B2EA22A2E002EDB9E /* WatchConfigGarminAppConfigView.swift */; };
 		4984D1D42EA2939E00263E83 /* WatchConfigGarminAppConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4984D1D32EA2939E00263E83 /* WatchConfigGarminAppConfigView.swift */; };
-		498B3E812DB96E6C00737DD3 /* WatchLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDFF20492DB29EF500AB8A96 /* WatchLogger.swift */; };
-		498B3E822DB96EF000737DD3 /* WatchStateSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDFF204D2DB2C00B00AB8A96 /* WatchStateSnapshot.swift */; };
 		498ED7052D80515B00D18CAF /* InsulinConcentrationDataFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 498ED7022D80515B00D18CAF /* InsulinConcentrationDataFlow.swift */; };
 		498ED7062D80515B00D18CAF /* InsulinConcentrationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 498ED7032D80515B00D18CAF /* InsulinConcentrationProvider.swift */; };
 		498ED7072D80515B00D18CAF /* InsulinConcentrationStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 498ED7042D80515B00D18CAF /* InsulinConcentrationStateModel.swift */; };
@@ -5071,7 +5068,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				BDFF7A872D25F97D0016C40C /* Assets.xcassets in Resources */,
-				4961C4AA2DD26E1900A02420 /* Assets.xcassets in Resources */,
 				DD498F2C2D692BEA00AAEA30 /* Localizable.xcstrings in Resources */,
 				49E464D92E7BF8850037EC26 /* tai.icon in Resources */,
 			);
@@ -6004,7 +6000,6 @@
 				DDFF204E2DB2C00B00AB8A96 /* WatchStateSnapshot.swift in Sources */,
 				DD6F63CC2D27F615007D94CF /* TreatmentMenuView.swift in Sources */,
 				DD3A3CE72D29C93F00AE478E /* Helper+Extensions.swift in Sources */,
-				498B3E822DB96EF000737DD3 /* WatchStateSnapshot.swift in Sources */,
 				DD246F062D2836AA0027DDE0 /* GlucoseTrendView.swift in Sources */,
 				BD432CA22D2F4E4000D1EB79 /* WatchMessageKeys.swift in Sources */,
 				C2BA6B9A2F7593C300348E6A /* NotificationIdentifiers.swift in Sources */,
@@ -6012,7 +6007,6 @@
 				BD54A9712D281A8100F9C1EE /* TempTargetPresetsView.swift in Sources */,
 				DD3A3CE92D29C97800AE478E /* Helper+ButtonStyles.swift in Sources */,
 				BDAE40002D372BAD009C12B1 /* WatchState+Requests.swift in Sources */,
-				498B3E812DB96E6C00737DD3 /* WatchLogger.swift in Sources */,
 				BDA25EE62D260D5E00035F34 /* WatchState.swift in Sources */,
 				BD04ECCE2D29952A008C5FEB /* BolusProgressOverlay.swift in Sources */,
 				49C27EC92E1BBBCA00FC65DF /* TaiStyle.swift in Sources */,
