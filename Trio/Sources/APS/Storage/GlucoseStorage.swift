@@ -40,17 +40,6 @@ final class BaseGlucoseStorage: GlucoseStorage, Injectable {
         updateSubject.eraseToAnyPublisher()
     }
 
-    private enum Config {
-        static var filterTime: TimeInterval {
-            UserDefaults.standard.double(forKey: "Config_FilterTime")
-        }
-
-        static var minimumGlucose: Int {
-            let v = UserDefaults.standard.integer(forKey: "Config_MinimumGlucose")
-            return v > 0 ? v : 39
-        }
-    }
-
     private let context: NSManagedObjectContext
 
     init(resolver: Resolver, context: NSManagedObjectContext? = nil) {
