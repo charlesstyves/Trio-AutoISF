@@ -10,6 +10,13 @@ struct TherapySettingEditorView: View {
     var validateOnDelete: (() -> Void)?
     var onItemAdded: (() -> Void)?
 
+    private let basalFormatter: NumberFormatter = {
+        let numberFormatter = NumberFormatter()
+        numberFormatter.maximumFractionDigits = 3
+        numberFormatter.minimumFractionDigits = 2
+        return numberFormatter
+    }()
+
     @State private var selectedItemID: UUID?
     @Namespace var bottomID
 
@@ -304,11 +311,12 @@ struct TherapySettingEditorView: View {
              .mmolLPer10Gram,
              .mmolLPerUnit:
             return decimalValue.formattedAsMmolL
+        case .unitPerHour:
+            return basalFormatter.string(from: decimalValue as NSNumber) ?? ""
         case .gramPerUnit,
              .mgdL,
              .mgdLPer10Gram,
-             .mgdLPerUnit,
-             .unitPerHour:
+             .mgdLPerUnit:
             return decimalValue.description
         }
     }
