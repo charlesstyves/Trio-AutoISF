@@ -125,6 +125,10 @@ extension Adjustments {
                 await withTaskGroup(of: Void.self) { group in
                     group.addTask { self.setupOverridePresetsArray() }
                     group.addTask { self.setupTempTargetPresetsArray() }
+                    // Populate the scheduled-TT list on first load too —
+                    // shortcut-driven scheduling can persist rows while this
+                    // view's StateModel hasn't been instantiated yet.
+                    group.addTask { self.setupScheduledTempTargetsArray() }
                     group.addTask { self.updateLatestOverrideConfiguration() }
                     group.addTask { self.updateLatestTempTargetConfiguration() }
                 }
