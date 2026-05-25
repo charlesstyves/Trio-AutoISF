@@ -46,8 +46,8 @@ struct CreateCustomTempTargetIntent: AppIntent {
     @Parameter(
         title: "Duration (minutes)",
         description: "How long the Temp Target should run (5–1440 min)",
-        requestValueDialog: IntentDialog(stringLiteral: String(localized: "Duration in minutes?")),
-        inclusiveRange: (5, 1440)
+        inclusiveRange: (5, 1440),
+        requestValueDialog: IntentDialog(stringLiteral: String(localized: "Duration in minutes?"))
     ) var durationMinutes: Int
 
     @Parameter(
