@@ -87,10 +87,10 @@ struct AppShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: CreateCustomTempTargetIntent(),
             phrases: [
-                "Set custom \(.applicationName) temp target",
-                "\(.applicationName) custom temp target"
+                "Create a \(.applicationName) Temporary Target",
+                "\(.applicationName) create temporary target"
             ],
-            shortTitle: "Custom TT",
+            shortTitle: "Create Temporary Target",
             systemImageName: "scope"
         )
         AppShortcut(

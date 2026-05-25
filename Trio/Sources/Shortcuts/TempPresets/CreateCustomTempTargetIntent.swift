@@ -5,23 +5,27 @@ import UIKit
 
 /// Create and activate a fully custom Temp Target — no preset selection required.
 /// Target value is interpreted in the user's configured glucose unit (mg/dL or mmol/L).
+///
+/// `name` and `startTime` are mandatory. The start time must be a date+time within
+/// the next 24 hours (now ... now + 24 h).
 struct CreateCustomTempTargetIntent: AppIntent {
-    static var title: LocalizedStringResource = "Create custom temp target"
+    static var title: LocalizedStringResource = "Create a Temporary Target"
 
     static var description = IntentDescription(
-        "Activate a custom Temp Target with explicit name, target value, duration and optional start time"
+        "Create and activate a Temporary Target with name, target value, duration and start time (start within the next 24 h)"
     )
 
     @Parameter(
         title: "Name",
-        description: "Optional name shown in history",
-        default: ""
+        description: "Name shown in history",
+        requestValueDialog: IntentDialog(stringLiteral: String(localized: "Name for this Temp Target?"))
     ) var name: String
 
     @Parameter(
         title: "Target value",
-        description: "Target glucose value in the unit configured in Trio (mg/dL or mmol/L)"
-    ) var targetValue: Double?
+        description: "Target glucose value in the unit configured in Trio (mg/dL or mmol/L)",
+        requestValueDialog: IntentDialog(stringLiteral: String(localized: "Target value?"))
+    ) var targetValue: Double
 
     @Parameter(
         title: "Duration (minutes)",
@@ -32,8 +36,9 @@ struct CreateCustomTempTargetIntent: AppIntent {
 
     @Parameter(
         title: "Start time",
-        description: "When the Temp Target begins. Leave blank to start now."
-    ) var startTime: Date?
+        description: "When the Temp Target begins. Must be within the next 24 hours.",
+        requestValueDialog: IntentDialog(stringLiteral: String(localized: "When should the Temp Target start?"))
+    ) var startTime: Date
 
     @Parameter(
         title: "Confirm Before applying",
@@ -42,53 +47,54 @@ struct CreateCustomTempTargetIntent: AppIntent {
     ) var confirmBeforeApplying: Bool
 
     static var parameterSummary: some ParameterSummary {
-        When(\CreateCustomTempTargetIntent.$confirmBeforeApplying, .equalTo, true, {
-            Summary("Set custom target \(\.$targetValue) for \(\.$durationMinutes) min") {
-                \.$name
-                \.$startTime
-                \.$confirmBeforeApplying
-            }
-        }, otherwise: {
-            Summary("Immediately set custom target \(\.$targetValue) for \(\.$durationMinutes) min") {
-                \.$name
-                \.$startTime
-                \.$confirmBeforeApplying
-            }
-        })
+        Summary("Set \(\.$name): \(\.$targetValue) for \(\.$durationMinutes) min starting \(\.$startTime)") {
+            \.$confirmBeforeApplying
+        }
     }
 
     @MainActor func perform() async throws -> some ProvidesDialog {
         let request = CustomTempTargetIntentRequest()
 
-        let targetEntered: Double
-        if let targetValue = targetValue {
-            targetEntered = targetValue
-        } else {
-            targetEntered = try await $targetValue.requestValue(
-                IntentDialog(stringLiteral: String(localized: "Target value?"))
-            )
-        }
-
-        guard targetEntered > 0 else {
+        guard targetValue > 0 else {
             return .result(
                 dialog: IntentDialog(stringLiteral: String(localized: "Target value must be positive"))
             )
         }
 
-        // Convert from user unit to mg/dL for storage.
-        let targetMgdl = request.targetInMgdl(entered: Decimal(targetEntered))
-
-        let resolvedStart = startTime ?? Date()
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let displayName = trimmedName.isEmpty ? String(localized: "Custom Temp Target") : trimmedName
+        guard !trimmedName.isEmpty else {
+            return .result(
+                dialog: IntentDialog(stringLiteral: String(localized: "Name is required"))
+            )
+        }
+
+        // Start time must lie within now ... now + 24 h (small grace window for
+        // clock skew between Shortcuts execution and this perform() call).
+        let now = Date()
+        let grace: TimeInterval = 60
+        let lowerBound = now.addingTimeInterval(-grace)
+        let upperBound = now.addingTimeInterval(24 * 3600)
+        guard startTime >= lowerBound, startTime <= upperBound else {
+            return .result(
+                dialog: IntentDialog(
+                    stringLiteral: String(
+                        localized: "Start time must be within the next 24 hours (now until +24 h)"
+                    )
+                )
+            )
+        }
+
+        // Convert from user unit to mg/dL for storage.
+        let targetMgdl = request.targetInMgdl(entered: Decimal(targetValue))
 
         if confirmBeforeApplying {
+            let prettyStart = DateFormatter.localizedString(from: startTime, dateStyle: .short, timeStyle: .short)
             try await requestConfirmation(
                 result: .result(
                     dialog: IntentDialog(
                         stringLiteral: String(
                             localized:
-                            "Confirm Temp Target '\(displayName)': \(formatted(targetEntered)) for \(durationMinutes) min"
+                            "Confirm Temp Target '\(trimmedName)': \(formatted(targetValue)) for \(durationMinutes) min starting \(prettyStart)"
                         )
                     )
                 )
@@ -96,24 +102,24 @@ struct CreateCustomTempTargetIntent: AppIntent {
         }
 
         let success = await request.createAndEnact(
-            name: trimmedName.isEmpty ? nil : trimmedName,
+            name: trimmedName,
             targetMgdl: targetMgdl,
             durationMinutes: Decimal(durationMinutes),
-            startTime: resolvedStart
+            startTime: startTime
         )
 
         if success {
             return .result(
                 dialog: IntentDialog(
                     stringLiteral: String(
-                        localized: "Temp Target '\(displayName)' applied for \(durationMinutes) min"
+                        localized: "Temp Target '\(trimmedName)' applied for \(durationMinutes) min"
                     )
                 )
             )
         } else {
             return .result(
                 dialog: IntentDialog(
-                    stringLiteral: String(localized: "Temp Target '\(displayName)' failed")
+                    stringLiteral: String(localized: "Temp Target '\(trimmedName)' failed")
                 )
             )
         }
