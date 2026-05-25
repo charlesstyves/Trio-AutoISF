@@ -293,6 +293,9 @@ extension Adjustments.StateModel {
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 self.updateLatestTempTargetConfiguration()
+                // Also refresh the scheduled-TT list — shortcut-driven scheduling
+                // persists a future-dated row that only shows up after a refetch.
+                self.setupScheduledTempTargetsArray()
             }
             .store(in: &cancellables)
     }
@@ -305,6 +308,8 @@ extension Adjustments.StateModel {
     /// Handles Temp Target configuration updates.
     @objc private func handleTempTargetConfigurationUpdate() {
         updateLatestTempTargetConfiguration()
+        // Same as the .willUpdate sink — keep the scheduled list in sync.
+        setupScheduledTempTargetsArray()
     }
 }
 

@@ -46,6 +46,13 @@ enum ScheduledTempTargetHelper {
             return false
         }
 
+        // Nudge Adjustments to refresh its scheduled-TT list immediately
+        // (otherwise the user only sees the row after switching tabs).
+        Foundation.NotificationCenter.default.post(
+            name: .willUpdateTempTargetConfiguration,
+            object: nil
+        )
+
         // Detached — survives the intent's perform().
         Task.detached {
             await waitUntilDate(startTime)
