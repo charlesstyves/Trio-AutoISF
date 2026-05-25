@@ -6,7 +6,7 @@ import Foundation
 /// scheduled row (the app has no native scheduling for presets) and
 /// detaches a wait+activate task that fires at the chosen time.
 struct ScheduleTempPresetIntent: AppIntent {
-    static var title: LocalizedStringResource = "Schedule a Temporary Target"
+    static var title: LocalizedStringResource = "Schedule TT Preset"
 
     static var description = IntentDescription(
         "Schedule a Temporary Target preset for a date+time within the next 24 hours"

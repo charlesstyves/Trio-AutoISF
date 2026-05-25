@@ -10,7 +10,7 @@ import UIKit
 /// Target value is interpreted in the user's configured glucose unit
 /// (mg/dL or mmol/L).
 struct CreateCustomTempTargetIntent: AppIntent {
-    static var title: LocalizedStringResource = "Create a Temporary Target"
+    static var title: LocalizedStringResource = "Create TT"
 
     static var description = IntentDescription(
         "Create and activate a Temporary Target now with name, target value and duration"

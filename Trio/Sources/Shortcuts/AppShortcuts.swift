@@ -18,16 +18,16 @@ struct AppShortcuts: AppShortcutsProvider {
                 "Activate \(.applicationName) temporary target ?",
                 "\(.applicationName) apply a temporary target"
             ],
-            shortTitle: "Activate TT",
+            shortTitle: "Activate TT preset",
             systemImageName: "arrow.up.circle.badge.clock"
         )
         AppShortcut(
             intent: ScheduleTempPresetIntent(),
             phrases: [
-                "Schedule \(.applicationName) temporary target",
+                "Schedule \(.applicationName) temporary target preset",
                 "\(.applicationName) schedule a temporary target preset"
             ],
-            shortTitle: "Schedule TT",
+            shortTitle: "Schedule TT Preset",
             systemImageName: "calendar.badge.clock"
         )
         AppShortcut(
@@ -108,7 +108,7 @@ struct AppShortcuts: AppShortcutsProvider {
                 "Schedule a custom \(.applicationName) Temporary Target",
                 "\(.applicationName) schedule custom temporary target"
             ],
-            shortTitle: "Schedule custom TT",
+            shortTitle: "Schedule TT",
             systemImageName: "calendar.badge.plus"
         )
         AppShortcut(

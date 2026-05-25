@@ -4,9 +4,9 @@ import Foundation
 /// Apply a Temp Target preset immediately. For scheduling a preset for a
 /// future date, use `ScheduleTempPresetIntent` instead.
 struct ApplyTempPresetIntent: AppIntent {
-    static var title: LocalizedStringResource = "Apply a Temporary Target"
+    static var title: LocalizedStringResource = "Activate TT preset"
 
-    static var description = IntentDescription("Enable a Temporary Target preset now")
+    static var description = IntentDescription("Activate a Temporary Target preset now")
 
     @Parameter(
         title: "Preset",

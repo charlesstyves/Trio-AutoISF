@@ -5,7 +5,7 @@ import Foundation
 /// hours. Persists a non-preset row with `enabled = false` and detaches a
 /// wait+activate task — same backend as scheduled-preset path.
 struct ScheduleCustomTempTargetIntent: AppIntent {
-    static var title: LocalizedStringResource = "Schedule a Temporary Target (custom)"
+    static var title: LocalizedStringResource = "Schedule TT"
 
     static var description = IntentDescription(
         "Schedule a custom Temporary Target for a date+time within the next 24 hours"
