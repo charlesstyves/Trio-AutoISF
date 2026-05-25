@@ -11,7 +11,9 @@ struct ScheduleProfileOnceIntent: AppIntent {
     static var title = LocalizedStringResource("Schedule a profile (once, timed)")
 
     static var description = IntentDescription(
-        .init("Schedule a profile to activate once at a specific date/time for a chosen number of hours. Indefinite scheduling is not available via Shortcuts.")
+        .init(
+            "Schedule a profile to activate once at a specific date/time for a chosen number of hours. Indefinite scheduling is not available via Shortcuts."
+        )
     )
 
     @Parameter(

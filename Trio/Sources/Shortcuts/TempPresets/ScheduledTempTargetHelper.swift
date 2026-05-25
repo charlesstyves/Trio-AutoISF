@@ -15,8 +15,7 @@ import Foundation
 ///
 /// The detached task runs in the Trio app process for the same lifetime an
 /// in-app Add-TT submission would.
-@MainActor
-enum ScheduledTempTargetHelper {
+@MainActor enum ScheduledTempTargetHelper {
     /// Persist a scheduled custom-shaped Temp Target and detach the
     /// wait+activate task. Returns `false` if persistence fails.
     static func enact(
