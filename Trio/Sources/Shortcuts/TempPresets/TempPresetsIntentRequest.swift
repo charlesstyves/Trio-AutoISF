@@ -179,6 +179,123 @@ final class TempPresetsIntentRequest: BaseIntentsRequest {
         }
     }
 
+    /// Schedule a preset to activate at a future date. Persists a new (non-preset)
+    /// row carrying the preset's values with `enabled = false` and `createdAt = at`,
+    /// then detaches a wait+activate task that fires at `at`. Mirrors the
+    /// post-persist half of `Adjustments.StateModel.saveScheduledTempTarget`.
+    ///
+    /// The original preset row is not modified.
+    @MainActor func schedulePresetTempTarget(_ preset: TempPreset, at fireAt: Date) async -> Bool {
+        // Resolve preset's stored fields (target, duration, halfBasalTarget, name).
+        guard let presetID = await fetchTempTargetID(preset),
+              let presetObject = try? viewContext.existingObject(with: presetID) as? TempTargetStored,
+              let targetDecimal = presetObject.target?.decimalValue,
+              let durationDecimal = presetObject.duration?.decimalValue
+        else {
+            debug(
+                .default,
+                "\(DebuggingIdentifiers.failed) Preset not found or incomplete for scheduling: \(preset.name)"
+            )
+            return false
+        }
+
+        let halfBasal = presetObject.halfBasalTarget?.decimalValue
+            ?? settingsManager.preferences.halfBasalExerciseTarget
+        let scheduledTT = TempTarget(
+            name: presetObject.name ?? preset.name,
+            createdAt: fireAt,
+            targetTop: targetDecimal,
+            targetBottom: targetDecimal,
+            duration: durationDecimal,
+            enteredBy: TempTarget.local,
+            reason: TempTarget.custom,
+            isPreset: false,
+            enabled: false,
+            halfBasalTarget: halfBasal
+        )
+
+        do {
+            try await tempTargetsStorage.storeTempTarget(tempTarget: scheduledTT)
+        } catch {
+            debug(
+                .default,
+                "\(DebuggingIdentifiers.failed) Failed to store scheduled preset TempTarget: \(error)"
+            )
+            return false
+        }
+
+        // Detached task — same shape as the tail of saveScheduledTempTarget().
+        Task.detached {
+            await Self.waitUntilDate(fireAt)
+            await self.activateScheduledPreset(
+                presetName: presetObject.name ?? preset.name,
+                targetMgdl: targetDecimal,
+                durationMinutes: durationDecimal,
+                halfBasalTarget: halfBasal,
+                startTime: fireAt
+            )
+        }
+        return true
+    }
+
+    @MainActor private func activateScheduledPreset(
+        presetName: String,
+        targetMgdl: Decimal,
+        durationMinutes: Decimal,
+        halfBasalTarget: Decimal?,
+        startTime: Date
+    ) async {
+        await disableAllActiveTempTargets(shouldStartBackgroundTask: false)
+        do {
+            let ids = try await tempTargetsStorage.fetchScheduledTempTarget(for: startTime)
+            guard let firstID = ids.first,
+                  let row = try viewContext.existingObject(with: firstID) as? TempTargetStored
+            else {
+                debug(
+                    .default,
+                    "\(DebuggingIdentifiers.failed) Scheduled preset TempTarget not found for \(startTime)"
+                )
+                return
+            }
+            row.enabled = true
+            row.isUploadedToNS = false
+            if viewContext.hasChanges {
+                try viewContext.save()
+            }
+            let liveTT = TempTarget(
+                name: presetName,
+                createdAt: startTime,
+                targetTop: targetMgdl,
+                targetBottom: targetMgdl,
+                duration: durationMinutes,
+                enteredBy: TempTarget.local,
+                reason: TempTarget.custom,
+                isPreset: false,
+                enabled: true,
+                halfBasalTarget: halfBasalTarget
+            )
+            tempTargetsStorage.saveTempTargetsToStorage([liveTT])
+            Foundation.NotificationCenter.default.post(
+                name: .willUpdateTempTargetConfiguration,
+                object: nil
+            )
+        } catch {
+            debug(
+                .default,
+                "\(DebuggingIdentifiers.failed) Failed to activate scheduled preset TempTarget: \(error)"
+            )
+        }
+    }
+
+    /// Sleep until `targetDate`. Mirrors `Adjustments.StateModel.waitUntilDate`.
+    private static func waitUntilDate(_ targetDate: Date) async {
+        while Date() < targetDate {
+            let delta = targetDate.timeIntervalSince(Date())
+            let sleepSeconds = min(delta, 60.0)
+            try? await Task.sleep(nanoseconds: UInt64(sleepSeconds * 1_000_000_000))
+        }
+    }
+
     /// Cancels an active temporary target.
     func cancelTempTarget() async {
         await disableAllActiveTempTargets(shouldStartBackgroundTask: true)
