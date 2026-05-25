@@ -22,6 +22,15 @@ struct AppShortcuts: AppShortcutsProvider {
             systemImageName: "arrow.up.circle.badge.clock"
         )
         AppShortcut(
+            intent: ScheduleTempPresetIntent(),
+            phrases: [
+                "Schedule \(.applicationName) temporary target",
+                "\(.applicationName) schedule a temporary target preset"
+            ],
+            shortTitle: "Schedule TT",
+            systemImageName: "calendar.badge.clock"
+        )
+        AppShortcut(
             intent: ListStateIntent(),
             phrases: [
                 "List \(.applicationName) state",
@@ -92,6 +101,15 @@ struct AppShortcuts: AppShortcutsProvider {
             ],
             shortTitle: "Create TT",
             systemImageName: "scope"
+        )
+        AppShortcut(
+            intent: ScheduleCustomTempTargetIntent(),
+            phrases: [
+                "Schedule a custom \(.applicationName) Temporary Target",
+                "\(.applicationName) schedule custom temporary target"
+            ],
+            shortTitle: "Schedule custom TT",
+            systemImageName: "calendar.badge.plus"
         )
         AppShortcut(
             intent: RestartLiveActivityIntent(),
