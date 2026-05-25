@@ -67,6 +67,33 @@ struct AppShortcuts: AppShortcutsProvider {
             systemImageName: "xmark.square"
         )
         AppShortcut(
+            intent: ApplyProfileIntent(),
+            phrases: [
+                "Activate \(.applicationName) profile",
+                "Activates a \(.applicationName) profile"
+            ],
+            shortTitle: "Activate Profile",
+            systemImageName: "person.crop.circle.badge.checkmark"
+        )
+        AppShortcut(
+            intent: ScheduleProfileOnceIntent(),
+            phrases: [
+                "Schedule \(.applicationName) profile",
+                "Schedules a \(.applicationName) profile to activate at a chosen time"
+            ],
+            shortTitle: "Schedule Profile",
+            systemImageName: "calendar.badge.clock"
+        )
+        AppShortcut(
+            intent: CreateCustomTempTargetIntent(),
+            phrases: [
+                "Set custom \(.applicationName) temp target",
+                "\(.applicationName) custom temp target"
+            ],
+            shortTitle: "Custom TT",
+            systemImageName: "scope"
+        )
+        AppShortcut(
             intent: RestartLiveActivityIntent(),
             phrases: [
                 "Restart \(.applicationName) Live Activity",
