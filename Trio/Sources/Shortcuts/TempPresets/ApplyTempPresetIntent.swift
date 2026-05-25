@@ -48,11 +48,13 @@ struct ApplyTempPresetIntent: AppIntent {
         Switch(\ApplyTempPresetIntent.$start) {
             Case(.scheduled) {
                 Summary("Schedule \(\.$preset) at \(\.$startTime)") {
+                    \.$start
                     \.$confirmBeforeApplying
                 }
             }
             DefaultCase {
                 Summary("Apply \(\.$preset) now") {
+                    \.$start
                     \.$confirmBeforeApplying
                 }
             }
