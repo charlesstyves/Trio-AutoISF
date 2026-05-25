@@ -112,6 +112,18 @@ struct CreateCustomTempTargetIntent: AppIntent {
         )
 
         if success {
+            let now = Date()
+            let wasScheduled = startTime > now.addingTimeInterval(2)
+            if wasScheduled {
+                let prettyStart = DateFormatter.localizedString(from: startTime, dateStyle: .short, timeStyle: .short)
+                return .result(
+                    dialog: IntentDialog(
+                        stringLiteral: String(
+                            localized: "Temp Target '\(trimmedName)' activated at \(prettyStart) for \(durationMinutes) min"
+                        )
+                    )
+                )
+            }
             return .result(
                 dialog: IntentDialog(
                     stringLiteral: String(
@@ -147,11 +159,43 @@ final class CustomTempTargetIntentRequest: BaseIntentsRequest {
         }
     }
 
+    /// Behaves the same way as `Adjustments.StateModel.invokeSaveOfCustomTempTargets`:
+    /// if the requested `startTime` lies in the future, the TT is stored as
+    /// scheduled (`enabled = false`, `createdAt = startTime`), the task sleeps
+    /// until `startTime`, then disables any actives and enables the scheduled
+    /// row. If `startTime` is now (or essentially now), it's enacted immediately.
+    /// In both cases the `duration` is the run-time after the start moment —
+    /// the wait is **not** added to it.
     @MainActor func createAndEnact(
-        name: String?,
+        name: String,
         targetMgdl: Decimal,
         durationMinutes: Decimal,
         startTime: Date
+    ) async -> Bool {
+        let now = Date()
+        let isScheduled = startTime > now.addingTimeInterval(2)
+        if isScheduled {
+            return await enactScheduled(
+                name: name,
+                targetMgdl: targetMgdl,
+                durationMinutes: durationMinutes,
+                startTime: startTime
+            )
+        } else {
+            return await enactImmediate(
+                name: name,
+                targetMgdl: targetMgdl,
+                durationMinutes: durationMinutes
+            )
+        }
+    }
+
+    // MARK: - Immediate path
+
+    @MainActor private func enactImmediate(
+        name: String,
+        targetMgdl: Decimal,
+        durationMinutes: Decimal
     ) async -> Bool {
         var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
         backgroundTaskID = startBackgroundTask(withName: "TempTarget Custom Enact")
@@ -159,18 +203,12 @@ final class CustomTempTargetIntentRequest: BaseIntentsRequest {
         // Disable any currently active TT first (matches preset-activation flow).
         await disableAllActiveTempTargets()
 
-        let halfBasal = settingsManager.preferences.halfBasalExerciseTarget
-        let tempTarget = TempTarget(
-            name: name ?? TempTarget.custom,
-            createdAt: startTime,
-            targetTop: targetMgdl,
-            targetBottom: targetMgdl,
-            duration: durationMinutes,
-            enteredBy: TempTarget.local,
-            reason: TempTarget.custom,
-            isPreset: false,
-            enabled: true,
-            halfBasalTarget: halfBasal
+        let tempTarget = makeTempTarget(
+            name: name,
+            createdAt: Date(),
+            targetMgdl: targetMgdl,
+            durationMinutes: durationMinutes,
+            enabled: true
         )
 
         do {
@@ -188,6 +226,115 @@ final class CustomTempTargetIntentRequest: BaseIntentsRequest {
             endBackgroundTaskSafely(&backgroundTaskID, taskName: "TempTarget Custom Enact")
             return false
         }
+    }
+
+    // MARK: - Scheduled path
+
+    @MainActor private func enactScheduled(
+        name: String,
+        targetMgdl: Decimal,
+        durationMinutes: Decimal,
+        startTime: Date
+    ) async -> Bool {
+        var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
+        backgroundTaskID = startBackgroundTask(withName: "TempTarget Scheduled Wait")
+
+        // 1. Persist as a scheduled (not-yet-enabled) row anchored to startTime.
+        let scheduledTT = makeTempTarget(
+            name: name,
+            createdAt: startTime,
+            targetMgdl: targetMgdl,
+            durationMinutes: durationMinutes,
+            enabled: false
+        )
+        do {
+            try await tempTargetsStorage.storeTempTarget(tempTarget: scheduledTT)
+        } catch {
+            debug(
+                .default,
+                "\(DebuggingIdentifiers.failed) Failed to store scheduled TempTarget: \(error)"
+            )
+            endBackgroundTaskSafely(&backgroundTaskID, taskName: "TempTarget Scheduled Wait")
+            return false
+        }
+
+        // 2. Sleep until fire time — matches Adjustments.StateModel.waitUntilDate.
+        //    NOTE: Shortcut intents have limited background runtime; if the wait
+        //    exceeds what iOS grants, the shortcut may be suspended/killed before
+        //    activation. The scheduled row is already persisted, so the user can
+        //    cancel/edit it from inside the app even if that happens.
+        while Date() < startTime {
+            let delta = startTime.timeIntervalSince(Date())
+            let sleepSeconds = min(delta, 60.0)
+            try? await Task.sleep(nanoseconds: UInt64(sleepSeconds * 1_000_000_000))
+        }
+
+        // 3. Disable any currently active TT.
+        await disableAllActiveTempTargets()
+
+        // 4. Flip the scheduled row to enabled and write JSON for oref. The TT's
+        //    duration window now runs from `startTime` (≈ now) for `duration`.
+        do {
+            let ids = try await tempTargetsStorage.fetchScheduledTempTarget(for: startTime)
+            guard let firstID = ids.first,
+                  let row = try viewContext.existingObject(with: firstID) as? TempTargetStored
+            else {
+                debug(
+                    .default,
+                    "\(DebuggingIdentifiers.failed) Scheduled TempTarget not found for \(startTime)"
+                )
+                endBackgroundTaskSafely(&backgroundTaskID, taskName: "TempTarget Scheduled Wait")
+                return false
+            }
+            row.enabled = true
+            row.isUploadedToNS = false
+            if viewContext.hasChanges {
+                try viewContext.save()
+            }
+
+            let liveTT = makeTempTarget(
+                name: name,
+                createdAt: startTime,
+                targetMgdl: targetMgdl,
+                durationMinutes: durationMinutes,
+                enabled: true
+            )
+            tempTargetsStorage.saveTempTargetsToStorage([liveTT])
+            Foundation.NotificationCenter.default.post(name: .willUpdateTempTargetConfiguration, object: nil)
+            await awaitNotification(.didUpdateTempTargetConfiguration)
+            endBackgroundTaskSafely(&backgroundTaskID, taskName: "TempTarget Scheduled Wait")
+            return true
+        } catch {
+            debug(
+                .default,
+                "\(DebuggingIdentifiers.failed) Failed to activate scheduled TempTarget: \(error)"
+            )
+            endBackgroundTaskSafely(&backgroundTaskID, taskName: "TempTarget Scheduled Wait")
+            return false
+        }
+    }
+
+    // MARK: - Helpers
+
+    private func makeTempTarget(
+        name: String,
+        createdAt: Date,
+        targetMgdl: Decimal,
+        durationMinutes: Decimal,
+        enabled: Bool
+    ) -> TempTarget {
+        TempTarget(
+            name: name,
+            createdAt: createdAt,
+            targetTop: targetMgdl,
+            targetBottom: targetMgdl,
+            duration: durationMinutes,
+            enteredBy: TempTarget.local,
+            reason: TempTarget.custom,
+            isPreset: false,
+            enabled: enabled,
+            halfBasalTarget: settingsManager.preferences.halfBasalExerciseTarget
+        )
     }
 
     @MainActor private func disableAllActiveTempTargets() async {
