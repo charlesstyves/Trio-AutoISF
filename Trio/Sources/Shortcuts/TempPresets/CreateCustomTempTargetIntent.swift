@@ -29,8 +29,8 @@ struct CreateCustomTempTargetIntent: AppIntent {
 
     @Parameter(
         title: "Duration (minutes)",
-        description: "How long the Temp Target should run",
-        default: 60,
+        description: "How long the Temp Target should run (5–1440 min)",
+        requestValueDialog: IntentDialog(stringLiteral: String(localized: "Duration in minutes?")),
         inclusiveRange: (5, 1440)
     ) var durationMinutes: Int
 
@@ -47,7 +47,10 @@ struct CreateCustomTempTargetIntent: AppIntent {
     ) var confirmBeforeApplying: Bool
 
     static var parameterSummary: some ParameterSummary {
-        Summary("Set \(\.$name): \(\.$targetValue) for \(\.$durationMinutes) min starting \(\.$startTime)") {
+        Summary("Create Temporary Target \(\.$name)") {
+            \.$targetValue
+            \.$durationMinutes
+            \.$startTime
             \.$confirmBeforeApplying
         }
     }

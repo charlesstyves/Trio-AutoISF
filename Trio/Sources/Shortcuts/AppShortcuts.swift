@@ -90,7 +90,7 @@ struct AppShortcuts: AppShortcutsProvider {
                 "Create a \(.applicationName) Temporary Target",
                 "\(.applicationName) create temporary target"
             ],
-            shortTitle: "Create Temporary Target",
+            shortTitle: "Create TT",
             systemImageName: "scope"
         )
         AppShortcut(
