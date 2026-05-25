@@ -26,11 +26,18 @@ struct ScheduleProfileOnceIntent: AppIntent {
     ) var fireAt: Date?
 
     @Parameter(
-        title: LocalizedStringResource("Duration (hours)"),
-        description: LocalizedStringResource("How long the profile should stay active before reverting"),
-        default: 1.0,
-        inclusiveRange: (0.25, 24.0)
-    ) var durationHours: Double
+        title: LocalizedStringResource("Hours"),
+        description: LocalizedStringResource("Whole hours of activation (0–24)"),
+        default: 1,
+        inclusiveRange: (0, 24)
+    ) var hours: Int
+
+    @Parameter(
+        title: LocalizedStringResource("Minutes"),
+        description: LocalizedStringResource("Additional minutes (0–55)"),
+        default: 0,
+        inclusiveRange: (0, 55)
+    ) var minutes: Int
 
     @Parameter(
         title: LocalizedStringResource("Schedule name"),
@@ -45,7 +52,7 @@ struct ScheduleProfileOnceIntent: AppIntent {
     ) var confirmBeforeScheduling: Bool
 
     static var parameterSummary: some ParameterSummary {
-        Summary("Schedule \(\.$profile) at \(\.$fireAt) for \(\.$durationHours) h") {
+        Summary("Schedule \(\.$profile) at \(\.$fireAt) for \(\.$hours) h \(\.$minutes) min") {
             \.$scheduleName
             \.$confirmBeforeScheduling
         }
@@ -81,14 +88,14 @@ struct ScheduleProfileOnceIntent: AppIntent {
             )
         }
 
-        let durationMinutes = Int((durationHours * 60).rounded())
+        let durationMinutes = max(0, hours) * 60 + max(0, minutes)
         guard durationMinutes > 0 else {
             return .result(
                 dialog: IntentDialog(stringLiteral: String(localized: "Duration must be positive"))
             )
         }
 
-        let descriptor = String(localized: "for \(formattedHours(durationHours)) h")
+        let descriptor = formattedDuration(hours: hours, minutes: minutes)
         let prettyDate = DateFormatter.localizedString(from: resolvedFireAt, dateStyle: .short, timeStyle: .short)
 
         if confirmBeforeScheduling {
@@ -96,7 +103,7 @@ struct ScheduleProfileOnceIntent: AppIntent {
                 result: .result(
                     dialog: IntentDialog(
                         stringLiteral: String(
-                            localized: "Confirm to schedule profile '\(target.name)' at \(prettyDate) \(descriptor)"
+                            localized: "Confirm to schedule profile '\(target.name)' at \(prettyDate) for \(descriptor)"
                         )
                     )
                 )
@@ -115,7 +122,7 @@ struct ScheduleProfileOnceIntent: AppIntent {
             return .result(
                 dialog: IntentDialog(
                     stringLiteral: String(
-                        localized: "Profile '\(target.name)' scheduled for \(prettyDate) \(descriptor)"
+                        localized: "Profile '\(target.name)' scheduled for \(prettyDate) for \(descriptor)"
                     )
                 )
             )
@@ -128,10 +135,12 @@ struct ScheduleProfileOnceIntent: AppIntent {
         }
     }
 
-    private func formattedHours(_ hours: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.minimumFractionDigits = 0
-        formatter.maximumFractionDigits = 2
-        return formatter.string(from: NSNumber(value: hours)) ?? "\(hours)"
+    /// "1 h 30 min", "45 min", "2 h" — mirrors the wording used in the in-app duration picker.
+    private func formattedDuration(hours: Int, minutes: Int) -> String {
+        let h = max(0, hours)
+        let m = max(0, minutes)
+        if h > 0, m > 0 { return "\(h) h \(m) min" }
+        if h > 0 { return "\(h) h" }
+        return "\(m) min"
     }
 }

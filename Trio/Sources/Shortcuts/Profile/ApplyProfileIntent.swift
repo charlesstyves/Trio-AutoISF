@@ -19,11 +19,18 @@ struct ApplyProfileIntent: AppIntent {
     ) var profile: ProfileEntity?
 
     @Parameter(
-        title: LocalizedStringResource("Duration (hours)"),
-        description: LocalizedStringResource("How long the profile should stay active before reverting"),
-        default: 1.0,
-        inclusiveRange: (0.25, 24.0)
-    ) var durationHours: Double
+        title: LocalizedStringResource("Hours"),
+        description: LocalizedStringResource("Whole hours of activation (0–24)"),
+        default: 1,
+        inclusiveRange: (0, 24)
+    ) var hours: Int
+
+    @Parameter(
+        title: LocalizedStringResource("Minutes"),
+        description: LocalizedStringResource("Additional minutes (0–55)"),
+        default: 0,
+        inclusiveRange: (0, 55)
+    ) var minutes: Int
 
     @Parameter(
         title: LocalizedStringResource("Confirm Before applying"),
@@ -32,7 +39,7 @@ struct ApplyProfileIntent: AppIntent {
     ) var confirmBeforeApplying: Bool
 
     static var parameterSummary: some ParameterSummary {
-        Summary("Activate \(\.$profile) for \(\.$durationHours) h") {
+        Summary("Activate \(\.$profile) for \(\.$hours) h \(\.$minutes) min") {
             \.$confirmBeforeApplying
         }
     }
@@ -49,20 +56,20 @@ struct ApplyProfileIntent: AppIntent {
             )
         }
 
-        let durationMinutes = Int((durationHours * 60).rounded())
+        let durationMinutes = max(0, hours) * 60 + max(0, minutes)
         guard durationMinutes > 0 else {
             return .result(
                 dialog: IntentDialog(stringLiteral: String(localized: "Duration must be positive"))
             )
         }
 
-        let descriptor = String(localized: "for \(formattedHours(durationHours)) h")
+        let descriptor = formattedDuration(hours: hours, minutes: minutes)
 
         if confirmBeforeApplying {
             try await requestConfirmation(
                 result: .result(
                     dialog: IntentDialog(
-                        stringLiteral: String(localized: "Confirm to activate profile '\(target.name)' \(descriptor)")
+                        stringLiteral: String(localized: "Confirm to activate profile '\(target.name)' for \(descriptor)")
                     )
                 )
             )
@@ -78,15 +85,17 @@ struct ApplyProfileIntent: AppIntent {
 
         return .result(
             dialog: IntentDialog(
-                stringLiteral: String(localized: "Profile '\(target.name)' activated \(descriptor)")
+                stringLiteral: String(localized: "Profile '\(target.name)' activated for \(descriptor)")
             )
         )
     }
 
-    private func formattedHours(_ hours: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.minimumFractionDigits = 0
-        formatter.maximumFractionDigits = 2
-        return formatter.string(from: NSNumber(value: hours)) ?? "\(hours)"
+    /// "1 h 30 min", "45 min", "2 h" — mirrors the wording used in the in-app duration picker.
+    private func formattedDuration(hours: Int, minutes: Int) -> String {
+        let h = max(0, hours)
+        let m = max(0, minutes)
+        if h > 0, m > 0 { return "\(h) h \(m) min" }
+        if h > 0 { return "\(h) h" }
+        return "\(m) min"
     }
 }
