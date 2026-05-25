@@ -8,11 +8,11 @@ import Foundation
 /// Shortcuts intentionally do not expose indefinite scheduling: only timed
 /// (auto-reverting) profile activations are allowed via the Shortcuts surface.
 struct ScheduleProfileOnceIntent: AppIntent {
-    static var title = LocalizedStringResource("Schedule a profile (once, timed)")
+    static var title = LocalizedStringResource("Schedule Profile")
 
     static var description = IntentDescription(
         .init(
-            "Schedule a profile to activate once at a specific date/time for a chosen number of hours. Indefinite scheduling is not available via Shortcuts."
+            "Schedule a profile to activate once at a specific date/time for a chosen duration. Indefinite scheduling is not available via Shortcuts."
         )
     )
 
@@ -24,21 +24,22 @@ struct ScheduleProfileOnceIntent: AppIntent {
 
     @Parameter(
         title: LocalizedStringResource("Fire at"),
-        description: LocalizedStringResource("Date and time the profile should activate")
+        description: LocalizedStringResource("Date and time the profile should activate"),
+        requestValueDialog: IntentDialog(stringLiteral: String(localized: "When should the profile activate?"))
     ) var fireAt: Date?
 
     @Parameter(
         title: LocalizedStringResource("Hours"),
         description: LocalizedStringResource("Whole hours of activation (0–24)"),
-        default: 1,
-        inclusiveRange: (0, 24)
+        inclusiveRange: (0, 24),
+        requestValueDialog: IntentDialog(stringLiteral: String(localized: "How many whole hours?"))
     ) var hours: Int
 
     @Parameter(
         title: LocalizedStringResource("Minutes"),
         description: LocalizedStringResource("Additional minutes (0–55)"),
-        default: 0,
-        inclusiveRange: (0, 55)
+        inclusiveRange: (0, 55),
+        requestValueDialog: IntentDialog(stringLiteral: String(localized: "How many additional minutes?"))
     ) var minutes: Int
 
     @Parameter(
@@ -54,7 +55,9 @@ struct ScheduleProfileOnceIntent: AppIntent {
     ) var confirmBeforeScheduling: Bool
 
     static var parameterSummary: some ParameterSummary {
-        Summary("Schedule \(\.$profile) at \(\.$fireAt) for \(\.$hours) h \(\.$minutes) min") {
+        Summary("Schedule Profile \(\.$profile) at \(\.$fireAt)") {
+            \.$hours
+            \.$minutes
             \.$scheduleName
             \.$confirmBeforeScheduling
         }

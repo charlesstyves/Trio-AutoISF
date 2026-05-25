@@ -6,10 +6,10 @@ import Foundation
 /// Shortcuts intentionally do not expose indefinite activation: only timed
 /// (auto-reverting) profile activations are allowed via the Shortcuts surface.
 struct ApplyProfileIntent: AppIntent {
-    static var title = LocalizedStringResource("Activate a profile (timed)")
+    static var title = LocalizedStringResource("Activate Profile")
 
     static var description = IntentDescription(
-        .init("Activate a stored profile now for a chosen number of hours. Indefinite activation is not available via Shortcuts.")
+        .init("Activate a stored profile now for a chosen duration. Indefinite activation is not available via Shortcuts.")
     )
 
     @Parameter(
@@ -21,15 +21,15 @@ struct ApplyProfileIntent: AppIntent {
     @Parameter(
         title: LocalizedStringResource("Hours"),
         description: LocalizedStringResource("Whole hours of activation (0–24)"),
-        default: 1,
-        inclusiveRange: (0, 24)
+        inclusiveRange: (0, 24),
+        requestValueDialog: IntentDialog(stringLiteral: String(localized: "How many whole hours?"))
     ) var hours: Int
 
     @Parameter(
         title: LocalizedStringResource("Minutes"),
         description: LocalizedStringResource("Additional minutes (0–55)"),
-        default: 0,
-        inclusiveRange: (0, 55)
+        inclusiveRange: (0, 55),
+        requestValueDialog: IntentDialog(stringLiteral: String(localized: "How many additional minutes?"))
     ) var minutes: Int
 
     @Parameter(
@@ -39,7 +39,9 @@ struct ApplyProfileIntent: AppIntent {
     ) var confirmBeforeApplying: Bool
 
     static var parameterSummary: some ParameterSummary {
-        Summary("Activate \(\.$profile) for \(\.$hours) h \(\.$minutes) min") {
+        Summary("Activate Profile \(\.$profile)") {
+            \.$hours
+            \.$minutes
             \.$confirmBeforeApplying
         }
     }

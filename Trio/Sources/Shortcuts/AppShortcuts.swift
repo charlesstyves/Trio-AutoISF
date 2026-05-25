@@ -76,7 +76,7 @@ struct AppShortcuts: AppShortcutsProvider {
                 "Activate \(.applicationName) profile",
                 "Activates a \(.applicationName) profile for a limited time"
             ],
-            shortTitle: "Activate Profile (timed)",
+            shortTitle: "Activate Profile",
             systemImageName: "person.crop.circle.badge.checkmark"
         )
         AppShortcut(
@@ -85,7 +85,7 @@ struct AppShortcuts: AppShortcutsProvider {
                 "Schedule \(.applicationName) profile",
                 "Schedules a \(.applicationName) profile to activate at a chosen time for a limited duration"
             ],
-            shortTitle: "Schedule Profile (timed)",
+            shortTitle: "Schedule Profile",
             systemImageName: "calendar.badge.clock"
         )
         AppShortcut(
