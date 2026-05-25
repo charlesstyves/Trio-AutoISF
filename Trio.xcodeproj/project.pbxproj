@@ -679,6 +679,14 @@
 		CE7CA34F2A064973004BE681 /* BaseIntentsRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE7CA3442A064973004BE681 /* BaseIntentsRequest.swift */; };
 		CE7CA3502A064973004BE681 /* CancelTempPresetIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE7CA3462A064973004BE681 /* CancelTempPresetIntent.swift */; };
 		CE7CA3512A064973004BE681 /* ApplyTempPresetIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE7CA3472A064973004BE681 /* ApplyTempPresetIntent.swift */; };
+		BF0100000000000000000101 /* ProfileEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0100000000000000000001 /* ProfileEntity.swift */; };
+		BF0100000000000000000102 /* ProfileIntentRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0100000000000000000002 /* ProfileIntentRequest.swift */; };
+		BF0100000000000000000103 /* ApplyProfileIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0100000000000000000003 /* ApplyProfileIntent.swift */; };
+		BF0100000000000000000104 /* ScheduleProfileOnceIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0100000000000000000004 /* ScheduleProfileOnceIntent.swift */; };
+		BF0100000000000000000105 /* CreateCustomTempTargetIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0100000000000000000005 /* CreateCustomTempTargetIntent.swift */; };
+		BF0100000000000000000107 /* ScheduledTempTargetHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0100000000000000000007 /* ScheduledTempTargetHelper.swift */; };
+		BF0100000000000000000108 /* ScheduleTempPresetIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0100000000000000000008 /* ScheduleTempPresetIntent.swift */; };
+		BF0100000000000000000109 /* ScheduleCustomTempTargetIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0100000000000000000009 /* ScheduleCustomTempTargetIntent.swift */; };
 		CE7CA3532A064973004BE681 /* TempPresetIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE7CA3492A064973004BE681 /* TempPresetIntent.swift */; };
 		CE7CA3542A064973004BE681 /* TempPresetsIntentRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE7CA34A2A064973004BE681 /* TempPresetsIntentRequest.swift */; };
 		CE7CA3552A064973004BE681 /* ListStateIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE7CA34C2A064973004BE681 /* ListStateIntent.swift */; };
@@ -1739,6 +1747,14 @@
 		CE7CA3442A064973004BE681 /* BaseIntentsRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BaseIntentsRequest.swift; sourceTree = "<group>"; };
 		CE7CA3462A064973004BE681 /* CancelTempPresetIntent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CancelTempPresetIntent.swift; sourceTree = "<group>"; };
 		CE7CA3472A064973004BE681 /* ApplyTempPresetIntent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplyTempPresetIntent.swift; sourceTree = "<group>"; };
+		BF0100000000000000000001 /* ProfileEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileEntity.swift; sourceTree = "<group>"; };
+		BF0100000000000000000002 /* ProfileIntentRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileIntentRequest.swift; sourceTree = "<group>"; };
+		BF0100000000000000000003 /* ApplyProfileIntent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplyProfileIntent.swift; sourceTree = "<group>"; };
+		BF0100000000000000000004 /* ScheduleProfileOnceIntent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScheduleProfileOnceIntent.swift; sourceTree = "<group>"; };
+		BF0100000000000000000005 /* CreateCustomTempTargetIntent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CreateCustomTempTargetIntent.swift; sourceTree = "<group>"; };
+		BF0100000000000000000007 /* ScheduledTempTargetHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScheduledTempTargetHelper.swift; sourceTree = "<group>"; };
+		BF0100000000000000000008 /* ScheduleTempPresetIntent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScheduleTempPresetIntent.swift; sourceTree = "<group>"; };
+		BF0100000000000000000009 /* ScheduleCustomTempTargetIntent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScheduleCustomTempTargetIntent.swift; sourceTree = "<group>"; };
 		CE7CA3492A064973004BE681 /* TempPresetIntent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TempPresetIntent.swift; sourceTree = "<group>"; };
 		CE7CA34A2A064973004BE681 /* TempPresetsIntentRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TempPresetsIntentRequest.swift; sourceTree = "<group>"; };
 		CE7CA34C2A064973004BE681 /* ListStateIntent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ListStateIntent.swift; sourceTree = "<group>"; };
@@ -4029,6 +4045,7 @@
 			children = (
 				DD4C57A42D73ADDA001BFF2C /* LiveActivity */,
 				118DF7692C5ECBC60067FEB7 /* Override */,
+				BF0100000000000000000006 /* Profile */,
 				110AEDE22C5193D100615CC9 /* Bolus */,
 				CE1856F32ADC4835007E39C7 /* Carbs */,
 				CE7CA3432A064973004BE681 /* AppShortcuts.swift */,
@@ -4039,6 +4056,17 @@
 			path = Shortcuts;
 			sourceTree = "<group>";
 		};
+		BF0100000000000000000006 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				BF0100000000000000000001 /* ProfileEntity.swift */,
+				BF0100000000000000000002 /* ProfileIntentRequest.swift */,
+				BF0100000000000000000003 /* ApplyProfileIntent.swift */,
+				BF0100000000000000000004 /* ScheduleProfileOnceIntent.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
 		CE7CA3452A064973004BE681 /* TempPresets */ = {
 			isa = PBXGroup;
 			children = (
@@ -4046,6 +4074,10 @@
 				CE7CA3462A064973004BE681 /* CancelTempPresetIntent.swift */,
 				CE7CA3492A064973004BE681 /* TempPresetIntent.swift */,
 				CE7CA34A2A064973004BE681 /* TempPresetsIntentRequest.swift */,
+				BF0100000000000000000005 /* CreateCustomTempTargetIntent.swift */,
+				BF0100000000000000000007 /* ScheduledTempTargetHelper.swift */,
+				BF0100000000000000000008 /* ScheduleTempPresetIntent.swift */,
+				BF0100000000000000000009 /* ScheduleCustomTempTargetIntent.swift */,
 			);
 			path = TempPresets;
 			sourceTree = "<group>";
@@ -5591,6 +5623,14 @@
 				389442CB25F65F7100FA1F27 /* NightscoutTreatment.swift in Sources */,
 				DD09D47F2C5986E5003FEA5D /* CalendarEventSettingsStateModel.swift in Sources */,
 				CE7CA3512A064973004BE681 /* ApplyTempPresetIntent.swift in Sources */,
+				BF0100000000000000000101 /* ProfileEntity.swift in Sources */,
+				BF0100000000000000000102 /* ProfileIntentRequest.swift in Sources */,
+				BF0100000000000000000103 /* ApplyProfileIntent.swift in Sources */,
+				BF0100000000000000000104 /* ScheduleProfileOnceIntent.swift in Sources */,
+				BF0100000000000000000105 /* CreateCustomTempTargetIntent.swift in Sources */,
+				BF0100000000000000000107 /* ScheduledTempTargetHelper.swift in Sources */,
+				BF0100000000000000000108 /* ScheduleTempPresetIntent.swift in Sources */,
+				BF0100000000000000000109 /* ScheduleCustomTempTargetIntent.swift in Sources */,
 				FA630397F76B582C8D8681A7 /* BasalProfileEditorProvider.swift in Sources */,
 				DD1745172C54389F00211FAC /* FeatureSettingsView.swift in Sources */,
 				DD3D60312F0377350021A33B /* ExportSetting.swift in Sources */,

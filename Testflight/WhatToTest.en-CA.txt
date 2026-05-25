@@ -1,4 +1,2 @@
 based on Trio dev 0.7.0.18
-SwiftOref
-Profiles & Schedules, Overrides
-OmnipodKit
+checkout new shortcuts for Profiles and scheduling a TT
