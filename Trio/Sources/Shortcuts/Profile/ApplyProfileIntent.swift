@@ -1,12 +1,15 @@
 import AppIntents
 import Foundation
 
-/// Activate a profile immediately, either indefinitely or for a custom number of hours.
+/// Activate a profile immediately for a chosen number of hours.
+///
+/// Shortcuts intentionally do not expose indefinite activation: only timed
+/// (auto-reverting) profile activations are allowed via the Shortcuts surface.
 struct ApplyProfileIntent: AppIntent {
-    static var title = LocalizedStringResource("Activate a profile")
+    static var title = LocalizedStringResource("Activate a profile (timed)")
 
     static var description = IntentDescription(
-        .init("Activate a stored profile now — indefinite or for a chosen number of hours")
+        .init("Activate a stored profile now for a chosen number of hours. Indefinite activation is not available via Shortcuts.")
     )
 
     @Parameter(
@@ -16,17 +19,11 @@ struct ApplyProfileIntent: AppIntent {
     ) var profile: ProfileEntity?
 
     @Parameter(
-        title: LocalizedStringResource("Duration Mode"),
-        description: LocalizedStringResource("Indefinite or custom hours"),
-        default: .indefinite
-    ) var durationMode: ProfileDurationMode
-
-    @Parameter(
         title: LocalizedStringResource("Duration (hours)"),
-        description: LocalizedStringResource("Activation duration in hours (used when Duration Mode is Custom)"),
+        description: LocalizedStringResource("How long the profile should stay active before reverting"),
         default: 1.0,
         inclusiveRange: (0.25, 24.0)
-    ) var customDurationHours: Double
+    ) var durationHours: Double
 
     @Parameter(
         title: LocalizedStringResource("Confirm Before applying"),
@@ -35,17 +32,8 @@ struct ApplyProfileIntent: AppIntent {
     ) var confirmBeforeApplying: Bool
 
     static var parameterSummary: some ParameterSummary {
-        Switch(\ApplyProfileIntent.$durationMode) {
-            Case(.customHours) {
-                Summary("Activate \(\.$profile) for \(\.$customDurationHours) h") {
-                    \.$confirmBeforeApplying
-                }
-            }
-            DefaultCase {
-                Summary("Activate \(\.$profile) indefinitely") {
-                    \.$confirmBeforeApplying
-                }
-            }
+        Summary("Activate \(\.$profile) for \(\.$durationHours) h") {
+            \.$confirmBeforeApplying
         }
     }
 
@@ -61,16 +49,14 @@ struct ApplyProfileIntent: AppIntent {
             )
         }
 
-        let durationMinutes: Int?
-        let descriptor: String
-        switch durationMode {
-        case .indefinite:
-            durationMinutes = nil
-            descriptor = String(localized: "indefinitely")
-        case .customHours:
-            durationMinutes = Int((customDurationHours * 60).rounded())
-            descriptor = String(localized: "for \(formattedHours(customDurationHours)) h")
+        let durationMinutes = Int((durationHours * 60).rounded())
+        guard durationMinutes > 0 else {
+            return .result(
+                dialog: IntentDialog(stringLiteral: String(localized: "Duration must be positive"))
+            )
         }
+
+        let descriptor = String(localized: "for \(formattedHours(durationHours)) h")
 
         if confirmBeforeApplying {
             try await requestConfirmation(

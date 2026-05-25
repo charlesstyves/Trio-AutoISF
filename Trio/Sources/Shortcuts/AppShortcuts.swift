@@ -70,18 +70,18 @@ struct AppShortcuts: AppShortcutsProvider {
             intent: ApplyProfileIntent(),
             phrases: [
                 "Activate \(.applicationName) profile",
-                "Activates a \(.applicationName) profile"
+                "Activates a \(.applicationName) profile for a limited time"
             ],
-            shortTitle: "Activate Profile",
+            shortTitle: "Activate Profile (timed)",
             systemImageName: "person.crop.circle.badge.checkmark"
         )
         AppShortcut(
             intent: ScheduleProfileOnceIntent(),
             phrases: [
                 "Schedule \(.applicationName) profile",
-                "Schedules a \(.applicationName) profile to activate at a chosen time"
+                "Schedules a \(.applicationName) profile to activate at a chosen time for a limited duration"
             ],
-            shortTitle: "Schedule Profile",
+            shortTitle: "Schedule Profile (timed)",
             systemImageName: "calendar.badge.clock"
         )
         AppShortcut(

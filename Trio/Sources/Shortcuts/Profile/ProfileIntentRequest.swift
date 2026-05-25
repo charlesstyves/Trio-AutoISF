@@ -21,36 +21,26 @@ final class ProfileIntentRequest: BaseIntentsRequest {
 
     // MARK: - Immediate activation
 
-    /// Activate a profile right now. Returns `nil` on success or an error message on failure.
-    /// `durationMinutes == nil` means indefinite. Handles the `.needsPumpConfirm` round-trip by
-    /// re-issuing the activation with `confirmedPumpSync: true` — i.e. App Intent confirmation
-    /// covers the pump-sync prompt.
-    @MainActor func activateProfile(id: UUID, durationMinutes: Int?) async -> String? {
-        let firstAttempt = await adaptProvider.activate(
+    /// Activate a profile right now for the given non-zero duration.
+    ///
+    /// Shortcuts only support timed activations, so `durationMinutes` is required.
+    /// Timed activations never trigger pump sync (the active profile's basal
+    /// schedule is restored on revert via the anchor), so `.needsPumpConfirm`
+    /// is not expected — if returned it surfaces as a generic error.
+    ///
+    /// Returns `nil` on success, or an error message on failure.
+    @MainActor func activateProfile(id: UUID, durationMinutes: Int) async -> String? {
+        let outcome = await adaptProvider.activate(
             id: id,
             durationMinutes: durationMinutes,
-            confirmedPumpSync: false,
+            confirmedPumpSync: true,
             skipPumpSync: false
         )
-        switch firstAttempt {
-        case .success:
-            return nil
-        case .needsPumpConfirm:
-            let second = await adaptProvider.activate(
-                id: id,
-                durationMinutes: durationMinutes,
-                confirmedPumpSync: true,
-                skipPumpSync: false
-            )
-            switch second {
-            case .success: return nil
-            case let .failed(msg),
-                 let .pumpSyncFailed(msg): return msg
-            case .needsPumpConfirm: return String(localized: "Pump sync still required")
-            }
+        switch outcome {
+        case .success: return nil
         case let .failed(msg),
-             let .pumpSyncFailed(msg):
-            return msg
+             let .pumpSyncFailed(msg): return msg
+        case .needsPumpConfirm: return String(localized: "Pump confirmation required — activate from the app")
         }
     }
 

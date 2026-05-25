@@ -1,13 +1,17 @@
 import AppIntents
 import Foundation
 
-/// Persist a one-off schedule that will activate a profile at the given date/time.
-/// The existing background `ProfileScheduleFirer` picks it up at fire time.
+/// Persist a one-off schedule that will activate a profile at the given date/time
+/// for a chosen number of hours. The existing background `ProfileScheduleFirer`
+/// picks it up at fire time.
+///
+/// Shortcuts intentionally do not expose indefinite scheduling: only timed
+/// (auto-reverting) profile activations are allowed via the Shortcuts surface.
 struct ScheduleProfileOnceIntent: AppIntent {
-    static var title = LocalizedStringResource("Schedule a profile (once)")
+    static var title = LocalizedStringResource("Schedule a profile (once, timed)")
 
     static var description = IntentDescription(
-        .init("Schedule a profile to activate once at a specific date and time")
+        .init("Schedule a profile to activate once at a specific date/time for a chosen number of hours. Indefinite scheduling is not available via Shortcuts.")
     )
 
     @Parameter(
@@ -22,17 +26,11 @@ struct ScheduleProfileOnceIntent: AppIntent {
     ) var fireAt: Date?
 
     @Parameter(
-        title: LocalizedStringResource("Duration Mode"),
-        description: LocalizedStringResource("Indefinite or custom hours"),
-        default: .indefinite
-    ) var durationMode: ProfileDurationMode
-
-    @Parameter(
         title: LocalizedStringResource("Duration (hours)"),
-        description: LocalizedStringResource("Activation duration in hours (used when Duration Mode is Custom)"),
+        description: LocalizedStringResource("How long the profile should stay active before reverting"),
         default: 1.0,
         inclusiveRange: (0.25, 24.0)
-    ) var customDurationHours: Double
+    ) var durationHours: Double
 
     @Parameter(
         title: LocalizedStringResource("Schedule name"),
@@ -47,19 +45,9 @@ struct ScheduleProfileOnceIntent: AppIntent {
     ) var confirmBeforeScheduling: Bool
 
     static var parameterSummary: some ParameterSummary {
-        Switch(\ScheduleProfileOnceIntent.$durationMode) {
-            Case(.customHours) {
-                Summary("Schedule \(\.$profile) at \(\.$fireAt) for \(\.$customDurationHours) h") {
-                    \.$scheduleName
-                    \.$confirmBeforeScheduling
-                }
-            }
-            DefaultCase {
-                Summary("Schedule \(\.$profile) at \(\.$fireAt) indefinitely") {
-                    \.$scheduleName
-                    \.$confirmBeforeScheduling
-                }
-            }
+        Summary("Schedule \(\.$profile) at \(\.$fireAt) for \(\.$durationHours) h") {
+            \.$scheduleName
+            \.$confirmBeforeScheduling
         }
     }
 
@@ -93,19 +81,16 @@ struct ScheduleProfileOnceIntent: AppIntent {
             )
         }
 
-        let duration: ProfileSchedule.Duration
-        let descriptor: String
-        switch durationMode {
-        case .indefinite:
-            duration = .indefinite
-            descriptor = String(localized: "indefinitely")
-        case .customHours:
-            let minutes = Int((customDurationHours * 60).rounded())
-            duration = .minutes(minutes)
-            descriptor = String(localized: "for \(formattedHours(customDurationHours)) h")
+        let durationMinutes = Int((durationHours * 60).rounded())
+        guard durationMinutes > 0 else {
+            return .result(
+                dialog: IntentDialog(stringLiteral: String(localized: "Duration must be positive"))
+            )
         }
 
+        let descriptor = String(localized: "for \(formattedHours(durationHours)) h")
         let prettyDate = DateFormatter.localizedString(from: resolvedFireAt, dateStyle: .short, timeStyle: .short)
+
         if confirmBeforeScheduling {
             try await requestConfirmation(
                 result: .result(
@@ -122,7 +107,7 @@ struct ScheduleProfileOnceIntent: AppIntent {
         let success = await request.scheduleOnce(
             profileID: target.id,
             fireAt: resolvedFireAt,
-            duration: duration,
+            duration: .minutes(durationMinutes),
             name: trimmedName.isEmpty ? nil : trimmedName
         )
 

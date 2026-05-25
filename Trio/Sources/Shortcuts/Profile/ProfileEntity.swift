@@ -24,16 +24,3 @@ struct ProfileEntityQuery: EntityQuery {
         await ProfileIntentRequest().fetchAllProfiles()
     }
 }
-
-/// How long a profile activation should run.
-enum ProfileDurationMode: String, AppEnum {
-    case indefinite
-    case customHours
-
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Duration Mode"
-
-    static var caseDisplayRepresentations: [ProfileDurationMode: DisplayRepresentation] = [
-        .indefinite: "Indefinite",
-        .customHours: "Custom (hours)"
-    ]
-}
