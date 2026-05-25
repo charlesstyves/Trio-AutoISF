@@ -30,15 +30,10 @@ struct AppShortcuts: AppShortcutsProvider {
             shortTitle: "Schedule TT Preset",
             systemImageName: "calendar.badge.clock"
         )
-        AppShortcut(
-            intent: ListStateIntent(),
-            phrases: [
-                "List \(.applicationName) state",
-                "\(.applicationName) state"
-            ],
-            shortTitle: "List State",
-            systemImageName: "list.bullet.circle"
-        )
+        // ListStateIntent and RestartLiveActivityIntent are still AppIntents and
+        // remain available in the Shortcuts app's action picker — they're just
+        // not promoted to Trio's gallery section, so we stay under Apple's
+        // 10-AppShortcut-per-app limit.
         AppShortcut(
             intent: AddCarbPresetIntent(),
             phrases: [
@@ -110,15 +105,6 @@ struct AppShortcuts: AppShortcutsProvider {
             ],
             shortTitle: "Schedule TT",
             systemImageName: "calendar.badge.plus"
-        )
-        AppShortcut(
-            intent: RestartLiveActivityIntent(),
-            phrases: [
-                "Restart \(.applicationName) Live Activity",
-                "Restarts the Live Activity for \(.applicationName)"
-            ],
-            shortTitle: "Restart Live Activity",
-            systemImageName: "arrow.clockwise.circle.fill"
         )
     }
 }
