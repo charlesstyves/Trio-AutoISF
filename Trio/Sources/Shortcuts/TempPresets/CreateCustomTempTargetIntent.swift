@@ -230,11 +230,16 @@ final class CustomTempTargetIntentRequest: BaseIntentsRequest {
         }
     }
 
-    // MARK: - Scheduled path (store-only)
+    // MARK: - Scheduled path (store + detached wait-and-activate)
 
-    /// Persist a scheduled row and return immediately. No waiting, no JSON
-    /// push to oref — the in-app scheduler is responsible for activation
-    /// when `startTime` arrives.
+    /// Persist the scheduled row and detach the wait+activate task, then
+    /// return immediately. The detached task mirrors the post-persist half of
+    /// `Adjustments.StateModel.saveScheduledTempTarget`: sleep until startTime,
+    /// disable any actives, flip enabled = true, push JSON to oref.
+    ///
+    /// The detached task lives in the Trio app process for the same duration
+    /// the in-app Add-TT submission would (i.e. as long as iOS keeps the
+    /// process resident). No new lifecycle behaviour vs. the in-app form.
     @MainActor private func storeScheduled(
         name: String,
         targetMgdl: Decimal,
@@ -250,13 +255,80 @@ final class CustomTempTargetIntentRequest: BaseIntentsRequest {
         )
         do {
             try await tempTargetsStorage.storeTempTarget(tempTarget: scheduledTT)
-            return true
         } catch {
             debug(
                 .default,
                 "\(DebuggingIdentifiers.failed) Failed to store scheduled TempTarget: \(error)"
             )
             return false
+        }
+
+        // Detached task — survives perform() returning. Same shape as the
+        // tail of saveScheduledTempTarget() in AdjustmentsStateModel. We
+        // capture self strongly: there's no retain cycle (the intent
+        // request is throw-away) and we need self for the storage,
+        // settingsManager, and viewContext references.
+        Task.detached {
+            await Self.waitUntilDate(startTime)
+            await self.activateScheduled(
+                name: name,
+                targetMgdl: targetMgdl,
+                durationMinutes: durationMinutes,
+                startTime: startTime
+            )
+        }
+        return true
+    }
+
+    @MainActor private func activateScheduled(
+        name: String,
+        targetMgdl: Decimal,
+        durationMinutes: Decimal,
+        startTime: Date
+    ) async {
+        await disableAllActiveTempTargets()
+        do {
+            let ids = try await tempTargetsStorage.fetchScheduledTempTarget(for: startTime)
+            guard let firstID = ids.first,
+                  let row = try viewContext.existingObject(with: firstID) as? TempTargetStored
+            else {
+                debug(
+                    .default,
+                    "\(DebuggingIdentifiers.failed) Scheduled TempTarget not found for \(startTime)"
+                )
+                return
+            }
+            row.enabled = true
+            row.isUploadedToNS = false
+            if viewContext.hasChanges {
+                try viewContext.save()
+            }
+            let liveTT = makeTempTarget(
+                name: name,
+                createdAt: startTime,
+                targetMgdl: targetMgdl,
+                durationMinutes: durationMinutes,
+                enabled: true
+            )
+            tempTargetsStorage.saveTempTargetsToStorage([liveTT])
+            Foundation.NotificationCenter.default.post(
+                name: .willUpdateTempTargetConfiguration,
+                object: nil
+            )
+        } catch {
+            debug(
+                .default,
+                "\(DebuggingIdentifiers.failed) Failed to activate scheduled TempTarget: \(error)"
+            )
+        }
+    }
+
+    /// Sleep until `targetDate`. Mirrors `Adjustments.StateModel.waitUntilDate`.
+    private static func waitUntilDate(_ targetDate: Date) async {
+        while Date() < targetDate {
+            let delta = targetDate.timeIntervalSince(Date())
+            let sleepSeconds = min(delta, 60.0)
+            try? await Task.sleep(nanoseconds: UInt64(sleepSeconds * 1_000_000_000))
         }
     }
 
