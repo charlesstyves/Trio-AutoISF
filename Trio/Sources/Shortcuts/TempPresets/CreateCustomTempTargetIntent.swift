@@ -3,16 +3,32 @@ import CoreData
 import Foundation
 import UIKit
 
+/// Start-time mode for a custom Temp Target shortcut.
+enum TempTargetStartMode: String, AppEnum {
+    case now
+    case scheduled
+
+    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Start"
+
+    static var caseDisplayRepresentations: [TempTargetStartMode: DisplayRepresentation] = [
+        .now: "Now (activate on submit)",
+        .scheduled: "Scheduled (pick date & time)"
+    ]
+}
+
 /// Create and activate a fully custom Temp Target — no preset selection required.
 /// Target value is interpreted in the user's configured glucose unit (mg/dL or mmol/L).
 ///
-/// `name` and `startTime` are mandatory. The start time must be a date+time within
-/// the next 24 hours (now ... now + 24 h).
+/// Two start modes:
+/// - **Now**: submitting the shortcut activates the Temp Target immediately.
+/// - **Scheduled**: pick a date+time within the next 24 h. The TT is stored as
+///   scheduled and activated when the time arrives (same flow as the in-app
+///   Add TT form).
 struct CreateCustomTempTargetIntent: AppIntent {
     static var title: LocalizedStringResource = "Create a Temporary Target"
 
     static var description = IntentDescription(
-        "Create and activate a Temporary Target with name, target value, duration and start time (start within the next 24 h)"
+        "Create and activate a Temporary Target with name, target value, duration. Activate now on submit, or schedule for a date+time within the next 24 h."
     )
 
     @Parameter(
@@ -35,10 +51,16 @@ struct CreateCustomTempTargetIntent: AppIntent {
     ) var durationMinutes: Int
 
     @Parameter(
+        title: "Start",
+        description: "Activate immediately on submit, or schedule for a future time",
+        default: .now
+    ) var start: TempTargetStartMode
+
+    @Parameter(
         title: "Start time",
-        description: "When the Temp Target begins. Must be within the next 24 hours.",
+        description: "Date & time the Temp Target should begin (within the next 24 hours). Only used when Start is Scheduled.",
         requestValueDialog: IntentDialog(stringLiteral: String(localized: "When should the Temp Target start?"))
-    ) var startTime: Date
+    ) var startTime: Date?
 
     @Parameter(
         title: "Confirm Before applying",
@@ -47,11 +69,21 @@ struct CreateCustomTempTargetIntent: AppIntent {
     ) var confirmBeforeApplying: Bool
 
     static var parameterSummary: some ParameterSummary {
-        Summary("Create Temporary Target \(\.$name)") {
-            \.$targetValue
-            \.$durationMinutes
-            \.$startTime
-            \.$confirmBeforeApplying
+        Switch(\CreateCustomTempTargetIntent.$start) {
+            Case(.scheduled) {
+                Summary("Schedule Temporary Target \(\.$name) at \(\.$startTime)") {
+                    \.$targetValue
+                    \.$durationMinutes
+                    \.$confirmBeforeApplying
+                }
+            }
+            DefaultCase {
+                Summary("Create Temporary Target \(\.$name) now") {
+                    \.$targetValue
+                    \.$durationMinutes
+                    \.$confirmBeforeApplying
+                }
+            }
         }
     }
 
@@ -71,36 +103,59 @@ struct CreateCustomTempTargetIntent: AppIntent {
             )
         }
 
-        // Start time must lie within now ... now + 24 h (small grace window for
-        // clock skew between Shortcuts execution and this perform() call).
-        let now = Date()
-        let grace: TimeInterval = 60
-        let lowerBound = now.addingTimeInterval(-grace)
-        let upperBound = now.addingTimeInterval(24 * 3600)
-        guard startTime >= lowerBound, startTime <= upperBound else {
-            return .result(
-                dialog: IntentDialog(
-                    stringLiteral: String(
-                        localized: "Start time must be within the next 24 hours (now until +24 h)"
+        // Resolve start time based on the chosen mode.
+        let resolvedStart: Date
+        switch start {
+        case .now:
+            resolvedStart = Date()
+        case .scheduled:
+            let picked: Date
+            if let startTime = startTime {
+                picked = startTime
+            } else {
+                picked = try await $startTime.requestValue(
+                    IntentDialog(stringLiteral: String(localized: "When should the Temp Target start?"))
+                )
+            }
+            // Scheduled time must lie within now ... now + 24 h (small grace
+            // window for clock skew between Shortcuts execution and this
+            // perform() call). Past or beyond-24h times are rejected.
+            let now = Date()
+            let grace: TimeInterval = 60
+            let lowerBound = now.addingTimeInterval(-grace)
+            let upperBound = now.addingTimeInterval(24 * 3600)
+            guard picked >= lowerBound, picked <= upperBound else {
+                return .result(
+                    dialog: IntentDialog(
+                        stringLiteral: String(
+                            localized: "Start time must be within the next 24 hours (now until +24 h)"
+                        )
                     )
                 )
-            )
+            }
+            resolvedStart = picked
         }
 
         // Convert from user unit to mg/dL for storage.
         let targetMgdl = request.targetInMgdl(entered: Decimal(targetValue))
 
         if confirmBeforeApplying {
-            let prettyStart = DateFormatter.localizedString(from: startTime, dateStyle: .short, timeStyle: .short)
-            try await requestConfirmation(
-                result: .result(
-                    dialog: IntentDialog(
-                        stringLiteral: String(
-                            localized:
-                            "Confirm Temp Target '\(trimmedName)': \(formatted(targetValue)) for \(durationMinutes) min starting \(prettyStart)"
-                        )
-                    )
+            let confirmDialog: String
+            switch start {
+            case .now:
+                confirmDialog = String(
+                    localized:
+                    "Confirm Temp Target '\(trimmedName)': \(formatted(targetValue)) for \(durationMinutes) min, now"
                 )
+            case .scheduled:
+                let prettyStart = DateFormatter.localizedString(from: resolvedStart, dateStyle: .short, timeStyle: .short)
+                confirmDialog = String(
+                    localized:
+                    "Confirm Temp Target '\(trimmedName)': \(formatted(targetValue)) for \(durationMinutes) min starting \(prettyStart)"
+                )
+            }
+            try await requestConfirmation(
+                result: .result(dialog: IntentDialog(stringLiteral: confirmDialog))
             )
         }
 
@@ -108,22 +163,19 @@ struct CreateCustomTempTargetIntent: AppIntent {
             name: trimmedName,
             targetMgdl: targetMgdl,
             durationMinutes: Decimal(durationMinutes),
-            startTime: startTime
+            startTime: resolvedStart
         )
 
-        if success {
-            let now = Date()
-            let wasScheduled = startTime > now.addingTimeInterval(2)
-            if wasScheduled {
-                let prettyStart = DateFormatter.localizedString(from: startTime, dateStyle: .short, timeStyle: .short)
-                return .result(
-                    dialog: IntentDialog(
-                        stringLiteral: String(
-                            localized: "Temp Target '\(trimmedName)' scheduled for \(prettyStart), \(durationMinutes) min"
-                        )
-                    )
+        guard success else {
+            return .result(
+                dialog: IntentDialog(
+                    stringLiteral: String(localized: "Temp Target '\(trimmedName)' failed")
                 )
-            }
+            )
+        }
+
+        switch start {
+        case .now:
             return .result(
                 dialog: IntentDialog(
                     stringLiteral: String(
@@ -131,10 +183,13 @@ struct CreateCustomTempTargetIntent: AppIntent {
                     )
                 )
             )
-        } else {
+        case .scheduled:
+            let prettyStart = DateFormatter.localizedString(from: resolvedStart, dateStyle: .short, timeStyle: .short)
             return .result(
                 dialog: IntentDialog(
-                    stringLiteral: String(localized: "Temp Target '\(trimmedName)' failed")
+                    stringLiteral: String(
+                        localized: "Temp Target '\(trimmedName)' scheduled for \(prettyStart), \(durationMinutes) min"
+                    )
                 )
             )
         }
