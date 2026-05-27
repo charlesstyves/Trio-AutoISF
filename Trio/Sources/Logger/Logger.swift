@@ -141,6 +141,7 @@ final class Logger {
     static let watchManager = Logger(category: .watchManager, reporter: baseReporter)
     static let coreData = Logger(category: .coreData, reporter: baseReporter)
     static let storage = Logger(category: .storage, reporter: baseReporter)
+    static let telemetry = Logger(category: .telemetry, reporter: baseReporter)
 
     enum Category: String {
         case `default`
@@ -156,6 +157,7 @@ final class Logger {
         case watchManager
         case coreData
         case storage
+        case telemetry
 
         var name: String {
             rawValue.capitalizingFirstLetter()
@@ -176,6 +178,7 @@ final class Logger {
             case .watchManager: return .watchManager
             case .coreData: return .coreData
             case .storage: return .storage
+            case .telemetry: return .telemetry
             }
         }
 
@@ -194,6 +197,7 @@ final class Logger {
                  .remoteControl,
                  .service,
                  .storage,
+                 .telemetry,
                  .watchManager:
                 return OSLog(subsystem: subsystem, category: name)
             }
