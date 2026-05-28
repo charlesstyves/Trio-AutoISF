@@ -8,16 +8,22 @@ struct SettingItem: Identifiable {
     let view: Screen
     let searchContents: [String]?
     let path: [String]?
+    /// Maps a `searchContents` string to the exact label used in `SettingInputSection`
+    /// when the two differ. Entries whose searchContents string already matches the
+    /// label don't need an entry here.
+    let scrollTargetLabels: [String: String]?
 
     init(
         title: String,
         view: Screen,
         searchContents: [String]? = nil,
+        scrollTargetLabels: [String: String]? = nil,
         path: [String]? = nil
     ) {
         self.title = title
         self.view = view
         self.searchContents = searchContents
+        self.scrollTargetLabels = scrollTargetLabels
         self.path = path
     }
 }
@@ -26,6 +32,11 @@ struct FilteredSettingItem: Identifiable {
     let id = UUID()
     let settingItem: SettingItem
     let matchedContent: String
+    /// The label string used as the scroll/highlight target in the destination view.
+    /// Falls back to `matchedContent` when no explicit mapping exists.
+    var scrollLabel: String {
+        settingItem.scrollTargetLabels?[matchedContent] ?? matchedContent
+    }
 }
 
 enum SettingItems {
@@ -230,7 +241,21 @@ enum SettingItems {
                 "acceleration",
                 "SMB Delivery Ratio",
                 "weights",
-                "factors"
+                "factors",
+                "Enable Autosens",
+                "AutoISF IOB Threshold Percent",
+                "AutoISF Max",
+                "AutoISF Min",
+                "Enable BG Acceleration",
+                "ISF Weight for Higher BGs",
+                "ISF Weight for Lower BGs",
+                "ISF Weight for Postprandial BG Rise",
+                "DuraISF Weight",
+                "SMB DeliveryRatio (fixed)",
+                "SMB DeliveryRatio BG Range",
+                "SMB DeliveryRatio BG Minimum",
+                "SMB DeliveryRatio BG Maximum",
+                "SMB Max RangeExtension"
             ],
             path: ["Algorithm", "autoISF"]
         ),
@@ -238,7 +263,14 @@ enum SettingItems {
             title: "AIMI B30",
             view: .B30Conf,
             searchContents: [
-                "Eating Soon"
+                "Eating Soon",
+                "Activate B30 EatingSoon",
+                "TempTarget Level for B30",
+                "Minimum Start Bolus Size",
+                "Duration of Increased B30 Basal Rate",
+                "B30 Basal Rate Increase Factor",
+                "Upper BG Limit for B30",
+                "Upper Delta Limit for B30"
             ],
             path: ["Algorithm", "AIMI B30"]
         ),
@@ -246,7 +278,12 @@ enum SettingItems {
             title: "Keto Protection",
             view: .KetoConfig,
             searchContents: [
-                "Acidosis"
+                "Acidosis",
+                "Activate KetoProtection",
+                "Variable Strategy",
+                "Safety TBR in %",
+                "Enable Absolute Safety TBR",
+                "Absolute Safety TBR"
             ],
             path: ["Algorithm", "Keto Protection"]
         ),
@@ -333,6 +370,17 @@ enum SettingItems {
                 "Time in Normoglycemia (TING)",
                 "Require Adjustments Confirmation"
             ],
+            scrollTargetLabels: [
+                "Show Y-Axis Grid Lines": "Show X-Axis Grid Lines",
+                "High Threshold": "Low Threshold",
+                "Cone": "Forecast Display Type",
+                "Lines": "Forecast Display Type",
+                "Dark Mode": "Appearance",
+                "Light Mode": "Appearance",
+                "Dark Scheme": "Appearance",
+                "Light Scheme": "Appearance",
+                "Carbs Required Threshold": "Show Carbs Required Badge"
+            ],
             path: ["Features", "User Interface"]
         ),
         SettingItem(
@@ -365,7 +413,11 @@ enum SettingItems {
                 "Low Glucose Alarm Limit",
                 "High Glucose Alarm Limit"
             ],
-            path: ["Notifications", "Trio Notifications"] // Glucose
+            scrollTargetLabels: [
+                "Low Glucose Alarm Limit": "Glucose Notifications",
+                "High Glucose Alarm Limit": "Glucose Notifications"
+            ],
+            path: ["Notifications", "Trio Notifications"]
         ),
         SettingItem(
             title: "Live Activity",

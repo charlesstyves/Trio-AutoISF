@@ -208,6 +208,7 @@ extension CGMSettings {
                 .onAppear(perform: configureView)
                 .navigationTitle("CGM")
                 .navigationBarTitleDisplayMode(.automatic)
+                .settingsHighlightScroll()
                 .navigationBarItems(leading: displayClose ? Button("Close", action: state.hideModal) : nil)
                 .sheet(isPresented: $state.shouldDisplayCGMSetupSheet) {
                     switch state.cgmCurrent.type {

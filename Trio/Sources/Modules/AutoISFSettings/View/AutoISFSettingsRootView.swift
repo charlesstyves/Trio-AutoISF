@@ -437,6 +437,7 @@ extension AutoISFSettings {
             .onAppear(perform: configureView)
             .navigationTitle("autoISF Settings")
             .navigationBarTitleDisplayMode(.automatic)
+            .settingsHighlightScroll()
         }
     }
 }

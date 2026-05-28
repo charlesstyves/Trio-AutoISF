@@ -179,6 +179,7 @@ extension B30Settings {
             .onAppear(perform: configureView)
             .navigationTitle("AIMI B30 Settings")
             .navigationBarTitleDisplayMode(.automatic)
+            .settingsHighlightScroll()
         }
     }
 }

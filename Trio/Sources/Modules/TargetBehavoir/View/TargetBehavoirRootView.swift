@@ -138,6 +138,7 @@ extension TargetBehavoir {
             }
             .navigationTitle("Target Behavior")
             .navigationBarTitleDisplayMode(.automatic)
+            .settingsHighlightScroll()
         }
 
         private var effectiveLowTTLowersSensBinding: Binding<Bool> {

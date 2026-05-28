@@ -176,6 +176,7 @@ extension KetoProtectSettings {
             .onAppear(perform: configureView)
             .navigationTitle("KetoProtect Settings")
             .navigationBarTitleDisplayMode(.automatic)
+            .settingsHighlightScroll()
         }
     }
 }

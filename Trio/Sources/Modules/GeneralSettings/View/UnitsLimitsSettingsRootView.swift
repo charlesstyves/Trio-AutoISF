@@ -268,6 +268,7 @@ extension UnitsLimitsSettings {
             .onAppear(perform: configureView)
             .navigationTitle("Units and Limits")
             .navigationBarTitleDisplayMode(.automatic)
+            .settingsHighlightScroll()
             .onDisappear {
                 state.saveIfChanged()
             }

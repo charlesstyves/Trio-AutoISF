@@ -633,6 +633,7 @@ extension UserInterfaceSettings {
             .onAppear(perform: configureView)
             .navigationBarTitle("User Interface")
             .navigationBarTitleDisplayMode(.automatic)
+            .settingsHighlightScroll()
         }
     }
 }

@@ -198,6 +198,7 @@ extension AutosensSettings {
             .onAppear(perform: configureView)
             .navigationTitle("Autosens")
             .navigationBarTitleDisplayMode(.automatic)
+            .settingsHighlightScroll()
         }
     }
 }
