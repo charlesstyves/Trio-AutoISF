@@ -1,2 +1,2 @@
-based on Trio dev 0.7.0.18
+based on Trio dev 0.8.0
 checkout new shortcuts for Profiles and scheduling a TT
