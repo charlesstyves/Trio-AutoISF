@@ -24,6 +24,12 @@ extension Main {
         @Environment(\.colorScheme) var colorScheme
         @Environment(AppState.self) var appState
 
+        /// Default `SettingsSearchHighlight` so any `SettingInputSection` rendered outside the
+        /// Settings tab (e.g. in Adjustments / AdaptProfile modals) finds an instance in the
+        /// environment instead of tripping SwiftUI's missing-Observable assertion. The Settings
+        /// tab injects its own instance, which overrides this one inside that subtree.
+        @State private var defaultSettingsSearchHighlight = SettingsSearchHighlight()
+
         var body: some View {
             router.view(for: .home)
                 .sheet(item: $state.modal) { modal in
@@ -36,6 +42,7 @@ extension Main {
 
                 .onAppear(perform: configureView)
                 .scrollContentBackground(.hidden).background(appState.trioBackgroundColor(for: colorScheme))
+                .environment(defaultSettingsSearchHighlight)
         }
     }
 }

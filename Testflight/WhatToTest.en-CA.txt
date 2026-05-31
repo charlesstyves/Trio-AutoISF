@@ -1,2 +1,3 @@
 based on Trio dev 0.8.0
 checkout new shortcuts for Profiles and scheduling a TT
+fix crash in Add profile du to settings search
