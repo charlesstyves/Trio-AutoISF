@@ -25,7 +25,7 @@ final class TelemetryClient: Injectable {
 
     // MARK: if you fork Trio and keep telemetry enabled, please change the name here
     // so that we can distinguish forks from mainline Trio builds in our telemetry.
-    private static let telemetryAppName: String = "Trio"
+    private static let telemetryAppName: String = "Tai"
 
     /// Effective base URL: respects the debug override in
     /// `PropertyPersistentFlags.telemetryDebugServerURL`, then falls back to
