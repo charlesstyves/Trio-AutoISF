@@ -24,6 +24,7 @@ final class TelemetryClient: Injectable {
     private static let productionBaseURL: URL? = nil
 
     // MARK: if you fork Trio and keep telemetry enabled, please change the name here
+
     // so that we can distinguish forks from mainline Trio builds in our telemetry.
     private static let telemetryAppName: String = "Tai"
 
