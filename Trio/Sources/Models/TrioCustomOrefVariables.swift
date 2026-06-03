@@ -21,6 +21,21 @@ struct TrioCustomOrefVariables: JSON, Equatable {
     var end: Decimal
     var smbMinutes: Decimal
     var uamMinutes: Decimal
+    // AutoISF profile injection overrides (nil = use profile default)
+    var overrideAutoISFmin: Decimal?
+    var overrideAutoISFmax: Decimal?
+    var overrideAutoISFhourlyChange: Decimal?
+    var overrideHigherISFrangeWeight: Decimal?
+    var overrideLowerISFrangeWeight: Decimal?
+    var overridePostMealISFweight: Decimal?
+    var overrideBgAccelISFweight: Decimal?
+    var overrideBgBrakeISFweight: Decimal?
+    var overrideIobThresholdPercent: Decimal?
+    var overrideSmbDeliveryRatio: Decimal?
+    var overrideSmbDeliveryRatioBGrange: Decimal?
+    var overrideSmbDeliveryRatioMin: Decimal?
+    var overrideSmbDeliveryRatioMax: Decimal?
+    var overrideEnableBGacceleration: Bool?
 
     init(
         average_total_data: Decimal,
@@ -43,6 +58,20 @@ struct TrioCustomOrefVariables: JSON, Equatable {
         end: Decimal,
         smbMinutes: Decimal,
         uamMinutes: Decimal,
+        overrideAutoISFmin: Decimal? = nil,
+        overrideAutoISFmax: Decimal? = nil,
+        overrideAutoISFhourlyChange: Decimal? = nil,
+        overrideHigherISFrangeWeight: Decimal? = nil,
+        overrideLowerISFrangeWeight: Decimal? = nil,
+        overridePostMealISFweight: Decimal? = nil,
+        overrideBgAccelISFweight: Decimal? = nil,
+        overrideBgBrakeISFweight: Decimal? = nil,
+        overrideIobThresholdPercent: Decimal? = nil,
+        overrideSmbDeliveryRatio: Decimal? = nil,
+        overrideSmbDeliveryRatioBGrange: Decimal? = nil,
+        overrideSmbDeliveryRatioMin: Decimal? = nil,
+        overrideSmbDeliveryRatioMax: Decimal? = nil,
+        overrideEnableBGacceleration: Bool? = nil
     ) {
         self.average_total_data = average_total_data
         self.weightedAverage = weightedAverage
@@ -64,6 +93,20 @@ struct TrioCustomOrefVariables: JSON, Equatable {
         self.end = end
         self.smbMinutes = smbMinutes
         self.uamMinutes = uamMinutes
+        self.overrideAutoISFmin = overrideAutoISFmin
+        self.overrideAutoISFmax = overrideAutoISFmax
+        self.overrideAutoISFhourlyChange = overrideAutoISFhourlyChange
+        self.overrideHigherISFrangeWeight = overrideHigherISFrangeWeight
+        self.overrideLowerISFrangeWeight = overrideLowerISFrangeWeight
+        self.overridePostMealISFweight = overridePostMealISFweight
+        self.overrideBgAccelISFweight = overrideBgAccelISFweight
+        self.overrideBgBrakeISFweight = overrideBgBrakeISFweight
+        self.overrideIobThresholdPercent = overrideIobThresholdPercent
+        self.overrideSmbDeliveryRatio = overrideSmbDeliveryRatio
+        self.overrideSmbDeliveryRatioBGrange = overrideSmbDeliveryRatioBGrange
+        self.overrideSmbDeliveryRatioMin = overrideSmbDeliveryRatioMin
+        self.overrideSmbDeliveryRatioMax = overrideSmbDeliveryRatioMax
+        self.overrideEnableBGacceleration = overrideEnableBGacceleration
     }
 }
 
@@ -89,5 +132,19 @@ extension TrioCustomOrefVariables {
         case end
         case smbMinutes
         case uamMinutes
+        case overrideAutoISFmin
+        case overrideAutoISFmax
+        case overrideAutoISFhourlyChange
+        case overrideHigherISFrangeWeight
+        case overrideLowerISFrangeWeight
+        case overridePostMealISFweight
+        case overrideBgAccelISFweight
+        case overrideBgBrakeISFweight
+        case overrideIobThresholdPercent
+        case overrideSmbDeliveryRatio
+        case overrideSmbDeliveryRatioBGrange
+        case overrideSmbDeliveryRatioMin
+        case overrideSmbDeliveryRatioMax
+        case overrideEnableBGacceleration
     }
 }

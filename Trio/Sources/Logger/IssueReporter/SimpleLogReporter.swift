@@ -1,7 +1,10 @@
 import Foundation
+import os.log
 import SwiftDate
 
 final class SimpleLogReporter: IssueReporter {
+    // Prevent infinite recursion by never calling debug() from within this reporter
+    private static let errorLog = OSLog(subsystem: "org.nightscout.trio", category: "SimpleLogReporter")
     private let fileManager = FileManager.default
 
     // Constants for maintenance
@@ -75,7 +78,13 @@ final class SimpleLogReporter: IssueReporter {
             do {
                 try fileManager.createDirectory(at: logsDir, withIntermediateDirectories: true)
             } catch {
-                debug(.service, "Failed to create logs directory: \(error.localizedDescription)")
+                // Never call debug() from within the reporter to prevent infinite recursion
+                os_log(
+                    "Failed to create logs directory: %{public}@",
+                    log: Self.errorLog,
+                    type: .error,
+                    error.localizedDescription
+                )
                 return
             }
         }
@@ -92,14 +101,22 @@ final class SimpleLogReporter: IssueReporter {
         // Append the log entry using ISO8601 formatter
         let logEntry = "\(Formatter.iso8601.string(from: now)) [\(category)] \(file.file) - \(function) - \(line) - \(message)\n"
         guard let data = logEntry.data(using: .utf8) else {
-            debug(.service, "Failed to encode log entry as UTF-8")
+            // Never call debug() from within the reporter to prevent infinite recursion
+            os_log("Failed to encode log entry as UTF-8", log: Self.errorLog, type: .error)
             return
         }
 
         do {
             try data.append(fileURL: logFileURL)
         } catch {
-            debug(.service, "Failed to append log entry to \(logFileURL.lastPathComponent): \(error.localizedDescription)")
+            // Never call debug() from within the reporter to prevent infinite recursion
+            os_log(
+                "Failed to append log entry to %{public}@: %{public}@",
+                log: Self.errorLog,
+                type: .error,
+                logFileURL.lastPathComponent,
+                error.localizedDescription
+            )
         }
     }
 
@@ -108,7 +125,8 @@ final class SimpleLogReporter: IssueReporter {
         let logFileURL = SimpleLogReporter.logFileURL(name: logName)
         let success = fileManager.createFile(atPath: logFileURL.path, contents: nil, attributes: [.creationDate: date])
         if !success {
-            debug(.service, "Failed to create log file: \(logFileURL.lastPathComponent)")
+            // Never call debug() from within the reporter to prevent infinite recursion
+            os_log("Failed to create log file: %{public}@", log: Self.errorLog, type: .error, logFileURL.lastPathComponent)
         }
     }
 
@@ -118,7 +136,7 @@ final class SimpleLogReporter: IssueReporter {
         do {
             return try Disk.url(for: nil, in: .documents)
         } catch {
-            debug(.service, "Failed to get documents directory: \(error.localizedDescription)")
+            os_log("Failed to get documents directory: %{public}@", log: Self.errorLog, type: .error, error.localizedDescription)
             // Fallback to FileManager approach
             let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
             return paths[0]
@@ -129,7 +147,12 @@ final class SimpleLogReporter: IssueReporter {
         do {
             return try Disk.AppDirectoryURL.logs()
         } catch {
-            debug(.service, "Failed to get logs directory via Disk: \(error.localizedDescription)")
+            os_log(
+                "Failed to get logs directory via Disk: %{public}@",
+                log: Self.errorLog,
+                type: .error,
+                error.localizedDescription
+            )
             // Fallback to manual construction
             return documentsDirectory.appendingPathComponent("logs", isDirectory: true)
         }
@@ -139,7 +162,12 @@ final class SimpleLogReporter: IssueReporter {
         do {
             return try Disk.AppDirectoryURL.logFile(name: name)
         } catch {
-            debug(.service, "Failed to get log file URL via Disk: \(error.localizedDescription)")
+            os_log(
+                "Failed to get log file URL via Disk: %{public}@",
+                log: Self.errorLog,
+                type: .error,
+                error.localizedDescription
+            )
             // Fallback to manual construction
             return logsDirectory.appendingPathComponent("\(name).log")
         }
@@ -164,7 +192,12 @@ final class SimpleLogReporter: IssueReporter {
         do {
             return try Disk.AppDirectoryURL.watchLogFile(name: name)
         } catch {
-            debug(.service, "Failed to get watch log file URL via Disk: \(error.localizedDescription)")
+            os_log(
+                "Failed to get watch log file URL via Disk: %{public}@",
+                log: Self.errorLog,
+                type: .error,
+                error.localizedDescription
+            )
             // Fallback to manual construction
             return logsDirectory.appendingPathComponent("watch_\(name).log")
         }
@@ -187,7 +220,12 @@ final class SimpleLogReporter: IssueReporter {
             do {
                 try fileManager.createDirectory(at: logsDir, withIntermediateDirectories: true)
             } catch {
-                debug(.service, "Failed to create logs directory for watch logs: \(error.localizedDescription)")
+                os_log(
+                    "Failed to create logs directory for watch logs: %{public}@",
+                    log: Self.errorLog,
+                    type: .error,
+                    error.localizedDescription
+                )
                 return
             }
         }
@@ -206,7 +244,12 @@ final class SimpleLogReporter: IssueReporter {
                     needNewFile = false
                 }
             } catch {
-                debug(.service, "Failed to get watch log file attributes: \(error.localizedDescription)")
+                os_log(
+                    "Failed to get watch log file attributes: %{public}@",
+                    log: Self.errorLog,
+                    type: .error,
+                    error.localizedDescription
+                )
                 needNewFile = true // Default to creating new file if we can't check
             }
         } else {
@@ -216,7 +259,12 @@ final class SimpleLogReporter: IssueReporter {
         if needNewFile {
             let success = fileManager.createFile(atPath: logFileURL.path, contents: nil, attributes: [.creationDate: startOfDay])
             if !success {
-                debug(.service, "Failed to create watch log file: \(logFileURL.lastPathComponent)")
+                os_log(
+                    "Failed to create watch log file: %{public}@",
+                    log: Self.errorLog,
+                    type: .error,
+                    logFileURL.lastPathComponent
+                )
                 return
             }
 
@@ -226,14 +274,20 @@ final class SimpleLogReporter: IssueReporter {
 
         // Append the log entry
         guard let data = (logContent + "\n").data(using: .utf8) else {
-            debug(.service, "Failed to encode watch log content as UTF-8")
+            os_log("Failed to encode watch log content as UTF-8", log: Self.errorLog, type: .error)
             return
         }
 
         do {
             try data.append(fileURL: logFileURL)
         } catch {
-            debug(.service, "Failed to append to watch log \(logFileURL.lastPathComponent): \(error.localizedDescription)")
+            os_log(
+                "Failed to append to watch log %{public}@: %{public}@",
+                log: Self.errorLog,
+                type: .error,
+                logFileURL.lastPathComponent,
+                error.localizedDescription
+            )
         }
     }
 
@@ -248,7 +302,12 @@ final class SimpleLogReporter: IssueReporter {
             // Only remove logs beyond retention period - no zip cleanup here
             cleanupLogs()
             lastDailyCleanupDate = today
-            debug(.service, "Performed daily log cleanup on \(Formatter.logDateFormatter.string(from: today))")
+            os_log(
+                "Performed daily log cleanup on %{public}@",
+                log: Self.errorLog,
+                type: .info,
+                Formatter.logDateFormatter.string(from: today)
+            )
         }
     }
 
@@ -344,9 +403,12 @@ final class SimpleLogReporter: IssueReporter {
                 try fileManager.removeItem(at: fileURL)
                 removedCount += 1
             } catch {
-                debug(
-                    .service,
-                    "Failed to remove file \(fileURL.lastPathComponent): \(error.localizedDescription)"
+                os_log(
+                    "Failed to remove file %{public}@: %{public}@",
+                    log: Self.errorLog,
+                    type: .error,
+                    fileURL.lastPathComponent,
+                    error.localizedDescription
                 )
             }
         }
@@ -364,10 +426,16 @@ final class SimpleLogReporter: IssueReporter {
             )
 
             if removedCount > 0 {
-                debug(.service, "Removed \(removedCount) log file(s) older than \(logRetentionDays) days")
+                os_log(
+                    "Removed %d log file(s) older than %d days",
+                    log: Self.errorLog,
+                    type: .info,
+                    removedCount,
+                    logRetentionDays
+                )
             }
         } catch {
-            debug(.service, "Error cleaning up logs: \(error.localizedDescription)")
+            os_log("Error cleaning up logs: %{public}@", log: Self.errorLog, type: .error, error.localizedDescription)
         }
     }
 
@@ -382,10 +450,21 @@ final class SimpleLogReporter: IssueReporter {
             )
 
             if removedCount > 0 {
-                debug(.service, "Removed \(removedCount) old zip files, keeping \(zipRetentionCount) most recent")
+                os_log(
+                    "Removed %d old zip files, keeping %d most recent",
+                    log: Self.errorLog,
+                    type: .info,
+                    removedCount,
+                    zipRetentionCount
+                )
             }
         } catch {
-            debug(.service, "Error accessing or cleaning up zip exports directory: \(error.localizedDescription)")
+            os_log(
+                "Error accessing or cleaning up zip exports directory: %{public}@",
+                log: Self.errorLog,
+                type: .error,
+                error.localizedDescription
+            )
         }
     }
 
@@ -402,7 +481,7 @@ final class SimpleLogReporter: IssueReporter {
                 // Update daily cleanup date too
                 lastDailyCleanupDate = Calendar.current.startOfDay(for: Date())
 
-                debug(.service, "Performed complete log maintenance (scheduled cleanup)")
+                os_log("Performed complete log maintenance (scheduled cleanup)", log: Self.errorLog, type: .info)
                 continuation.resume()
             }
         }

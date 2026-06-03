@@ -353,11 +353,11 @@ final class BaseWatchManager: NSObject, WCSessionDelegate, Injectable, WatchMana
                 watchState.bolusIncrement = self.settingsManager.preferences.bolusIncrement
                 watchState.confirmBolusFaster = self.settingsManager.settings.confirmBolusFaster
 
-//                debug(
-//                    .watchManager,
-//
-//                    "📱 Setup WatchState - currentGlucose: \(watchState.currentGlucose ?? "nil"), trend: \(watchState.trend ?? "nil"), delta: \(watchState.delta ?? "nil"), values: \(watchState.glucoseValues.count)"
-//                )
+                debug(
+                    .watchManager,
+
+                    "📱 Setup WatchState - currentGlucose: \(watchState.currentGlucose ?? "nil"), trend: \(watchState.trend ?? "nil"), delta: \(watchState.delta ?? "nil"), values: \(watchState.glucoseValues.count)"
+                )
 
                 return watchState
             }
@@ -495,12 +495,12 @@ final class BaseWatchManager: NSObject, WCSessionDelegate, Injectable, WatchMana
             return
         }
 
-        // Skip if we already sent this state or older
-        let lastSent = WatchStateSnapshot.loadLatestDateFromDisk()
-        guard lastSent < state.date else {
-            debug(.watchManager, "🕐 Skipping push — newer or equal state already sent")
-            return
-        }
+        // Stamp the snapshot with send time. Each push gets a strictly newer
+        // `date` than the previous one, which is what the watch's monotonicity
+        // dedup relies on — including watch-requested re-pushes when no CGM
+        // tick has bumped the build-time date.
+        var state = state
+        state.date = Date()
 
         let message: [String: Any] = watchStateToDictionary(from: state)
 
@@ -510,12 +510,11 @@ final class BaseWatchManager: NSObject, WCSessionDelegate, Injectable, WatchMana
             session.sendMessage([WatchMessageKeys.watchState: message], replyHandler: nil) { error in
                 debug(.watchManager, "❌ Error sending watch state: \(error)")
             }
-            WatchStateSnapshot.saveLatestDateToDisk(state.date)
         } else {
-            WatchStateSnapshot.saveLatestDateToDisk(state.date)
             session.transferUserInfo([WatchMessageKeys.watchState: message])
             debug(.watchManager, "📤 Transferred new WatchState snapshot via userInfo")
         }
+        WatchStateSnapshot.saveLatestDateToDisk(state.date)
     }
 
     func sendAcknowledgment(toWatch success: Bool, message: String = "", ackCode: AcknowledgmentCode) {
@@ -557,6 +556,7 @@ final class BaseWatchManager: NSObject, WCSessionDelegate, Injectable, WatchMana
         // Handle logs first - doesn't need self, so it can run even during teardown
         if let logs = message["watchLogs"] as? String {
             SimpleLogReporter.appendToWatchLog(logs)
+            return
         }
 
         Task { @MainActor [weak self] in
@@ -603,37 +603,19 @@ final class BaseWatchManager: NSObject, WCSessionDelegate, Injectable, WatchMana
                     "📱 Received meal bolus combo request from watch: \(bolusAmount)U, \(carbsAmount)g at \(date)"
                 )
                 self.handleCombinedRequest(bolusAmount: Decimal(bolusAmount), carbsAmount: Decimal(carbsAmount), date: date)
-            } else {
-                debug(.watchManager, "📱 Invalid or incomplete data received from watch. Received:  \(message)")
-                // Acknowledge failure
-                self.sendAcknowledgment(
-                    toWatch: false,
-                    message: "Error! Invalid or incomplete data received from watch.",
-                    ackCode: .genericFailure
-                )
-            }
-
-            if message[WatchMessageKeys.cancelOverride] as? Bool == true {
+            } else if message[WatchMessageKeys.cancelOverride] as? Bool == true {
                 debug(.watchManager, "📱 Received cancel override request from watch")
                 self.handleCancelOverride()
-            }
-
-            if let presetName = message[WatchMessageKeys.activateOverride] as? String {
+            } else if let presetName = message[WatchMessageKeys.activateOverride] as? String {
                 debug(.watchManager, "📱 Received activate override request from watch for preset: \(presetName)")
                 self.handleActivateOverride(presetName)
-            }
-
-            if let presetName = message[WatchMessageKeys.activateTempTarget] as? String {
+            } else if let presetName = message[WatchMessageKeys.activateTempTarget] as? String {
                 debug(.watchManager, "📱 Received activate temp target request from watch for preset: \(presetName)")
                 self.handleActivateTempTarget(presetName)
-            }
-
-            if message[WatchMessageKeys.cancelTempTarget] as? Bool == true {
+            } else if message[WatchMessageKeys.cancelTempTarget] as? Bool == true {
                 debug(.watchManager, "📱 Received cancel temp target request from watch")
                 self.handleCancelTempTarget()
-            }
-
-            if message[WatchMessageKeys.requestBolusRecommendation] as? Bool == true {
+            } else if message[WatchMessageKeys.requestBolusRecommendation] as? Bool == true {
                 let carbs = message[WatchMessageKeys.carbs] as? Int ?? 0
 
                 var minPredBG: Decimal = 54
@@ -685,6 +667,14 @@ final class BaseWatchManager: NSObject, WCSessionDelegate, Injectable, WatchMana
                     }
                 }
                 return
+            } else {
+                debug(.watchManager, "📱 Invalid or incomplete data received from watch. Received:  \(message)")
+                // Acknowledge failure
+                self.sendAcknowledgment(
+                    toWatch: false,
+                    message: "Error! Invalid or incomplete data received from watch.",
+                    ackCode: .genericFailure
+                )
             }
         }
     }

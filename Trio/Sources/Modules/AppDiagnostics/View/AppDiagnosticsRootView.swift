@@ -21,7 +21,7 @@ extension AppDiagnostics {
                                 Button(action: {
                                     state.diagnosticsSharingOption = option
                                 }) {
-                                    HStack {
+                                    HStack(alignment: .top, spacing: 12) {
                                         Image(
                                             systemName: state
                                                 .diagnosticsSharingOption == option ? "largecircle.fill.circle" : "circle"
@@ -29,8 +29,14 @@ extension AppDiagnostics {
                                         .foregroundColor(state.diagnosticsSharingOption == option ? .accentColor : .secondary)
                                         .imageScale(.large)
 
-                                        Text(option.displayName)
-                                            .foregroundColor(.primary)
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(option.displayName)
+                                                .foregroundColor(.primary)
+                                                .bold()
+                                            Text(option.caption)
+                                                .font(.footnote)
+                                                .foregroundColor(.secondary)
+                                        }
 
                                         Spacer()
                                     }
@@ -48,12 +54,17 @@ extension AppDiagnostics {
                 ).listRowBackground(Color.chart)
 
                 Section {
+                    NavigationLink("What's sent") { TelemetryPreviewView() }
+                    NavigationLink("Privacy details") { TelemetryPrivacyView() }
+                }.listRowBackground(Color.chart)
+
+                Section {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Why does Tai collect this data?").bold()
                         VStack(alignment: .leading, spacing: 4) {
                             BulletPoint(
                                 String(
-                                    localized: "App diagnostic insights help us enhance app stability, ensure safety for all users, and enable us to quickly identify and resolve critical issues."
+                                    localized: "App diagnostic insights — based on crash reports only — help us enhance app stability, ensure safety for all users, and quickly identify and resolve critical issues."
                                 )
                             )
                             BulletPoint(

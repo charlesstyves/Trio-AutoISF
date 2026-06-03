@@ -20,6 +20,9 @@ struct AddOverrideForm: View {
     @State private var durationMinutes = 0
     @State private var overrideTarget = false
     @State private var didPressSave = false
+    @State private var showAutoISFSection = false
+    @State private var showSmbSection = false
+    @State private var showVariableSmbRatio = false
 
     var body: some View {
         NavigationView {
@@ -334,6 +337,11 @@ struct AddOverrideForm: View {
                 .listRowBackground(Color.chart)
             }
 
+            if state.useAutoISF, state.useSwiftOref {
+                autoISFSection()
+                smbSection()
+            }
+
             Section {
                 Toggle(isOn: $state.indefinite) {
                     Text("Enable Indefinitely")
@@ -380,6 +388,309 @@ struct AddOverrideForm: View {
             }
             .listRowBackground(Color.chart)
         }
+    }
+
+    @ViewBuilder private func autoISFSection() -> some View {
+        Section {
+            DisclosureGroup(
+                isExpanded: $showAutoISFSection,
+                content: {
+                    autoISFRow(
+                        label: String(localized: "IOB Threshold %", comment: "Row label on Add Override form — IOB Threshold %"),
+                        value: Binding(
+                            get: { state.overrideIobThresholdPercent ?? state.profileIobThresholdPercent },
+                            set: { state.overrideIobThresholdPercent = $0 == state.profileIobThresholdPercent ? nil : $0 }
+                        ),
+                        profileValue: state.profileIobThresholdPercent,
+                        isModified: state.overrideIobThresholdPercent != nil,
+                        settingKey: "iobThresholdPercent",
+                        onReset: { state.overrideIobThresholdPercent = nil }
+                    )
+                    autoISFRow(
+                        label: String(localized: "autoISF Min", comment: "Row label on Add Override form — autoISF Min"),
+                        value: Binding(
+                            get: { state.overrideAutoISFmin ?? state.profileAutoISFmin },
+                            set: { state.overrideAutoISFmin = $0 == state.profileAutoISFmin ? nil : $0 }
+                        ),
+                        profileValue: state.profileAutoISFmin,
+                        isModified: state.overrideAutoISFmin != nil,
+                        settingKey: "autoISFmin",
+                        onReset: { state.overrideAutoISFmin = nil }
+                    )
+                    autoISFRow(
+                        label: String(localized: "autoISF Max", comment: "Row label on Add Override form — autoISF Max"),
+                        value: Binding(
+                            get: { state.overrideAutoISFmax ?? state.profileAutoISFmax },
+                            set: { state.overrideAutoISFmax = $0 == state.profileAutoISFmax ? nil : $0 }
+                        ),
+                        profileValue: state.profileAutoISFmax,
+                        isModified: state.overrideAutoISFmax != nil,
+                        settingKey: "autoISFmax",
+                        onReset: { state.overrideAutoISFmax = nil }
+                    )
+                    autoISFRow(
+                        label: String(localized: "DuraISF Weight", comment: "Row label on Add Override form — DuraISF Weight"),
+                        value: Binding(
+                            get: { state.overrideAutoISFhourlyChange ?? state.profileAutoISFhourlyChange },
+                            set: { state.overrideAutoISFhourlyChange = $0 == state.profileAutoISFhourlyChange ? nil : $0 }
+                        ),
+                        profileValue: state.profileAutoISFhourlyChange,
+                        isModified: state.overrideAutoISFhourlyChange != nil,
+                        settingKey: "autoISFhourlyChange",
+                        onReset: { state.overrideAutoISFhourlyChange = nil }
+                    )
+                    autoISFRow(
+                        label: String(
+                            localized: "ISF Weight for Higher BGs",
+                            comment: "Row label on Add Override form — ISF Weight for Higher BGs"
+                        ),
+                        value: Binding(
+                            get: { state.overrideHigherISFrangeWeight ?? state.profileHigherISFrangeWeight },
+                            set: { state.overrideHigherISFrangeWeight = $0 == state.profileHigherISFrangeWeight ? nil : $0 }
+                        ),
+                        profileValue: state.profileHigherISFrangeWeight,
+                        isModified: state.overrideHigherISFrangeWeight != nil,
+                        settingKey: "higherISFrangeWeight",
+                        onReset: { state.overrideHigherISFrangeWeight = nil }
+                    )
+                    autoISFRow(
+                        label: String(
+                            localized: "ISF Weight for Lower BGs",
+                            comment: "Row label on Add Override form — ISF Weight for Lower BGs"
+                        ),
+                        value: Binding(
+                            get: { state.overrideLowerISFrangeWeight ?? state.profileLowerISFrangeWeight },
+                            set: { state.overrideLowerISFrangeWeight = $0 == state.profileLowerISFrangeWeight ? nil : $0 }
+                        ),
+                        profileValue: state.profileLowerISFrangeWeight,
+                        isModified: state.overrideLowerISFrangeWeight != nil,
+                        settingKey: "lowerISFrangeWeight",
+                        onReset: { state.overrideLowerISFrangeWeight = nil }
+                    )
+                    autoISFRow(
+                        label: String(
+                            localized: "ISF Weight for Postprandial BG Rise",
+                            comment: "Row label on Add Override form — ISF Weight for Postprandial BG Rise"
+                        ),
+                        value: Binding(
+                            get: { state.overridePostMealISFweight ?? state.profilePostMealISFweight },
+                            set: { state.overridePostMealISFweight = $0 == state.profilePostMealISFweight ? nil : $0 }
+                        ),
+                        profileValue: state.profilePostMealISFweight,
+                        isModified: state.overridePostMealISFweight != nil,
+                        settingKey: "postMealISFweight",
+                        onReset: { state.overridePostMealISFweight = nil }
+                    )
+                    HStack {
+                        Text("Enable BG Acceleration")
+                            .foregroundColor(state.overrideEnableBGacceleration != nil ? .accentColor : .secondary)
+                        Spacer()
+                        if state.overrideEnableBGacceleration != nil {
+                            Button(action: { state.overrideEnableBGacceleration = nil }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.secondary)
+                                    .imageScale(.small)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        Toggle(
+                            "",
+                            isOn: Binding(
+                                get: { state.overrideEnableBGacceleration ?? state.profileEnableBGacceleration },
+                                set: { newVal in
+                                    state.overrideEnableBGacceleration = newVal == state
+                                        .profileEnableBGacceleration ? nil : newVal
+                                }
+                            )
+                        )
+                        .labelsHidden()
+                    }
+                    autoISFRow(
+                        label: String(
+                            localized: "ISF Weight While BG Accelerates",
+                            comment: "Row label on Add Override form — ISF Weight While BG Accelerates"
+                        ),
+                        value: Binding(
+                            get: { state.overrideBgAccelISFweight ?? state.profileBgAccelISFweight },
+                            set: { state.overrideBgAccelISFweight = $0 == state.profileBgAccelISFweight ? nil : $0 }
+                        ),
+                        profileValue: state.profileBgAccelISFweight,
+                        isModified: state.overrideBgAccelISFweight != nil,
+                        settingKey: "bgAccelISFweight",
+                        onReset: { state.overrideBgAccelISFweight = nil }
+                    )
+                    autoISFRow(
+                        label: String(
+                            localized: "ISF Weight While BG Decelerates",
+                            comment: "Row label on Add Override form — ISF Weight While BG Decelerates"
+                        ),
+                        value: Binding(
+                            get: { state.overrideBgBrakeISFweight ?? state.profileBgBrakeISFweight },
+                            set: { state.overrideBgBrakeISFweight = $0 == state.profileBgBrakeISFweight ? nil : $0 }
+                        ),
+                        profileValue: state.profileBgBrakeISFweight,
+                        isModified: state.overrideBgBrakeISFweight != nil,
+                        settingKey: "bgBrakeISFweight",
+                        onReset: { state.overrideBgBrakeISFweight = nil }
+                    )
+                },
+                label: {
+                    HStack {
+                        Text("AutoISF Settings")
+                        if hasAutoISFOverrides {
+                            Spacer()
+                            Text("Modified")
+                                .font(.caption)
+                                .foregroundColor(.accentColor)
+                        }
+                    }
+                }
+            )
+        }
+        .listRowBackground(Color.chart)
+    }
+
+    @ViewBuilder private func autoISFRow(
+        label: String,
+        value: Binding<Decimal>,
+        profileValue _: Decimal,
+        isModified: Bool,
+        settingKey: String,
+        onReset: @escaping () -> Void = {}
+    ) -> some View {
+        OverrideAutoISFRow(
+            label: label,
+            value: value,
+            isModified: isModified,
+            settingKey: settingKey,
+            units: state.units,
+            onReset: onReset
+        )
+    }
+
+    private var hasAutoISFOverrides: Bool {
+        state.overrideAutoISFmin != nil ||
+            state.overrideAutoISFmax != nil ||
+            state.overrideAutoISFhourlyChange != nil ||
+            state.overrideHigherISFrangeWeight != nil ||
+            state.overrideLowerISFrangeWeight != nil ||
+            state.overridePostMealISFweight != nil ||
+            state.overrideBgAccelISFweight != nil ||
+            state.overrideBgBrakeISFweight != nil ||
+            state.overrideIobThresholdPercent != nil ||
+            state.overrideEnableBGacceleration != nil
+    }
+
+    private var hasSmbOverrides: Bool {
+        state.overrideSmbDeliveryRatio != nil ||
+            state.overrideSmbDeliveryRatioBGrange != nil ||
+            state.overrideSmbDeliveryRatioMin != nil ||
+            state.overrideSmbDeliveryRatioMax != nil
+    }
+
+    @ViewBuilder private func smbSection() -> some View {
+        Section {
+            DisclosureGroup(
+                isExpanded: $showSmbSection,
+                content: {
+                    autoISFRow(
+                        label: String(
+                            localized: "SMB Delivery Ratio",
+                            comment: "Row label on Add Override form — SMB Delivery Ratio"
+                        ),
+                        value: Binding(
+                            get: { state.overrideSmbDeliveryRatio ?? state.profileSmbDeliveryRatio },
+                            set: { state.overrideSmbDeliveryRatio = $0 == state.profileSmbDeliveryRatio ? nil : $0 }
+                        ),
+                        profileValue: state.profileSmbDeliveryRatio,
+                        isModified: state.overrideSmbDeliveryRatio != nil,
+                        settingKey: "smbDeliveryRatio",
+                        onReset: { state.overrideSmbDeliveryRatio = nil }
+                    )
+
+                    DisclosureGroup(
+                        isExpanded: $showVariableSmbRatio,
+                        content: {
+                            autoISFRow(
+                                label: String(
+                                    localized: "SMB Delivery Ratio BG Range",
+                                    comment: "Row label on Add Override form — SMB Delivery Ratio BG Range"
+                                ),
+                                value: Binding(
+                                    get: { state.overrideSmbDeliveryRatioBGrange ?? state.profileSmbDeliveryRatioBGrange },
+                                    set: {
+                                        state.overrideSmbDeliveryRatioBGrange = $0 == state
+                                            .profileSmbDeliveryRatioBGrange ? nil : $0
+                                    }
+                                ),
+                                profileValue: state.profileSmbDeliveryRatioBGrange,
+                                isModified: state.overrideSmbDeliveryRatioBGrange != nil,
+                                settingKey: "smbDeliveryRatioBGrange",
+                                onReset: { state.overrideSmbDeliveryRatioBGrange = nil }
+                            )
+                            autoISFRow(
+                                label: String(
+                                    localized: "SMB Delivery Ratio Min",
+                                    comment: "Row label on Add Override form — SMB Delivery Ratio Min"
+                                ),
+                                value: Binding(
+                                    get: { state.overrideSmbDeliveryRatioMin ?? state.profileSmbDeliveryRatioMin },
+                                    set: {
+                                        state.overrideSmbDeliveryRatioMin = $0 == state.profileSmbDeliveryRatioMin ? nil : $0
+                                    }
+                                ),
+                                profileValue: state.profileSmbDeliveryRatioMin,
+                                isModified: state.overrideSmbDeliveryRatioMin != nil,
+                                settingKey: "smbDeliveryRatioMin",
+                                onReset: { state.overrideSmbDeliveryRatioMin = nil }
+                            )
+                            autoISFRow(
+                                label: String(
+                                    localized: "SMB Delivery Ratio Max",
+                                    comment: "Row label on Add Override form — SMB Delivery Ratio Max"
+                                ),
+                                value: Binding(
+                                    get: { state.overrideSmbDeliveryRatioMax ?? state.profileSmbDeliveryRatioMax },
+                                    set: {
+                                        state.overrideSmbDeliveryRatioMax = $0 == state.profileSmbDeliveryRatioMax ? nil : $0
+                                    }
+                                ),
+                                profileValue: state.profileSmbDeliveryRatioMax,
+                                isModified: state.overrideSmbDeliveryRatioMax != nil,
+                                settingKey: "smbDeliveryRatioMax",
+                                onReset: { state.overrideSmbDeliveryRatioMax = nil }
+                            )
+                        },
+                        label: {
+                            HStack {
+                                Text("Variable SMB DelRatio")
+                                if state.overrideSmbDeliveryRatioBGrange != nil ||
+                                    state.overrideSmbDeliveryRatioMin != nil ||
+                                    state.overrideSmbDeliveryRatioMax != nil
+                                {
+                                    Spacer()
+                                    Text("Modified")
+                                        .font(.caption)
+                                        .foregroundColor(.accentColor)
+                                }
+                            }
+                        }
+                    )
+                },
+                label: {
+                    HStack {
+                        Text("SMB Settings")
+                        if hasSmbOverrides {
+                            Spacer()
+                            Text("Modified")
+                                .font(.caption)
+                                .foregroundColor(.accentColor)
+                        }
+                    }
+                }
+            )
+        }
+        .listRowBackground(Color.chart)
     }
 
     private var saveButton: some View {
@@ -445,20 +756,87 @@ struct AddOverrideForm: View {
         let noDurationSpecified = !state.indefinite && state.overrideDuration == 0
         let targetZeroWithOverride = state.shouldOverrideTarget && state.target == 0
         let allSettingsDefault = state.overridePercentage == 100 && !state.shouldOverrideTarget &&
-            !state.advancedSettings && !state.smbIsOff && !state.smbIsScheduledOff
+            !state.advancedSettings && !state.smbIsOff && !state.smbIsScheduledOff && !hasAutoISFOverrides &&
+            !hasSmbOverrides
 
         if noDurationSpecified {
-            return (true, String(localized: "Enable indefinitely or set a duration."))
+            return (
+                true,
+                String(
+                    localized: "Enable indefinitely or set a duration.",
+                    comment: "Validation error on Add Override form when neither indefinite nor a duration is set"
+                )
+            )
         }
 
         if targetZeroWithOverride {
-            return (true, String(localized: "Target glucose is out of range (\(state.units == .mgdL ? "72-270" : "4-14"))."))
+            return (
+                true,
+                String(
+                    localized: "Target glucose is out of range (\(state.units == .mgdL ? "72-270" : "4-14")).",
+                    comment: "Validation error on Add Override form when target glucose is outside allowed range — interpolated value is the unit-dependent range"
+                )
+            )
         }
 
         if allSettingsDefault {
-            return (true, String(localized: "All settings are at default values."))
+            return (
+                true,
+                String(
+                    localized: "All settings are at default values.",
+                    comment: "Validation error on Add Override form when the override would be a no-op (all defaults)"
+                )
+            )
         }
 
         return (false, nil)
+    }
+}
+
+/// Row used by the override forms for AutoISF / SMB numeric overrides. Mirrors
+/// the tap-to-expand wheel-picker UX from `SettingInputSection`, sourcing
+/// bounds, step and value formatting from `DecimalPickerSettings`. Adds the
+/// override-form reset button + accent-color modification indicator.
+struct OverrideAutoISFRow: View {
+    let label: String
+    @Binding var value: Decimal
+    let isModified: Bool
+    let settingKey: String
+    let units: GlucoseUnits
+    var onReset: () -> Void = {}
+
+    @ObservedObject private var pickerSettingsProvider = PickerSettingsProvider.shared
+    @State private var displayPicker: Bool = false
+
+    var body: some View {
+        if let setting = pickerSettingsProvider.pickerSetting(for: settingKey) {
+            VStack {
+                HStack {
+                    Text(label)
+                        .foregroundColor(isModified ? .accentColor : .primary)
+                    Spacer()
+                    if isModified {
+                        Button(action: onReset) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                                .imageScale(.small)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    setting.displayText(for: value, units: units)
+                        .foregroundColor(displayPicker ? .accentColor : .primary)
+                        .onTapGesture { displayPicker.toggle() }
+                }
+                if displayPicker {
+                    Picker(selection: $value, label: Text(label)) {
+                        ForEach(pickerSettingsProvider.generatePickerValues(from: setting, units: units), id: \.self) { v in
+                            setting.displayText(for: v, units: units).tag(v)
+                        }
+                    }
+                    .pickerStyle(WheelPickerStyle())
+                    .frame(maxWidth: .infinity)
+                }
+            }
+        }
     }
 }

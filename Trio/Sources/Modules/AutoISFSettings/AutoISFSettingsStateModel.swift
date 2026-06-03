@@ -13,8 +13,8 @@ extension AutoISFSettings {
             didSet {
                 updateEnableAutosens()
                 if autoisf {
-                    settingsManager.preferences.useNewFormula = false
-                    settingsManager.preferences.sigmoid = false
+                    scope.preferences.useNewFormula = false
+                    scope.preferences.sigmoid = false
                 }
             }
         }

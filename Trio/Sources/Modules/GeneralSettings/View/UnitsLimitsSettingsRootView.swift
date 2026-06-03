@@ -182,31 +182,75 @@ extension UnitsLimitsSettings {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Default: Set by Algorithm").bold()
                         Text(
-                            "Minimum Threshold Setting is, by default, determined by your set Glucose Target. This threshold automatically suspends insulin delivery if your glucose levels are forecasted to fall below this value. It’s designed to protect against hypoglycemia, particularly during sleep or other vulnerable times."
+                            "Minimum Threshold Setting is the hard floor for the SMB cutoff. Below this glucose value Trio will suspend insulin delivery and block SMBs. It is designed to protect against hypoglycemia, particularly during sleep or other vulnerable times."
+                        )
+                        Text("Combined SMB cutoff calculation:").bold()
+                        Text(
+                            "cutoff = clamp( max( Minimum Safety Threshold, ratioFloor ), 60, 120 ) mg/dL"
                         )
                         Text(
-                            "Trio will use the larger of the default setting calculation below and the value entered here."
+                            "ratioFloor = TargetGlucose − (1 − SMB Threshold Ratio) × (TargetGlucose − 40)"
                         )
-                        VStack(alignment: .leading, spacing: 10) {
-                            VStack(alignment: .leading, spacing: 5) {
-                                Text("The default setting is based on this calculation:").bold()
-                                Text("TargetGlucose - 0.5 × (TargetGlucose - 40)")
-                            }
-                            VStack(alignment: .leading, spacing: 5) {
-                                Text(
-                                    "If your glucose target is \(state.units == .mgdL ? "110" : 110.formattedAsMmolL) \(state.units.rawValue), Trio will use a safety threshold of \(state.units == .mgdL ? "75" : 75.formattedAsMmolL) \(state.units.rawValue), unless you set Minimum Safety Threshold to something > \(state.units == .mgdL ? "75" : 75.formattedAsMmolL) \(state.units.rawValue)."
-                                )
-                                Text(
-                                    "\(state.units == .mgdL ? "110" : 110.formattedAsMmolL) - 0.5 × (\(state.units == .mgdL ? "110" : 110.formattedAsMmolL) - \(state.units == .mgdL ? "40" : 40.formattedAsMmolL)) = \(state.units == .mgdL ? "75" : 75.formattedAsMmolL)"
-                                )
-                            }
+                        Text(
+                            "With the default ratio of 0.5 this collapses to TargetGlucose − 0.5 × (TargetGlucose − 40), i.e. the midpoint between target and 40 mg/dL. Trio always uses whichever is higher: this Minimum Safety Threshold or that ratio-derived floor."
+                        )
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("Example:").bold()
                             Text(
-                                "This setting is limited to values between \(state.units == .mgdL ? "60" : 60.formattedAsMmolL) - \(state.units == .mgdL ? "120" : 120.formattedAsMmolL) \(state.units.rawValue)"
+                                "If your glucose target is \(state.units == .mgdL ? "110" : 110.formattedAsMmolL) \(state.units.rawValue) and ratio = 0.5, ratioFloor = \(state.units == .mgdL ? "75" : 75.formattedAsMmolL) \(state.units.rawValue). Setting Minimum Safety Threshold below \(state.units == .mgdL ? "75" : 75.formattedAsMmolL) has no effect; setting it above raises the cutoff."
                             )
                             Text(
-                                "Note: Basal may be resumed if there is negative IOB and glucose is rising faster than the forecast."
+                                "\(state.units == .mgdL ? "110" : 110.formattedAsMmolL) − 0.5 × (\(state.units == .mgdL ? "110" : 110.formattedAsMmolL) − \(state.units == .mgdL ? "40" : 40.formattedAsMmolL)) = \(state.units == .mgdL ? "75" : 75.formattedAsMmolL)"
                             )
                         }
+                        Text(
+                            "This setting is limited to values between \(state.units == .mgdL ? "60" : 60.formattedAsMmolL) - \(state.units == .mgdL ? "120" : 120.formattedAsMmolL) \(state.units.rawValue)."
+                        )
+                        Text(
+                            "Note: Basal may be resumed if there is negative IOB and glucose is rising faster than the forecast."
+                        )
+                    }
+                )
+
+                SettingInputSection(
+                    decimalValue: $state.smbThresholdRatio,
+                    booleanValue: $booleanPlaceholder,
+                    shouldDisplayHint: $shouldDisplayHint,
+                    selectedVerboseHint: Binding(
+                        get: { selectedVerboseHint },
+                        set: {
+                            selectedVerboseHint = $0.map { AnyView($0) }
+                            hintLabel = String(localized: "SMB Threshold Ratio", comment: "SMB Threshold Ratio")
+                        }
+                    ),
+                    units: state.units,
+                    type: .decimal("smbThresholdRatio"),
+                    label: String(localized: "SMB Threshold Ratio", comment: "SMB Threshold Ratio"),
+                    miniHint: String(
+                        localized: "Raises the glucose floor below which SMBs are blocked. 0.5 keeps default behaviour, 1.0 blocks SMBs until above target."
+                    ),
+                    verboseHint: VStack(alignment: .leading, spacing: 10) {
+                        Text("Default: 0.5 — valid range (0.5, 1.0]").bold()
+                        Text(
+                            "A safety knob that controls how close to your low-target SMBs are still allowed. It interpolates the SMB cutoff along the line between your low-target and 40 mg/dL."
+                        )
+                        Text("Combined SMB cutoff calculation:").bold()
+                        Text(
+                            "cutoff = clamp( max( Minimum Safety Threshold, ratioFloor ), 60, 120 ) mg/dL"
+                        )
+                        Text(
+                            "ratioFloor = TargetGlucose − (1 − ratio) × (TargetGlucose − 40)"
+                        )
+                        Text(
+                            "Trio uses whichever is higher: the Minimum Safety Threshold above or the ratio-derived floor below. So this ratio only takes effect when ratioFloor exceeds the Minimum Safety Threshold."
+                        )
+                        Text("Examples (TargetGlucose = 100 mg/dL):").bold()
+                        Text("• 0.5 — ratioFloor 70 mg/dL (midpoint between target and 40)")
+                        Text("• 0.7 — ratioFloor 82 mg/dL (SMBs cut off sooner)")
+                        Text("• 1.0 — ratioFloor 100 mg/dL (no SMBs below target)")
+                        Text(
+                            "Higher = more conservative. Values at or below 0.5 fall back to 0.5; values above 1.0 are ignored. The final cutoff is also clamped to 60–120 mg/dL."
+                        )
                     }
                 )
             }
@@ -224,6 +268,7 @@ extension UnitsLimitsSettings {
             .onAppear(perform: configureView)
             .navigationTitle("Units and Limits")
             .navigationBarTitleDisplayMode(.automatic)
+            .settingsHighlightScroll()
             .onDisappear {
                 state.saveIfChanged()
             }

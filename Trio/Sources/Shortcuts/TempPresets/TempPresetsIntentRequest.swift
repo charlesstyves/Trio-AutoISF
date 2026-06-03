@@ -179,6 +179,39 @@ final class TempPresetsIntentRequest: BaseIntentsRequest {
         }
     }
 
+    /// Schedule a preset to activate at a future date. Clones the preset's
+    /// stored fields (target, duration, halfBasalTarget, name) into a custom-
+    /// shaped scheduled TT — the app has no scheduling for presets, so a
+    /// preset-driven scheduled activation is functionally a Custom TT seeded
+    /// from the preset's values. The original preset row is not modified.
+    ///
+    /// Delegates persistence + wait+activate to `ScheduledTempTargetHelper`,
+    /// which is the same backend used by `CreateCustomTempTargetIntent`.
+    @MainActor func schedulePresetTempTarget(_ preset: TempPreset, at fireAt: Date) async -> Bool {
+        guard let presetID = await fetchTempTargetID(preset),
+              let presetObject = try? viewContext.existingObject(with: presetID) as? TempTargetStored,
+              let targetDecimal = presetObject.target?.decimalValue,
+              let durationDecimal = presetObject.duration?.decimalValue
+        else {
+            debug(
+                .default,
+                "\(DebuggingIdentifiers.failed) Preset not found or incomplete for scheduling: \(preset.name)"
+            )
+            return false
+        }
+        let halfBasal = presetObject.halfBasalTarget?.decimalValue
+            ?? settingsManager.preferences.halfBasalExerciseTarget
+        return await ScheduledTempTargetHelper.enact(
+            name: presetObject.name ?? preset.name,
+            targetMgdl: targetDecimal,
+            durationMinutes: durationDecimal,
+            halfBasalTarget: halfBasal,
+            startTime: fireAt,
+            tempTargetsStorage: tempTargetsStorage,
+            viewContext: viewContext
+        )
+    }
+
     /// Cancels an active temporary target.
     func cancelTempTarget() async {
         await disableAllActiveTempTargets(shouldStartBackgroundTask: true)

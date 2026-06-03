@@ -401,6 +401,7 @@ extension MealSettings {
             .onAppear(perform: configureView)
             .navigationBarTitle("Meal Settings")
             .navigationBarTitleDisplayMode(.automatic)
+            .settingsHighlightScroll()
         }
     }
 }

@@ -54,5 +54,6 @@ struct NightscoutFetchView: View {
         .navigationBarTitleDisplayMode(.automatic)
         .scrollContentBackground(.hidden)
         .background(appState.trioBackgroundColor(for: colorScheme))
+        .settingsHighlightScroll()
     }
 }

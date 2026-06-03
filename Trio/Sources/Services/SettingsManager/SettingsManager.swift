@@ -53,6 +53,7 @@ final class BaseSettingsManager: SettingsManager, Injectable {
 
     private func savePreferences() {
         storage.save(preferences, as: OpenAPS.Settings.preferences)
+        ActiveProfileMirror.shared.updatePreferences(preferences)
     }
 
     init(resolver: Resolver) {

@@ -9,7 +9,7 @@ function generate(iob, currenttemp, glucose, profile, autosens = null, meal = nu
     var middleware_was_used = "";
     try {
         // Pass the processed glucose_status to middleware instead of raw glucose array
-        var middlewareReason = middleware(iob, currenttemp, glucose_status, profile, autosens, meal, reservoir, clock, pump_history, preferences, basalProfile, trio_custom_oref_variables);
+        var middlewareReason = middleware(iob, currenttemp, glucose_status, profile, autosens, meal, reservoir, clock, pump_history, basalProfile, trio_custom_oref_variables);
         middleware_was_used = (middlewareReason || "Nothing changed");
         console.log("Middleware reason: " + middleware_was_used);
     } catch (error) {

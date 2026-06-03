@@ -23,8 +23,9 @@ struct TagCloudView: View {
         var height = CGFloat.zero
 
         return ZStack(alignment: .topLeading) {
-            ForEach(self.tags, id: \.self) { tag in
-                self.item(for: tag, isMmolL: shouldParseToMmolL)
+            ForEach(Array(self.tags.enumerated()), id: \.offset) { index, tag in
+                let previousTag = index > 0 ? self.tags[index - 1] : nil
+                self.item(for: tag, previousTag: previousTag, isMmolL: shouldParseToMmolL)
                     .padding([.horizontal, .vertical], 2)
                     .alignmentGuide(.leading, computeValue: { d in
                         if abs(width - d.width) > g.size.width {
@@ -50,7 +51,7 @@ struct TagCloudView: View {
         }.background(viewHeightReader($totalHeight))
     }
 
-    private func item(for textTag: String, isMmolL: Bool) -> some View {
+    private func item(for textTag: String, previousTag: String?, isMmolL: Bool) -> some View {
         var colorOfTag: Color {
             switch textTag {
             case textTag where textTag.contains("Floating"),
@@ -63,8 +64,8 @@ struct TagCloudView: View {
                  textTag where textTag.contains("disabled"),
                  textTag where textTag.contains("final"):
                 return .loopRed
-            case "autosens:",
-                 "SMB Del.Ratio:":
+            case textTag where textTag.contains("autosens"),
+                 textTag where textTag.contains("SMB Del.Ratio"):
                 return .loopGreen
             case "Parabolic Fit:",
                  textTag where textTag.contains("acce-ISF"):
@@ -85,25 +86,22 @@ struct TagCloudView: View {
                  textTag where textTag.contains("AF:"),
                  textTag where textTag.contains("Autosens/Dynamic Limit:"),
                  textTag where textTag.contains("Dynamic ISF/CR"),
-                 textTag where textTag.contains("Basal ratio"),
-                 textTag where textTag.contains("SMB Ratio"):
+                 textTag where textTag.contains("Basal ratio"):
                 return .zt
             case textTag where textTag.contains("Middleware:"),
                  textTag where textTag.contains("Smoothing: On"):
                 return .red
-            case textTag where textTag.contains("SMB Ratio"),
-                 textTag where textTag.contains("iobTH:"):
+            case textTag where textTag.contains("iobTH"):
                 return .orange
             default:
                 return .basal
             }
         }
 
-        let formattedTextTag = formatGlucoseTags(textTag, isMmolL: isMmolL)
+        let formattedTextTag = formatGlucoseTags(textTag, previousTag: previousTag, isMmolL: isMmolL)
 
         return ZStack {
-//            Text(formattedTextTag)
-            Text(textTag)
+            Text(formattedTextTag)
                 .padding(.vertical, 2)
                 .padding(.horizontal, 4)
                 .font(.subheadline)
@@ -127,14 +125,18 @@ struct TagCloudView: View {
      */
 
     // TODO: Consolidate all mmol parsing methods (in TagCloudView, NightscoutManager and HomeRootView) to one central func
-    private func formatGlucoseTags(_ tag: String, isMmolL: Bool) -> String {
+    private func formatGlucoseTags(_ tag: String, previousTag: String?, isMmolL: Bool) -> String {
         let patterns = [
+            // Original orefSwift patterns
             "(?:ISF|Target):\\s*-?\\d+\\.?\\d*(?:→-?\\d+\\.?\\d*)+",
             "Dev:\\s*-?\\d+\\.?\\d*",
             "BGI:\\s*-?\\d+\\.?\\d*",
-            "Avg:\\s*-?\\d+\\.?\\d*",
             "Target:\\s*-?\\d+\\.?\\d*",
-            "(?:minPredBG|minGuardBG|IOBpredBG|COBpredBG|UAMpredBG)\\s*-?\\d+\\.?\\d*"
+            "ISF:\\s*-?\\d+\\.?\\d*", // standalone ISF (no →), e.g. JS-side ", ISF: 112"
+            "(?:minPredBG|minGuardBG|IOBpredBG|COBpredBG|UAMpredBG)\\s*-?\\d+\\.?\\d*",
+            // autoISF additions
+            "Avg:\\s*-?\\d+\\.?\\d*", // autoISF: dura_ISF average BG
+            "(?:predicts|saw)\\s+(?:Max|Min)\\s+of\\s+-?\\d+(?:\\.\\d+)?" // autoISF: parabolic fit extremumBG
         ]
         let pattern = patterns.joined(separator: "|")
         let regex = try! NSRegularExpression(pattern: pattern)
@@ -146,6 +148,18 @@ struct TagCloudView: View {
                 return isMmolL ? mmolValue.description : value
             }
             return value
+        }
+
+        // autoISF: Handle standalone value range "X→Y" following "final ISF:" tag
+        // (from "final ISF:, X→Y" split by ", "). Context check ensures CR/ratio ranges don't match.
+        if isMmolL,
+           let prev = previousTag,
+           prev.contains("final ISF"),
+           tag.range(of: "^-?\\d+\\.?\\d*(?:→-?\\d+\\.?\\d*)+$", options: .regularExpression) != nil
+        {
+            let values = tag.components(separatedBy: "→").map { $0.trimmingCharacters(in: .whitespaces) }
+            let convertedValues = values.map { convertToMmolL($0) }
+            return convertedValues.joined(separator: "→")
         }
 
         let matches = regex.matches(in: tag, range: NSRange(tag.startIndex..., in: tag))
@@ -184,7 +198,7 @@ struct TagCloudView: View {
                 updatedTag.replaceSubrange(range, with: formattedString)
 
             } else if glucoseValueString.starts(with: "Avg:") {
-                // -- Handle Dev
+                // -- autoISF: Handle Avg (dura_ISF average BG)
                 let value = glucoseValueString.components(separatedBy: ":")[1].trimmingCharacters(in: .whitespaces)
                 let formattedValue = convertToMmolL(value)
                 let formattedString = "Avg: \(formattedValue)"
@@ -197,6 +211,23 @@ struct TagCloudView: View {
                 let formattedString = "Target: \(formattedValue)"
                 updatedTag.replaceSubrange(range, with: formattedString)
 
+            } else if glucoseValueString.starts(with: "ISF:") {
+                // -- Handle standalone ISF (no →; e.g. JS-side ", ISF: 112")
+                let value = glucoseValueString.components(separatedBy: ":")[1].trimmingCharacters(in: .whitespaces)
+                let formattedValue = convertToMmolL(value)
+                let formattedString = "ISF: \(formattedValue)"
+                updatedTag.replaceSubrange(range, with: formattedString)
+
+            } else if glucoseValueString.contains("predicts") || glucoseValueString.contains("saw") {
+                // -- autoISF: Handle Parabolic Fit extremumBG (e.g., "predicts Max of 95" or "saw Min of 134")
+                let parts = glucoseValueString.components(separatedBy: .whitespaces)
+                if parts.count >= 4, let value = parts.last {
+                    let action = parts[0] // "predicts" or "saw"
+                    let extremum = parts[1] // "Max" or "Min"
+                    let formattedValue = convertToMmolL(value)
+                    let formattedString = "\(action) \(extremum) of \(formattedValue)"
+                    updatedTag.replaceSubrange(range, with: formattedString)
+                }
             } else {
                 // -- Handle everything else (e.g., "minPredBG 39" etc.)
                 let parts = glucoseValueString.components(separatedBy: .whitespaces)

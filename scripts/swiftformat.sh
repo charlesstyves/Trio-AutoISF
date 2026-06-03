@@ -97,7 +97,7 @@ trailingClosures \
 --typeattributes same-line \
 --varattributes same-line \
 --wrapcollections before-first \
---exclude Pods, Generated, \
+--exclude Pods, Generated, build, \
   R.generated.swift, \
   fastlane/swift, \
   Dependencies,  \
@@ -112,4 +112,5 @@ trailingClosures \
   MinimedKit, \
   TidepoolService, \
   DanaKit, \
-  MedtrumKit
+  MedtrumKit, \
+  OmnipodKit

@@ -40,6 +40,11 @@ extension Notification.Name {
     @State private var showOnboardingCompletedSplash = false
     @State private var showMigrationError: Bool = false
 
+    // Telemetry: one-shot guard so the consent migration sheet is presented
+    // at most once per process even if scene activates repeatedly.
+    @State private var showTelemetryMigrationSheet = false
+    @State private var hasCheckedTelemetryMigration = false
+
     // Dependencies Assembler
     // contain all dependencies Assemblies
     // TODO: Remove static key after update "Use Dependencies" logic
@@ -85,6 +90,7 @@ extension Notification.Name {
             _ = resolver.resolve(LiveActivityManager.self)!
         }
         _ = resolver.resolve(IOBService.self)!
+        _ = resolver.resolve(ProfileScheduleFirer.self)!
         PickerSettingsProvider.shared.configure(resolver: resolver)
     }
 
@@ -154,6 +160,10 @@ extension Notification.Name {
                 // TODO: possibly wrap this in a UserDefault / TinyStorage flag check, so we do not even attempt to fetch files unnecessary, but early exit the import
                 await performJsonToCoreDataMigrationIfNeeded()
 
+                if let storage = resolver.resolve(FileStorage.self) {
+                    await ProfileSeeder.seedDefaultIfNeeded(storage: storage)
+                }
+
                 await Task { @MainActor in
                     // Only load services after successful Core Data initialization
                     loadServices()
@@ -198,21 +208,30 @@ extension Notification.Name {
             try await importer.importGlucoseHistoryIfNeeded()
         } catch {
             importErrors
-                .append(String(localized: "Failed to import glucose history."))
+                .append(String(
+                    localized: "Failed to import glucose history.",
+                    comment: "Migration error shown on first launch when legacy glucose JSON fails to import into Core Data"
+                ))
             debug(.coreData, "❌ Failed to import JSON-based Glucose History: \(error)")
         }
 
         do {
             try await importer.importPumpHistoryIfNeeded()
         } catch {
-            importErrors.append(String(localized: "Failed to import pump history."))
+            importErrors.append(String(
+                localized: "Failed to import pump history.",
+                comment: "Migration error shown on first launch when legacy pump-history JSON fails to import into Core Data"
+            ))
             debug(.coreData, "❌ Failed to import JSON-based Pump History: \(error)")
         }
 
         do {
             try await importer.importCarbHistoryIfNeeded()
         } catch {
-            importErrors.append(String(localized: "Failed to import algorithm data."))
+            importErrors.append(String(
+                localized: "Failed to import algorithm data.",
+                comment: "Migration error shown on first launch when legacy carb/algorithm JSON fails to import into Core Data"
+            ))
             debug(.coreData, "❌ Failed to import JSON-based Carb History: \(error)")
         }
 
@@ -221,7 +240,10 @@ extension Notification.Name {
         } catch {
             importErrors
                 .append(
-                    String(localized: "Migration of JSON-based OpenAPS Determination Data failed: \(error.localizedDescription)")
+                    String(
+                        localized: "Migration of JSON-based OpenAPS Determination Data failed: \(error.localizedDescription)",
+                        comment: "Migration error on first launch — the interpolated value is the underlying system error description"
+                    )
                 )
             debug(.coreData, "❌ Failed to import JSON-based OpenAPS Determination Data: \(error)")
         }
@@ -341,6 +363,10 @@ extension Notification.Name {
                     self.showOnboardingCompletedSplash = true
                 }
             }
+            .sheet(isPresented: $showTelemetryMigrationSheet) {
+                TelemetryMigrationSheetView()
+                    .interactiveDismissDisabled(true)
+            }
         }
         .onChange(of: scenePhase) { _, newScenePhase in
             debug(.default, "APPLICATION PHASE: \(newScenePhase)")
@@ -359,7 +385,28 @@ extension Notification.Name {
                 if initState.complete {
                     performCleanupIfNecessary()
                 }
+                presentTelemetryMigrationSheetIfNeeded()
             }
+        }
+    }
+
+    /// Presents the one-time telemetry consent sheet for users who completed
+    /// onboarding before telemetry existed. The condition (`onboardingCompleted
+    /// == true` and no telemetry decision yet) is checked once per process —
+    /// the in-app dismiss handler sets `telemetryConsentDecisionMade`, so a
+    /// re-foreground after the user picks will no longer match.
+    private func presentTelemetryMigrationSheetIfNeeded() {
+        guard !hasCheckedTelemetryMigration else { return }
+        hasCheckedTelemetryMigration = true
+
+        let onboarded = PropertyPersistentFlags.shared.onboardingCompleted == true
+        let telemetryDecided = PropertyPersistentFlags.shared.telemetryConsentDecisionMade == true
+        guard onboarded, !telemetryDecided else { return }
+
+        // Defer one runloop so SwiftUI has finished settling on whatever root
+        // view was just shown (loading screen, splash, main view).
+        DispatchQueue.main.async {
+            showTelemetryMigrationSheet = true
         }
     }
 

@@ -86,7 +86,12 @@ final class BaseUserNotificationsManager: NSObject, UserNotificationsManager, In
     let firstInterval = 20 // min
     let secondInterval = 40 // min
 
+    /// Retained so schedule-activation notification responses can construct `AdaptProfile.Provider`
+    /// on demand without an extra DI round-trip.
+    private let resolver: Resolver
+
     init(resolver: Resolver) {
+        self.resolver = resolver
         super.init()
         notificationCenter.delegate = self
         injectServices(resolver)
@@ -116,9 +121,15 @@ final class BaseUserNotificationsManager: NSObject, UserNotificationsManager, In
             guard let self else { return }
 
             let glucoseCategory = NotificationCategoryFactory.createGlucoseCategory()
+            let scheduleCategory = NotificationCategoryFactory.createScheduleActivationCategory()
+            let scheduleActivatedCategory = NotificationCategoryFactory.createScheduleActivatedCategory()
+            let profileRevertedCategory = NotificationCategoryFactory.createProfileRevertedCategory()
 
             var categories = existingCategories
             categories.update(with: glucoseCategory)
+            categories.update(with: scheduleCategory)
+            categories.update(with: scheduleActivatedCategory)
+            categories.update(with: profileRevertedCategory)
             // UNUserNotificationCenter methods should be called on main thread
             Task { @MainActor [weak self] in
                 guard let self else { return }
@@ -686,11 +697,30 @@ extension BaseUserNotificationsManager: UNUserNotificationCenterDelegate {
     ) {
         defer { completionHandler() }
 
+        debug(
+            .service,
+            "NotificationResponse: actionIdentifier=\(response.actionIdentifier) category=\(response.notification.request.content.categoryIdentifier)"
+        )
+
         // Handle quick snooze actions (from notification action buttons)
         if let quickAction = NotificationResponseAction(rawValue: response.actionIdentifier) {
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 await self.applySnooze(for: quickAction.duration)
+            }
+            return
+        }
+
+        // Handle schedule-activation actions (indefinite schedule fires via PR 5 Flow B).
+        if response.notification.request.content.categoryIdentifier
+            == NotificationCategoryIdentifier.scheduleActivation.rawValue
+        {
+            if let scheduleAction = ScheduleNotificationAction(rawValue: response.actionIdentifier) {
+                handleScheduleActivationResponse(action: scheduleAction, notification: response.notification)
+            } else if response.actionIdentifier == UNNotificationDefaultActionIdentifier {
+                // User tapped the notification body — open an in-app dialog so they can pick
+                // Save to pump / Skip without having to long-press the notification.
+                handleScheduleActivationDefaultTap(notification: response.notification)
             }
             return
         }
@@ -716,6 +746,126 @@ extension BaseUserNotificationsManager: UNUserNotificationCenterDelegate {
                 )
                 self.router.alertMessage.send(messageCont)
             default: break
+            }
+        }
+    }
+
+    /// Responds to user interaction on a scheduled-activation notification.
+    /// - `.confirm` → navigates to AdaptProfile and broadcasts `didConfirmScheduleActivation` so
+    ///   the root view can present the pump-save confirmation pre-filled for the target profile.
+    /// - `.skip` → marks the occurrence as fired on `ProfileScheduleStored` without activation,
+    ///   so the firer's next sweep doesn't re-post the notification.
+    private func handleScheduleActivationResponse(
+        action: ScheduleNotificationAction,
+        notification: UNNotification
+    ) {
+        let info = notification.request.content.userInfo
+        guard
+            let scheduleRaw = info[ScheduleNotificationUserInfoKey.scheduleID] as? String,
+            let scheduleID = UUID(uuidString: scheduleRaw),
+            let profileRaw = info[ScheduleNotificationUserInfoKey.profileID] as? String,
+            let profileID = UUID(uuidString: profileRaw),
+            let occurrenceEpoch = info[ScheduleNotificationUserInfoKey.occurrenceEpoch] as? Double
+        else {
+            debug(.service, "Schedule notification payload malformed; ignoring")
+            return
+        }
+        let occurrence = Date(timeIntervalSince1970: occurrenceEpoch)
+
+        debug(.service, "ScheduledActivation: response action=\(action.rawValue) schedule=\(scheduleID)")
+        switch action {
+        case .confirm:
+            runScheduledActivation(
+                scheduleID: scheduleID,
+                profileID: profileID,
+                occurrence: occurrence
+            )
+        case .skip:
+            markScheduleOccurrenceSkipped(scheduleID: scheduleID, occurrence: occurrence)
+        }
+    }
+
+    /// Default-tap on the notification body (no explicit action button chosen). Navigates to
+    /// AdaptProfile and broadcasts the request so RootView can present a Save-to-pump / Skip
+    /// dialog. This is distinct from the explicit `.confirm` / `.skip` action buttons, which run
+    /// directly without an in-app prompt.
+    private func handleScheduleActivationDefaultTap(notification: UNNotification) {
+        let info = notification.request.content.userInfo
+        guard
+            let scheduleRaw = info[ScheduleNotificationUserInfoKey.scheduleID] as? String,
+            let scheduleID = UUID(uuidString: scheduleRaw),
+            let profileRaw = info[ScheduleNotificationUserInfoKey.profileID] as? String,
+            let profileID = UUID(uuidString: profileRaw),
+            let occurrenceEpoch = info[ScheduleNotificationUserInfoKey.occurrenceEpoch] as? Double
+        else {
+            debug(.service, "ScheduledActivation default-tap: malformed payload")
+            return
+        }
+        let occurrence = Date(timeIntervalSince1970: occurrenceEpoch)
+        debug(.service, "ScheduledActivation: default-tap routing to AdaptProfile for schedule=\(scheduleID)")
+        // Stash the request first so AdaptProfile.StateModel picks it up regardless of whether
+        // it's already alive (Foundation notification path) or about to spin up (drain on
+        // subscribe). Navigate afterwards so the new RootView sees the mailbox populated.
+        ScheduledActivationMailbox.enqueue(
+            scheduleID: scheduleID,
+            profileID: profileID,
+            occurrence: occurrence
+        )
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            self.router.mainModalScreen.send(.adaptProfile)
+            Foundation.NotificationCenter.default.post(
+                name: .didTapScheduleNotification,
+                object: nil,
+                userInfo: [
+                    ScheduleNotificationUserInfoKey.scheduleID: scheduleID,
+                    ScheduleNotificationUserInfoKey.profileID: profileID,
+                    ScheduleNotificationUserInfoKey.occurrenceEpoch: occurrenceEpoch
+                ]
+            )
+        }
+    }
+
+    /// Performs the indefinite activation directly from the notification-action tap. The
+    /// notification body already explained what "Save to pump" does, so we don't need a second
+    /// in-app confirmation — tapping the action IS the confirmation. Clears the schedule's
+    /// `pendingOccurrence` either way so the firer moves on.
+    private func runScheduledActivation(scheduleID: UUID, profileID: UUID, occurrence: Date) {
+        debug(.service, "ScheduledActivation: confirm received for schedule=\(scheduleID) profile=\(profileID)")
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            let provider = AdaptProfile.Provider(resolver: self.resolver)
+            await provider.markScheduleActivated(scheduleID: scheduleID, occurrence: occurrence)
+            debug(.service, "ScheduledActivation: markScheduleActivated done")
+            let outcome = await provider.activate(
+                id: profileID,
+                durationMinutes: nil,
+                confirmedPumpSync: true
+            )
+            debug(.service, "ScheduledActivation: activate outcome=\(outcome)")
+            Foundation.NotificationCenter.default.post(
+                name: .didUpdateProfileSchedules,
+                object: nil
+            )
+        }
+    }
+
+    /// Stamps `lastFiredAt = occurrence` and clears `pendingOccurrence` so the firer's next sweep
+    /// treats the occurrence as handled and moves on to the next one. Runs on a background context;
+    /// the `didUpdateProfileSchedules` broadcast refreshes open schedule lists.
+    private func markScheduleOccurrenceSkipped(scheduleID: UUID, occurrence: Date) {
+        let context = CoreDataStack.shared.newTaskContext()
+        context.perform {
+            let request = ProfileScheduleStored.fetch(.scheduleByID(scheduleID), fetchLimit: 1)
+            guard let row = (try? context.fetch(request))?.first else { return }
+            row.lastFiredAt = occurrence
+            row.pendingOccurrence = nil
+            try? context.save()
+            Task { @MainActor in
+                Foundation.NotificationCenter.default.post(
+                    name: .didUpdateProfileSchedules,
+                    object: nil
+                )
             }
         }
     }

@@ -35,6 +35,12 @@ struct SettingInputSection<VerboseHint: View>: View {
     var footerText: String?
     var isToggleDisabled: Bool = false
     var miniHintColor: Color = .secondary
+    /// When `true`, the label text is tinted with the accent color. Used by the profile draft
+    /// editor to mark values that differ from the source profile.
+    var isChanged: Bool = false
+    /// When non-nil AND `isChanged` is true, a small circle-x button is shown next to the value
+    /// that invokes this closure to reset the field to its source value.
+    var onReset: (() -> Void)? = nil
 
     @ObservedObject private var pickerSettingsProvider = PickerSettingsProvider.shared
     @State private var displayPicker: Bool = false
@@ -83,147 +89,13 @@ struct SettingInputSection<VerboseHint: View>: View {
             },
             header: { headerText.map(Text.init) },
             footer: { footerText.map(Text.init) }
-        ).listRowBackground(Color.chart)
+        )
+        .settingsSearchTarget(label: label)
     }
 
     // Helper function to retrieve PickerSetting based on key
     private func getPickerSetting(for key: String) -> PickerSetting? {
-        switch key {
-        case "lowGlucose":
-            return pickerSettingsProvider.settings.lowGlucose
-        case "highGlucose":
-            return pickerSettingsProvider.settings.highGlucose
-        case "carbsRequiredThreshold":
-            return pickerSettingsProvider.settings.carbsRequiredThreshold
-        case "individualAdjustmentFactor":
-            return pickerSettingsProvider.settings.individualAdjustmentFactor
-        case "delay":
-            return pickerSettingsProvider.settings.delay
-        case "timeCap":
-            return pickerSettingsProvider.settings.timeCap
-        case "minuteInterval":
-            return pickerSettingsProvider.settings.minuteInterval
-        case "high":
-            return pickerSettingsProvider.settings.high
-        case "low":
-            return pickerSettingsProvider.settings.low
-        case "hours":
-            return pickerSettingsProvider.settings.hours
-        case "maxCarbs":
-            return pickerSettingsProvider.settings.maxCarbs
-        case "maxMealAbsorptionTime":
-            return pickerSettingsProvider.settings.maxMealAbsorptionTime
-        case "maxFat":
-            return pickerSettingsProvider.settings.maxFat
-        case "maxProtein":
-            return pickerSettingsProvider.settings.maxProtein
-        case "overrideFactor":
-            return pickerSettingsProvider.settings.overrideFactor
-        case "fattyMealFactor":
-            return pickerSettingsProvider.settings.fattyMealFactor
-        case "sweetMealFactor":
-            return pickerSettingsProvider.settings.sweetMealFactor
-        case "maxIOB":
-            return pickerSettingsProvider.settings.maxIOB
-        case "maxDailySafetyMultiplier":
-            return pickerSettingsProvider.settings.maxDailySafetyMultiplier
-        case "currentBasalSafetyMultiplier":
-            return pickerSettingsProvider.settings.currentBasalSafetyMultiplier
-        case "autosensMax":
-            return pickerSettingsProvider.settings.autosensMax
-        case "autosensMin":
-            return pickerSettingsProvider.settings.autosensMin
-        case "smbDeliveryRatio":
-            return pickerSettingsProvider.settings.smbDeliveryRatio
-        case "halfBasalExerciseTarget":
-            return pickerSettingsProvider.settings.halfBasalExerciseTarget
-        case "maxCOB":
-            return pickerSettingsProvider.settings.maxCOB
-        case "min5mCarbimpact":
-            return pickerSettingsProvider.settings.min5mCarbimpact
-        case "remainingCarbsFraction":
-            return pickerSettingsProvider.settings.remainingCarbsFraction
-        case "remainingCarbsCap":
-            return pickerSettingsProvider.settings.remainingCarbsCap
-        case "maxSMBBasalMinutes":
-            return pickerSettingsProvider.settings.maxSMBBasalMinutes
-        case "maxUAMSMBBasalMinutes":
-            return pickerSettingsProvider.settings.maxUAMSMBBasalMinutes
-        case "smbInterval":
-            return pickerSettingsProvider.settings.smbInterval
-        case "insulinPeakTime":
-            return pickerSettingsProvider.settings.insulinPeakTime
-        case "carbsReqThreshold":
-            return pickerSettingsProvider.settings.carbsReqThreshold
-        case "noisyCGMTargetMultiplier":
-            return pickerSettingsProvider.settings.noisyCGMTargetMultiplier
-        case "maxDeltaBGthreshold":
-            return pickerSettingsProvider.settings.maxDeltaBGthreshold
-        case "adjustmentFactor":
-            return pickerSettingsProvider.settings.adjustmentFactor
-        case "adjustmentFactorSigmoid":
-            return pickerSettingsProvider.settings.adjustmentFactorSigmoid
-        case "weightPercentage":
-            return pickerSettingsProvider.settings.weightPercentage
-        case "enableSMB_high_bg_target":
-            return pickerSettingsProvider.settings.enableSMB_high_bg_target
-        case "threshold_setting":
-            return pickerSettingsProvider.settings.threshold_setting
-        case "updateInterval":
-            return pickerSettingsProvider.settings.updateInterval
-        case "dia":
-            return pickerSettingsProvider.settings.dia
-        case "maxBolus":
-            return pickerSettingsProvider.settings.maxBolus
-        case "maxBasal":
-            return pickerSettingsProvider.settings.maxBasal
-        case "autoISFmax":
-            return pickerSettingsProvider.settings.autoISFmax
-        case "autoISFmin":
-            return pickerSettingsProvider.settings.autoISFmin
-        case "smbMaxRangeExtension":
-            return pickerSettingsProvider.settings.smbMaxRangeExtension
-        case "smbDeliveryRatioBGrange":
-            return pickerSettingsProvider.settings.smbDeliveryRatioBGrange
-        case "smbDeliveryRatioMin":
-            return pickerSettingsProvider.settings.smbDeliveryRatioMin
-        case "smbDeliveryRatioMax":
-            return pickerSettingsProvider.settings.smbDeliveryRatioMax
-        case "autoISFhourlyChange":
-            return pickerSettingsProvider.settings.autoISFhourlyChange
-        case "higherISFrangeWeight":
-            return pickerSettingsProvider.settings.higherISFrangeWeight
-        case "lowerISFrangeWeight":
-            return pickerSettingsProvider.settings.lowerISFrangeWeight
-        case "deltaISFrangeWeight":
-            return pickerSettingsProvider.settings.deltaISFrangeWeight
-        case "postMealISFweight":
-            return pickerSettingsProvider.settings.postMealISFweight
-        case "bgAccelISFweight":
-            return pickerSettingsProvider.settings.bgAccelISFweight
-        case "bgBrakeISFweight":
-            return pickerSettingsProvider.settings.bgBrakeISFweight
-        case "iobThresholdPercent":
-            return pickerSettingsProvider.settings.iobThresholdPercent
-        case "B30iTimeStartBolus":
-            return pickerSettingsProvider.settings.B30iTimeStartBolus
-        case "B30iTime":
-            return pickerSettingsProvider.settings.B30iTime
-        case "B30iTimeTarget":
-            return pickerSettingsProvider.settings.B30iTimeTarget
-        case "B30upperLimit":
-            return pickerSettingsProvider.settings.B30upperLimit
-        case "B30upperDelta":
-            return pickerSettingsProvider.settings.B30upperDelta
-        case "B30basalFactor":
-            return pickerSettingsProvider.settings.B30basalFactor
-        case "ketoProtectBasalPercent":
-            return pickerSettingsProvider.settings.ketoProtectBasalPercent
-        case "ketoProtectBasalAbsolut":
-            return pickerSettingsProvider.settings.ketoProtectBasalAbsolut
-        default:
-            return nil
-        }
+        pickerSettingsProvider.pickerSetting(for: key)
     }
 
     private func pickerView(
@@ -235,7 +107,15 @@ struct SettingInputSection<VerboseHint: View>: View {
         VStack {
             HStack {
                 Text(label)
+                    .foregroundColor(isChanged ? .accentColor : .primary)
                 Spacer()
+                if isChanged, let onReset = onReset {
+                    Button(action: onReset) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(BorderlessButtonStyle())
+                }
                 displayText(for: setting, decimalValue: decimalValue.wrappedValue)
                     .foregroundColor(!displayPicker.wrappedValue ? .primary : .accentColor)
                     .onTapGesture {
@@ -274,6 +154,8 @@ struct SettingInputSection<VerboseHint: View>: View {
             return Text("\(decimalValue) \(String(localized: "min", comment: "Minutes abbreviation"))")
         case .hour:
             return Text("\(decimalValue) \(String(localized: "hr", comment: "Hours abbreviation"))")
+        case .percent:
+            return Text("\(decimalValue) \(String(localized: "%", comment: "Percentage symbol"))")
         }
     }
 
@@ -281,6 +163,14 @@ struct SettingInputSection<VerboseHint: View>: View {
         HStack {
             Toggle(isOn: isOn) {
                 Text(label)
+                    .foregroundColor(isChanged ? .accentColor : .primary)
+            }
+            if isChanged, let onReset = onReset {
+                Button(action: onReset) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(BorderlessButtonStyle())
             }
         }.padding(.top)
     }

@@ -1,14 +1,18 @@
 import Foundation
 
+struct DeterminationErrorResponse: JSON, Equatable {
+    let error: String
+}
+
 struct Determination: JSON, Equatable {
     let id: UUID?
     var reason: String
-    let units: Decimal?
-    let insulinReq: Decimal?
+    var units: Decimal?
+    var insulinReq: Decimal?
     var eventualBG: Int?
     let sensitivityRatio: Decimal?
-    let rate: Decimal?
-    let duration: Decimal?
+    var rate: Decimal?
+    var duration: Decimal?
     let iob: Decimal?
     let cob: Decimal?
     var predictions: Predictions?
@@ -25,8 +29,6 @@ struct Determination: JSON, Equatable {
     var tdd: Decimal?
 
     var current_target: Decimal?
-    let insulinForManualBolus: Decimal?
-    let manualBolusErrorString: Decimal?
     var minDelta: Decimal?
     var expectedDelta: Decimal?
     var minGuardBG: Decimal?
@@ -35,25 +37,30 @@ struct Determination: JSON, Equatable {
     let carbRatio: Decimal?
     let received: Bool?
     //    autoISF
-    let smbRatio: Decimal?
-    let duraISFratio: Decimal?
-    let bgISFratio: Decimal?
-    let ppISFratio: Decimal?
-    let acceISFratio: Decimal?
-    let autoISFratio: Decimal?
-    let iobTH: Decimal?
+    var smbRatio: Decimal?
+    var duraISFratio: Decimal?
+    var bgISFratio: Decimal?
+    var ppISFratio: Decimal?
+    var acceISFratio: Decimal?
+    var autoISFratio: Decimal?
+    var iobTH: Decimal?
     let tick: Int?
     // acce calc
-    let parabolaFitMinutes: Decimal?
-    let parabolaFitLastDelta: Decimal?
-    let parabolaFitNextDelta: Decimal?
-    let parabolaFitCorrelation: Decimal?
-    let parabolaFitA0: Decimal?
-    let parabolaFitA1: Decimal?
-    let parabolaFitA2: Decimal?
-    let duraMin: Decimal?
-    let duraAvg: Decimal?
-    let bgAcce: Decimal?
+    var parabolaFitMinutes: Decimal?
+    var parabolaFitLastDelta: Decimal?
+    var parabolaFitNextDelta: Decimal?
+    var parabolaFitCorrelation: Decimal?
+    var parabolaFitA0: Decimal?
+    var parabolaFitA1: Decimal?
+    var parabolaFitA2: Decimal?
+    var duraMin: Decimal?
+    var duraAvg: Decimal?
+    var bgAcce: Decimal?
+    // Mirrors JS rT.BGI / rT.deviation / rT.iobActivity. Surfaced so the JS↔Swift
+    // algo-compare can verify the glucose-impact pipeline end-to-end.
+    var bgi: Decimal?
+    var deviation: Decimal?
+    var iobActivity: Decimal?
 }
 
 struct Predictions: JSON, Equatable {
@@ -85,8 +92,6 @@ extension Determination {
         case isf = "ISF"
         case current_target
         case tdd = "TDD"
-        case insulinForManualBolus
-        case manualBolusErrorString
         case minDelta
         case expectedDelta
         case minGuardBG
@@ -114,6 +119,9 @@ extension Determination {
         case duraMin = "dura_min"
         case duraAvg = "dura_avg"
         case bgAcce = "bg_acce"
+        case bgi = "BGI"
+        case deviation
+        case iobActivity
     }
 }
 

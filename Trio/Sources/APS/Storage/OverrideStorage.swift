@@ -122,7 +122,10 @@ final class BaseOverrideStorage: @preconcurrency OverrideStorage, Injectable {
                 newOverride.name = override.name
             } else {
                 let formattedDate = self.dateFormatter.string(from: Date())
-                newOverride.name = "Override \(formattedDate)"
+                newOverride.name = String(
+                    localized: "Override \(formattedDate)",
+                    comment: "Default name for a new override when the user left the name field blank — interpolated value is a formatted date/time"
+                )
             }
             newOverride.id = UUID().uuidString
             newOverride.date = override.date
@@ -163,6 +166,21 @@ final class BaseOverrideStorage: @preconcurrency OverrideStorage, Injectable {
                 newOverride.smbIsScheduledOff = false
             }
 
+            newOverride.autoISFmin = override.autoISFmin.map { NSDecimalNumber(decimal: $0) }
+            newOverride.autoISFmax = override.autoISFmax.map { NSDecimalNumber(decimal: $0) }
+            newOverride.autoISFhourlyChange = override.autoISFhourlyChange.map { NSDecimalNumber(decimal: $0) }
+            newOverride.higherISFrangeWeight = override.higherISFrangeWeight.map { NSDecimalNumber(decimal: $0) }
+            newOverride.lowerISFrangeWeight = override.lowerISFrangeWeight.map { NSDecimalNumber(decimal: $0) }
+            newOverride.postMealISFweight = override.postMealISFweight.map { NSDecimalNumber(decimal: $0) }
+            newOverride.bgAccelISFweight = override.bgAccelISFweight.map { NSDecimalNumber(decimal: $0) }
+            newOverride.bgBrakeISFweight = override.bgBrakeISFweight.map { NSDecimalNumber(decimal: $0) }
+            newOverride.iobThresholdPercent = override.iobThresholdPercent.map { NSDecimalNumber(decimal: $0) }
+            newOverride.smbDeliveryRatio = override.smbDeliveryRatio.map { NSDecimalNumber(decimal: $0) }
+            newOverride.smbDeliveryRatioBGrange = override.smbDeliveryRatioBGrange.map { NSDecimalNumber(decimal: $0) }
+            newOverride.smbDeliveryRatioMin = override.smbDeliveryRatioMin.map { NSDecimalNumber(decimal: $0) }
+            newOverride.smbDeliveryRatioMax = override.smbDeliveryRatioMax.map { NSDecimalNumber(decimal: $0) }
+            newOverride.enableBGacceleration = override.enableBGacceleration.map { NSNumber(value: $0) }
+
             guard self.context.hasChanges else { return }
             try self.context.save()
         }
@@ -195,6 +213,20 @@ final class BaseOverrideStorage: @preconcurrency OverrideStorage, Injectable {
         newOverride.end = override.end
         newOverride.smbMinutes = override.smbMinutes
         newOverride.uamMinutes = override.uamMinutes
+        newOverride.autoISFmin = override.autoISFmin
+        newOverride.autoISFmax = override.autoISFmax
+        newOverride.autoISFhourlyChange = override.autoISFhourlyChange
+        newOverride.higherISFrangeWeight = override.higherISFrangeWeight
+        newOverride.lowerISFrangeWeight = override.lowerISFrangeWeight
+        newOverride.postMealISFweight = override.postMealISFweight
+        newOverride.bgAccelISFweight = override.bgAccelISFweight
+        newOverride.bgBrakeISFweight = override.bgBrakeISFweight
+        newOverride.iobThresholdPercent = override.iobThresholdPercent
+        newOverride.smbDeliveryRatio = override.smbDeliveryRatio
+        newOverride.smbDeliveryRatioBGrange = override.smbDeliveryRatioBGrange
+        newOverride.smbDeliveryRatioMin = override.smbDeliveryRatioMin
+        newOverride.smbDeliveryRatioMax = override.smbDeliveryRatioMax
+        newOverride.enableBGacceleration = override.enableBGacceleration
         newOverride.isUploadedToNS = true // set to true to avoid getting duplicate entries on NS
 
         await viewContext.perform {
@@ -263,7 +295,10 @@ final class BaseOverrideStorage: @preconcurrency OverrideStorage, Injectable {
                     eventType: OverrideStored.EventType.nsExercise,
                     createdAt: override.date ?? Date(),
                     enteredBy: NightscoutExercise.local,
-                    notes: override.name ?? String(localized: "Custom Override"),
+                    notes: override.name ?? String(
+                        localized: "Custom Override",
+                        comment: "Fallback name for an unnamed override uploaded to Nightscout"
+                    ),
                     id: UUID(uuidString: override.id ?? UUID().uuidString)
                 )
             }
@@ -296,7 +331,10 @@ final class BaseOverrideStorage: @preconcurrency OverrideStorage, Injectable {
                     eventType: OverrideStored.EventType.nsExercise,
                     createdAt: (overrideRun.startDate ?? overrideRun.override?.date) ?? Date(),
                     enteredBy: NightscoutExercise.local,
-                    notes: overrideRun.name ?? String(localized: "Custom Override"),
+                    notes: overrideRun.name ?? String(
+                        localized: "Custom Override",
+                        comment: "Fallback name for an unnamed historical override run uploaded to Nightscout"
+                    ),
                     id: overrideRun.id
                 )
             }
@@ -346,7 +384,10 @@ final class BaseOverrideStorage: @preconcurrency OverrideStorage, Injectable {
                 eventType: OverrideStored.EventType.nsExercise,
                 createdAt: recordDate,
                 enteredBy: NightscoutExercise.local,
-                notes: record.name ?? String(localized: "Custom Override"),
+                notes: record.name ?? String(
+                    localized: "Custom Override",
+                    comment: "Fallback name when checking whether a stored Nightscout override entry needs updating"
+                ),
                 id: UUID(uuidString: record.id ?? UUID().uuidString)
             )
         }

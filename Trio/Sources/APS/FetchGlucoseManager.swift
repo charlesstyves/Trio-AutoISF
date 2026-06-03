@@ -231,17 +231,16 @@ final class BaseFetchGlucoseManager: FetchGlucoseManager, Injectable {
             }
         }
 
-        // Set loop interval for APSManager and filter time in FetchGlucoseManager
+        // Persist runtime loop/glucose config (loop interval, filter time, minimum glucose)
         if !Bundle.main.simulatorVisibility.isHidden {
             if self.cgmGlucoseSourceType == .simulator {
-                // Set loop interval to 10 seconds
-                let newLoopInterval = 10.0
-                UserDefaults.standard.set(newLoopInterval, forKey: "Config_LoopInterval")
-                // Set filter time in FetchGlucoseManager to 10s so that new glucose values don't get filtered out
-                UserDefaults.standard.set(10, forKey: "Config_FilterTime")
+                UserDefaults.standard.set(Config.simulatorLoopInterval, forKey: Config.UserDefaultsKey.loopInterval)
+                UserDefaults.standard.set(Config.simulatorFilterTime, forKey: Config.UserDefaultsKey.filterTime)
+                UserDefaults.standard.set(Config.simulatorMinimumGlucose, forKey: Config.UserDefaultsKey.minimumGlucose)
             } else {
-                UserDefaults.standard.set(3.minutes.timeInterval, forKey: "Config_LoopInterval")
-                UserDefaults.standard.set(3.5 * 60, forKey: "Config_FilterTime")
+                UserDefaults.standard.set(Config.defaultLoopInterval, forKey: Config.UserDefaultsKey.loopInterval)
+                UserDefaults.standard.set(Config.defaultFilterTime, forKey: Config.UserDefaultsKey.filterTime)
+                UserDefaults.standard.set(Config.defaultMinimumGlucose, forKey: Config.UserDefaultsKey.minimumGlucose)
             }
         }
     }
@@ -425,7 +424,7 @@ extension BaseFetchGlucoseManager {
             throw CoreDataError.fetchError(function: #function, file: #file)
         }
 
-        return glucoseArray.map(\.objectID).reversed()
+        return Array(glucoseArray.map(\.objectID).reversed())
     }
 
     /// Main smoothing entry point - dispatches to exponential or UKF based on settings.
@@ -446,7 +445,7 @@ extension BaseFetchGlucoseManager {
     /// CoreData-friendly AAPS exponential smoothing + storage.
     /// - Important: Only stores `smoothedGlucose`. UI/alerts should still use `glucose`.
     ///
-    private func exponentialSmoothingGlucose(context: NSManagedObjectContext) async {
+    func exponentialSmoothingGlucose(context: NSManagedObjectContext) async {
         let startTime = Date()
 
         do {

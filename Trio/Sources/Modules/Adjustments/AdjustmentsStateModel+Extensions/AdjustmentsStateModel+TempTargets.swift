@@ -47,14 +47,20 @@ extension Adjustments.StateModel {
     @MainActor func setCurrentTempTarget(from IDs: [NSManagedObjectID]) async {
         do {
             guard let firstID = IDs.first else {
-                activeTempTargetName = "Custom Temp Target"
+                activeTempTargetName = String(
+                    localized: "Custom Temp Target",
+                    comment: "Fallback display name for the active temp target when no list entry exists"
+                )
                 currentActiveTempTarget = nil
                 return
             }
 
             if let tempTargetToEdit = try viewContext.existingObject(with: firstID) as? TempTargetStored {
                 currentActiveTempTarget = tempTargetToEdit
-                activeTempTargetName = tempTargetToEdit.name ?? String(localized: "Custom Temp Target")
+                activeTempTargetName = tempTargetToEdit.name ?? String(
+                    localized: "Custom Temp Target",
+                    comment: "Fallback display name for the active temp target when no name was set"
+                )
                 tempTargetTarget = tempTargetToEdit.target?.decimalValue ?? 0
             }
         } catch {
@@ -371,7 +377,10 @@ extension Adjustments.StateModel {
             if let tempTargetToEdit = try viewContext.existingObject(with: duplidateId) as? TempTargetStored
             {
                 currentActiveTempTarget = tempTargetToEdit
-                activeTempTargetName = tempTargetToEdit.name ?? String(localized: "Custom Temp Target")
+                activeTempTargetName = tempTargetToEdit.name ?? String(
+                    localized: "Custom Temp Target",
+                    comment: "Fallback display name for a duplicated temp target when the preset had no name"
+                )
             }
         } catch {
             debugPrint(
@@ -402,8 +411,8 @@ extension Adjustments.StateModel {
     /// Determines if sensitivity adjustment is enabled based on target.
     func isAdjustSensEnabled(usingTarget initialTarget: Decimal? = nil) -> Bool {
         let target = initialTarget ?? tempTargetTarget
-        if target < TempTargetCalculations.normalTarget, lowTTlowersSens && autosensMax > 1 { return true }
-        if target > TempTargetCalculations.normalTarget, highTTraisesSens || isExerciseModeActive { return true }
+        if target < TempTargetCalculations.normalTarget, lowTTlowersSens, autosensMax > 1 { return true }
+        if target > TempTargetCalculations.normalTarget, highTTraisesSens { return true }
         return false
     }
 
@@ -428,4 +437,11 @@ extension Adjustments.StateModel {
 enum TempTargetSensitivityAdjustmentType: String, CaseIterable {
     case standard = "Standard"
     case slider = "Custom"
+
+    var displayName: String {
+        switch self {
+        case .standard: return String(localized: "Standard", comment: "Temp target sensitivity mode — preset ratios")
+        case .slider: return String(localized: "Custom", comment: "Temp target sensitivity mode — user-adjustable slider")
+        }
+    }
 }

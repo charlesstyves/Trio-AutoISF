@@ -1,4 +1,4 @@
-function middleware(iob, currenttemp, glucose_status, profile, autosens, meal, reservoir, clock, pump_history, basalProfile, trio_custom_oref_variables_temp) {
+function middleware(iob, currenttemp, glucose_status, profile, autosens, meal, reservoir, clock, pump_history, basalProfile, trio_custom_oref_variables) {
     
     // modify anything
     // return any reason what has changed.
@@ -24,7 +24,7 @@ function middleware(iob, currenttemp, glucose_status, profile, autosens, meal, r
             }
         }
     if (setTarget == 1) {
-        if     (currentHour > 22 || currentHour < 7 && currentBG < 130) {
+        if ((currentHour > 22 || currentHour < 7) && currentBG < 130) {
             profile.min_bg = 101;
             profile.max_bg = profile.min_bg;
             reasonTarget = ", TT set to: " + profile.min_bg;
