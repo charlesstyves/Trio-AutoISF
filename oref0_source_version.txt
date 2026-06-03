@@ -1,6 +1,7 @@
-oref0 branch: autoISF3.01 - git version: f6cc9f1
+oref0 branch: autoISF3.01 - git version: 51dde70
 
 Last commits:
+51dde70 fix(iob): respect enable_autosens in basal IOB calculation
 f6cc9f1 fix(autoISF): apply iobTH 130% cap regardless of even/odd toggle
 dbd4169 Align autoISF logs and parabolic calculations with orefSwift
 4cec9c1 use proper targetBG for brake Cap for acceRatio
@@ -30,4 +31,3 @@ c3034b7 dynISF
 a38f052 Rename output library to trio_[name]
 1236511 introduce shouldProtectDueToHIGH
 fe902c1 use iobTH without even/off
-78c308c AIMI deactivates with upperDelta or BG surpassed
