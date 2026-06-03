@@ -1350,6 +1350,10 @@ final class OpenAPS {
                         Script(name: Bundle.determineBasal)
                     ])
 
+                    if let middleware = self.middlewareScript(name: OpenAPS.Middleware.determineBasal) {
+                        worker.evaluate(script: middleware)
+                    }
+
                     let result = worker.call(function: Function.generate, with: [
                         iob,
                         currentTemp,
@@ -1625,6 +1629,16 @@ final class OpenAPS {
 
     private func loadFileFromStorage(name: String) -> RawJSON {
         storage.retrieveRaw(name) ?? OpenAPS.defaults(for: name)
+    }
+
+    private func middlewareScript(name: String) -> Script? {
+        if let body = storage.retrieveRaw(name), !body.isEmpty {
+            return Script(name: name, body: body)
+        }
+        if let url = Foundation.Bundle.main.url(forResource: "javascript/\(name)", withExtension: "") {
+            return (try? String(contentsOf: url)).map { Script(name: name, body: $0) }
+        }
+        return nil
     }
 
     private func loadFileFromStorageAsync(name: String) async -> RawJSON {
