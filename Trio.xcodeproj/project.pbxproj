@@ -760,13 +760,8 @@
 		BD175EBE0000100000000004 /* HistoryStateModel+Carbs.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE0000100000000004 /* HistoryStateModel+Carbs.swift */; };
 		BD175EBE0000100000000005 /* HistoryStateModel+Insulin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE0000100000000005 /* HistoryStateModel+Insulin.swift */; };
 		BD175EBE0000100000000006 /* HistoryStateModel+CarbEditing.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE0000100000000006 /* HistoryStateModel+CarbEditing.swift */; };
-		BD175EBE0000100000000007 /* HistoryRootView+Treatments.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE0000100000000007 /* HistoryRootView+Treatments.swift */; };
-		BD175EBE0000100000000008 /* HistoryRootView+Meals.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE0000100000000008 /* HistoryRootView+Meals.swift */; };
-		BD175EBE0000100000000009 /* HistoryRootView+Glucose.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE0000100000000009 /* HistoryRootView+Glucose.swift */; };
-		BD175EBE000010000000000A /* HistoryRootView+Adjustments.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE000010000000000A /* HistoryRootView+Adjustments.swift */; };
-		BD175EBE000010000000000B /* HistoryRootView+Filters.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE000010000000000B /* HistoryRootView+Filters.swift */; };
-		BD175EBE000010000000000C /* HistoryRootView+AddGlucose.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE000010000000000C /* HistoryRootView+AddGlucose.swift */; };
-		BD175EBE000010000000000D /* HistoryRootView+Confirmations.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD175EFE000010000000000D /* HistoryRootView+Confirmations.swift */; };
+		BD7A1571E000000000000002 /* TaiStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD7A1571E000000000000001 /* TaiStyle.swift */; };
+		BD7A1571E000000000000003 /* TaiStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD7A1571E000000000000001 /* TaiStyle.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1620,13 +1615,7 @@
 		BD175EFE0000100000000004 /* HistoryStateModel+Carbs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryStateModel+Carbs.swift"; sourceTree = "<group>"; };
 		BD175EFE0000100000000005 /* HistoryStateModel+Insulin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryStateModel+Insulin.swift"; sourceTree = "<group>"; };
 		BD175EFE0000100000000006 /* HistoryStateModel+CarbEditing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryStateModel+CarbEditing.swift"; sourceTree = "<group>"; };
-		BD175EFE0000100000000007 /* HistoryRootView+Treatments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryRootView+Treatments.swift"; sourceTree = "<group>"; };
-		BD175EFE0000100000000008 /* HistoryRootView+Meals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryRootView+Meals.swift"; sourceTree = "<group>"; };
-		BD175EFE0000100000000009 /* HistoryRootView+Glucose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryRootView+Glucose.swift"; sourceTree = "<group>"; };
-		BD175EFE000010000000000A /* HistoryRootView+Adjustments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryRootView+Adjustments.swift"; sourceTree = "<group>"; };
-		BD175EFE000010000000000B /* HistoryRootView+Filters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryRootView+Filters.swift"; sourceTree = "<group>"; };
-		BD175EFE000010000000000C /* HistoryRootView+AddGlucose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryRootView+AddGlucose.swift"; sourceTree = "<group>"; };
-		BD175EFE000010000000000D /* HistoryRootView+Confirmations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HistoryRootView+Confirmations.swift"; sourceTree = "<group>"; };
+		BD7A1571E000000000000001 /* TaiStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaiStyle.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -1756,13 +1745,6 @@
 			children = (
 				BDA7593D2D37CFC000E649A4 /* CarbEntryEditorView.swift */,
 				881E04BA5E0A003DE8E0A9C6 /* HistoryRootView.swift */,
-				BD175EFE0000100000000007 /* HistoryRootView+Treatments.swift */,
-				BD175EFE0000100000000008 /* HistoryRootView+Meals.swift */,
-				BD175EFE0000100000000009 /* HistoryRootView+Glucose.swift */,
-				BD175EFE000010000000000A /* HistoryRootView+Adjustments.swift */,
-				BD175EFE000010000000000B /* HistoryRootView+Filters.swift */,
-				BD175EFE000010000000000C /* HistoryRootView+AddGlucose.swift */,
-				BD175EFE000010000000000D /* HistoryRootView+Confirmations.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -2583,6 +2565,7 @@
 				49239B422EEA27AD00469145 /* TempTargetCalculations.swift */,
 				DDCAE8322D78D49C00B1BB51 /* TherapySettingsUtil.swift */,
 				DDD5889C2DDDC9A900C8848D /* TimeAgoFormatter.swift */,
+				BD7A1571E000000000000001 /* TaiStyle.swift */,
 				BD2FF19F2AE29D43005D1C5D /* ToggleStyles.swift */,
 				CEB434E428B8FF5D00B70274 /* UIColor.swift */,
 				FEFFA7A12929FE49007B8193 /* UIDevice+Extensions.swift */,
@@ -4308,6 +4291,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BD7A1571E000000000000002 /* TaiStyle.swift in Sources */,
 				DDA40BBA2F4DB18800257798 /* AlgorithmGlucose.swift in Sources */,
 				DD5DC9F12CF3D97C00AB8703 /* AdjustmentsStateModel+Overrides.swift in Sources */,
 				3811DE2325C9D48300A708ED /* MainDataFlow.swift in Sources */,
@@ -4920,13 +4904,6 @@
 				BD175EBE0000100000000004 /* HistoryStateModel+Carbs.swift in Sources */,
 				BD175EBE0000100000000005 /* HistoryStateModel+Insulin.swift in Sources */,
 				BD175EBE0000100000000006 /* HistoryStateModel+CarbEditing.swift in Sources */,
-				BD175EBE0000100000000007 /* HistoryRootView+Treatments.swift in Sources */,
-				BD175EBE0000100000000008 /* HistoryRootView+Meals.swift in Sources */,
-				BD175EBE0000100000000009 /* HistoryRootView+Glucose.swift in Sources */,
-				BD175EBE000010000000000A /* HistoryRootView+Adjustments.swift in Sources */,
-				BD175EBE000010000000000B /* HistoryRootView+Filters.swift in Sources */,
-				BD175EBE000010000000000C /* HistoryRootView+AddGlucose.swift in Sources */,
-				BD175EBE000010000000000D /* HistoryRootView+Confirmations.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4980,6 +4957,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BD7A1571E000000000000003 /* TaiStyle.swift in Sources */,
 				BDA25F222D26D62800035F34 /* BolusInputView.swift in Sources */,
 				BDFF7A882D25F97D0016C40C /* TrioMainWatchView.swift in Sources */,
 				BDA25F202D26D5FE00035F34 /* CarbsInputView.swift in Sources */,
