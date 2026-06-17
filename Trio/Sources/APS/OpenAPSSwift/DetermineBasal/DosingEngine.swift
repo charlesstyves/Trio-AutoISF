@@ -460,12 +460,12 @@ enum DosingEngine {
 
         // calculate 30m low-temp required to get projected glucose up to target
         var insulinRequired = 2 * min(0, (eventualGlucose - targetGlucose) / adjustedSensitivity)
-        insulinRequired = insulinRequired.jsRounded(scale: 2)
+        insulinRequired = insulinRequired.jsRounded(scale: 3)
 
-        let naiveInsulinRequired = min(0, (naiveEventualGlucose - targetGlucose) / adjustedSensitivity).jsRounded(scale: 2)
+        let naiveInsulinRequired = min(0, (naiveEventualGlucose - targetGlucose) / adjustedSensitivity).jsRounded(scale: 3)
 
         if minDelta < 0, minDelta > expectedDelta {
-            let newInsulinRequired = (insulinRequired * (minDelta / expectedDelta)).jsRounded(scale: 2)
+            let newInsulinRequired = (insulinRequired * (minDelta / expectedDelta)).jsRounded(scale: 3)
             insulinRequired = newInsulinRequired
         }
 
@@ -712,7 +712,7 @@ enum DosingEngine {
         var newDetermination = determination
         var insulinRequired = (
             (min(minForecastGlucose, eventualGlucose) - targetGlucose) / adjustedSensitivity
-        ).jsRounded(scale: 2)
+        ).jsRounded(scale: 3)
 
         if insulinRequired > maxIob - currentIob {
             newDetermination.reason += "max_iob \(maxIob), "
