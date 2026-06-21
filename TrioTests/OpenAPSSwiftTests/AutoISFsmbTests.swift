@@ -208,8 +208,7 @@ import Testing
         #expect(result.smbEnabled)
     }
 
-    @Test("evaluate detects even target in mmol/L units (108 mg/dL → 6.0 mmol/L)")
-    func evaluateEvenTargetMmolL() throws {
+    @Test("evaluate detects even target in mmol/L units (108 mg/dL → 6.0 mmol/L)") func evaluateEvenTargetMmolL() throws {
         // targetBG is always supplied in mg/dL (profile.minBg storage). The mmol/L
         // branch must first convert to mmol/L (the reciprocal of asMgdL, 1-dec rounded)
         // before doing the *10 %2 parity check, mirroring JS convert_bg.
@@ -231,8 +230,7 @@ import Testing
         #expect(result.smbEnabled)
     }
 
-    @Test("evaluate blocks SMB on odd mmol/L target (99 mg/dL → 5.5 mmol/L)")
-    func evaluateOddTargetMmolL() throws {
+    @Test("evaluate blocks SMB on odd mmol/L target (99 mg/dL → 5.5 mmol/L)") func evaluateOddTargetMmolL() throws {
         // Regression test for the mg/dL-vs-mmol/L parity bug: the previous
         // implementation did `(targetBG * 10) % 2` on the raw mg/dL integer,
         // which is always even. JS does the parity check on the displayed
@@ -254,8 +252,7 @@ import Testing
         #expect(!result.smbEnabled)
     }
 
-    @Test("evaluate blocks SMB on odd mmol/L target (110 mg/dL → 6.1 mmol/L)")
-    func evaluateOddTargetMmolLHigh() throws {
+    @Test("evaluate blocks SMB on odd mmol/L target (110 mg/dL → 6.1 mmol/L)") func evaluateOddTargetMmolLHigh() throws {
         // 110 mg/dL * 0.0555 = 6.105 → 6.1 → 61 → odd.
         // Under the old code this would have been (110 * 10) % 2 = 0 (even) → not blocked.
         let profile = makeProfile()
@@ -275,8 +272,7 @@ import Testing
         #expect(!result.smbEnabled)
     }
 
-    @Test("evaluate flips parity when units flip: 92 mg/dL is even, 5.1 mmol/L is odd")
-    func evaluateParityFlipsAcrossUnits92() throws {
+    @Test("evaluate flips parity when units flip: 92 mg/dL is even, 5.1 mmol/L is odd") func evaluateParityFlipsAcrossUnits92() throws {
         // 92 mg/dL is even → mg/dL branch enforces SMB.
         // 92 * 0.0555 = 5.106 → 5.1 → tenths digit 1 → odd → mmol/L branch blocks.
         // Same physical target, opposite verdict — verifies the unit conversion happens
@@ -314,8 +310,7 @@ import Testing
         #expect(!mmolResult.smbEnabled)
     }
 
-    @Test("evaluate flips parity when units flip: 93 mg/dL is odd, 5.2 mmol/L is even")
-    func evaluateParityFlipsAcrossUnits93() throws {
+    @Test("evaluate flips parity when units flip: 93 mg/dL is odd, 5.2 mmol/L is even") func evaluateParityFlipsAcrossUnits93() throws {
         // 93 mg/dL is odd → mg/dL branch blocks SMB.
         // 93 * 0.0555 = 5.1615 → 5.2 → tenths digit 2 → even → mmol/L branch enforces.
         let mgdlProfile = makeProfile()
@@ -350,8 +345,7 @@ import Testing
         #expect(mmolResult.smbEnabled)
     }
 
-    @Test("evaluate detects even target in mmol/L units (100 mg/dL → 5.6 mmol/L)")
-    func evaluateEvenTargetMmolL100() throws {
+    @Test("evaluate detects even target in mmol/L units (100 mg/dL → 5.6 mmol/L)") func evaluateEvenTargetMmolL100() throws {
         // 100 mg/dL * 0.0555 = 5.55 → round 1dp .plain → 5.6 → 56 → even.
         let profile = makeProfile()
 

@@ -55,6 +55,7 @@ enum DeterminationGenerator {
             try determineBasal(
                 profile: profile,
                 preferences: preferences,
+                units: units,
                 currentTemp: currentTemp,
                 iobData: iobData,
                 mealData: mealData,
@@ -76,6 +77,7 @@ enum DeterminationGenerator {
     static func determineBasal(
         profile: Profile,
         preferences: Preferences,
+        units: GlucoseUnits,
         currentTemp: TempBasal,
         iobData: [IobResult],
         mealData: ComputedCarbs,
