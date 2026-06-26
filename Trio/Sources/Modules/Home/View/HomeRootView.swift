@@ -1477,17 +1477,17 @@ extension Home {
                     action: {
                         state.showModal(for: .treatmentView) },
                     label: {
-//                        Image(systemName: "plus.circle.fill")
-//                            .font(.system(size: 40))
-//                            .foregroundStyle(Color.tabBar)
-//                            .padding(.vertical, 2)
-//                            .padding(.horizontal, 24)
-                        Image(.taiCircledNoBackground)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 42, height: 42)
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 40))
+                            .foregroundStyle(Color.tabBar)
                             .padding(.vertical, 2)
-                            .shadow(color: Color.white.opacity(0.1), radius: 5, x: 0, y: 0)
+                            .padding(.horizontal, 24)
+//                        Image(.taiCircledNoBackground)
+//                            .resizable()
+//                            .scaledToFit()
+//                            .frame(width: 42, height: 42)
+//                            .padding(.vertical, 2)
+//                            .shadow(color: Color.white.opacity(0.1), radius: 5, x: 0, y: 0)
                     }
                 )
             }.ignoresSafeArea(.keyboard, edges: .bottom).blur(radius: state.waitForSuggestion ? 8 : 0)
