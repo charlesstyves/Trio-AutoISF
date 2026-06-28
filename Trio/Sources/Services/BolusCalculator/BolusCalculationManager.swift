@@ -392,7 +392,8 @@ final class BaseBolusCalculationManager: BolusCalculationManager, Injectable {
         debug(.default, "Target difference insulin: \(targetDifferenceInsulin)")
 
         // more or less insulin because of bg trend in the last 15 minutes
-        let fifteenMinutesInsulin = input.deltaBG / input.isf
+        // let fifteenMinutesInsulin = input.deltaBG / input.isf
+        let fifteenMinutesInsulin: Decimal = 0
         debug(.default, "15min insulin: \(fifteenMinutesInsulin)")
 
         // determine whole COB for which we want to dose insulin for and then determine insulin for wholeCOB
