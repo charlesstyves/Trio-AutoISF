@@ -275,14 +275,14 @@ extension Treatments {
                             }
 
                             // Notes
-                            HStack {
-                                Image(systemName: "square.and.pencil")
-                                TextFieldWithToolBarString(
-                                    text: $state.note,
-                                    placeholder: String(localized: "Note..."),
-                                    maxLength: 25
-                                )
-                            }
+//                            HStack {
+//                                Image(systemName: "square.and.pencil")
+//                                TextFieldWithToolBarString(
+//                                    text: $state.note,
+//                                    placeholder: String(localized: "Note..."),
+//                                    maxLength: 25
+//                                )
+//                            }
                         }.listRowBackground(Color.chart)
 
                         Section {
