@@ -87,8 +87,8 @@ struct CurrentGlucoseView: View {
     @ViewBuilder private func bobbleAndTag(triangleColor: Color) -> some View {
         // Push the U-concentration badge outside the lifecycle arc (radius 73)
         // when it's drawn; collapse to the bobble edge otherwise. The sensor
-        // tag mirrors the badge across BOTH axes so it lands in the opposite
-        // corner — badge at 7-8 o'clock, tag at 1-2 o'clock.
+        // icon mirrors the badge across BOTH axes so it lands in the truly
+        // opposite corner — badge at 7-8 o'clock, icon at 1-2 o'clock.
         let arcVisible = cgmProgress != nil && shouldShowArc
         let badgeOffsetX: CGFloat = arcVisible ? -72 : -65
         let badgeOffsetY: CGFloat = arcVisible ? 72 : 65
@@ -112,11 +112,21 @@ struct CurrentGlucoseView: View {
             }
         }
         .overlay {
-            // Overlay (not VStack) so the tag doesn't push siblings down;
-            // hidden when the trend arrow swings into the tag's top-right
-            // corner (fortyFiveUp → arrow points at ~1-2 o'clock).
-            if let tag = tagLabel, !trendCollidesWithTag {
-                SensorStatusTagView(text: tag.text, theme: tag.theme, iconSystemName: tag.icon)
+            // Icon-only — text doesn't fit in the bobble corner. Hourglass
+            // variant tracks lifecycle position (sand at bottom = fresh,
+            // sand at top = expiring); palette renders Tai colors with a
+            // severity-driven outline. Hidden when the trend arrow swings
+            // into the icon's top-right corner (fortyFiveUp → arrow at
+            // ~1-2 o'clock).
+            if let symbol = sensorLifecycleSymbol, !trendCollidesWithTag {
+                Image(systemName: symbol)
+                    .font(.title3)
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(
+                        sensorLifecycleOutlineColor,
+                        sensorLifecycleSandColor,
+                        sensorLifecycleSandColor
+                    )
                     .offset(x: -badgeOffsetX, y: -badgeOffsetY)
                     .zIndex(1)
             }
@@ -202,7 +212,7 @@ struct CurrentGlucoseView: View {
         return Date().timeIntervalSince(date) < 12 * 60
     }
 
-    /// Only the `fortyFiveUp` (-45°) trend points the arrow into the tag's
+    /// Only the `fortyFiveUp` (-45°) trend points the arrow into the icon's
     /// top-right corner; `singleUp`/`doubleUp`/`tripleUp` (-90°) swing past it
     /// to 12 o'clock and the down arrows clear it entirely.
     private var trendCollidesWithTag: Bool { rotationDegrees == -45 }
@@ -252,49 +262,69 @@ struct CurrentGlucoseView: View {
         cgmStatus?.localizedMessage.lowercased().contains("stabilizing") ?? false
     }
 
-    /// Warmup → hourglass + countdown; stabilizing → hourglass + "Stabilizing"
-    /// (no countdown — duration is sensor-driven); outside warmup/stabilizing
-    /// the tag is gated to the same 48h window as the arc.
-    private var tagLabel: (text: String, theme: SensorStatusTagTheme, icon: String?)? {
-        if isInWarmup {
-            let text: String
-            if let endsAt = cgmWarmupEndsAt {
-                text = SensorRemainingTimeFormatter.format(until: endsAt)
-            } else {
-                text = "Warming up"
-            }
-            return (text, .orange, "hourglass")
-        }
-        if isStabilizing {
-            return ("Stabilizing", .orange, "hourglass")
-        }
-        guard shouldShowArc else { return nil }
-        if let status = cgmStatus {
-            // LibreLoop's cgmStatusHighlight uses "\n" to split two-line pill
-            // labels ("Signal\nLoss", "Sensor\nWarmup"); we render in a
-            // single-line tag, so collapse newlines to spaces here.
-            let oneLine = status.localizedMessage.replacingOccurrences(of: "\n", with: " ")
-            return (oneLine, theme(for: status.status), nil)
-        }
-        if let expiresAt = cgmSensorExpiresAt {
-            let text = SensorRemainingTimeFormatter.format(until: expiresAt)
-            let theme: SensorStatusTagTheme
-            switch cgmProgress?.progressState {
-            case .critical: theme = .red
-            case .warning: theme = .orange
-            default: theme = .green
-            }
-            return (text, theme, nil)
-        }
-        return nil
+    /// Outline color of the lifecycle hourglass — a phase tag, not a severity
+    /// tag. Warmup/stabilizing get Tai-blue (insulin); the expiry window and
+    /// generic non-normal states get orange. The actual "how urgent" signal
+    /// is carried by `sensorLifecycleSandColor` + the symbol variant.
+    private var sensorLifecycleOutlineColor: Color {
+        if isInWarmup || isStabilizing { return .insulin }
+        return .orange
     }
 
-    private func theme(for status: CgmDisplayStatus) -> SensorStatusTagTheme {
-        switch status {
-        case .critical: return .red
-        case .warning: return .orange
-        case .normal: return .secondary
+    /// Sand-fill color tracking *where in the lifecycle* the sensor is.
+    /// Warmup runs the Tai progression in reverse (purple → insulin → green)
+    /// — sensor is least usable at the start, becomes ready at the end —
+    /// while expiry runs it forward (green → insulin → purple) as the
+    /// sensor's final 48h drain. Stabilizing pins to green (just past the
+    /// finish line).
+    private var sensorLifecycleSandColor: Color {
+        if isStabilizing { return .loopGreen }
+        if isInWarmup {
+            guard let endsAt = cgmWarmupEndsAt else { return .yellow }
+            let minutesRemaining = endsAt.timeIntervalSinceNow / 60
+            switch minutesRemaining {
+            case 60...: return .purple
+            case 30 ..< 60: return .yellow
+            default: return .loopGreen
+            }
         }
+        if let expiresAt = cgmSensorExpiresAt {
+            let hoursRemaining = expiresAt.timeIntervalSinceNow / 3600
+            switch hoursRemaining {
+            case 24...: return .loopGreen
+            case 12 ..< 24: return .insulin
+            default: return .purple
+            }
+        }
+        return .insulin
+    }
+
+    /// Hourglass variant tracking sensor lifecycle position. Real-hourglass
+    /// semantics: sand starts at the top (lots of time left / fresh warmup)
+    /// and drains to the bottom (nearly done / warmup almost complete).
+    /// Gated to the same warmup/48h-from-expiry window as `shouldShowArc`.
+    private var sensorLifecycleSymbol: String? {
+        if isInWarmup {
+            guard let endsAt = cgmWarmupEndsAt else { return "hourglass" }
+            let minutesRemaining = endsAt.timeIntervalSinceNow / 60
+            switch minutesRemaining {
+            case 60...: return "hourglass.tophalf.filled"
+            case 30 ..< 60: return "hourglass"
+            default: return "hourglass.bottomhalf.filled"
+            }
+        }
+        if isStabilizing { return "hourglass.bottomhalf.filled" }
+        guard shouldShowArc else { return nil }
+        if let expiresAt = cgmSensorExpiresAt {
+            let hoursRemaining = expiresAt.timeIntervalSinceNow / 3600
+            switch hoursRemaining {
+            case 24...: return "hourglass.tophalf.filled"
+            case 12 ..< 24: return "hourglass"
+            default: return "hourglass.bottomhalf.filled"
+            }
+        }
+        if cgmStatus != nil { return "hourglass" }
+        return nil
     }
 
     private func glucoseColor(for glucoseValue: Int16) -> Color {
