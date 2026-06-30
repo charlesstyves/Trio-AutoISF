@@ -476,7 +476,8 @@ extension Treatments {
             let isForecastVeryLow = state.minPredBG < 54
 
             // Only warn when enacting a bolus via pump
-            guard !state.externalInsulin, state.amount > 0 else {
+//            guard !state.externalInsulin, state.amount > 0 else {
+            guard !state.externalInsulin, state.amount > 0, state.confirmBolus else {
                 return (false, "", .primary)
             }
 
