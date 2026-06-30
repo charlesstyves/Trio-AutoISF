@@ -135,7 +135,8 @@ struct HorizontalPumpView: View {
             }
 
             Spacer()
-
+            
+/*
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Image(systemName: "ivfluid.bag")
                     .font(.system(size: 16))
@@ -154,6 +155,9 @@ struct HorizontalPumpView: View {
             }
 
             Spacer()
+
+      */
+            
             if autoisfEnabled {
                 Group {
                     Text("aiSR")
