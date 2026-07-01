@@ -320,7 +320,7 @@ extension Treatments {
                                     }
                                     
                                     Toggle(isOn: $state.externalInsulin) {
-                                        Text("External Insulin")
+                                        Text("External")
                                     }
                                     .toggleStyle(RadioButtonToggleStyle())
                                     .font(.footnote)
