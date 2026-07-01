@@ -184,7 +184,7 @@ struct HorizontalPumpView: View {
         .lineLimit(1) // Ensure all text stays on a single line
         .minimumScaleFactor(0.5) // Allow the text to scale down if needed
         .fixedSize(horizontal: false, vertical: true) // Prevent vertical scaling
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 18)
     }
 
     private func remainingTimeString(time: TimeInterval) -> String {
