@@ -290,7 +290,7 @@ extension Treatments {
                                 HStack(spacing: 10) {
                                     if state.fattyMeals {
                                         Toggle(isOn: $state.useFattyMealCorrectionFactor) {
-                                            Text("Reduced Bolus")
+                                            Text("Reduced")
                                         }
                                         .toggleStyle(RadioButtonToggleStyle())
                                         .font(.footnote)
@@ -318,6 +318,13 @@ extension Treatments {
                                             }
                                         }
                                     }
+                                    
+                                    Toggle(isOn: $state.externalInsulin) {
+                                        Text("External Insulin")
+                                    }
+                                    .toggleStyle(RadioButtonToggleStyle())
+                                    .font(.footnote)
+                                    
                                 }
                             }
 
@@ -376,11 +383,11 @@ extension Treatments {
                                     }
                             }
 
-                            HStack {
-                                Text("External Insulin")
-                                Spacer()
-                                Toggle("", isOn: $state.externalInsulin).toggleStyle(CheckboxToggleStyle())
-                            }
+//                            HStack {
+//                                Text("External")
+//                                Spacer()
+//                                Toggle("", isOn: $state.externalInsulin).toggleStyle(CheckboxToggleStyle())
+//                            }
                         }.listRowBackground(Color.chart)
 
                         treatmentButton
