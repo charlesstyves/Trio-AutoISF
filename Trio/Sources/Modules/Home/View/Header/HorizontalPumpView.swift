@@ -44,7 +44,7 @@ struct HorizontalPumpView: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 4) {
-            Spacer()
+//            Spacer()
             Group {
                 if let pumpStatusHighlightMessage = pumpStatusHighlightMessage {
                     Text(pumpStatusHighlightMessage)
@@ -134,24 +134,24 @@ struct HorizontalPumpView: View {
                 }
             }
 
-            Spacer()
+//            Spacer()
 
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Image(systemName: "ivfluid.bag")
-                    .font(.system(size: 16))
-                    .foregroundColor(.insulin)
-                    .layoutPriority(1)
-                Text("24h")
-                    .foregroundColor(.insulin)
-                    .font(.callout).fontDesign(.rounded)
-                    .layoutPriority(1)
-                Text(Formatter.decimalFormatterWithOneFractionDigit.string(from: totalDaily as NSNumber) ?? "0.0")
-                    .font(.callout).fontDesign(.rounded).fontWeight(.bold)
-                    .layoutPriority(2)
-            }
-            .onTapGesture {
-                onTDDTap?()
-            }
+//            HStack(alignment: .firstTextBaseline, spacing: 4) {
+//                Image(systemName: "ivfluid.bag")
+//                    .font(.system(size: 16))
+//                    .foregroundColor(.insulin)
+//                    .layoutPriority(1)
+//                Text("24h")
+//                    .foregroundColor(.insulin)
+//                    .font(.callout).fontDesign(.rounded)
+//                    .layoutPriority(1)
+//                Text(Formatter.decimalFormatterWithOneFractionDigit.string(from: totalDaily as NSNumber) ?? "0.0")
+//                    .font(.callout).fontDesign(.rounded).fontWeight(.bold)
+//                    .layoutPriority(2)
+//            }
+//            .onTapGesture {
+//                onTDDTap?()
+//            }
 
             Spacer()
             if autoisfEnabled {
@@ -179,11 +179,12 @@ struct HorizontalPumpView: View {
                     .layoutPriority(2)
             }
 
-            Spacer()
+//            Spacer()
         }
         .lineLimit(1) // Ensure all text stays on a single line
         .minimumScaleFactor(0.5) // Allow the text to scale down if needed
         .fixedSize(horizontal: false, vertical: true) // Prevent vertical scaling
+        .padding(.horizontal, 16)
     }
 
     private func remainingTimeString(time: TimeInterval) -> String {
