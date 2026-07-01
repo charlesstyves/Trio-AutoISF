@@ -607,6 +607,26 @@ extension Home {
 
         @ViewBuilder func rightHeaderPanel(_: GeometryProxy) -> some View {
             VStack(alignment: .trailing, spacing: 15) {
+
+                /// Loop view at bottomLeading
+                /// Loop view at bottomLeading
+                LoopView(
+                    closedLoop: state.closedLoop,
+                    timerDate: state.timerDate,
+                    isLooping: state.isLooping,
+                    lastLoopDate: state.lastLoopDate,
+                    manualTempBasal: state.manualTempBasal,
+                    determination: state.determinationsFromPersistence
+                )
+                .onTapGesture {
+                    state.isStatusPopupPresented.toggle()
+                }
+                .onLongPressGesture {
+                    let impactHeavy = UIImpactFeedbackGenerator(style: .heavy)
+                    impactHeavy.impactOccurred()
+                    state.runLoop()
+                }
+                
                 HStack(spacing: 4) {
                     Image(systemName: "arrow.up.arrow.down")
                         .font(.system(size: 16))
@@ -641,24 +661,7 @@ extension Home {
                             .font(.system(size: 16, weight: .bold, design: .rounded))
                     }
                 }
-                /// Loop view at bottomLeading
-                /// Loop view at bottomLeading
-                LoopView(
-                    closedLoop: state.closedLoop,
-                    timerDate: state.timerDate,
-                    isLooping: state.isLooping,
-                    lastLoopDate: state.lastLoopDate,
-                    manualTempBasal: state.manualTempBasal,
-                    determination: state.determinationsFromPersistence
-                )
-                .onTapGesture {
-                    state.isStatusPopupPresented.toggle()
-                }
-                .onLongPressGesture {
-                    let impactHeavy = UIImpactFeedbackGenerator(style: .heavy)
-                    impactHeavy.impactOccurred()
-                    state.runLoop()
-                }
+                
             }
         }
 
