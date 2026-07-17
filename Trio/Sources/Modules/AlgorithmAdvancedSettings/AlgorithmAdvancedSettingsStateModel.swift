@@ -10,6 +10,7 @@ extension AlgorithmAdvancedSettings {
 
         var units: GlucoseUnits = .mgdL
 
+        // settings
         @Published var maxDailySafetyMultiplier: Decimal = 3
         @Published var currentBasalSafetyMultiplier: Decimal = 4
         @Published var skipNeutralTemps: Bool = false
@@ -18,7 +19,7 @@ extension AlgorithmAdvancedSettings {
         @Published var remainingCarbsFraction: Decimal = 1.0
         @Published var remainingCarbsCap: Decimal = 90
         @Published var noisyCGMTargetMultiplier: Decimal = 1.3
-        @Published var insulinActionCurve: Decimal = 10
+        // preference
         @Published var smbDeliveryRatio: Decimal = 0.5
         @Published var smbInterval: Decimal = 3
         @Published var useProfileCSF: Bool = false

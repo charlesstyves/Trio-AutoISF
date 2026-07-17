@@ -5,7 +5,6 @@ import UIKit
 var LoggerTestMode = false
 
 private let baseReporter = TrioApp.resolver.resolve(GroupedIssueReporter.self)!
-private let router = TrioApp.resolver.resolve(Router.self)!
 
 let loggerLock = NSRecursiveLock()
 
@@ -28,37 +27,13 @@ func debug(
 func info(
     _ category: Logger.Category,
     _ message: String,
-    type: MessageType = .info,
     file: String = #file,
     function: String = #function,
     line: UInt = #line
 ) {
     DispatchWorkItem(qos: .background, flags: .enforceQoS) {
         loggerLock.perform {
-            category.logger.info(message, type: type, file: file, function: function, line: line)
-        }
-    }.perform()
-}
-
-func info(
-    _ category: Logger.Category,
-    _ message: String,
-    notificationText: String,
-    type: MessageType = .info,
-    file: String = #file,
-    function: String = #function,
-    line: UInt = #line
-) {
-    DispatchWorkItem(qos: .background, flags: .enforceQoS) {
-        loggerLock.perform {
-            category.logger.info(
-                message,
-                notificationText: notificationText,
-                type: type,
-                file: file,
-                function: function,
-                line: line
-            )
+            category.logger.info(message, file: file, function: function, line: line)
         }
     }.perform()
 }
@@ -132,6 +107,7 @@ final class Logger {
     static let service = Logger(category: .service, reporter: baseReporter)
     static let businessLogic = Logger(category: .businessLogic, reporter: baseReporter)
     static let openAPS = Logger(category: .openAPS, reporter: baseReporter)
+    static let openAPSSwift = Logger(category: .openAPSSwift, reporter: baseReporter)
     static let deviceManager = Logger(category: .deviceManager, reporter: baseReporter)
     static let apsManager = Logger(category: .apsManager, reporter: baseReporter)
     static let nightscout = Logger(category: .nightscout, reporter: baseReporter)
@@ -140,12 +116,14 @@ final class Logger {
     static let watchManager = Logger(category: .watchManager, reporter: baseReporter)
     static let coreData = Logger(category: .coreData, reporter: baseReporter)
     static let storage = Logger(category: .storage, reporter: baseReporter)
+    static let telemetry = Logger(category: .telemetry, reporter: baseReporter)
 
     enum Category: String {
         case `default`
         case service
         case businessLogic
         case openAPS
+        case openAPSSwift
         case deviceManager
         case apsManager
         case nightscout
@@ -154,6 +132,7 @@ final class Logger {
         case watchManager
         case coreData
         case storage
+        case telemetry
 
         var name: String {
             rawValue.capitalizingFirstLetter()
@@ -165,6 +144,7 @@ final class Logger {
             case .service: return .service
             case .businessLogic: return .businessLogic
             case .openAPS: return .openAPS
+            case .openAPSSwift: return .openAPSSwift
             case .deviceManager: return .deviceManager
             case .apsManager: return .apsManager
             case .nightscout: return .nightscout
@@ -173,6 +153,7 @@ final class Logger {
             case .watchManager: return .watchManager
             case .coreData: return .coreData
             case .storage: return .storage
+            case .telemetry: return .telemetry
             }
         }
 
@@ -187,9 +168,11 @@ final class Logger {
                  .deviceManager,
                  .nightscout,
                  .openAPS,
+                 .openAPSSwift,
                  .remoteControl,
                  .service,
                  .storage,
+                 .telemetry,
                  .watchManager:
                 return OSLog(subsystem: subsystem, category: name)
             }
@@ -264,18 +247,6 @@ final class Logger {
 
     func info(
         _ message: String,
-        type: MessageType = .info,
-        file: String = #file,
-        function: String = #function,
-        line: UInt = #line
-    ) {
-        info(message, notificationText: message, type: type, file: file, function: function, line: line)
-    }
-
-    func info(
-        _ message: String,
-        notificationText: String,
-        type: MessageType = .info,
         file: String = #file,
         function: String = #function,
         line: UInt = #line
@@ -283,8 +254,6 @@ final class Logger {
         let printedMessage = "INFO: \(message)"
         os_log("%@ - %@ - %d %{public}@", log: log, type: .info, file.file, function, line, printedMessage)
         reporter.log(category.name, printedMessage, file: file, function: function, line: line)
-
-        showAlert(notificationText, type: type)
     }
 
     func warning(
@@ -318,13 +287,6 @@ final class Logger {
         fatalError(
             "\(message) @ \(String(describing: description)) @ \(String(describing: maybeError)) @ \(file) @ \(function) @ \(line)"
         )
-    }
-
-    private func showAlert(_ message: String, type: MessageType = .info) {
-        DispatchQueue.main.async {
-            let messageCont = MessageContent(content: message, type: type)
-            router.alertMessage.send(messageCont)
-        }
     }
 
     fileprivate func errorWithoutFatalError(

@@ -3,14 +3,14 @@ import Foundation
 enum BolusShortcutLimit: String, JSON, CaseIterable, Identifiable {
     var id: String { rawValue }
     case notAllowed
-    case limitBolusMax
+    case limitWithSafetyChecks
 
     var displayName: String {
         switch self {
         case .notAllowed:
             return String(localized: "Not allowed")
-        case .limitBolusMax:
-            return String(localized: "Max bolus")
+        case .limitWithSafetyChecks:
+            return String(localized: "Limit with Safety Checks")
         }
     }
 }
@@ -45,14 +45,6 @@ struct TrioSettings: JSON, Equatable, Encodable {
     var displayCalendarIOBandCOB: Bool = false
     var displayCalendarEmojis: Bool = false
     var glucoseBadge: Bool = false
-    var notificationsPump: Bool = true
-    var notificationsCgm: Bool = true
-    var notificationsCarb: Bool = true
-    var notificationsAlgorithm: Bool = true
-    var glucoseNotificationsOption: GlucoseNotificationsOption = .onlyAlarmLimits
-    var addSourceInfoToGlucoseNotifications: Bool = false
-    var lowGlucose: Decimal = 72
-    var highGlucose: Decimal = 270
     var carbsRequiredThreshold: Decimal = 10
     var showCarbsRequiredBadge: Bool = true
     var useFPUconversion: Bool = true
@@ -66,7 +58,7 @@ struct TrioSettings: JSON, Equatable, Encodable {
     var eA1cDisplayUnit: EstimatedA1cDisplayUnit = .percent
     var high: Decimal = 180
     var low: Decimal = 70
-    var glucoseColorScheme: GlucoseColorScheme = .staticColor
+    var glucoseColorScheme: GlucoseColorScheme = .dynamicColor
     var xGridLines: Bool = true
     var yGridLines: Bool = true
     var hideInsulinBadge: Bool = false
@@ -74,6 +66,7 @@ struct TrioSettings: JSON, Equatable, Encodable {
     var insulinConcentration: Decimal = 1
     var showCobIobChart: Bool = true
     var rulerMarks: Bool = true
+    var bolusDisplayThreshold: BolusDisplayThreshold = .allUnits
     var forecastDisplayType: ForecastDisplayType = .cone
     var maxCarbs: Decimal = 250
     var maxFat: Decimal = 250
@@ -86,12 +79,17 @@ struct TrioSettings: JSON, Equatable, Encodable {
     var sweetMealFactor: Decimal = 1
     var displayPresets: Bool = true
     var confirmBolus: Bool = false
+    var enableQuickBolus: Bool = false
     var useLiveActivity: Bool = false
     var lockScreenView: LockScreenView = .simple
     var smartStackView: LockScreenView = .simple
+    var displayGlucoseForecasts: Bool = false
     var bolusShortcut: BolusShortcutLimit = .notAllowed
     var timeInRangeType: TimeInRangeType = .timeInTightRange
     var showGlucosePeaks: Bool = false
+    var useChartBars: Bool = true
+    var requireAdjustmentsConfirmation: Bool = false
+    var showCgmSensorStatus: Bool = true
 
     /// Selected Garmin watchface (Trio or SwissAlpine)
     var garminWatchface: GarminWatchface = .trio
@@ -106,6 +104,10 @@ struct TrioSettings: JSON, Equatable, Encodable {
     /// Controls whether watchface data transmission is enabled
     var isWatchfaceDataEnabled: Bool = false
 
+    /// When enabled, automatically switches between watchface and datafield based on activity detection.
+    /// When disabled, broadcasts to all configured apps simultaneously.
+    var smartGarminMessageSwitching: Bool = true
+
     /// Computed property that groups all Garmin settings into a single struct
     var garminSettings: GarminWatchSettings {
         get {
@@ -114,7 +116,8 @@ struct TrioSettings: JSON, Equatable, Encodable {
                 datafield: garminDatafield,
                 primaryAttributeChoice: primaryAttributeChoice,
                 secondaryAttributeChoice: secondaryAttributeChoice,
-                isWatchfaceDataEnabled: isWatchfaceDataEnabled
+                isWatchfaceDataEnabled: isWatchfaceDataEnabled,
+                smartGarminMessageSwitching: smartGarminMessageSwitching
             )
         }
         set {
@@ -123,6 +126,7 @@ struct TrioSettings: JSON, Equatable, Encodable {
             primaryAttributeChoice = newValue.primaryAttributeChoice
             secondaryAttributeChoice = newValue.secondaryAttributeChoice
             isWatchfaceDataEnabled = newValue.isWatchfaceDataEnabled
+            smartGarminMessageSwitching = newValue.smartGarminMessageSwitching
         }
     }
 }
@@ -233,44 +237,6 @@ extension TrioSettings: Decodable {
             settings.delay = delay
         }
 
-        if let notificationsPump = try? container.decode(Bool.self, forKey: .notificationsPump) {
-            settings.notificationsPump = notificationsPump
-        }
-
-        if let notificationsCgm = try? container.decode(Bool.self, forKey: .notificationsCgm) {
-            settings.notificationsCgm = notificationsCgm
-        }
-
-        if let notificationsCarb = try? container.decode(Bool.self, forKey: .notificationsCarb) {
-            settings.notificationsCarb = notificationsCarb
-        }
-
-        if let notificationsAlgorithm = try? container.decode(Bool.self, forKey: .notificationsAlgorithm) {
-            settings.notificationsAlgorithm = notificationsAlgorithm
-        }
-
-        if let glucoseNotificationsOption = try? container.decode(
-            GlucoseNotificationsOption.self,
-            forKey: .glucoseNotificationsOption
-        ) {
-            settings.glucoseNotificationsOption = glucoseNotificationsOption
-        }
-
-        if let addSourceInfoToGlucoseNotifications = try? container.decode(
-            Bool.self,
-            forKey: .addSourceInfoToGlucoseNotifications
-        ) {
-            settings.addSourceInfoToGlucoseNotifications = addSourceInfoToGlucoseNotifications
-        }
-
-        if let lowGlucose = try? container.decode(Decimal.self, forKey: .lowGlucose) {
-            settings.lowGlucose = lowGlucose
-        }
-
-        if let highGlucose = try? container.decode(Decimal.self, forKey: .highGlucose) {
-            settings.highGlucose = highGlucose
-        }
-
         if let carbsRequiredThreshold = try? container.decode(Decimal.self, forKey: .carbsRequiredThreshold) {
             settings.carbsRequiredThreshold = carbsRequiredThreshold
         }
@@ -327,6 +293,10 @@ extension TrioSettings: Decodable {
             settings.rulerMarks = rulerMarks
         }
 
+        if let bolusDisplayThreshold = try? container.decode(BolusDisplayThreshold.self, forKey: .bolusDisplayThreshold) {
+            settings.bolusDisplayThreshold = bolusDisplayThreshold
+        }
+
         if let forecastDisplayType = try? container.decode(ForecastDisplayType.self, forKey: .forecastDisplayType) {
             settings.forecastDisplayType = forecastDisplayType
         }
@@ -359,6 +329,10 @@ extension TrioSettings: Decodable {
             settings.confirmBolus = confirmBolus
         }
 
+        if let enableQuickBolus = try? container.decode(Bool.self, forKey: .enableQuickBolus) {
+            settings.enableQuickBolus = enableQuickBolus
+        }
+
         if let useLiveActivity = try? container.decode(Bool.self, forKey: .useLiveActivity) {
             settings.useLiveActivity = useLiveActivity
         }
@@ -371,6 +345,10 @@ extension TrioSettings: Decodable {
             settings.smartStackView = smartStackView
         }
 
+        if let displayGlucoseForecasts = try? container.decode(Bool.self, forKey: .displayGlucoseForecasts) {
+            settings.displayGlucoseForecasts = displayGlucoseForecasts
+        }
+
         if let bolusShortcut = try? container.decode(BolusShortcutLimit.self, forKey: .bolusShortcut) {
             settings.bolusShortcut = bolusShortcut
         }
@@ -381,6 +359,18 @@ extension TrioSettings: Decodable {
 
         if let showGlucosePeaks = try? container.decode(Bool.self, forKey: .showGlucosePeaks) {
             settings.showGlucosePeaks = showGlucosePeaks
+        }
+
+        if let useChartBars = try? container.decode(Bool.self, forKey: .useChartBars) {
+            settings.useChartBars = useChartBars
+        }
+
+        if let requireAdjustmentsConfirmation = try? container.decode(Bool.self, forKey: .requireAdjustmentsConfirmation) {
+            settings.requireAdjustmentsConfirmation = requireAdjustmentsConfirmation
+        }
+
+        if let showCgmSensorStatus = try? container.decode(Bool.self, forKey: .showCgmSensorStatus) {
+            settings.showCgmSensorStatus = showCgmSensorStatus
         }
 
         if let garminWatchface = try? container.decode(GarminWatchface.self, forKey: .garminWatchface) {
@@ -406,6 +396,10 @@ extension TrioSettings: Decodable {
 
         if let isWatchfaceDataEnabled = try? container.decode(Bool.self, forKey: .isWatchfaceDataEnabled) {
             settings.isWatchfaceDataEnabled = isWatchfaceDataEnabled
+        }
+
+        if let smartGarminMessageSwitching = try? container.decode(Bool.self, forKey: .smartGarminMessageSwitching) {
+            settings.smartGarminMessageSwitching = smartGarminMessageSwitching
         }
 
         self = settings

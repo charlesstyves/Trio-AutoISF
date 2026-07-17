@@ -11,7 +11,7 @@ import Testing
     var coreDataStack: CoreDataStack!
     var testContext: NSManagedObjectContext!
     var fetchGlucoseManager: BaseFetchGlucoseManager!
-    var openAPS: OpenAPS!
+    var glucoseStorage: BaseGlucoseStorage!
 
     init() async throws {
         coreDataStack = try await CoreDataStack.createForTests()
@@ -32,8 +32,8 @@ import Testing
 
         fetchGlucoseManager = resolver.resolve(FetchGlucoseManager.self)! as? BaseFetchGlucoseManager
 
-        let fileStorage = resolver.resolve(FileStorage.self)!
-        openAPS = OpenAPS(storage: fileStorage, tddStorage: MockTDDStorage())
+        let context: NSManagedObjectContext = testContext
+        glucoseStorage = BaseGlucoseStorage(resolver: resolver, contextProvider: { context })
     }
 
     // MARK: - Exponential Smoothing Tests
@@ -41,6 +41,7 @@ import Testing
     @Test(
         "Exponential smoothing writes smoothed glucose for CGM values when enough data exists"
     ) func testExponentialSmoothingStoresSmoothedValues() async throws {
+        try await deleteAllGlucose()
         let glucoseValues: [Int16] = [100, 105, 110, 115, 120, 125]
         await createGlucoseSequence(values: glucoseValues, interval: 5 * 60, isManual: false)
 
@@ -122,6 +123,7 @@ import Testing
     @Test(
         "Exponential smoothing stops at gaps >= 12 minutes and only updates the most recent window"
     ) func testExponentialSmoothingGapStopsWindow() async throws {
+        try await deleteAllGlucose()
         let now = Date()
 
         var dates: [Date] = []
@@ -149,42 +151,26 @@ import Testing
         let ascending = try await fetchAndSortGlucose()
         #expect(ascending.count == values.count)
 
-        // Split into:
-        // - older block (before gap)
-        // - recent block (after gap)
-        let olderBlock = ascending.prefix(10)
-        let recentBlock = ascending.suffix(3)
-
-        // --- ASSERT 1: Older values should NOT be overwritten ---
-        for (index, obj) in olderBlock.enumerated() {
-            #expect(
-                obj.smoothedGlucose == nil,
-                "Older value at index \(index) should remain untouched (no fallback overwrite)."
-            )
-        }
-
-        // --- ASSERT 2: Recent values should be filled by fallback ---
-        for (index, obj) in recentBlock.enumerated() {
+        // After 0fa593695 "try to always smooth", the smoother sets fallback
+        // smoothed = max(raw, 39) on every reading regardless of gap or window
+        // size. With a 15-minute gap and only 3 readings after it, the valid
+        // window (3) is below minimumWindowSize (4), so the smoother returns
+        // after the fallback pass — every entry should carry a smoothed value
+        // equal to its raw glucose.
+        for (index, obj) in ascending.enumerated() {
             guard let smoothed = obj.smoothedGlucose?.decimalValue else {
-                #expect(false, "Recent value at index \(index) should have smoothedGlucose set.")
+                #expect(Bool(false), "Entry at index \(index) should have a fallback smoothedGlucose set.")
                 continue
             }
-
-            #expect(
-                smoothed >= 39,
-                "Fallback smoothed glucose must be clamped to >= 39, got \(smoothed)."
-            )
-
-            #expect(
-                smoothed == smoothed.rounded(toPlaces: 0),
-                "Fallback smoothed glucose must be rounded to integer, got \(smoothed)."
-            )
+            #expect(smoothed >= 39, "Smoothed glucose must be clamped to >= 39, got \(smoothed).")
+            #expect(smoothed == Decimal(Int(obj.glucose)), "Fallback should equal raw glucose at index \(index).")
         }
     }
 
     @Test(
         "Exponential smoothing treats 38 mg/dL as xDrip error and clamps stored smoothed glucose"
     ) func testExponentialSmoothingXDrip38StopsWindow() async throws {
+        try await deleteAllGlucose()
         // GIVEN
         let values: [Int16] = [100, 105, 110, 38, 120, 125]
         await createGlucoseSequence(values: values, interval: 5 * 60, isManual: false)
@@ -217,48 +203,116 @@ import Testing
         }
     }
 
+    // MARK: - fetchGlucose Window Tests
+
+    @Test(
+        "fetchGlucose retains the most recent 350 readings (not the oldest) when 24h holds more than 350"
+    ) func testFetchGlucoseKeepsMostRecentWhenOverLimit() async throws {
+        // GIVEN: 360 readings within the last 24h (3 min spacing => ~18h span).
+        // Each reading carries a unique glucose value so we can verify which subset survives the limit.
+        let count = 360
+        let values: [Int16] = (0 ..< count).map { Int16(100 + $0) }
+        await createGlucoseSequence(values: values, interval: 3 * 60, isManual: false)
+
+        // WHEN
+        let objectIDs = try await fetchGlucoseManager.fetchGlucose(context: testContext)
+
+        // THEN
+        #expect(objectIDs.count == 350, "fetchGlucose should respect the 350 limit, got \(objectIDs.count).")
+
+        await testContext.perform {
+            let fetched = objectIDs.compactMap { self.testContext.object(with: $0) as? GlucoseStored }
+            #expect(fetched.count == 350, "All returned object IDs must resolve to GlucoseStored instances.")
+
+            // Returned order must be oldest-first (chronological) — the smoother walks the array this way.
+            let dates = fetched.compactMap(\.date)
+            #expect(dates == dates.sorted(), "fetchGlucose must return readings in chronological (ascending) order.")
+
+            // The most recent reading (current BG) must be the LAST element after the chronological reverse.
+            #expect(
+                fetched.last?.glucose == Int16(100 + count - 1),
+                "Most recent reading (current BG) must be retained after the 350-limit truncation."
+            )
+
+            // The oldest 10 readings must be dropped — verify the limit cut from the OLD end, not the recent end.
+            let returnedGlucoseValues = Set(fetched.map(\.glucose))
+            #expect(
+                !returnedGlucoseValues.contains(Int16(100)),
+                "Oldest reading must be excluded by the limit (truncation should cut old, not recent)."
+            )
+            #expect(
+                returnedGlucoseValues.contains(Int16(100 + count - 1)),
+                "Newest reading must be included after truncation."
+            )
+        }
+    }
+
+    @Test(
+        "Exponential smoothing writes a smoothed value for the current BG when 24h holds more than 350 readings"
+    ) func testExponentialSmoothingCoversCurrentBGAboveLimit() async throws {
+        try await deleteAllGlucose()
+        // GIVEN: 360 contiguous CGM readings within the last 24h (3 min spacing, no gaps).
+        let count = 360
+        let values: [Int16] = (0 ..< count).map { _ in Int16(120) }
+        await createGlucoseSequence(values: values, interval: 3 * 60, isManual: false)
+
+        // WHEN
+        await fetchGlucoseManager.exponentialSmoothingGlucose(context: testContext)
+
+        // THEN: the most recent reading must have received a smoothed value.
+        // Regression test for the bug where ascending+fetchLimit kept the OLDEST 350 readings,
+        // so the current BG fell outside the smoothing window and was never written.
+        let ascending = try await fetchAndSortGlucose()
+        #expect(ascending.count == count)
+
+        #expect(
+            ascending.last?.smoothedGlucose != nil,
+            "Most recent reading (current BG) must receive a smoothed value when over the 350-row limit."
+        )
+    }
+
     // MARK: - OpenAPS Glucose Selection Tests
 
     @Test("Algorithm uses smoothed glucose when enabled") func testAlgorithmUsesSmoothedGlucose() async throws {
         await createGlucose(glucose: 150, smoothed: 140, isManual: false, date: Date())
 
-        let algorithmInput = try await runFetchAndProcessGlucose(smoothGlucose: true)
+        let algorithmInput = try await glucoseStorage.getGlucoseForAlgorithm(shouldSmoothGlucose: true, fetchHours: 24)
 
         #expect(algorithmInput.count == 1, "Expected to process one glucose entry.")
         #expect(
-            algorithmInput.first?.glucose == 140,
-            "Algorithm should have used the smoothed glucose value (140), but used \(algorithmInput.first?.glucose ?? 0)."
+            algorithmInput.first?.sgv == 140,
+            "Algorithm should have used the smoothed glucose value (140), but used \(algorithmInput.first?.sgv ?? 0)."
         )
     }
 
     @Test("Algorithm uses raw glucose when smoothing is disabled") func testAlgorithmUsesRawGlucose() async throws {
         await createGlucose(glucose: 150, smoothed: 140, isManual: false, date: Date())
 
-        let algorithmInput = try await runFetchAndProcessGlucose(smoothGlucose: false)
+        let algorithmInput = try await glucoseStorage.getGlucoseForAlgorithm(shouldSmoothGlucose: false, fetchHours: 24)
 
         #expect(algorithmInput.count == 1, "Expected to process one glucose entry.")
         #expect(
-            algorithmInput.first?.glucose == 150,
-            "Algorithm should have used the raw glucose value (150), but used \(algorithmInput.first?.glucose ?? 0)."
+            algorithmInput.first?.sgv == 150,
+            "Algorithm should have used the raw glucose value (150), but used \(algorithmInput.first?.sgv ?? 0)."
         )
     }
 
     @Test("Algorithm falls back to raw glucose if smoothed value is missing") func testAlgorithmFallbackToRawGlucose() async throws {
         await createGlucose(glucose: 150, smoothed: nil, isManual: false, date: Date())
 
-        let algorithmInput = try await runFetchAndProcessGlucose(smoothGlucose: true)
+        let algorithmInput = try await glucoseStorage.getGlucoseForAlgorithm(shouldSmoothGlucose: true, fetchHours: 24)
 
         #expect(algorithmInput.count == 1, "Expected to process one glucose entry.")
         #expect(
-            algorithmInput.first?.glucose == 150,
-            "Algorithm should have fallen back to the raw glucose value (150), but used \(algorithmInput.first?.glucose ?? 0)."
+            algorithmInput.first?.sgv == 150,
+            "Algorithm should have fallen back to the raw glucose value (150), but used \(algorithmInput.first?.sgv ?? 0)."
         )
     }
 
     @Test("Algorithm ignores smoothed value for manual glucose entries") func testAlgorithmIgnoresSmoothedManualGlucose() async throws {
         await createGlucose(glucose: 150, smoothed: 140, isManual: true, date: Date())
 
-        let algorithmInput = try await runFetchAndProcessGlucose(smoothGlucose: true)
+        let algorithmInput = try await glucoseStorage.getGlucoseForAlgorithm(shouldSmoothGlucose: true, fetchHours: 24)
 
         #expect(algorithmInput.count == 1, "Expected to process one glucose entry.")
         #expect(
@@ -268,24 +322,6 @@ import Testing
     }
 
     // MARK: - Helpers
-
-    private func runFetchAndProcessGlucose(smoothGlucose: Bool) async throws -> [AlgorithmGlucose] {
-        let jsonString = try await openAPS.fetchAndProcessGlucose(
-            context: testContext,
-            shouldSmoothGlucose: smoothGlucose,
-            fetchLimit: 10
-        )
-
-        let data = jsonString.data(using: .utf8)!
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .custom { decoder in
-            let container = try decoder.singleValueContainer()
-            let dateDouble = try container.decode(Double.self)
-            return Date(timeIntervalSince1970: dateDouble / 1000)
-        }
-
-        return try decoder.decode([AlgorithmGlucose].self, from: data)
-    }
 
     private func createGlucose(glucose: Int16, smoothed: Decimal?, isManual: Bool, date: Date) async {
         await testContext.perform {
@@ -319,6 +355,27 @@ import Testing
         let now = Date()
         let dates = values.indices.map { now.addingTimeInterval(Double($0) * interval) }
         await createGlucoseSequence(values: values, dates: dates, isManual: isManual)
+    }
+
+    /// Removes any pre-existing GlucoseStored rows. State can leak between tests
+    /// in this suite (Swift Testing reuses suite instances in `.serialized` runs
+    /// even though `init()` reassigns the stack), and `BaseFetchGlucoseManager.init`
+    /// may seed a reading via the restored cgmManager. Call at the start of any
+    /// test that asserts on the total fetched count.
+    private func deleteAllGlucose() async throws {
+        try await testContext.perform {
+            let request: NSFetchRequest<NSFetchRequestResult> = GlucoseStored.fetchRequest()
+            let batchDelete = NSBatchDeleteRequest(fetchRequest: request)
+            batchDelete.resultType = .resultTypeObjectIDs
+            let result = try self.testContext.execute(batchDelete) as? NSBatchDeleteResult
+            if let ids = result?.result as? [NSManagedObjectID], !ids.isEmpty {
+                NSManagedObjectContext.mergeChanges(
+                    fromRemoteContextSave: [NSDeletedObjectsKey: ids],
+                    into: [self.testContext]
+                )
+            }
+            self.testContext.reset()
+        }
     }
 
     private func fetchAndSortGlucose() async throws -> [GlucoseStored] {

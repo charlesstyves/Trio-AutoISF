@@ -19,6 +19,12 @@ protocol FetchGlucoseManager: SourceInfoProvider {
     var cgmGlucosePluginId: String { get }
     var settingsManager: SettingsManager! { get }
     var shouldSyncToRemoteService: Bool { get }
+    var cgmDisplayState: CurrentValueSubject<CgmDisplayState?, Never> { get }
+    var cgmProgressHighlight: CurrentValueSubject<DeviceLifecycleProgress?, Never> { get }
+    /// Routes CGMManager-issued alerts (sensor failure, signal loss, expiry,
+    /// etc.) into the unified `TrioAlertManager` pipeline. Read by
+    /// `PluginSource.issueAlert` / `retractAlert`.
+    var trioAlertManager: TrioAlertManager! { get }
 }
 
 extension FetchGlucoseManager {
@@ -40,6 +46,7 @@ final class BaseFetchGlucoseManager: FetchGlucoseManager, Injectable {
     @Injected() var deviceDataManager: DeviceDataManager!
     @Injected() var pluginCGMManager: PluginManager!
     @Injected() var calibrationService: CalibrationService!
+    @Injected() var trioAlertManager: TrioAlertManager!
 
     private var lifetime = Lifetime()
     private let timer = DispatchTimer(timeInterval: 1.minutes.timeInterval)
@@ -55,8 +62,6 @@ final class BaseFetchGlucoseManager: FetchGlucoseManager, Injectable {
     @PersistedProperty(key: "CGMManagerState") var rawCGMManager: CGMManager.RawValue?
 
     private lazy var simulatorSource = GlucoseSimulatorSource()
-
-    private let context = CoreDataStack.shared.newTaskContext()
 
     /// Enforce mutual exclusion on calls to glucoseStoreAndHeartDecision
     private let glucoseStoreAndHeartLock = DispatchSemaphore(value: 1)
@@ -148,7 +153,27 @@ final class BaseFetchGlucoseManager: FetchGlucoseManager, Injectable {
         }
     }
 
-    var glucoseSource: GlucoseSource?
+    let cgmDisplayState = CurrentValueSubject<CgmDisplayState?, Never>(nil)
+    let cgmProgressHighlight = CurrentValueSubject<DeviceLifecycleProgress?, Never>(nil)
+    private var cgmStatusSubscriptions = Set<AnyCancellable>()
+
+    var glucoseSource: GlucoseSource? {
+        didSet {
+            // Drop prior subscriptions so source swaps don't dupe emissions.
+            cgmStatusSubscriptions.removeAll()
+            cgmDisplayState.value = glucoseSource?.cgmDisplayState.value
+            cgmProgressHighlight.value = glucoseSource?.cgmProgressHighlight.value
+            guard let glucoseSource else { return }
+            glucoseSource.cgmDisplayState
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] state in self?.cgmDisplayState.value = state }
+                .store(in: &cgmStatusSubscriptions)
+            glucoseSource.cgmProgressHighlight
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] progress in self?.cgmProgressHighlight.value = progress }
+                .store(in: &cgmStatusSubscriptions)
+        }
+    }
 
     func removeCalibrations() {
         calibrationService.removeAllCalibrations()
@@ -231,17 +256,16 @@ final class BaseFetchGlucoseManager: FetchGlucoseManager, Injectable {
             }
         }
 
-        // Set loop interval for APSManager and filter time in FetchGlucoseManager
+        // Persist runtime loop/glucose config (loop interval, filter time, minimum glucose)
         if !Bundle.main.simulatorVisibility.isHidden {
             if self.cgmGlucoseSourceType == .simulator {
-                // Set loop interval to 10 seconds
-                let newLoopInterval = 10.0
-                UserDefaults.standard.set(newLoopInterval, forKey: "Config_LoopInterval")
-                // Set filter time in FetchGlucoseManager to 10s so that new glucose values don't get filtered out
-                UserDefaults.standard.set(10, forKey: "Config_FilterTime")
+                UserDefaults.standard.set(Config.simulatorLoopInterval, forKey: Config.UserDefaultsKey.loopInterval)
+                UserDefaults.standard.set(Config.simulatorFilterTime, forKey: Config.UserDefaultsKey.filterTime)
+                UserDefaults.standard.set(Config.simulatorMinimumGlucose, forKey: Config.UserDefaultsKey.minimumGlucose)
             } else {
-                UserDefaults.standard.set(3.minutes.timeInterval, forKey: "Config_LoopInterval")
-                UserDefaults.standard.set(3.5 * 60, forKey: "Config_FilterTime")
+                UserDefaults.standard.set(Config.defaultLoopInterval, forKey: Config.UserDefaultsKey.loopInterval)
+                UserDefaults.standard.set(Config.defaultFilterTime, forKey: Config.UserDefaultsKey.filterTime)
+                UserDefaults.standard.set(Config.defaultMinimumGlucose, forKey: Config.UserDefaultsKey.minimumGlucose)
             }
         }
     }
@@ -299,6 +323,7 @@ final class BaseFetchGlucoseManager: FetchGlucoseManager, Injectable {
             debug(.deviceManager, "Triggering smoothing: hasBackfilled=\(hasBackfilled), hasStoredNew=\(hasStoredNew)")
             // Create a fresh context for smoothing to ensure it sees the latest data from the persistent store
             let smoothingContext = CoreDataStack.shared.newTaskContext()
+            smoothingContext.name = "smoothGlucose"
             await smoothGlucose(context: smoothingContext)
         }
 
@@ -387,6 +412,7 @@ extension BaseFetchGlucoseManager: SettingsObserver {
             Task {
                 // Create a fresh context for smoothing to ensure it sees the latest data
                 let smoothingContext = CoreDataStack.shared.newTaskContext()
+                smoothingContext.name = "smoothGlucose"
                 await self.smoothGlucose(context: smoothingContext)
                 self.glucoseStoreAndHeartLock.signal()
             }
@@ -413,9 +439,11 @@ extension BaseFetchGlucoseManager {
             // Predicate must cover at least the full glucose horizon used by downstream algorithm consumers.
             // If autosens / oref / smoothing logic ever starts looking back further (e.g. 36h),
             // this fetch window must be expanded accordingly.
+            // Fetch descending (newest first) so the limit always keeps the most recent 350 readings.
+            // Reversed before return so callers receive oldest-first (chronological) order.
             predicate: compoundPredicate,
             key: "date",
-            ascending: true, // the first element is the oldest
+            ascending: false,
             fetchLimit: 350
         )
 
@@ -423,7 +451,7 @@ extension BaseFetchGlucoseManager {
             throw CoreDataError.fetchError(function: #function, file: #file)
         }
 
-        return glucoseArray.map(\.objectID)
+        return Array(glucoseArray.map(\.objectID).reversed())
     }
 
     /// Main smoothing entry point - dispatches to exponential or UKF based on settings.
@@ -444,7 +472,7 @@ extension BaseFetchGlucoseManager {
     /// CoreData-friendly AAPS exponential smoothing + storage.
     /// - Important: Only stores `smoothedGlucose`. UI/alerts should still use `glucose`.
     ///
-    private func exponentialSmoothingGlucose(context: NSManagedObjectContext) async {
+    func exponentialSmoothingGlucose(context: NSManagedObjectContext) async {
         let startTime = Date()
 
         do {
@@ -660,7 +688,7 @@ extension BaseFetchGlucoseManager {
                     guard let date = stored.date else { return nil }
                     let direction = stored.direction.flatMap { BloodGlucose.Direction(from: $0) }
                     return BloodGlucose(
-                        _id: stored.id?.uuidString ?? UUID().uuidString,
+                        id: stored.id?.uuidString ?? UUID().uuidString,
                         sgv: Int(stored.glucose),
                         direction: direction,
                         date: Decimal(date.timeIntervalSince1970 * 1000), // milliseconds

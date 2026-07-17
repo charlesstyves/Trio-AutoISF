@@ -16,7 +16,6 @@ struct Preferences: JSON, Equatable {
     var halfBasalExerciseTarget: Decimal = 160
     var maxCOB: Decimal = 120
     var maxMealAbsorptionTime: Decimal = 6
-    var wideBGTargetRange: Bool = false
     var skipNeutralTemps: Bool = false
     var unsuspendIfNoTemp: Bool = false
     var min5mCarbimpact: Decimal = 8
@@ -58,7 +57,6 @@ struct Preferences: JSON, Equatable {
     // start autoISF config
     var floatingcarbs: Bool = false
     var autoisf: Bool = true
-    var exerciseMode: Bool = false
     var autoISFmax: Decimal = 2
     var autoISFmin: Decimal = 0.5
     var smbMaxRangeExtension: Decimal = 2
@@ -108,11 +106,9 @@ extension Preferences {
         case sensitivityRaisesTarget = "sensitivity_raises_target"
         case resistanceLowersTarget = "resistance_lowers_target"
         case advTargetAdjustments = "adv_target_adjustments"
-        case exerciseMode = "exercise_mode"
         case halfBasalExerciseTarget = "half_basal_exercise_target"
         case maxCOB
         case maxMealAbsorptionTime
-        case wideBGTargetRange = "wide_bg_target_range"
         case skipNeutralTemps = "skip_neutral_temps"
         case unsuspendIfNoTemp = "unsuspend_if_no_temp"
         case min5mCarbimpact = "min_5m_carbimpact"
@@ -248,10 +244,6 @@ extension Preferences: Decodable {
             preferences.advTargetAdjustments = advTargetAdjustments
         }
 
-        if let exerciseMode = try? container.decode(Bool.self, forKey: .exerciseMode) {
-            preferences.exerciseMode = exerciseMode
-        }
-
         if let halfBasalExerciseTarget = try? container.decode(Decimal.self, forKey: .halfBasalExerciseTarget) {
             preferences.halfBasalExerciseTarget = halfBasalExerciseTarget
         }
@@ -262,10 +254,6 @@ extension Preferences: Decodable {
 
         if let maxMealAbsorptionTime = try? container.decode(Decimal.self, forKey: .maxMealAbsorptionTime) {
             preferences.maxMealAbsorptionTime = maxMealAbsorptionTime
-        }
-
-        if let wideBGTargetRange = try? container.decode(Bool.self, forKey: .wideBGTargetRange) {
-            preferences.wideBGTargetRange = wideBGTargetRange
         }
 
         if let skipNeutralTemps = try? container.decode(Bool.self, forKey: .skipNeutralTemps) {
@@ -415,9 +403,6 @@ extension Preferences: Decodable {
         }
         if let enableAutosens = try? container.decode(Bool.self, forKey: .enableAutosens) {
             preferences.enableAutosens = enableAutosens
-        }
-        if let exerciseMode = try? container.decode(Bool.self, forKey: .exerciseMode) {
-            preferences.exerciseMode = exerciseMode
         }
         if let autoISFmax = try? container.decode(Decimal.self, forKey: .autoISFmax) {
             preferences.autoISFmax = autoISFmax

@@ -10,6 +10,13 @@ struct TherapySettingEditorView: View {
     var validateOnDelete: (() -> Void)?
     var onItemAdded: (() -> Void)?
 
+    private let basalFormatter: NumberFormatter = {
+        let numberFormatter = NumberFormatter()
+        numberFormatter.maximumFractionDigits = 3
+        numberFormatter.minimumFractionDigits = 2
+        return numberFormatter
+    }()
+
     @State private var selectedItemID: UUID?
     @Namespace var bottomID
 
@@ -105,6 +112,18 @@ struct TherapySettingEditorView: View {
                                     originalRate: originalRates[index]
                                 )
                                 .transition(.slide)
+                            }
+                        }
+                        .contextMenu {
+                            if let index = items.firstIndex(where: { $0.id == item.id }), items.count > 1 {
+                                Button(role: .destructive) {
+                                    items.remove(at: index)
+                                    selectedItemID = nil
+                                    validateTherapySettingItems()
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                                .tint(.red)
                             }
                         }
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
@@ -292,11 +311,12 @@ struct TherapySettingEditorView: View {
              .mmolLPer10Gram,
              .mmolLPerUnit:
             return decimalValue.formattedAsMmolL
+        case .unitPerHour:
+            return basalFormatter.string(from: decimalValue as NSNumber) ?? ""
         case .gramPerUnit,
              .mgdL,
              .mgdLPer10Gram,
-             .mgdLPerUnit,
-             .unitPerHour:
+             .mgdLPerUnit:
             return decimalValue.description
         }
     }

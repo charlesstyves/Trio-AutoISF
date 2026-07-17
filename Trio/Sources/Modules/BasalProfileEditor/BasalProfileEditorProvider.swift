@@ -9,9 +9,7 @@ extension BasalProfileEditor {
         private let processQueue = DispatchQueue(label: "BasalProfileEditorProvider.processQueue")
 
         var profile: [BasalProfileEntry] {
-            storage.retrieve(OpenAPS.Settings.basalProfile, as: [BasalProfileEntry].self)
-                ?? [BasalProfileEntry](from: OpenAPS.defaults(for: OpenAPS.Settings.basalProfile))
-                ?? []
+            scope.basalProfile
         }
 
         var supportedBasalRates: [Decimal]? {
@@ -35,7 +33,7 @@ extension BasalProfileEditor {
                 pump.syncBasalRateSchedule(items: syncValues) { result in
                     switch result {
                     case .success:
-                        self.storage.save(profile, as: OpenAPS.Settings.basalProfile)
+                        self.scope.basalProfile = profile
                         promise(.success(()))
                     case let .failure(error):
                         promise(.failure(error))

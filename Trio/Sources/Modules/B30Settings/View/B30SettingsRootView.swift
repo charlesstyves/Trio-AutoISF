@@ -28,38 +28,14 @@ extension B30Settings {
                                 get: { selectedVerboseHint },
                                 set: {
                                     selectedVerboseHint = $0.map { AnyView($0) }
-                                    hintLabel = String(localized: "Activate B30 EatingSoon", comment: "Enable B30")
+                                    hintLabel = AlgorithmSettingHints.enableB30Label
                                 }
                             ),
                             units: state.units,
                             type: .boolean,
-                            label: String(localized: "Activate B30 EatingSoon", comment: "Enable B30"),
-                            miniHint: String(
-                                localized:
-                                "Enables an increased basal rate after an EatingSoon TT and a manual bolus to saturate the infusion site with insulin.",
-                                comment: "Enable B30 miniHint"
-                            ),
-                            verboseHint: AnyView(
-                                VStack(alignment: .leading) {
-                                    Text(
-                                        "Enables an increased basal rate after an EatingSoon TT and a manual bolus to saturate the infusion site with insulin to increase insulin absorption for SMB's following a meal with no carb counting."
-                                    )
-                                    BulletList(
-                                        listItems: [
-                                            "needs an EatingSoon TempTarget (TT) with a specific GlucoseTarget",
-                                            "in order to activate B30 a minimum manual Bolus needs to be given",
-                                            "you can specify how long B30 run and how high it is",
-                                            "while B30 TBR runs no SMB's will be enacted",
-                                            "TBR ignores maxBasal multipliers, but respects maxBasal of pump",
-                                            "once activated you can stop the B30 TBR and allowing SMB's by just cancelling the TT"
-                                        ],
-                                        listItemSpacing: 10
-                                    )
-                                    Text(
-                                        "Initiating B30 can be done by Apple Shortcuts\nhttps://tinyurl.com/aimiB30shortcut\n"
-                                    )
-                                }
-                            )
+                            label: AlgorithmSettingHints.enableB30Label,
+                            miniHint: AlgorithmSettingHints.enableB30Mini,
+                            verboseHint: AlgorithmSettingHints.enableB30Verbose()
                         )
                     }
                 )
@@ -73,26 +49,14 @@ extension B30Settings {
                                 get: { selectedVerboseHint },
                                 set: {
                                     selectedVerboseHint = $0.map { AnyView($0) }
-                                    hintLabel = String(localized: "TempTarget Level for B30", comment: "B30 TT Level")
+                                    hintLabel = AlgorithmSettingHints.b30iTimeTargetLabel
                                 }
                             ),
                             units: state.units,
                             type: .decimal("B30iTimeTarget"),
-                            label: String(localized: "TempTarget Level for B30", comment: "B30 TT Level"),
-                            miniHint: String(
-                                localized:
-                                "An EatingSoon TempTarget needs to be enabled to start B30 adaption. Set level for this target to be identified.",
-                                comment: "B30 TT Level miniHint"
-                            ),
-                            verboseHint: AnyView(
-                                Text(
-                                    String(
-                                        localized:
-                                        "Set the EatingSoon TempTarget glucose level to trigger B30. Should be a low TT like \(state.units == .mgdL ? "80" : 80.formattedAsMmolL) \(state.units.rawValue). Keep in mind it should be an even TT to allow autoISF SMB's after the duration specified, if the target would still be active. Canceling this TT will imediatly stop B30 adaptions.",
-                                        comment: "B30 TT Level VerboseHint"
-                                    )
-                                )
-                            )
+                            label: AlgorithmSettingHints.b30iTimeTargetLabel,
+                            miniHint: AlgorithmSettingHints.b30iTimeTargetMini,
+                            verboseHint: AlgorithmSettingHints.b30iTimeTargetVerbose(units: state.units)
                         )
                         SettingInputSection(
                             decimalValue: $state.B30iTimeStartBolus,
@@ -102,26 +66,14 @@ extension B30Settings {
                                 get: { selectedVerboseHint },
                                 set: {
                                     selectedVerboseHint = $0.map { AnyView($0) }
-                                    hintLabel = String(localized: "Minimum Start Bolus Size", comment: "B30 Start Bolus")
+                                    hintLabel = AlgorithmSettingHints.b30iTimeStartBolusLabel
                                 }
                             ),
                             units: state.units,
                             type: .decimal("B30iTimeStartBolus"),
-                            label: String(localized: "Minimum Start Bolus Size", comment: "B30 Start Bolus"),
-                            miniHint: String(
-                                localized:
-                                "Minimum manual bolus to start a B30 adaption.",
-                                comment: "B30 Start Bolus miniHint"
-                            ),
-                            verboseHint: AnyView(
-                                Text(
-                                    String(
-                                        localized:
-                                        "Specify the minimum bolus size required to trigger B30.",
-                                        comment: "B30 Start Bolus VerboseHint"
-                                    )
-                                )
-                            )
+                            label: AlgorithmSettingHints.b30iTimeStartBolusLabel,
+                            miniHint: AlgorithmSettingHints.b30iTimeStartBolusMini,
+                            verboseHint: AlgorithmSettingHints.b30iTimeStartBolusVerbose()
                         )
                         SettingInputSection(
                             decimalValue: $state.B30iTime,
@@ -131,26 +83,14 @@ extension B30Settings {
                                 get: { selectedVerboseHint },
                                 set: {
                                     selectedVerboseHint = $0.map { AnyView($0) }
-                                    hintLabel = String(localized: "Duration of Increased B30 Basal Rate", comment: "B30 Duration")
+                                    hintLabel = AlgorithmSettingHints.b30iTimeLabel
                                 }
                             ),
                             units: state.units,
                             type: .decimal("B30iTime"),
-                            label: String(localized: "Duration of Increased B30 Basal Rate", comment: "B30 Duration"),
-                            miniHint: String(
-                                localized:
-                                "Duration of increased basal rate that saturates the infusion site with insulin. Default 30 minutes.",
-                                comment: "B30 Duration miniHint"
-                            ),
-                            verboseHint: AnyView(
-                                Text(
-                                    String(
-                                        localized:
-                                        "Set the duration for the increased basal rate in B30 mode. Default is 30 minutes.",
-                                        comment: "B30 Duration VerboseHint"
-                                    )
-                                )
-                            )
+                            label: AlgorithmSettingHints.b30iTimeLabel,
+                            miniHint: AlgorithmSettingHints.b30iTimeMini,
+                            verboseHint: AlgorithmSettingHints.b30iTimeVerbose()
                         )
                         SettingInputSection(
                             decimalValue: $state.B30basalFactor,
@@ -160,26 +100,14 @@ extension B30Settings {
                                 get: { selectedVerboseHint },
                                 set: {
                                     selectedVerboseHint = $0.map { AnyView($0) }
-                                    hintLabel = String(localized: "B30 Basal Rate Increase Factor", comment: "B30 Factor")
+                                    hintLabel = AlgorithmSettingHints.b30basalFactorLabel
                                 }
                             ),
                             units: state.units,
                             type: .decimal("B30basalFactor"),
-                            label: String(localized: "B30 Basal Rate Increase Factor", comment: "B30 Factor"),
-                            miniHint: String(
-                                localized:
-                                "Factor that multiplies your regular basal rate from profile for B30. Max is 10. The TBR will ignore the maxBasalMultipliers but respect maxBasal setting!",
-                                comment: "B30 Factor miniHint"
-                            ),
-                            verboseHint: AnyView(
-                                Text(
-                                    String(
-                                        localized:
-                                        "Specify the factor to increase the basal rate during B30. Max is 10x.",
-                                        comment: "B30 Factor VerboseHint"
-                                    )
-                                )
-                            )
+                            label: AlgorithmSettingHints.b30basalFactorLabel,
+                            miniHint: AlgorithmSettingHints.b30basalFactorMini,
+                            verboseHint: AlgorithmSettingHints.b30basalFactorVerbose()
                         )
                         SettingInputSection(
                             decimalValue: $state.B30upperLimit,
@@ -189,26 +117,14 @@ extension B30Settings {
                                 get: { selectedVerboseHint },
                                 set: {
                                     selectedVerboseHint = $0.map { AnyView($0) }
-                                    hintLabel = String(localized: "Upper BG Limit for B30", comment: "B30 Upper BG Limit")
+                                    hintLabel = AlgorithmSettingHints.b30upperLimitLabel
                                 }
                             ),
                             units: state.units,
                             type: .decimal("B30upperLimit"),
-                            label: String(localized: "Upper BG Limit for B30", comment: "B30 Upper BG Limit"),
-                            miniHint: String(
-                                localized:
-                                "B30 will only run & supress SMB as long as BG stays underneath that level. Default is \(state.units == .mgdL ? "130" : 130.formattedAsMmolL) \(state.units.rawValue).",
-                                comment: "B30 Upper BG Limit miniHint"
-                            ),
-                            verboseHint: AnyView(
-                                Text(
-                                    String(
-                                        localized:
-                                        "Set the maximum BG level for B30 & suppressed SMB to remain active. Default is \(state.units == .mgdL ? "130" : 130.formattedAsMmolL) \(state.units.rawValue).",
-                                        comment: "B30 Upper BG Limit VerboseHint"
-                                    )
-                                )
-                            )
+                            label: AlgorithmSettingHints.b30upperLimitLabel,
+                            miniHint: AlgorithmSettingHints.b30upperLimitMini(units: state.units),
+                            verboseHint: AlgorithmSettingHints.b30upperLimitVerbose(units: state.units)
                         )
                         SettingInputSection(
                             decimalValue: $state.B30upperDelta,
@@ -218,26 +134,14 @@ extension B30Settings {
                                 get: { selectedVerboseHint },
                                 set: {
                                     selectedVerboseHint = $0.map { AnyView($0) }
-                                    hintLabel = String(localized: "Upper Delta Limit for B30", comment: "B30 Upper Delta")
+                                    hintLabel = AlgorithmSettingHints.b30upperDeltaLabel
                                 }
                             ),
                             units: state.units,
                             type: .decimal("B30upperDelta"),
-                            label: String(localized: "Upper Delta Limit for B30", comment: "B30 Upper Delta"),
-                            miniHint: String(
-                                localized:
-                                "B30 will only run & supress SMB's as long as BG delta stays below that level. Default is \(state.units == .mgdL ? "8" : 8.formattedAsMmolL) \(state.units.rawValue).",
-                                comment: "B30 Upper Delta miniHint"
-                            ),
-                            verboseHint: AnyView(
-                                Text(
-                                    String(
-                                        localized:
-                                        "Set the maximum BG delta limit for B30 & suppressed SMB to remain active. Default is \(state.units == .mgdL ? "8" : 8.formattedAsMmolL) \(state.units.rawValue).",
-                                        comment: "B30 Upper Delta VerboseHint"
-                                    )
-                                )
-                            )
+                            label: AlgorithmSettingHints.b30upperDeltaLabel,
+                            miniHint: AlgorithmSettingHints.b30upperDeltaMini(units: state.units),
+                            verboseHint: AlgorithmSettingHints.b30upperDeltaVerbose(units: state.units)
                         )
                     }
                 } else {
@@ -275,6 +179,7 @@ extension B30Settings {
             .onAppear(perform: configureView)
             .navigationTitle("AIMI B30 Settings")
             .navigationBarTitleDisplayMode(.automatic)
+            .settingsHighlightScroll()
         }
     }
 }

@@ -71,7 +71,7 @@ extension Onboarding {
 
         // Next button conditional
         private var shouldDisableNextButton: Bool {
-            (currentStep == .diagnostics && state.diagnosticsSharingOption == .enabled && !state.hasAcceptedPrivacyPolicy)
+            (currentStep == .diagnostics && state.diagnosticsSharingOption != .disabled && !state.hasAcceptedPrivacyPolicy)
                 ||
                 (currentStep == .nightscout && didSelectNightscoutSetupOption)
                 ||
@@ -630,8 +630,7 @@ struct OnboardingNavigationButtons: View {
                      .minimed:
                     currentAutosensSubstep = .rewindResetsAutosens
                 case .medtrum,
-                     .omnipodDash,
-                     .omnipodEros:
+                     .omni:
                     currentAutosensSubstep = .autosensMax
                 }
             }

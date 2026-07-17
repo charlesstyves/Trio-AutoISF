@@ -85,7 +85,7 @@ extension AutotuneConfig {
                         )
                     }
                 guard let pump = apsManager.pumpManager else {
-                    storage.save(basals, as: OpenAPS.Settings.basalProfile)
+                    scope.basalProfile = basals
                     debug(.service, "Basals have been replaced with Autotuned Basals by user.")
                     return
                 }
@@ -95,7 +95,7 @@ extension AutotuneConfig {
                 pump.syncBasalRateSchedule(items: syncValues) { result in
                     switch result {
                     case .success:
-                        self.storage.save(basals, as: OpenAPS.Settings.basalProfile)
+                        self.scope.basalProfile = basals
                         debug(.service, "Basals saved to pump!")
                     case .failure:
                         debug(.service, "Basals couldn't be save to pump")

@@ -13,6 +13,9 @@ extension Adjustments {
         @ObservationIgnored @Injected() var overrideStorage: OverrideStorage!
         @ObservationIgnored @Injected() var nightscoutManager: NightscoutManager!
 
+        var requireAdjustmentsConfirmation: Bool = false
+        var shouldDisplayPresetStartConfirmDialog: Bool = false
+
         // MARK: - Override and Temp Target Properties
 
         var overridePercentage: Double = 100
@@ -39,6 +42,38 @@ extension Adjustments {
         var defaultSmbMinutes: Decimal = 0
         var defaultUamMinutes: Decimal = 0
         var selectedTab: Tab = .tempTargets
+
+        // AutoISF profile injection overrides — nil means use profile default
+        var overrideAutoISFmin: Decimal?
+        var overrideAutoISFmax: Decimal?
+        var overrideAutoISFhourlyChange: Decimal?
+        var overrideHigherISFrangeWeight: Decimal?
+        var overrideLowerISFrangeWeight: Decimal?
+        var overridePostMealISFweight: Decimal?
+        var overrideBgAccelISFweight: Decimal?
+        var overrideBgBrakeISFweight: Decimal?
+        var overrideIobThresholdPercent: Decimal?
+        var overrideSmbDeliveryRatio: Decimal?
+        var overrideSmbDeliveryRatioBGrange: Decimal?
+        var overrideSmbDeliveryRatioMin: Decimal?
+        var overrideSmbDeliveryRatioMax: Decimal?
+        var overrideEnableBGacceleration: Bool?
+        // Profile defaults for color comparison in UI
+        var profileAutoISFmin: Decimal = 0.5
+        var profileAutoISFmax: Decimal = 2
+        var profileAutoISFhourlyChange: Decimal = 0
+        var profileHigherISFrangeWeight: Decimal = 0
+        var profileLowerISFrangeWeight: Decimal = 0
+        var profilePostMealISFweight: Decimal = 0
+        var profileBgAccelISFweight: Decimal = 0.15
+        var profileBgBrakeISFweight: Decimal = 0.15
+        var profileIobThresholdPercent: Decimal = 1
+        var profileSmbDeliveryRatio: Decimal = 0.5
+        var profileSmbDeliveryRatioBGrange: Decimal = 0
+        var profileSmbDeliveryRatioMin: Decimal = 0.5
+        var profileSmbDeliveryRatioMax: Decimal = 0.8
+        var profileEnableBGacceleration: Bool = true
+        var useAutoISF: Bool = false
         var activeOverrideName: String = ""
         var currentActiveOverride: OverrideStored?
         var activeTempTargetName: String = ""
@@ -62,12 +97,10 @@ extension Adjustments {
         var halfBasalTarget: Decimal = 160
         var settingHalfBasalTarget: Decimal = 160
         var highTTraisesSens: Bool = false
-        var isExerciseModeActive: Bool = false
         var lowTTlowersSens: Bool = false
         var didSaveSettings: Bool = false
 
         // Core Data
-        let coredataContext = CoreDataStack.shared.newTaskContext()
         let viewContext = CoreDataStack.shared.persistentContainer.viewContext
 
         // Help Sheet
@@ -90,6 +123,10 @@ extension Adjustments {
                 await withTaskGroup(of: Void.self) { group in
                     group.addTask { self.setupOverridePresetsArray() }
                     group.addTask { self.setupTempTargetPresetsArray() }
+                    // Populate the scheduled-TT list on first load too —
+                    // shortcut-driven scheduling can persist rows while this
+                    // view's StateModel hasn't been instantiated yet.
+                    group.addTask { self.setupScheduledTempTargetsArray() }
                     group.addTask { self.updateLatestOverrideConfiguration() }
                     group.addTask { self.updateLatestTempTargetConfiguration() }
                 }
@@ -149,22 +186,42 @@ extension Adjustments {
         /// Configures various settings from the settings manager.
         private func setupSettings() {
             units = settingsManager.settings.units
+            useAutoISF = settingsManager.preferences.autoisf
             defaultSmbMinutes = settingsManager.preferences.maxSMBBasalMinutes
             defaultUamMinutes = settingsManager.preferences.maxUAMSMBBasalMinutes
             autosensMax = settingsManager.preferences.autosensMax
             settingHalfBasalTarget = settingsManager.preferences.halfBasalExerciseTarget
             halfBasalTarget = settingsManager.preferences.halfBasalExerciseTarget
             highTTraisesSens = settingsManager.preferences.highTemptargetRaisesSensitivity
-            isExerciseModeActive = settingsManager.preferences.exerciseMode
             lowTTlowersSens = settingsManager.preferences.lowTemptargetLowersSensitivity
             percentage = TempTargetCalculations.computeAdjustedPercentage(
                 halfBasalTarget: halfBasalTarget,
                 target: tempTargetTarget,
                 autosensMax: autosensMax
             )
+            loadAutoISFProfileDefaults()
+            requireAdjustmentsConfirmation = settingsManager.settings.requireAdjustmentsConfirmation
             Task {
                 await getCurrentGlucoseTarget()
             }
+        }
+
+        func loadAutoISFProfileDefaults() {
+            let prefs = settingsManager.preferences
+            profileAutoISFmin = prefs.autoISFmin
+            profileAutoISFmax = prefs.autoISFmax
+            profileAutoISFhourlyChange = prefs.autoISFhourlyChange
+            profileHigherISFrangeWeight = prefs.higherISFrangeWeight
+            profileLowerISFrangeWeight = prefs.lowerISFrangeWeight
+            profilePostMealISFweight = prefs.postMealISFweight
+            profileBgAccelISFweight = prefs.bgAccelISFweight
+            profileBgBrakeISFweight = prefs.bgBrakeISFweight
+            profileIobThresholdPercent = prefs.iobThresholdPercent
+            profileSmbDeliveryRatio = prefs.smbDeliveryRatio
+            profileSmbDeliveryRatioBGrange = prefs.smbDeliveryRatioBGrange
+            profileSmbDeliveryRatioMin = prefs.smbDeliveryRatioMin
+            profileSmbDeliveryRatioMax = prefs.smbDeliveryRatioMax
+            profileEnableBGacceleration = prefs.enableBGacceleration
         }
 
         /// Reorders Override Presets and updates the view.
@@ -237,6 +294,9 @@ extension Adjustments.StateModel {
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 self.updateLatestTempTargetConfiguration()
+                // Also refresh the scheduled-TT list — shortcut-driven scheduling
+                // persists a future-dated row that only shows up after a refetch.
+                self.setupScheduledTempTargetsArray()
             }
             .store(in: &cancellables)
     }
@@ -249,6 +309,8 @@ extension Adjustments.StateModel {
     /// Handles Temp Target configuration updates.
     @objc private func handleTempTargetConfigurationUpdate() {
         updateLatestTempTargetConfiguration()
+        // Same as the .willUpdate sink — keep the scheduled list in sync.
+        setupScheduledTempTargetsArray()
     }
 }
 
@@ -256,6 +318,7 @@ extension Adjustments.StateModel: SettingsObserver, PreferencesObserver {
     /// Updates settings when they change.
     func settingsDidChange(_: TrioSettings) {
         units = settingsManager.settings.units
+        requireAdjustmentsConfirmation = settingsManager.settings.requireAdjustmentsConfirmation
         Task {
             await getCurrentGlucoseTarget()
         }
@@ -263,13 +326,13 @@ extension Adjustments.StateModel: SettingsObserver, PreferencesObserver {
 
     /// Updates preferences when they change.
     func preferencesDidChange(_: Preferences) {
+        useAutoISF = settingsManager.preferences.autoisf
         defaultSmbMinutes = settingsManager.preferences.maxSMBBasalMinutes
         defaultUamMinutes = settingsManager.preferences.maxUAMSMBBasalMinutes
         autosensMax = settingsManager.preferences.autosensMax
         settingHalfBasalTarget = settingsManager.preferences.halfBasalExerciseTarget
         halfBasalTarget = settingsManager.preferences.halfBasalExerciseTarget
         highTTraisesSens = settingsManager.preferences.highTemptargetRaisesSensitivity
-        isExerciseModeActive = settingsManager.preferences.exerciseMode
         lowTTlowersSens = settingsManager.preferences.lowTemptargetLowersSensitivity
         percentage = TempTargetCalculations.computeAdjustedPercentage(
             halfBasalTarget: halfBasalTarget,

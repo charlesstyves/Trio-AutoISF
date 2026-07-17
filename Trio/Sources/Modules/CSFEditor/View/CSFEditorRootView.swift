@@ -16,7 +16,7 @@ extension CSFEditor {
         private var numberFormatter: NumberFormatter {
             let formatter = NumberFormatter()
             formatter.numberStyle = .decimal
-            formatter.maximumFractionDigits = 1
+            formatter.maximumFractionDigits = state.units == .mmolL ? 1 : 0
             return formatter
         }
 
@@ -180,7 +180,8 @@ extension CSFEditor {
         private var csfChart: some View {
             Chart {
                 ForEach(Array(state.items.enumerated()), id: \.element.id) { index, item in
-                    let displayValue = state.rateValues[item.rateIndex]
+                    let displayValue = state.units == .mgdL ? state.rateValues[item.rateIndex] : state
+                        .rateValues[item.rateIndex].asMmolL
 
                     let startDate = Calendar.current
                         .startOfDay(for: now)
@@ -231,8 +232,12 @@ extension CSFEditor {
                     .addingTimeInterval(60 * 60 * 24)
             )
             .chartYAxis {
-                AxisMarks(values: .automatic(desiredCount: 4)) { _ in
-                    AxisValueLabel()
+                AxisMarks(values: .automatic(desiredCount: 4)) { value in
+                    if let val = value.as(Double.self) {
+                        AxisValueLabel {
+                            Text(numberFormatter.string(from: NSNumber(value: val)) ?? "")
+                        }
+                    }
                     AxisGridLine(centered: true, stroke: StrokeStyle(lineWidth: 1, dash: [2, 4]))
                 }
             }

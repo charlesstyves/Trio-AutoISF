@@ -1,3 +1,4 @@
+import Foundation
 import LoopKit
 import LoopKitUI
 import MockKit
@@ -8,6 +9,7 @@ extension PumpConfig {
     final class StateModel: BaseStateModel<Provider> {
         @Injected() var settings: SettingsManager!
         @Injected() var nightscout: NightscoutManager!
+        @Injected() private var tidepoolManager: TidepoolManager!
 
         @Published var setupPump = false
         private(set) var setupPumpType: PumpType = .minimed
@@ -21,6 +23,7 @@ extension PumpConfig {
         @Published var allowDilution: Bool = false
         @Published var hideInsulinBadge: Bool = false
         @Injected() var bluetoothManager: BluetoothStateManager!
+        @Injected() var trioAlertManager: TrioAlertManager!
 
         var pumpSettings: PumpSettings {
             provider.settings()
@@ -96,6 +99,10 @@ extension PumpConfig {
                                 )
                             }
                         }
+
+                        Task.detached(priority: .low) {
+                            await self.tidepoolManager.uploadSettings()
+                        }
                     } receiveValue: {}
                     .store(in: &lifetime)
             }
@@ -107,7 +114,7 @@ extension PumpConfig {
         }
 
         func ack() {
-            provider.deviceManager.alertHistoryStorage.broadcastAlertUpdates()
+            trioAlertManager.acknowledgeAllOutstanding()
         }
 
         /// Checks if the pump simulator is selected and resets it if Bundle.main.simulatorVisibility.isHidden is true

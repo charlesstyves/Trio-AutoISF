@@ -16,6 +16,12 @@ final class StorageAssembly: Assembly {
         container.register(CarbsStorage.self) { r in BaseCarbsStorage(resolver: r) }
         container.register(ContactImageStorage.self) { r in BaseContactImageStorage(resolver: r) }
         container.register(SettingsManager.self) { r in BaseSettingsManager(resolver: r) }
+        container.register(SettingsScope.self) { r in
+            LiveScope(
+                settingsManager: r.resolve(SettingsManager.self)!,
+                storage: r.resolve(FileStorage.self)!
+            )
+        }
         container.register(Keychain.self) { _ in BaseKeychain() }
         container.register(AlertHistoryStorage.self) { r in BaseAlertHistoryStorage(resolver: r) }
     }

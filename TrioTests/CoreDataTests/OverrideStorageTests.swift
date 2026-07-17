@@ -62,7 +62,21 @@ import Testing
             start: 1,
             end: 2,
             smbMinutes: 100,
-            uamMinutes: 120
+            uamMinutes: 120,
+            autoISFmin: nil,
+            autoISFmax: nil,
+            autoISFhourlyChange: nil,
+            higherISFrangeWeight: nil,
+            lowerISFrangeWeight: nil,
+            postMealISFweight: nil,
+            bgAccelISFweight: nil,
+            bgBrakeISFweight: nil,
+            iobThresholdPercent: nil,
+            smbDeliveryRatio: nil,
+            smbDeliveryRatioBGrange: nil,
+            smbDeliveryRatioMin: nil,
+            smbDeliveryRatioMax: nil,
+            enableBGacceleration: nil
         )
 
         // When
@@ -108,7 +122,21 @@ import Testing
             start: 1,
             end: 2,
             smbMinutes: 100,
-            uamMinutes: 120
+            uamMinutes: 120,
+            autoISFmin: nil,
+            autoISFmax: nil,
+            autoISFhourlyChange: nil,
+            higherISFrangeWeight: nil,
+            lowerISFrangeWeight: nil,
+            postMealISFweight: nil,
+            bgAccelISFweight: nil,
+            bgBrakeISFweight: nil,
+            iobThresholdPercent: nil,
+            smbDeliveryRatio: nil,
+            smbDeliveryRatioBGrange: nil,
+            smbDeliveryRatioMin: nil,
+            smbDeliveryRatioMax: nil,
+            enableBGacceleration: nil
         )
 
         // When
@@ -152,7 +180,21 @@ import Testing
             start: 1,
             end: 2,
             smbMinutes: 100,
-            uamMinutes: 120
+            uamMinutes: 120,
+            autoISFmin: nil,
+            autoISFmax: nil,
+            autoISFhourlyChange: nil,
+            higherISFrangeWeight: nil,
+            lowerISFrangeWeight: nil,
+            postMealISFweight: nil,
+            bgAccelISFweight: nil,
+            bgBrakeISFweight: nil,
+            iobThresholdPercent: nil,
+            smbDeliveryRatio: nil,
+            smbDeliveryRatioBGrange: nil,
+            smbDeliveryRatioMin: nil,
+            smbDeliveryRatioMax: nil,
+            enableBGacceleration: nil
         )
 
         // Store the preset
@@ -208,7 +250,21 @@ import Testing
             start: 1,
             end: 2,
             smbMinutes: 100,
-            uamMinutes: 120
+            uamMinutes: 120,
+            autoISFmin: nil,
+            autoISFmax: nil,
+            autoISFhourlyChange: nil,
+            higherISFrangeWeight: nil,
+            lowerISFrangeWeight: nil,
+            postMealISFweight: nil,
+            bgAccelISFweight: nil,
+            bgBrakeISFweight: nil,
+            iobThresholdPercent: nil,
+            smbDeliveryRatio: nil,
+            smbDeliveryRatioBGrange: nil,
+            smbDeliveryRatioMin: nil,
+            smbDeliveryRatioMax: nil,
+            enableBGacceleration: nil
         )
 
         // When

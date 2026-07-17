@@ -11,7 +11,11 @@ extension AutoISFSettings {
         // Published properties for state binding
         @Published var autoisf: Bool = false {
             didSet {
-                updateEnableAutosens() // Call the method whenever autoisf changes
+                updateEnableAutosens()
+                if autoisf {
+                    scope.preferences.useNewFormula = false
+                    scope.preferences.sigmoid = false
+                }
             }
         }
 

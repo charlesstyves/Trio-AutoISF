@@ -26,3 +26,16 @@ extension BasalProfileEntry {
         self = BasalProfileEntry(start: start, minutes: minutes, rate: rate)
     }
 }
+
+extension Array where Element == BasalProfileEntry {
+    /// Calculate total daily basal rate in units per day
+    var totalDailyBasal: Decimal {
+        var total: Decimal = 0
+        for (i, entry) in enumerated() {
+            let nextMinutes = i + 1 < count ? self[i + 1].minutes : 24 * 60
+            let hours = Decimal(nextMinutes - entry.minutes) / 60
+            total += entry.rate * hours
+        }
+        return total
+    }
+}

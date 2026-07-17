@@ -86,3 +86,6 @@ logs/
 
 # Claude
 .claude/
+
+#Crashfiles
+crashfiles/

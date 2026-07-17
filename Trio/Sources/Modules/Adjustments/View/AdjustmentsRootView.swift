@@ -23,6 +23,7 @@ extension Adjustments {
         @State var isEditingTT = false
         @State var showCancelOverrideConfirmDialog = false
         @State var showCancelTempTargetConfirmDialog = false
+        @State var pendingPresetActivation: PendingPresetActivation?
 
         private var shouldDisplayStickyOverrideStopButton: Bool {
             state.isOverrideEnabled && state.activeOverrideName.isNotEmpty
@@ -88,56 +89,114 @@ extension Adjustments {
                             state.selectedTab = .overrides
                         }
                     }
+                    HStack {
+                        Spacer()
+                        Image(systemName: "person.2", variableValue: 0.58)
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(Color.blue, Color.white, Color.white)
+                            .font(.system(size: 13, weight: .regular))
+                            .frame(width: 22, height: 22)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .stroke(Color.blue, lineWidth: 1.5)
+                            )
+                        Text(Adjustments.Tab.profiles.name)
+                            .font(.subheadline)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                        Spacer()
+                    }
+                    .padding(.vertical, 6)
+                    .background(state.selectedTab == .profiles ? Color.loopGray.opacity(0.4) : Color.clear)
+                    .cornerRadius(8)
+                    .onTapGesture {
+                        withAnimation {
+                            state.selectedTab = .profiles
+                        }
+                    }
                 }
                 .background(Color.gray.opacity(0.2))
                 .cornerRadius(8)
                 .padding(.horizontal)
 
-                List {
+                Group {
                     switch state.selectedTab {
-                    case .overrides: overrides()
-                    case .tempTargets: tempTargets()
+                    case .profiles:
+                        // Embed the existing Profiles screen as the third tab. AdaptProfile.RootView
+                        // owns its own List, toolbar, and "Profiles" navigation title — those take
+                        // over while this tab is active. The Adjustments-side toolbar/title below is
+                        // skipped on this tab to avoid stacking.
+                        AdaptProfile.RootView(resolver: resolver)
+                    case .overrides,
+                         .tempTargets:
+                        List {
+                            switch state.selectedTab {
+                            case .overrides: overrides()
+                            case .tempTargets: tempTargets()
+                            case .profiles: EmptyView()
+                            }
+                        }
+                        .listSectionSpacing(10)
+                        .safeAreaInset(
+                            edge: .bottom,
+                            spacing: shouldDisplayStickyOverrideStopButton || shouldDisplayStickyTempTargetStopButton ? 30 : 0
+                        ) {
+                            if shouldDisplayStickyOverrideStopButton, state.selectedTab == .overrides {
+                                stickyStopOverrideButton
+                            } else if shouldDisplayStickyTempTargetStopButton, state.selectedTab == .tempTargets {
+                                stickyStopTempTargetButton
+                            } else {
+                                EmptyView()
+                            }
+                        }
+                        .scrollContentBackground(.hidden)
+                        .background(appState.trioBackgroundColor(for: colorScheme))
+                        .navigationBarTitle("Adjustments")
+                        .navigationBarTitleDisplayMode(.large)
+                        .toolbar {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                Group {
+                                    switch state.selectedTab {
+                                    case .overrides:
+                                        Button(action: {
+                                            showOverrideCreationSheet = true
+                                        }, label: {
+                                            HStack {
+                                                Text("Add Override")
+                                                Image(systemName: "plus")
+                                            }
+                                        })
+                                    case .tempTargets:
+                                        Button(action: {
+                                            showTempTargetCreationSheet = true
+                                        }, label: {
+                                            HStack {
+                                                Text("Add Temp Target")
+                                                Image(systemName: "plus")
+                                            }
+                                        })
+                                    case .profiles:
+                                        EmptyView()
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-                .listSectionSpacing(10)
-                .safeAreaInset(
-                    edge: .bottom,
-                    spacing: shouldDisplayStickyOverrideStopButton || shouldDisplayStickyTempTargetStopButton ? 30 : 0
-                ) {
-                    if shouldDisplayStickyOverrideStopButton, state.selectedTab == .overrides {
-                        stickyStopOverrideButton
-                    } else if shouldDisplayStickyTempTargetStopButton, state.selectedTab == .tempTargets {
-                        stickyStopTempTargetButton
-                    } else {
-                        EmptyView()
-                    }
-                }
-                .scrollContentBackground(.hidden)
-                .background(appState.trioBackgroundColor(for: colorScheme))
-                .onAppear(perform: configureView)
-                .navigationBarTitle("Adjustments")
-                .navigationBarTitleDisplayMode(.large)
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        switch state.selectedTab {
-                        case .overrides:
-                            Button(action: {
-                                showOverrideCreationSheet = true
-                            }, label: {
-                                HStack {
-                                    Text("Add Override")
-                                    Image(systemName: "plus")
-                                }
-                            })
-                        case .tempTargets:
-                            Button(action: {
-                                showTempTargetCreationSheet = true
-                            }, label: {
-                                HStack {
-                                    Text("Add Temp Target")
-                                    Image(systemName: "plus")
-                                }
-                            })
+                .onAppear {
+                    configureView()
+                    // Banner-arrival path: let the view first render on the default tab so the
+                    // NavigationStack chrome and List layout settle exactly the same way they
+                    // would on any normal mount, then animate the swap to .profiles. This makes
+                    // the banner path go through the identical "tab switch" code path the user
+                    // would trigger by tapping the pill manually — eliminating the layout
+                    // mismatch we got from setting .profiles before/during first render.
+                    if UserDefaults.standard.bool(forKey: Adjustments.pendingProfilesTabKey) {
+                        UserDefaults.standard.removeObject(forKey: Adjustments.pendingProfilesTabKey)
+                        DispatchQueue.main.async {
+                            withAnimation {
+                                state.selectedTab = .profiles
+                            }
                         }
                     }
                 }
@@ -205,28 +264,40 @@ extension Adjustments {
                 } message: {
                     Text("Stop the Temp Target \"\(state.currentActiveTempTarget?.name ?? "")\"?")
                 }
-            }.background(appState.trioBackgroundColor(for: colorScheme))
+                .confirmationDialog(
+                    "Activate Preset",
+                    isPresented: presetActivationConfirmationBinding
+                ) {
+                    Button("Activate") {
+                        if let activation = pendingPresetActivation {
+                            activatePreset(activation)
+                        }
+                    }
+
+                    Button("Cancel", role: .cancel) {
+                        state.shouldDisplayPresetStartConfirmDialog = false
+                        pendingPresetActivation = nil
+                    }
+                } message: {
+                    if let activation = pendingPresetActivation {
+                        Text(activation.confirmationMessage)
+                    }
+                }
+            }
+            .background(appState.trioBackgroundColor(for: colorScheme))
         }
 
         var defaultText: some View {
             Group {
                 switch state.selectedTab {
                 case .overrides:
-                    Section(
-                        header: Text(
+                    Section {} header: {
+                        Text(
                             "Add Preset or Override by tapping 'Add Override +' in the top right-hand corner of the screen."
                         )
                         .textCase(nil)
-                        .foregroundStyle(.secondary),
-                        content: {
-                            VStack(alignment: .leading) {
-                                Text(
-                                    "Overrides DO NOT have ANY functionality in Tai. The UI is up to date and can be tested, including shortcuts, NS remotes and all displayed information. However NONE of the overriden parameters have any effect.\n\nOnce oref is ported to Swift, this feature will be added to Tai."
-                                ).bold()
-                            }
-                        }
-                    )
-                    .listRowBackground(Color.tabBar)
+                        .foregroundStyle(.secondary)
+                    }
                 case .tempTargets:
                     Section {} header: {
                         Text(
@@ -235,11 +306,13 @@ extension Adjustments {
                         .textCase(nil)
                         .foregroundStyle(.secondary)
                     }
+                case .profiles:
+                    EmptyView()
                 }
             }
         }
 
-        var currentActiveAdjustment: some View {
+        @ViewBuilder var currentActiveAdjustment: some View {
             switch state.selectedTab {
             case .overrides:
                 Section {
@@ -291,10 +364,12 @@ extension Adjustments {
                     }
                 }
                 .listRowBackground(Color.loopGreen.opacity(0.8))
+            case .profiles:
+                EmptyView()
             }
         }
 
-        var cancelAdjustmentButton: some View {
+        @ViewBuilder var cancelAdjustmentButton: some View {
             switch state.selectedTab {
             case .overrides:
                 Button(action: {
@@ -318,6 +393,8 @@ extension Adjustments {
                     .disabled(!state.isTempTargetEnabled)
                     .listRowBackground(!state.isTempTargetEnabled ? Color(.systemGray4) : Color(.systemRed))
                     .tint(.white)
+            case .profiles:
+                EmptyView()
             }
         }
 
@@ -333,6 +410,96 @@ extension Adjustments {
                 return "\(minutes)m \(seconds)s"
             } else {
                 return "<1m"
+            }
+        }
+    }
+}
+
+// MARK: Preset Activation Handling
+
+extension Adjustments.RootView: View {
+    enum PendingPresetActivation {
+        case override(objectID: NSManagedObjectID, presetID: String?, name: String)
+        case tempTarget(objectID: NSManagedObjectID, presetID: String?, name: String)
+
+        var name: String {
+            switch self {
+            case let .override(_, _, name),
+                 let .tempTarget(_, _, name):
+                return name
+            }
+        }
+
+        var adjustmentType: String {
+            switch self {
+            case .override:
+                return String(localized: "Override")
+            case .tempTarget:
+                return String(localized: "Temp Target")
+            }
+        }
+
+        var confirmationMessage: String {
+            String(localized: "Start the \(adjustmentType) \"\(name)\"?", comment: "Confirmation message for starting a preset")
+        }
+    }
+
+    private var presetActivationConfirmationBinding: Binding<Bool> {
+        Binding(
+            get: {
+                state.requireAdjustmentsConfirmation &&
+                    state.shouldDisplayPresetStartConfirmDialog &&
+                    pendingPresetActivation != nil
+            },
+            set: { isPresented in
+                if !isPresented {
+                    state.shouldDisplayPresetStartConfirmDialog = false
+                    pendingPresetActivation = nil
+                }
+            }
+        )
+    }
+
+    func requestPresetActivation(_ activation: PendingPresetActivation) {
+        if state.requireAdjustmentsConfirmation {
+            pendingPresetActivation = activation
+            state.shouldDisplayPresetStartConfirmDialog = true
+        } else {
+            activatePreset(activation)
+        }
+    }
+
+    func activatePreset(_ activation: PendingPresetActivation) {
+        Task {
+            switch activation {
+            case let .override(objectID, presetID, _):
+                await state.enactOverridePreset(withID: objectID)
+
+                await MainActor.run {
+                    state.hideModal()
+                    selectedOverridePresetID = presetID
+                    showOverrideCheckmark = true
+                    state.shouldDisplayPresetStartConfirmDialog = false
+                    pendingPresetActivation = nil
+                }
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    showOverrideCheckmark = false
+                }
+
+            case let .tempTarget(objectID, presetID, _):
+                await state.enactTempTargetPreset(withID: objectID)
+
+                await MainActor.run {
+                    selectedTempTargetPresetID = presetID
+                    showTempTargetCheckmark = true
+                    state.shouldDisplayPresetStartConfirmDialog = false
+                    pendingPresetActivation = nil
+                }
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    showTempTargetCheckmark = false
+                }
             }
         }
     }

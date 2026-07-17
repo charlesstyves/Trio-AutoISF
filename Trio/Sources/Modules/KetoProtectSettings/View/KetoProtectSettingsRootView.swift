@@ -28,25 +28,14 @@ extension KetoProtectSettings {
                                 get: { selectedVerboseHint },
                                 set: {
                                     selectedVerboseHint = $0.map { AnyView($0) }
-                                    hintLabel = String(localized: "Activate KetoProtection", comment: "Enable KetoProtection")
+                                    hintLabel = AlgorithmSettingHints.ketoProtectLabel
                                 }
                             ),
                             units: state.units,
                             type: .boolean,
-                            label: String(localized: "Activate KetoProtection", comment: "Enable KetoProtection"),
-                            miniHint: String(
-                                localized:
-                                "This feature enables a small safety Temp Basal Rate (TBR) to reduce ketoacidosis risk. Without the Variable Protection, the safety TBR is always applied."
-                            ),
-                            verboseHint: AnyView(
-                                Text(
-                                    String(
-                                        localized:
-                                        "Ketoacidosis protection will apply a small configurable Temp Basal Rate (TBR) instead of a Zero Temp. This is done either always or if certain conditions arise. For the later you need to enable the Variable KetoProtect Strategy.",
-                                        comment: "KetoProtect VerboseHint"
-                                    )
-                                )
-                            )
+                            label: AlgorithmSettingHints.ketoProtectLabel,
+                            miniHint: AlgorithmSettingHints.ketoProtectMini,
+                            verboseHint: AlgorithmSettingHints.ketoProtectVerbose()
                         )
                     }
                 )
@@ -62,30 +51,14 @@ extension KetoProtectSettings {
                                     get: { selectedVerboseHint },
                                     set: {
                                         selectedVerboseHint = $0.map { AnyView($0) }
-                                        hintLabel = String(
-                                            localized:
-                                            "Variable Strategy",
-                                            comment: "Variable Keto Protection"
-                                        )
+                                        hintLabel = AlgorithmSettingHints.variableKetoProtectLabel
                                     }
                                 ),
                                 units: state.units,
                                 type: .boolean,
-                                label: String(localized: "Variable Strategy", comment: "Variable Keto Protection"),
-                                miniHint: String(
-                                    localized:
-                                    "In addition to the Zero Temp the activiation of KetoProtect is dependant on IOB levels and last Active Insulin.",
-                                    comment: "Variable protection miniHint"
-                                ),
-                                verboseHint: AnyView(
-                                    Text(
-                                        String(
-                                            localized:
-                                            "Activated: Safety TBR only kicks in when IOB is in neg. range below current Basal Rate and Active Insulin is also negative.",
-                                            comment: "Variable Protection VerboseHint"
-                                        )
-                                    )
-                                )
+                                label: AlgorithmSettingHints.variableKetoProtectLabel,
+                                miniHint: AlgorithmSettingHints.variableKetoProtectMini,
+                                verboseHint: AlgorithmSettingHints.variableKetoProtectVerbose()
                             )
                         }
                     )
@@ -118,26 +91,14 @@ extension KetoProtectSettings {
                                         get: { selectedVerboseHint },
                                         set: {
                                             selectedVerboseHint = $0.map { AnyView($0) }
-                                            hintLabel = String(localized: "Safety TBR in %", comment: "Safety TBR")
+                                            hintLabel = AlgorithmSettingHints.ketoProtectBasalPercentLabel
                                         }
                                     ),
                                     units: state.units,
                                     type: .decimal("ketoProtectBasalPercent"),
-                                    label: String(localized: "Safety TBR in %", comment: "Safety TBR"),
-                                    miniHint: String(
-                                        localized:
-                                        "Quantity of the small safety TBR in % of Profile BR, which is given to avoid ketoacidosis.",
-                                        comment: "Safety TBR miniHint"
-                                    ),
-                                    verboseHint: AnyView(
-                                        Text(
-                                            String(
-                                                localized:
-                                                "Set the percentage of the current basal rate to apply for safety against ketoacidosis. Recommended between 10% - 20%",
-                                                comment: "Safety TBR VerboseHint"
-                                            )
-                                        )
-                                    )
+                                    label: AlgorithmSettingHints.ketoProtectBasalPercentLabel,
+                                    miniHint: AlgorithmSettingHints.ketoProtectBasalPercentMini,
+                                    verboseHint: AlgorithmSettingHints.ketoProtectBasalPercentVerbose()
                                 )
                             }
                             SettingInputSection(
@@ -148,30 +109,14 @@ extension KetoProtectSettings {
                                     get: { selectedVerboseHint },
                                     set: {
                                         selectedVerboseHint = $0.map { AnyView($0) }
-                                        hintLabel = String(
-                                            localized:
-                                            "Enable Absolute Safety TBR",
-                                            comment: "Enable Absolute TBR"
-                                        )
+                                        hintLabel = AlgorithmSettingHints.ketoProtectAbsolutLabel
                                     }
                                 ),
                                 units: state.units,
                                 type: .boolean,
-                                label: String(localized: "Enable Absolute Safety TBR", comment: "Enable Absolute TBR"),
-                                miniHint: String(
-                                    localized:
-                                    "Specify an absolute TBR between 0 and 2 U/hr instead of a percentage of the current basal rate.",
-                                    comment: "Enable Absolute Safety TBR miniHint"
-                                ),
-                                verboseHint: AnyView(
-                                    Text(
-                                        String(
-                                            localized:
-                                            "Absolute safety TBR provides a fixed insulin rate for safety, useful for consistent protection.",
-                                            comment: "Absolute TBR VerboseHint"
-                                        )
-                                    )
-                                )
+                                label: AlgorithmSettingHints.ketoProtectAbsolutLabel,
+                                miniHint: AlgorithmSettingHints.ketoProtectAbsolutMini,
+                                verboseHint: AlgorithmSettingHints.ketoProtectAbsolutVerbose()
                             )
                             if state.ketoProtectAbsolut {
                                 SettingInputSection(
@@ -182,26 +127,14 @@ extension KetoProtectSettings {
                                         get: { selectedVerboseHint },
                                         set: {
                                             selectedVerboseHint = $0.map { AnyView($0) }
-                                            hintLabel = String(localized: "Absolute Safety TBR", comment: "Absolute TBR")
+                                            hintLabel = AlgorithmSettingHints.ketoProtectBasalAbsolutLabel
                                         }
                                     ),
                                     units: state.units,
                                     type: .decimal("ketoProtectBasalAbsolut"),
-                                    label: String(localized: "Absolute Safety TBR", comment: "Absolute TBR"),
-                                    miniHint: String(
-                                        localized:
-                                        "Amount in U/hr of small safety TBR to avoid ketoacidosis.",
-                                        comment: "Absolute Safety TBR miniHint"
-                                    ),
-                                    verboseHint: AnyView(
-                                        Text(
-                                            String(
-                                                localized:
-                                                "Specify a fixed basal rate for safety against ketoacidosis.",
-                                                comment: "Absolute TBR VerboseHint"
-                                            )
-                                        )
-                                    )
+                                    label: AlgorithmSettingHints.ketoProtectBasalAbsolutLabel,
+                                    miniHint: AlgorithmSettingHints.ketoProtectBasalAbsolutMini,
+                                    verboseHint: AlgorithmSettingHints.ketoProtectBasalAbsolutVerbose()
                                 )
                             }
                         }
@@ -243,6 +176,7 @@ extension KetoProtectSettings {
             .onAppear(perform: configureView)
             .navigationTitle("KetoProtect Settings")
             .navigationBarTitleDisplayMode(.automatic)
+            .settingsHighlightScroll()
         }
     }
 }

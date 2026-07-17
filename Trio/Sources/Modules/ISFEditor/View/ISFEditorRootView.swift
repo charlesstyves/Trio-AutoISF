@@ -143,7 +143,8 @@ extension ISFEditor {
         private var isfChart: some View {
             Chart {
                 ForEach(Array(state.items.enumerated()), id: \.element.id) { index, item in
-                    let displayValue = state.rateValues[item.rateIndex]
+                    let displayValue = state.units == .mgdL ? state.rateValues[item.rateIndex] : state
+                        .rateValues[item.rateIndex].asMmolL
 
                     let startDate = Calendar.current
                         .startOfDay(for: now)
@@ -194,8 +195,12 @@ extension ISFEditor {
                     .addingTimeInterval(60 * 60 * 24)
             )
             .chartYAxis {
-                AxisMarks(values: .automatic(desiredCount: 4)) { _ in
-                    AxisValueLabel()
+                AxisMarks(values: .automatic(desiredCount: 4)) { value in
+                    if let val = value.as(Double.self) {
+                        AxisValueLabel {
+                            Text(numberFormatter.string(from: NSNumber(value: val)) ?? "")
+                        }
+                    }
                     AxisGridLine(centered: true, stroke: StrokeStyle(lineWidth: 1, dash: [2, 4]))
                 }
             }

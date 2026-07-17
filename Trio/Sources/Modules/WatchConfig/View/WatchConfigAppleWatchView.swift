@@ -70,5 +70,6 @@ struct WatchConfigAppleWatchView: BaseView {
         .navigationBarTitleDisplayMode(.automatic)
         .scrollContentBackground(.hidden)
         .background(appState.trioBackgroundColor(for: colorScheme))
+        .settingsHighlightScroll()
     }
 }

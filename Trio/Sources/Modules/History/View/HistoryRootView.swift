@@ -61,18 +61,25 @@ extension History {
             animation: .bouncy
         ) var tempTargetRunStored: FetchedResults<TempTargetRunStored>
 
+        @FetchRequest(
+            entity: ProfileRunStored.entity(),
+            sortDescriptors: [NSSortDescriptor(key: "startDate", ascending: false)],
+            predicate: NSPredicate.profileRunStoredFromOneDayAgo,
+            animation: .bouncy
+        ) var profileRunStored: FetchedResults<ProfileRunStored>
+
         private func resolvedType(for event: PumpEventStored) -> String {
             if let bolus = event.bolus {
                 if bolus.isSMB {
-                    return "SMB"
+                    return String(localized: "SMB", comment: "Treatment history type label — SMB (super-microbolus)")
                 } else { // for manual and external Boli
-                    return "Bolus"
+                    return String(localized: "Bolus", comment: "Treatment history type label — Bolus")
                 }
             } else if event.tempBasal != nil {
-                return "Temp Basal"
+                return String(localized: "Temp Basal", comment: "Treatment history type label — temporary basal")
             } else {
                 // Group all other pump events (like Pump Suspended, Pump Resume, etc.) as "Pump State"
-                return "Pump State"
+                return String(localized: "Pump State", comment: "Treatment history type label — pump state change")
             }
         }
 
@@ -84,7 +91,7 @@ extension History {
             // Add "Carbs" to the list if there are any carb entries
             var allTypes = Array(Set(pumpTypes)).sorted()
             if !carbEntryStored.isEmpty {
-                allTypes.append("Carbs")
+                allTypes.append(String(localized: "Carbs", comment: "Treatment history type label — carbohydrate entry"))
             }
 
             return allTypes.sorted()
@@ -207,11 +214,9 @@ extension History {
                         .padding(.horizontal)
                     } else {
                         Picker("Mode", selection: $state.mode) {
-                            ForEach(
-                                Mode.allCases.indexed(),
-                                id: \.1
-                            ) { index, item in
-                                Text(item.name).tag(index)
+                            // Meals are listed within the treatments list, so no separate mode.
+                            ForEach(Mode.allCases.filter { $0 != .meals }) { item in
+                                Text(item.name).tag(item)
                             }
                         }
                         .pickerStyle(SegmentedPickerStyle())
@@ -435,7 +440,13 @@ extension History {
                             .foregroundColor(Color.accentColor)
                             Text(
                                 selectedTreatmentTypes.count == TreatmentType.allCases
-                                    .count ? String(localized: "Deselect All") : String(localized: "Select All")
+                                    .count ? String(
+                                        localized: "Deselect All",
+                                        comment: "Toggle button in History filter popover — deselects every treatment type"
+                                    ) : String(
+                                        localized: "Select All",
+                                        comment: "Toggle button in History filter popover — selects every treatment type"
+                                    )
                             )
                             .foregroundColor(Color.primary)
                         }.padding(4)
@@ -483,8 +494,17 @@ extension History {
                 },
                 label: {
                     HStack {
-                        Text(showFutureEntries ? String(localized: "Hide Future") : String(localized: "Show Future"))
-                            .foregroundColor(Color.accentColor)
+                        Text(
+                            showFutureEntries ?
+                                String(
+                                    localized: "Hide Future",
+                                    comment: "Toggle button in History — hide entries with future timestamps"
+                                ) : String(
+                                    localized: "Show Future",
+                                    comment: "Toggle button in History — show entries with future timestamps"
+                                )
+                        )
+                        .foregroundColor(Color.accentColor)
                         Image(systemName: showFutureEntries ? "eye.slash" : "eye")
                             .foregroundColor(Color.accentColor)
                     }
@@ -521,7 +541,7 @@ extension History {
                     }
                 } else {
                     ContentUnavailableView(
-                        String(localized: "No data."),
+                        String(localized: "No data.", comment: "Empty-state text on History Treatments list"),
                         systemImage: "syringe"
                     )
                 }
@@ -541,7 +561,7 @@ extension History {
                     }
                 } else {
                     ContentUnavailableView(
-                        String(localized: "No data."),
+                        String(localized: "No data.", comment: "Empty-state text on History Adjustments list"),
                         systemImage: "clock.arrow.2.circlepath"
                     )
                 }
@@ -549,11 +569,77 @@ extension History {
             .listRowBackground(Color.chart)
         }
 
+        private func profileAdjustmentItem(_ run: ProfileRunStored) -> AdjustmentItem {
+            let summary = ProfileSummaryLabel.shortStrings(
+                appliedPercent: run.profile?.appliedPercent?.decimalValue,
+                dailyBasalRate: run.profile?.therapy?.basalProfile.totalDailyBasal
+            )
+            return AdjustmentItem(
+                id: run.objectID,
+                name: run.name ?? String(
+                    localized: "Profile",
+                    comment: "Fallback name on History Adjustments list when a profile run has no name"
+                ),
+                startDate: run.startDate ?? Date(),
+                endDate: run.endDate ?? Date(),
+                target: nil,
+                type: .profile,
+                wasIndefinite: run.wasIndefinite,
+                profileSummary: summary
+            )
+        }
+
+        @ViewBuilder private func adjustmentIcon(for item: AdjustmentItem) -> some View {
+            switch item.type {
+            case .override:
+                Image(systemName: "clock.arrow.2.circlepath")
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(
+                        Color.primary,
+                        Color(red: 0.6235294118, green: 0.4235294118, blue: 0.9803921569)
+                    )
+            case .tempTarget:
+                Image(systemName: "arrow.up.circle.badge.clock")
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(Color.primary, Color.loopGreen)
+            case .profile:
+                if item.wasIndefinite {
+                    Image(systemName: "person.2", variableValue: 0.58)
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(Color.blue, Color.white, Color.white)
+                        .font(.system(size: 10, weight: .regular))
+                        .frame(width: 17, height: 17)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 3)
+                                .stroke(Color.blue, lineWidth: 1.3)
+                        )
+                } else {
+                    Image(systemName: "person.2.arrow.trianglehead.counterclockwise")
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(Color.primary, Color.blue)
+                        .font(.system(size: 18))
+                }
+            }
+        }
+
+        private func formatAdjustmentDuration(from start: Date, to end: Date) -> String {
+            let totalSeconds = max(0, Int(end.timeIntervalSince(start)))
+            let hours = totalSeconds / 3600
+            let minutes = (totalSeconds % 3600) / 60
+            if hours > 0 {
+                return minutes > 0 ? "\(hours)h \(minutes)m" : "\(hours)h"
+            }
+            return minutes > 0 ? "\(minutes)m" : "<1m"
+        }
+
         private var combinedAdjustments: [AdjustmentItem] {
             let overrides = overrideRunStored.map { override -> AdjustmentItem in
                 AdjustmentItem(
                     id: override.objectID,
-                    name: override.name ?? String(localized: "Override"),
+                    name: override.name ?? String(
+                        localized: "Override",
+                        comment: "Fallback name on History Adjustments list when an override run has no name"
+                    ),
                     startDate: override.startDate ?? Date(),
                     endDate: override.endDate ?? Date(),
                     target: override.target?.decimalValue,
@@ -564,7 +650,10 @@ extension History {
             let tempTargets = tempTargetRunStored.map { tempTarget -> AdjustmentItem in
                 AdjustmentItem(
                     id: tempTarget.objectID,
-                    name: tempTarget.name ?? String(localized: "Temp Target"),
+                    name: tempTarget.name ?? String(
+                        localized: "Temp Target",
+                        comment: "Fallback name on History Adjustments list when a temp target run has no name"
+                    ),
                     startDate: tempTarget.startDate ?? Date(),
                     endDate: tempTarget.endDate ?? Date(),
                     target: tempTarget.target?.decimalValue,
@@ -572,7 +661,9 @@ extension History {
                 )
             }
 
-            let combined = overrides + tempTargets
+            let profiles = profileRunStored.map(profileAdjustmentItem)
+
+            let combined = overrides + tempTargets + profiles
             return combined.sorted {
                 if $0.startDate == $1.startDate {
                     return $0.endDate > $1.endDate
@@ -587,11 +678,14 @@ extension History {
             let endDate: Date
             let target: Decimal?
             let type: AdjustmentType
+            var wasIndefinite: Bool = false
+            var profileSummary: [String] = []
         }
 
         private enum AdjustmentType {
             case override
             case tempTarget
+            case profile
 
             var symbolName: String {
                 switch self {
@@ -599,6 +693,8 @@ extension History {
                     return "clock.arrow.2.circlepath"
                 case .tempTarget:
                     return "arrow.up.circle.badge.clock"
+                case .profile:
+                    return "person.crop.circle.badge.clock"
                 }
             }
 
@@ -608,6 +704,8 @@ extension History {
                     return .orange
                 case .tempTarget:
                     return .blue
+                case .profile:
+                    return .teal
                 }
             }
         }
@@ -616,25 +714,21 @@ extension History {
             let formattedDates =
                 "\(Formatter.timeFormatter.string(from: item.startDate)) - \(Formatter.timeFormatter.string(from: item.endDate))"
 
-            let labels: [String] = [
-                "\(item.target) \(state.units.rawValue)",
-                formattedDates
-            ].filter { !$0.isEmpty }
+            let durationString = formatAdjustmentDuration(from: item.startDate, to: item.endDate)
+
+            let targetLabel: String? = item.target.map { "\($0) \(state.units.rawValue)" }
+
+            let labels: [String] = ([targetLabel].compactMap { $0 } + item.profileSummary + [durationString, formattedDates])
+                .filter { !$0.isEmpty }
+
+            let iconRotation: Double = item.type == .tempTarget ? 90 : 0
 
             ZStack(alignment: .trailing) {
                 HStack {
                     VStack(alignment: .leading) {
                         HStack {
-                            Image(systemName: item.type.symbolName)
-                                .rotationEffect(.degrees(
-                                    item.type == .override ? 0 : 90
-                                ))
-                                .symbolRenderingMode(.palette)
-                                .foregroundStyle(
-                                    Color.primary,
-                                    item.type == .override ? Color(red: 0.6235294118, green: 0.4235294118, blue: 0.9803921569) :
-                                        Color.loopGreen
-                                )
+                            adjustmentIcon(for: item)
+                                .rotationEffect(.degrees(iconRotation))
                             Text(item.name)
                                 .font(.headline)
                             Spacer()
@@ -731,7 +825,7 @@ extension History {
                     }
                 } else {
                     ContentUnavailableView(
-                        String(localized: "No data."),
+                        String(localized: "No data.", comment: "Empty-state text on History Glucose list"),
                         systemImage: "drop.fill"
                     )
                 }
@@ -754,7 +848,10 @@ extension History {
                 debugPrint(
                     "Data Table Root View: \(#function) \(DebuggingIdentifiers.failed) error while deleting glucose from core data"
                 )
-                alertMessage = "Failed to delete glucose data: \(error.localizedDescription)"
+                alertMessage = String(
+                    localized: "Failed to delete glucose data: \(error.localizedDescription)",
+                    comment: "Error alert shown when glucose deletion from CoreData fails — interpolated value is a localized error description from the OS"
+                )
                 showAlert = true
             }
         }
@@ -816,7 +913,13 @@ extension History {
         private var filterEntriesButton: some View {
             Button(action: { showFutureEntries.toggle() }, label: {
                 HStack {
-                    Text(showFutureEntries ? String(localized: "Hide Future") : String(localized: "Show Future"))
+                    Text(showFutureEntries ? String(
+                        localized: "Hide Future",
+                        comment: "Toggle button on History Carb Entries view — hide entries with future timestamps"
+                    ) : String(
+                        localized: "Show Future",
+                        comment: "Toggle button on History Carb Entries view — show entries with future timestamps"
+                    ))
                         .foregroundColor(Color.secondary)
                     Image(systemName: showFutureEntries ? "calendar.badge.minus" : "calendar.badge.plus")
                 }.frame(maxWidth: .infinity, alignment: .center)
@@ -859,7 +962,18 @@ extension History {
                             )
                     }
 
-                    Text(bolus.isSMB ? "SMB" : item.type ?? "Bolus")
+                    Text(
+                        bolus
+                            .isSMB ? String(localized: "SMB", comment: "Treatment row label — SMB") :
+                            (
+                                item
+                                    .type ??
+                                    String(
+                                        localized: "Bolus",
+                                        comment: "Treatment row label — fallback when event type is missing"
+                                    )
+                            )
+                    )
                     Text(
                         (Formatter.insulinFormatterToIncrement(for: state.bolusIncrement).string(from: amount) ?? "0") +
                             String(localized: " U", comment: "Insulin unit")
@@ -881,7 +995,14 @@ extension History {
                     }
                 } else {
                     Image(systemName: "circle.fill").foregroundColor(Color.loopGray)
-                    Text(item.type ?? "Pump Event")
+                    Text(
+                        item
+                            .type ??
+                            String(
+                                localized: "Pump Event",
+                                comment: "Treatment row label — fallback when pump event type is missing"
+                            )
+                    )
                 }
                 Spacer()
                 Text(Formatter.timeFormatter.string(from: item.timestamp ?? Date())).moveDisabled(true)

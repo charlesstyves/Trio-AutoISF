@@ -14,6 +14,7 @@ protocol StateModel: ObservableObject {
 class BaseStateModel<Provider>: StateModel, Injectable where Provider: Trio.Provider {
     @Injected() var router: Router!
     @Injected() var settingsManager: SettingsManager!
+    @Injected() var scope: SettingsScope!
     var isInitial: Bool = true
     private(set) var provider: Provider!
 
@@ -63,12 +64,15 @@ class BaseStateModel<Provider>: StateModel, Injectable where Provider: Trio.Prov
         _ keyPath: WritableKeyPath<Preferences, T>,
         on preferencesPublisher: U, initial: (T) -> Void, map: ((T) -> (T))? = nil, didSet: ((T) -> Void)? = nil
     ) where U.Output == T, U.Failure == Never {
-        initial(settingsManager.preferences[keyPath: keyPath])
+        initial(scope.preferences[keyPath: keyPath])
         preferencesPublisher
             .removeDuplicates()
             .map(map ?? { $0 })
             .sink { [weak self] value in
-                self?.settingsManager.preferences[keyPath: keyPath] = value
+                guard let self = self else { return }
+                var prefs = self.scope.preferences
+                prefs[keyPath: keyPath] = value
+                self.scope.preferences = prefs
                 didSet?(value)
             }
             .store(in: &lifetime)

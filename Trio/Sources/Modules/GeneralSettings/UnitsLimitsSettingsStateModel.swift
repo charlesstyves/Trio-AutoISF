@@ -5,6 +5,7 @@ extension UnitsLimitsSettings {
     final class StateModel: BaseStateModel<Provider> {
         @Injected() var settings: SettingsManager!
         @Injected() var storage: FileStorage!
+        @Injected() private var tidepoolManager: TidepoolManager!
 
         @Published var units: GlucoseUnits = .mgdL
         @Published var unitsIndex = 0 // index 0 is mg/dl
@@ -15,6 +16,7 @@ extension UnitsLimitsSettings {
         @Published var maxCOB: Decimal = 120
         @Published var hasChanged: Bool = false
         @Published var threshold_setting: Decimal = 60
+        @Published var smbThresholdRatio: Decimal = 0.5
         var targetUnits: GlucoseUnits = .mgdL
 
         var preferences: Preferences {
@@ -38,6 +40,7 @@ extension UnitsLimitsSettings {
             subscribePreferencesSetting(\.maxIOB, on: $maxIOB) { maxIOB = $0 }
             subscribePreferencesSetting(\.maxCOB, on: $maxCOB) { maxCOB = $0 }
             subscribePreferencesSetting(\.threshold_setting, on: $threshold_setting) { threshold_setting = $0 }
+            subscribePreferencesSetting(\.smbThresholdRatio, on: $smbThresholdRatio) { smbThresholdRatio = $0 }
 
             maxBasal = pumpSettings.maxBasal
             maxBolus = pumpSettings.maxBolus
@@ -61,6 +64,10 @@ extension UnitsLimitsSettings {
                         let settings = self.provider.settings()
                         self.maxBasal = settings.maxBasal
                         self.maxBolus = settings.maxBolus
+
+                        Task.detached(priority: .low) {
+                            await self.tidepoolManager.uploadSettings()
+                        }
                     } receiveValue: {}
                     .store(in: &lifetime)
             }

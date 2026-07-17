@@ -107,7 +107,21 @@ extension Adjustments.StateModel {
                 start: start,
                 end: end,
                 smbMinutes: smbMinutes,
-                uamMinutes: uamMinutes
+                uamMinutes: uamMinutes,
+                autoISFmin: overrideAutoISFmin,
+                autoISFmax: overrideAutoISFmax,
+                autoISFhourlyChange: overrideAutoISFhourlyChange,
+                higherISFrangeWeight: overrideHigherISFrangeWeight,
+                lowerISFrangeWeight: overrideLowerISFrangeWeight,
+                postMealISFweight: overridePostMealISFweight,
+                bgAccelISFweight: overrideBgAccelISFweight,
+                bgBrakeISFweight: overrideBgBrakeISFweight,
+                iobThresholdPercent: overrideIobThresholdPercent,
+                smbDeliveryRatio: overrideSmbDeliveryRatio,
+                smbDeliveryRatioBGrange: overrideSmbDeliveryRatioBGrange,
+                smbDeliveryRatioMin: overrideSmbDeliveryRatioMin,
+                smbDeliveryRatioMax: overrideSmbDeliveryRatioMax,
+                enableBGacceleration: overrideEnableBGacceleration
             )
 
             // First disable all Overrides
@@ -154,7 +168,21 @@ extension Adjustments.StateModel {
                 start: start,
                 end: end,
                 smbMinutes: smbMinutes,
-                uamMinutes: uamMinutes
+                uamMinutes: uamMinutes,
+                autoISFmin: overrideAutoISFmin,
+                autoISFmax: overrideAutoISFmax,
+                autoISFhourlyChange: overrideAutoISFhourlyChange,
+                higherISFrangeWeight: overrideHigherISFrangeWeight,
+                lowerISFrangeWeight: overrideLowerISFrangeWeight,
+                postMealISFweight: overridePostMealISFweight,
+                bgAccelISFweight: overrideBgAccelISFweight,
+                bgBrakeISFweight: overrideBgBrakeISFweight,
+                iobThresholdPercent: overrideIobThresholdPercent,
+                smbDeliveryRatio: overrideSmbDeliveryRatio,
+                smbDeliveryRatioBGrange: overrideSmbDeliveryRatioBGrange,
+                smbDeliveryRatioMin: overrideSmbDeliveryRatioMin,
+                smbDeliveryRatioMax: overrideSmbDeliveryRatioMax,
+                enableBGacceleration: overrideEnableBGacceleration
             )
 
             async let storeOverride: () = overrideStorage.storeOverride(override: preset)
@@ -263,14 +291,20 @@ extension Adjustments.StateModel {
     @MainActor func setCurrentOverride(from IDs: [NSManagedObjectID]) async {
         do {
             guard let firstID = IDs.first else {
-                activeOverrideName = "Custom Override"
+                activeOverrideName = String(
+                    localized: "Custom Override",
+                    comment: "Fallback display name for the active override when no list entry exists"
+                )
                 currentActiveOverride = nil
                 return
             }
 
             if let overrideToEdit = try viewContext.existingObject(with: firstID) as? OverrideStored {
                 currentActiveOverride = overrideToEdit
-                activeOverrideName = overrideToEdit.name ?? String(localized: "Custom Override")
+                activeOverrideName = overrideToEdit.name ?? String(
+                    localized: "Custom Override",
+                    comment: "Fallback display name for the active override when no name was set"
+                )
             }
         } catch {
             debugPrint(
@@ -294,7 +328,10 @@ extension Adjustments.StateModel {
 
             if let overrideToEdit = try viewContext.existingObject(with: duplicateId) as? OverrideStored {
                 currentActiveOverride = overrideToEdit
-                activeOverrideName = overrideToEdit.name ?? String(localized: "Custom Override")
+                activeOverrideName = overrideToEdit.name ?? String(
+                    localized: "Custom Override",
+                    comment: "Fallback display name for a duplicated override when the preset had no name"
+                )
             }
         } catch {
             debugPrint(
@@ -324,6 +361,20 @@ extension Adjustments.StateModel {
         smbMinutes = defaultSmbMinutes
         uamMinutes = defaultUamMinutes
         target = currentGlucoseTarget
+        overrideAutoISFmin = nil
+        overrideAutoISFmax = nil
+        overrideAutoISFhourlyChange = nil
+        overrideHigherISFrangeWeight = nil
+        overrideLowerISFrangeWeight = nil
+        overridePostMealISFweight = nil
+        overrideBgAccelISFweight = nil
+        overrideBgBrakeISFweight = nil
+        overrideIobThresholdPercent = nil
+        overrideSmbDeliveryRatio = nil
+        overrideSmbDeliveryRatioBGrange = nil
+        overrideSmbDeliveryRatioMin = nil
+        overrideSmbDeliveryRatioMax = nil
+        overrideEnableBGacceleration = nil
     }
 
     /// Rounds a target value to the nearest step.

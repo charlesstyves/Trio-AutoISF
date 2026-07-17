@@ -21,9 +21,6 @@ final class BaseBolusCalculationManager: BolusCalculationManager, Injectable {
     @Injected() private var fileStorage: FileStorage!
     @Injected() private var determinationStorage: DeterminationStorage!
 
-    let glucoseFetchContext = CoreDataStack.shared.newTaskContext()
-    let determinationFetchContext = CoreDataStack.shared.newTaskContext()
-
     init(resolver: Resolver) {
         injectServices(resolver)
     }
@@ -43,7 +40,6 @@ final class BaseBolusCalculationManager: BolusCalculationManager, Injectable {
         var evBG: Decimal
         var minPredBG: Decimal
         var lastLoopDate: Date?
-        var insulin: Decimal
         var target: Decimal
         var isf: Decimal
         var cob: Int16
@@ -194,16 +190,17 @@ final class BaseBolusCalculationManager: BolusCalculationManager, Injectable {
     /// Fetches recent glucose readings from CoreData
     /// - Returns: Array of NSManagedObjectIDs for glucose readings
     private func fetchGlucose() async throws -> [NSManagedObjectID] {
+        let context = CoreDataStack.shared.newTaskContext()
+        context.name = "fetchGlucose"
         let results = try await CoreDataStack.shared.fetchEntitiesAsync(
             ofType: GlucoseStored.self,
-            onContext: glucoseFetchContext,
+            onContext: context,
             predicate: NSPredicate.glucose,
             key: "date",
-            ascending: false,
-            fetchLimit: 288
+            ascending: false
         )
 
-        return try await glucoseFetchContext.perform {
+        return try await context.perform {
             guard let fetchedResults = results as? [GlucoseStored] else {
                 throw CoreDataError.fetchError(function: #function, file: #file)
             }
@@ -261,7 +258,6 @@ final class BaseBolusCalculationManager: BolusCalculationManager, Injectable {
                 evBG: 0,
                 minPredBG: 0,
                 lastLoopDate: nil,
-                insulin: 0,
                 target: currentBGTarget,
                 isf: currentISF,
                 cob: 0,
@@ -277,7 +273,6 @@ final class BaseBolusCalculationManager: BolusCalculationManager, Injectable {
             evBG: (mostRecentDetermination.eventualBG ?? 0) as Decimal,
             minPredBG: (mostRecentDetermination.minPredBG ?? 0) as Decimal,
             lastLoopDate: apsManager.lastLoopDate as Date?,
-            insulin: (mostRecentDetermination.insulinForManualBolus ?? 0) as Decimal,
             target: (mostRecentDetermination.currentTarget ?? currentBGTarget as NSDecimalNumber) as Decimal,
             isf: (mostRecentDetermination.insulinSensitivity ?? NSDecimalNumber(decimal: currentISF)) as Decimal,
             cob: mostRecentDetermination.cob as Int16,
@@ -316,6 +311,8 @@ final class BaseBolusCalculationManager: BolusCalculationManager, Injectable {
             let maxCOB = preferences.maxCOB
 
             // Fetch glucose data
+            let glucoseFetchContext = CoreDataStack.shared.newTaskContext()
+            glucoseFetchContext.name = "handleBolusCalculation.glucose"
             let glucoseIds = try await fetchGlucose()
             let glucoseObjects: [GlucoseStored] = try await CoreDataStack.shared.getNSManagedObject(
                 with: glucoseIds,
@@ -326,6 +323,8 @@ final class BaseBolusCalculationManager: BolusCalculationManager, Injectable {
             }
 
             // Fetch determination data
+            let determinationFetchContext = CoreDataStack.shared.newTaskContext()
+            determinationFetchContext.name = "handleBolusCalculation.determination"
             let determinationIds = try await determinationStorage.fetchLastDeterminationObjectID(
                 predicate: NSPredicate.predicateFor30MinAgoForDetermination
             )

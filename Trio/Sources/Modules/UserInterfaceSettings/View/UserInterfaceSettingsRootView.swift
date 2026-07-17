@@ -195,6 +195,106 @@ extension UserInterfaceSettings {
 
                 SettingInputSection(
                     decimalValue: $decimalPlaceholder,
+                    booleanValue: $state.useChartBars,
+                    shouldDisplayHint: $shouldDisplayHint,
+                    selectedVerboseHint: Binding(
+                        get: { selectedVerboseHint },
+                        set: {
+                            selectedVerboseHint = $0.map { AnyView($0) }
+                            hintLabel = String(localized: "Use Bars for Bolus and Carbs")
+                        }
+                    ),
+                    units: state.units,
+                    type: .boolean,
+                    label: String(localized: "Use Bars for Bolus and Carbs"),
+                    miniHint: String(
+                        localized: "Replace circles and triangles with vertical bars for bolus, SMB and carbs."
+                    ),
+                    verboseHint: VStack(alignment: .leading, spacing: 10) {
+                        Text(
+                            "When enabled, boluses and SMBs are drawn as blue bars hanging down from above the glucose curve, and carbs as orange bars rising up from below."
+                        )
+                        Text(
+                            "The bar height grows with the dose or carb amount, making it easier to spot large entries at a glance."
+                        )
+                        Text("External insulin keeps its rhombus marker.")
+                    }
+                )
+
+                SettingInputSection(
+                    decimalValue: $decimalPlaceholder,
+                    booleanValue: $state.showCgmSensorStatus,
+                    shouldDisplayHint: $shouldDisplayHint,
+                    selectedVerboseHint: Binding(
+                        get: { selectedVerboseHint },
+                        set: {
+                            selectedVerboseHint = $0.map { AnyView($0) }
+                            hintLabel = String(localized: "Show CGM Status Around Bobble")
+                        }
+                    ),
+                    units: state.units,
+                    type: .boolean,
+                    label: String(localized: "Show CGM Status Around Bobble"),
+                    miniHint: String(
+                        localized: "Display sensor lifecycle arc, hourglass and status around the glucose bobble."
+                    ),
+                    verboseHint: VStack(alignment: .leading, spacing: 10) {
+                        Text(
+                            "When enabled, the glucose bobble shows CGM sensor status: a lifecycle arc during warmup and the last 48 hours before expiry, an hourglass icon tracking the sensor's remaining time, and compact status views for error states like signal loss or sensor failure."
+                        )
+                        Text(
+                            "When disabled, the bobble only shows the glucose reading, trend arrow, and delta."
+                        )
+                    }
+                )
+
+                Section {
+                    VStack {
+                        Picker(
+                            selection: $state.bolusDisplayThreshold,
+                            label: Text("Bolus Label Threshold")
+                        ) {
+                            ForEach(BolusDisplayThreshold.allCases) { selection in
+                                Text(selection.displayName).tag(selection)
+                            }
+                        }.padding(.top)
+
+                        HStack(alignment: .center) {
+                            Text(
+                                "Hide numeric labels next to small boluses and SMBs to reduce chart clutter."
+                            )
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                            .lineLimit(nil)
+                            Spacer()
+                            Button(
+                                action: {
+                                    hintLabel = String(localized: "Bolus Label Threshold")
+                                    selectedVerboseHint =
+                                        AnyView(
+                                            VStack(alignment: .leading, spacing: 10) {
+                                                Text(
+                                                    "Only boluses and SMBs at or above the selected amount will show their numeric label on the main chart. The bar or marker itself is always drawn."
+                                                )
+                                                Text(
+                                                    "Choose 'Show all labels' to keep every label, or pick a higher threshold to clean up the chart when there are many small SMBs."
+                                                )
+                                            }
+                                        )
+                                    shouldDisplayHint.toggle()
+                                },
+                                label: {
+                                    HStack {
+                                        Image(systemName: "questionmark.circle")
+                                    }
+                                }
+                            ).buttonStyle(BorderlessButtonStyle())
+                        }.padding(.top)
+                    }.padding(.bottom)
+                }.listRowBackground(Color.chart)
+
+                SettingInputSection(
+                    decimalValue: $decimalPlaceholder,
                     booleanValue: $state.rulerMarks,
                     shouldDisplayHint: $shouldDisplayHint,
                     selectedVerboseHint: Binding(
@@ -288,7 +388,7 @@ extension UserInterfaceSettings {
 
                             HStack(alignment: .center) {
                                 Text(
-                                    "Set low and high glucose values for the main screen, watch app and live activity glucose graph."
+                                    "Set low and high glucose values for the main screen, watch app, live activity, and contact image colors."
                                 )
                                 .lineLimit(nil)
                                 .font(.footnote)
@@ -305,7 +405,10 @@ extension UserInterfaceSettings {
                                                         "Default values are based on internationally accepted Time in Range values of \(state.units == .mgdL ? "70" : 70.formattedAsMmolL)-\(state.units == .mgdL ? "180" : 180.formattedAsMmolL) \(state.units.rawValue)."
                                                     ).bold()
                                                     Text(
-                                                        "Adjust these values if you would like the statistics to reflect different values than the internationally accepted Time In Range values used as the default."
+                                                        "These thresholds drive the chart band colors, statistics in-range buckets, Live Activity colors, and Contact Image colors."
+                                                    )
+                                                    Text(
+                                                        "To configure when alarms fire (urgent low / low / high / forecasted low), open Glucose Alarms."
                                                     )
                                                     Text("Note: These values are not used to calculate insulin dosing.")
                                                 }
@@ -521,6 +624,29 @@ extension UserInterfaceSettings {
                     ),
                     headerText: String(localized: "Carbs Required Badge")
                 )
+
+                SettingInputSection(
+                    decimalValue: $decimalPlaceholder,
+                    booleanValue: $state.requireAdjustmentsConfirmation,
+                    shouldDisplayHint: $shouldDisplayHint,
+                    selectedVerboseHint: Binding(
+                        get: { selectedVerboseHint },
+                        set: {
+                            selectedVerboseHint = $0.map { AnyView($0) }
+                            hintLabel = String(localized: "Require Adjustments Confirmation")
+                        }
+                    ),
+                    units: state.units,
+                    type: .boolean,
+                    label: String(localized: "Require Adjustments Confirmation"),
+                    miniHint: String(
+                        localized: "If enabled, a confirmation dialog will be shown when activating adjustment presets."
+                    ),
+                    verboseHint: Text(
+                        "Turning this on will show a confirmation dialog when you activate an Override or Temporary Target preset. This is for users who would like avoid accidentally activating a preset by mistake."
+                    ),
+                    headerText: String(localized: "Adjustments")
+                )
             }
             .listSectionSpacing(sectionSpacing)
             .sheet(isPresented: $shouldDisplayHint) {
@@ -537,6 +663,7 @@ extension UserInterfaceSettings {
             .onAppear(perform: configureView)
             .navigationBarTitle("User Interface")
             .navigationBarTitleDisplayMode(.automatic)
+            .settingsHighlightScroll()
         }
     }
 }

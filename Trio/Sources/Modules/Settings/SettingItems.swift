@@ -8,16 +8,22 @@ struct SettingItem: Identifiable {
     let view: Screen
     let searchContents: [String]?
     let path: [String]?
+    /// Maps a `searchContents` string to the exact label used in `SettingInputSection`
+    /// when the two differ. Entries whose searchContents string already matches the
+    /// label don't need an entry here.
+    let scrollTargetLabels: [String: String]?
 
     init(
         title: String,
         view: Screen,
         searchContents: [String]? = nil,
+        scrollTargetLabels: [String: String]? = nil,
         path: [String]? = nil
     ) {
         self.title = title
         self.view = view
         self.searchContents = searchContents
+        self.scrollTargetLabels = scrollTargetLabels
         self.path = path
     }
 }
@@ -26,6 +32,11 @@ struct FilteredSettingItem: Identifiable {
     let id = UUID()
     let settingItem: SettingItem
     let matchedContent: String
+    /// The label string used as the scroll/highlight target in the destination view.
+    /// Falls back to `matchedContent` when no explicit mapping exists.
+    var scrollLabel: String {
+        settingItem.scrollTargetLabels?[matchedContent] ?? matchedContent
+    }
 }
 
 enum SettingItems {
@@ -120,6 +131,8 @@ enum SettingItems {
                 "Max IOB",
                 "Max COB",
                 "Minimum Safety Threshold",
+                "SMB Threshold Ratio",
+                "SMB cutoff",
                 "Delivery Limits"
             ],
             path: ["Therapy Settings", "Units and Limits"]
@@ -228,7 +241,21 @@ enum SettingItems {
                 "acceleration",
                 "SMB Delivery Ratio",
                 "weights",
-                "factors"
+                "factors",
+                "Enable Autosens",
+                "AutoISF IOB Threshold Percent",
+                "AutoISF Max",
+                "AutoISF Min",
+                "Enable BG Acceleration",
+                "ISF Weight for Higher BGs",
+                "ISF Weight for Lower BGs",
+                "ISF Weight for Postprandial BG Rise",
+                "DuraISF Weight",
+                "SMB DeliveryRatio (fixed)",
+                "SMB DeliveryRatio BG Range",
+                "SMB DeliveryRatio BG Minimum",
+                "SMB DeliveryRatio BG Maximum",
+                "SMB Max RangeExtension"
             ],
             path: ["Algorithm", "autoISF"]
         ),
@@ -236,7 +263,14 @@ enum SettingItems {
             title: "AIMI B30",
             view: .B30Conf,
             searchContents: [
-                "Eating Soon"
+                "Eating Soon",
+                "Activate B30 EatingSoon",
+                "TempTarget Level for B30",
+                "Minimum Start Bolus Size",
+                "Duration of Increased B30 Basal Rate",
+                "B30 Basal Rate Increase Factor",
+                "Upper BG Limit for B30",
+                "Upper Delta Limit for B30"
             ],
             path: ["Algorithm", "AIMI B30"]
         ),
@@ -244,7 +278,12 @@ enum SettingItems {
             title: "Keto Protection",
             view: .KetoConfig,
             searchContents: [
-                "Acidosis"
+                "Acidosis",
+                "Activate KetoProtection",
+                "Variable Strategy",
+                "Safety TBR in %",
+                "Enable Absolute Safety TBR",
+                "Absolute Safety TBR"
             ],
             path: ["Algorithm", "Keto Protection"]
         ),
@@ -272,7 +311,19 @@ enum SettingItems {
                 "Super Bolus Factor",
                 "Very Low Glucose Warning"
             ],
-            path: ["Features", "Bolus Calculator"]
+            scrollTargetLabels: [
+                "Enable Reduced Bolus Factor": "Enable Reduced Bolus Option",
+                "Reduced Bolus Factor": "Enable Reduced Bolus Option",
+                "Enable Super Bolus": "Enable Super Bolus Option",
+                "Super Bolus Factor": "Enable Super Bolus Option"
+            ],
+            path: ["Features", "Treatments", "Bolus Calculator"]
+        ),
+        SettingItem(
+            title: "Quick-Pick Boluses",
+            view: .quickBolusConfig,
+            searchContents: ["Enable Quick-Pick Boluses"],
+            path: ["Features", "Treatments", "Quick-Pick Boluses"]
         ),
         SettingItem(
             title: "Meal Settings",
@@ -289,7 +340,15 @@ enum SettingItems {
                 "Fat and Protein Factor",
                 "FPU"
             ],
-            path: ["Features", "Meal Settings"]
+            scrollTargetLabels: [
+                "Max Fat": "Enable Fat and Protein Entries",
+                "Max Protein": "Enable Fat and Protein Entries",
+                "Fat and Protein Delay": "Enable Fat and Protein Entries",
+                "Spread Interval": "Enable Fat and Protein Entries",
+                "Fat and Protein Percentage": "Enable Fat and Protein Entries",
+                "FPU": "Enable Fat and Protein Entries"
+            ],
+            path: ["Features", "Treatments", "Meal Settings"]
         ),
         SettingItem(
             title: "Shortcuts",
@@ -328,7 +387,24 @@ enum SettingItems {
                 "Glucose Color Scheme",
                 "Time in Range Type",
                 "Time in Tight Range (TITR)",
-                "Time in Normoglycemia (TING)"
+                "Time in Normoglycemia (TING)",
+                "Require Adjustments Confirmation",
+                "Show CGM Status Around Bobble",
+                "CGM Status",
+                "Bobble"
+            ],
+            scrollTargetLabels: [
+                "Show Y-Axis Grid Lines": "Show X-Axis Grid Lines",
+                "High Threshold": "Low Threshold",
+                "Cone": "Forecast Display Type",
+                "Lines": "Forecast Display Type",
+                "Dark Mode": "Appearance",
+                "Light Mode": "Appearance",
+                "Dark Scheme": "Appearance",
+                "Light Scheme": "Appearance",
+                "Carbs Required Threshold": "Show Carbs Required Badge",
+                "CGM Status": "Show CGM Status Around Bobble",
+                "Bobble": "Show CGM Status Around Bobble"
             ],
             path: ["Features", "User Interface"]
         ),
@@ -349,20 +425,49 @@ enum SettingItems {
     static let notificationItems = [
         SettingItem(title: "Manage iOS Preferences", view: .notificationSettings),
         SettingItem(
-            title: "Trio Notifications",
-            view: .glucoseNotificationSettings,
+            title: "Glucose Alarms",
+            view: .glucoseAlerts,
             searchContents: [
-                "Always Notify Pump",
-                "Always Notify CGM",
-                "Always Notify Carb",
-                "Always Notify Algorithm",
-                "Show Glucose App Badge",
-                "Glucose Notifications",
-                "Add Glucose Source to Alarm",
-                "Low Glucose Alarm Limit",
-                "High Glucose Alarm Limit"
+                "Urgent Low Glucose",
+                "Low Glucose",
+                "Forecasted Low Glucose",
+                "High Glucose",
+                "Day & Night",
+                "Alert Sound",
+                "Override Silence",
+                "Show Glucose App Badge"
             ],
-            path: ["Notifications", "Trio Notifications"] // Glucose
+            path: ["Notifications", "Glucose Alarms"]
+        ),
+        SettingItem(
+            title: "Device Alarms",
+            view: .deviceAlarms,
+            searchContents: [
+                "Critical",
+                "Time-Sensitive",
+                "Normal",
+                "Occlusion",
+                "Pump Fault",
+                "Hardware Fault",
+                "Reservoir",
+                "Battery",
+                "Bolus Failed",
+                "Pod",
+                "Sensor Failure",
+                "Sensor Stopped",
+                "Calibration",
+                "Signal Loss",
+                "Device Expired",
+                "Not Looping",
+                "Algorithm"
+            ],
+            path: ["Notifications", "Device Alarms"]
+        ),
+        SettingItem(
+            title: "Day & Night Windows",
+            view: .alarmWindows,
+            searchContents: ["Day Starts", "Night Starts", "Day & Night"],
+            path: ["Notifications", "Day & Night Windows"]
         ),
         SettingItem(
             title: "Live Activity",

@@ -18,18 +18,22 @@ struct AppShortcuts: AppShortcutsProvider {
                 "Activate \(.applicationName) temporary target ?",
                 "\(.applicationName) apply a temporary target"
             ],
-            shortTitle: "Activate TT",
+            shortTitle: "Activate TT preset",
             systemImageName: "arrow.up.circle.badge.clock"
         )
         AppShortcut(
-            intent: ListStateIntent(),
+            intent: ScheduleTempPresetIntent(),
             phrases: [
-                "List \(.applicationName) state",
-                "\(.applicationName) state"
+                "Schedule \(.applicationName) temporary target preset",
+                "\(.applicationName) schedule a temporary target preset"
             ],
-            shortTitle: "List State",
-            systemImageName: "list.bullet.circle"
+            shortTitle: "Schedule TT Preset",
+            systemImageName: "calendar.badge.clock"
         )
+        // ListStateIntent and RestartLiveActivityIntent are still AppIntents and
+        // remain available in the Shortcuts app's action picker — they're just
+        // not promoted to Trio's gallery section, so we stay under Apple's
+        // 10-AppShortcut-per-app limit.
         AppShortcut(
             intent: AddCarbPresetIntent(),
             phrases: [
@@ -67,13 +71,40 @@ struct AppShortcuts: AppShortcutsProvider {
             systemImageName: "xmark.square"
         )
         AppShortcut(
-            intent: RestartLiveActivityIntent(),
+            intent: ApplyProfileIntent(),
             phrases: [
-                "Restart \(.applicationName) Live Activity",
-                "Restarts the Live Activity for \(.applicationName)"
+                "Activate \(.applicationName) profile",
+                "Activates a \(.applicationName) profile for a limited time"
             ],
-            shortTitle: "Restart Live Activity",
-            systemImageName: "arrow.clockwise.circle.fill"
+            shortTitle: "Activate Profile",
+            systemImageName: "person.crop.circle.badge.checkmark"
+        )
+        AppShortcut(
+            intent: ScheduleProfileOnceIntent(),
+            phrases: [
+                "Schedule \(.applicationName) profile",
+                "Schedules a \(.applicationName) profile to activate at a chosen time for a limited duration"
+            ],
+            shortTitle: "Schedule Profile",
+            systemImageName: "calendar.badge.clock"
+        )
+        AppShortcut(
+            intent: CreateCustomTempTargetIntent(),
+            phrases: [
+                "Create a \(.applicationName) Temporary Target",
+                "\(.applicationName) create temporary target"
+            ],
+            shortTitle: "Create TT",
+            systemImageName: "scope"
+        )
+        AppShortcut(
+            intent: ScheduleCustomTempTargetIntent(),
+            phrases: [
+                "Schedule a custom \(.applicationName) Temporary Target",
+                "\(.applicationName) schedule custom temporary target"
+            ],
+            shortTitle: "Schedule TT",
+            systemImageName: "calendar.badge.plus"
         )
     }
 }

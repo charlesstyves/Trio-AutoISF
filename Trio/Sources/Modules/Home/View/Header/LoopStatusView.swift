@@ -164,11 +164,13 @@ struct LoopStatusView: View {
             if deliverAt < Date().addingTimeInterval(-5 * 60) {
                 let roundedMinutes = Int(minutesAgo.rounded())
                 statusTitle = String(
-                    localized: "Trio has not looped in \(roundedMinutes) minutes."
+                    localized: "Algorithm — not looped in \(roundedMinutes) minutes.",
+                    comment: "Loop status popup title when no recent loop — interpolation is minutes count"
                 )
             } else {
                 statusTitle = String(
-                    localized: "Enacted at \(Formatter.dateFormatter.string(from: deliverAt))"
+                    localized: "Algorithm enacted at \(Formatter.dateFormatter.string(from: deliverAt))",
+                    comment: "Loop status popup title when a recent loop has enacted — interpolation is a clock time"
                 )
             }
         } else if let determination = lastDetermination, let deliverAt = determination.deliverAt {
@@ -177,15 +179,20 @@ struct LoopStatusView: View {
             if deliverAt < Date().addingTimeInterval(-5 * 60) {
                 let roundedMinutes = Int(minutesAgo.rounded())
                 statusTitle = String(
-                    localized: "Trio has not looped in \(roundedMinutes) minutes."
+                    localized: "Algorithm — not looped in \(roundedMinutes) minutes.",
+                    comment: "Loop status popup title when no recent loop — interpolation is minutes count"
                 )
             } else {
                 statusTitle = String(
-                    localized: "Enacted at \(Formatter.dateFormatter.string(from: deliverAt))"
+                    localized: "Algorithm enacted at \(Formatter.dateFormatter.string(from: deliverAt))",
+                    comment: "Loop status popup title when a recent loop has enacted — interpolation is a clock time"
                 )
             }
         } else {
-            statusTitle = String(localized: "Not looping.")
+            statusTitle = String(
+                localized: "Not looping.",
+                comment: "Loop-status popup title shown on Home when no determination is available and the loop isn't running"
+            )
         }
     }
 
@@ -285,11 +292,15 @@ struct LoopStatusView: View {
         var tags: [String] = determination.reasonParts
 
         if state.isSmoothingEnabled {
-            tags.append("Smoothing: On")
+            tags
+                .append(String(
+                    localized: "Smoothing: On",
+                    comment: "Tag chip in Loop status popup — glucose smoothing is enabled"
+                ))
         }
 
         if let currentTDD = state.fetchedTDDs.first?.totalDailyDose, currentTDD != 0 {
-            tags.append("TDD: \(currentTDD)")
+            tags.append(String(localized: "TDD: \(currentTDD)", comment: "Tag chip in Loop status popup — total daily dose"))
         }
 
         return tags

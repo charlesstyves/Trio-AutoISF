@@ -4,6 +4,7 @@ import SwiftUI
 extension BasalProfileEditor {
     @Observable final class StateModel: BaseStateModel<Provider> {
         @ObservationIgnored @Injected() private var nightscout: NightscoutManager!
+        @ObservationIgnored @Injected() private var tidepoolManager: TidepoolManager!
         @ObservationIgnored @Injected() private var broadcaster: Broadcaster!
 
         var syncInProgress: Bool = false
@@ -36,8 +37,8 @@ extension BasalProfileEditor {
         }
 
         var preferences: Preferences {
-            get { settingsManager.preferences }
-            set { settingsManager.preferences = newValue }
+            get { scope.preferences }
+            set { scope.preferences = newValue }
         }
 
         var roundingHint: Bool = false
@@ -161,10 +162,7 @@ extension BasalProfileEditor {
                 return BasalProfileEntry(start: fotmatter.string(from: date), minutes: minutes, rate: rate)
             }
 
-            var profileWith24hours = profile.map(\.minutes)
-            profileWith24hours.append(24 * 60)
-            let pr2 = zip(profile, profileWith24hours.dropFirst())
-            total = pr2.reduce(0) { $0 + (Decimal($1.1 - $1.0.minutes) / 60) * $1.0.rate }
+            total = profile.totalDailyBasal
         }
 
         func add() {
@@ -196,7 +194,8 @@ extension BasalProfileEditor {
             }
             provider.saveProfile(profile)
                 .receive(on: DispatchQueue.main)
-                .sink { completion in
+                .sink { [weak self] completion in
+                    guard let self else { return }
                     self.syncInProgress = false
                     switch completion {
                     case .finished:
@@ -205,19 +204,24 @@ extension BasalProfileEditor {
                         self.roundingHint = false
                         self.originalRates.removeAll()
 
-                        DispatchQueue.main.async {
-                            self.broadcaster.notify(BasalProfileObserver.self, on: .main) {
+                        DispatchQueue.main.async { [weak self] in
+                            self?.broadcaster.notify(BasalProfileObserver.self, on: .main) {
                                 $0.basalProfileDidChange(profile)
                             }
                         }
 
-                        Task.detached(priority: .low) {
+                        Task.detached(priority: .low) { [weak self] in
+                            guard let self else { return }
                             do {
                                 debug(.nightscout, "Attempting to upload basal rates to Nightscout")
                                 try await self.nightscout.uploadProfiles()
                             } catch {
                                 debug(.default, "Failed to upload basal rates to Nightscout: \(error)")
                             }
+                        }
+
+                        Task.detached(priority: .low) { [weak self] in
+                            await self?.tidepoolManager.uploadSettings()
                         }
                     case .failure:
                         // Handle the error, show error message

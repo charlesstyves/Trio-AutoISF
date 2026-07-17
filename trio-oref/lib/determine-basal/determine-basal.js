@@ -36,14 +36,7 @@ function calculate_expected_delta(target_bg, eventual_bg, bgi) {
 
 function convert_bg(value, profile)
 {
-    if (profile.target_units == "mmol/L")
-    {
-        return round(value * 0.0555, 1).toFixed(1);
-    }
-    else
-    {
-        return Math.round(value);
-    }
+    return Math.round(value);
 }
 
     //*********************************************************************************
@@ -197,7 +190,9 @@ function loop_smb(microBolusAllowed, profile, iob_data, aimismb, useIobTh, iobTh
         }
 
         if (profile.enableSMB_EvenOn_OddOff_always)  {
-            var target = convert_bg(profile.min_bg, profile);
+            var target = profile.target_units == "mmol/L"
+                ? round(profile.min_bg * 0.0555, 1)
+                : Math.round(profile.min_bg);
             console.error("User units for Glucose (devTest) target profile: " + profile.target_units + ", Target: " + target);
 
             if (profile.target_units == "mmol/L") {
@@ -399,12 +394,12 @@ function autoISF(sens, origin_sens, target_bg, profile, glucose_status, sensitiv
         if (parabola_fit_a2 !=0 && fit_corr>=0.9) {
             var minmax_delta = - parabola_fit_a1/2/parabola_fit_a2 * 5;       // back from 5min block to 1 min
             var minmax_value = round(parabola_fit_a0 - minmax_delta*minmax_delta/25*parabola_fit_a2, 1);
-            minmax_delta = round(minmax_delta, 1);
+            minmax_delta = round(minmax_delta, 0);  // match orefSwift: integer minutes for the parabola tag
             if (minmax_delta>0 && bg_acce<0) {
-                fitreason = "predicts a Max of " + convert_bg(minmax_value,profile) + ", in about " + Math.abs(minmax_delta) + "min";
+                fitreason = "predicts Max of " + convert_bg(minmax_value,profile) + ", in about " + Math.abs(minmax_delta) + "min";
                 console.error("Parabolic fit " + fitreason);
             } else if (minmax_delta>0 && bg_acce>0) {
-                fitreason = "predicts a Min of " + convert_bg(minmax_value,profile) + ", in about " + Math.abs(minmax_delta) + "min";
+                fitreason = "predicts Min of " + convert_bg(minmax_value,profile) + ", in about " + Math.abs(minmax_delta) + "min";
                 console.error("Parabolic fit " + fitreason);
                 if (minmax_delta<=30 && minmax_value<target_bg) {   // start braking
                     acce_weight = -profile.bgBrake_ISF_weight;
@@ -427,7 +422,7 @@ function autoISF(sens, origin_sens, target_bg, profile, glucose_status, sensitiv
             var fit_share = 10*(fit_corr-0.9);                                      // 0 at correlation 0.9, 1 at 1.00
             var cap_weight = 1;                                                     // full contribution above target
             var meal_addon = 0;
-            if ( acce_weight==1 && glucose_status.glucose<profile.target_bg ) {     // below target acce goes towards target
+            if ( acce_weight==1 && glucose_status.glucose<target_bg ) {     // below target acce goes towards target
                 if ( bg_acce > 0 ) {
                     if (bg_acce>1) {cap_weight = 0.5}                           // halve the effect below target
                     acce_weight = profile.bgBrake_ISF_weight;
@@ -468,7 +463,7 @@ function autoISF(sens, origin_sens, target_bg, profile, glucose_status, sensitiv
         final_ISF = withinISFlimits(liftISF, profile.autoISF_min, maxISFReduction, sensitivityRatio, origin_sens, profile, exerciseModeActive, resistanceModeActive);
         autoISFsens = Math.min(720, round(profile.sens / final_ISF, 1));
         //isfreason +=  ", bg-ISF Ratio: " + round(final_ISF,2);
-        isfreason += ", final Ratio: " + round(final_ISF,2) + exerciseReason + withinlimitsreason + ", final ISF: " + convert_bg(profile.sens,profile) + "\u2192" + convert_bg(autoISFsens, profile);
+        isfreason += ", final Ratio:, " + round(final_ISF,2) + exerciseReason + withinlimitsreason + ", final ISF:, " + convert_bg(profile.sens,profile) + "\u2192" + convert_bg(autoISFsens, profile);
         return autoISFsens;
     } else if ( bg_ISF > 1 ) {
         sens_modified = true;
@@ -518,7 +513,7 @@ function autoISF(sens, origin_sens, target_bg, profile, glucose_status, sensitiv
         }                                                        // brakes on for otherwise stronger or stable ISF
         final_ISF = withinISFlimits(liftISF, profile.autoISF_min, maxISFReduction, sensitivityRatio, origin_sens, profile, exerciseModeActive, resistanceModeActive);
         autoISFsens = round(profile.sens / final_ISF, 1);
-        isfreason += ppisfreason + duraisfreason + ", final Ratio: " + round(final_ISF,2) + exerciseReason + withinlimitsreason + ", final ISF: " + convert_bg(profile.sens,profile) + "\u2192" + convert_bg(autoISFsens, profile);
+        isfreason += ppisfreason + duraisfreason + ", final Ratio:, " + round(final_ISF,2) + exerciseReason + withinlimitsreason + ", final ISF:, " + convert_bg(profile.sens,profile) + "\u2192" + convert_bg(autoISFsens, profile);
         return autoISFsens;
     }
     isfreason += ", not modified"
@@ -1854,11 +1849,8 @@ var determine_basal = function determine_basal(glucose_status, currenttemp, iob_
             var iobTHreason = "";
             var iobTHtolerance = 130;
             var iobTHvirtual = profile.iob_threshold_percent*iobTHtolerance/100 * profile.max_iob * iobTH_reduction_ratio;
-            if (microBolus > iobTHvirtual - iob_data.iob && (loop_wanted_smb=="fullLoop" || loop_wanted_smb=="enforced")) {
+            if (use_iobTH && microBolus > iobTHvirtual - iob_data.iob) {
                 microBolus = iobTHvirtual - iob_data.iob;
-                //if (profile.profile_percentage!=100) {
-                //    console.error("Full loop modified max_iob", profile.max_iob, "to effectively", round(profile.max_iob*profile.profile_percentage/100,1), "due to profile percentage");
-                //}
                 iobTHreason = ", capped by autoISF iobTH";
                 console.error("autoISF capped SMB at " + round(microBolus,2) + " to not exceed " + iobTHtolerance + "% of effective iobTH " + round(iobTHvirtual/iobTHtolerance*100,2) + "U");
             }
