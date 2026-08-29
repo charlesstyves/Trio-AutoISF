@@ -1476,13 +1476,12 @@ extension Home {
                 }
                 .tint(Color.tabBar)
 
-                Image(.taiCircledNoBackground)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 42, height: 42)
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 40))
+                    .foregroundStyle(Color.tabBar)
                     .padding(.vertical, 2)
-                    .shadow(color: Color.white.opacity(0.1), radius: 5, x: 0, y: 0)
-                    .contentShape(Rectangle())
+                    .padding(.horizontal, 24)
+
                     .onTapGesture {
                         state.showModal(for: .treatmentView)
                     }
