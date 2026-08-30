@@ -275,14 +275,14 @@ extension Treatments {
                             }
 
                             // Notes
-                            HStack {
-                                Image(systemName: "square.and.pencil")
-                                TextFieldWithToolBarString(
-                                    text: $state.note,
-                                    placeholder: String(localized: "Note..."),
-                                    maxLength: 25
-                                )
-                            }
+//                            HStack {
+//                                Image(systemName: "square.and.pencil")
+//                                TextFieldWithToolBarString(
+//                                    text: $state.note,
+//                                    placeholder: String(localized: "Note..."),
+//                                    maxLength: 25
+//                                )
+//                            }
                         }.listRowBackground(Color.chart)
 
                         Section {
@@ -476,7 +476,7 @@ extension Treatments {
             let isForecastVeryLow = state.minPredBG < 54
 
             // Only warn when enacting a bolus via pump
-            guard !state.externalInsulin, state.amount > 0 else {
+            guard !state.externalInsulin, state.amount > 0, state.confirmBolus else {
                 return (false, "", .primary)
             }
 
