@@ -394,7 +394,7 @@ final class BaseBolusCalculationManager: BolusCalculationManager, Injectable {
         debug(.default, "Target difference insulin: \(targetDifferenceInsulin)")
 
         // more or less insulin because of bg trend in the last 15 minutes
-        let fifteenMinutesInsulin = input.deltaBG / input.isf
+        let fifteenMinutesInsulin: Decimal = 0
         debug(.default, "15min insulin: \(fifteenMinutesInsulin)")
 
         // determine whole COB for which we want to dose insulin for and then determine insulin for wholeCOB
@@ -430,16 +430,13 @@ final class BaseBolusCalculationManager: BolusCalculationManager, Injectable {
         var factoredInsulin = wholeCalc
         debug(.default, "Initial factored insulin: \(factoredInsulin)")
 
-        // Apply Recommended Bolus Percentage (input.fraction) and if selected apply Reduced Bolus Percentage (input.fattyMealFactor)
-        // If factoredInsulin is negative, though, don't apply either
-        if factoredInsulin > 0 {
-            factoredInsulin *= input.fraction
-            debug(.default, "After fraction (\(input.fraction)): \(factoredInsulin)")
-
-            if input.useFattyMealCorrectionFactor {
-                factoredInsulin *= input.fattyMealFactor
-                debug(.default, "After reduced bolus factor (\(input.fattyMealFactor)): \(factoredInsulin)")
-            }
+        // Apply reduction factors ONLY to the COB portion of the insulin requirement
+        if factoredInsulin > 0, wholeCobInsulin > 0 {
+            let combinedFactor = input.useFattyMealCorrectionFactor ? (input.fraction * input.fattyMealFactor) : input.fraction
+            let cobReduction = wholeCobInsulin * (1 - combinedFactor)
+            
+            factoredInsulin -= cobReduction
+            debug(.default, "COB reduction applied (\(cobReduction)): new factoredInsulin = \(factoredInsulin)")
         }
 
         // Calculate and add super bolus insulin if enabled
