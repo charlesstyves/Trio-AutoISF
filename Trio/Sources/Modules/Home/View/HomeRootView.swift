@@ -404,9 +404,10 @@ extension Home {
         }
 
         private var treatmentButton: some View {
-            Image(.taiCircledNoBackground)
+            Image(systemName: "plus.circle.fill")
                 .resizable()
                 .scaledToFit()
+                .foregroundStyle(Color.tabBar)
                 .frame(width: 42, height: 42)
                 .padding(.vertical, 2)
                 .shadow(color: Color.white.opacity(0.1), radius: 5, x: 0, y: 0)
