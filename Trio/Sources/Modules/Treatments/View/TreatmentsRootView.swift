@@ -265,22 +265,22 @@ extension Treatments {
                             }
 
                             // Notes
-                            HStack {
-                                Image(systemName: "square.and.pencil")
-                                TextFieldWithToolBarString(
-                                    text: $state.note,
-                                    placeholder: String(localized: "Note..."),
-                                    maxLength: 25
-                                )
-                            }
+//                            HStack {
+//                                Image(systemName: "square.and.pencil")
+//                                TextFieldWithToolBarString(
+//                                    text: $state.note,
+//                                    placeholder: String(localized: "Note..."),
+//                                    maxLength: 25
+//                                )
+//                            }
                         }.listRowBackground(Color.chart)
 
                         Section {
-                            if state.fattyMeals || state.sweetMeals {
+//                            if state.fattyMeals || state.sweetMeals {
                                 HStack(spacing: 10) {
                                     if state.fattyMeals {
                                         Toggle(isOn: $state.useFattyMealCorrectionFactor) {
-                                            Text("Reduced Bolus")
+                                            Text("Reduced")
                                         }
                                         .toggleStyle(RadioButtonToggleStyle())
                                         .font(.footnote)
@@ -308,8 +308,14 @@ extension Treatments {
                                             }
                                         }
                                     }
+                                    
+                                    Toggle(isOn: $state.externalInsulin) {
+	                                    Text("External")
+                                    }
+                                    .toggleStyle(RadioButtonToggleStyle())
+                                    .font(.footnote)
                                 }
-                            }
+//                            }
 
                             HStack {
                                 HStack {
@@ -373,11 +379,11 @@ extension Treatments {
                                     }
                             }
 
-                            HStack {
-                                Text("External Insulin")
-                                Spacer()
-                                Toggle("", isOn: $state.externalInsulin).toggleStyle(CheckboxToggleStyle())
-                            }
+//                            HStack {
+//                                Text("External Insulin")
+//                                Spacer()
+//                                Toggle("", isOn: $state.externalInsulin).toggleStyle(CheckboxToggleStyle())
+//                            }
                         }.listRowBackground(Color.chart)
 
                         treatmentButton
@@ -428,6 +434,7 @@ extension Treatments {
                         showFatProteinOrderBanner = true
                     }
                 }
+                focusedField = .carbs
             }
             .onDisappear {
                 state.isActive = false
@@ -473,7 +480,7 @@ extension Treatments {
             let isForecastVeryLow = state.minPredBG < 54
 
             // Only warn when enacting a bolus via pump
-            guard !state.externalInsulin, state.amount > 0 else {
+            guard !state.externalInsulin, state.amount > 0, state.confirmBolus else {
                 return (false, "", .primary)
             }
 
