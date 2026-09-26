@@ -263,6 +263,7 @@ extension Treatments {
                                         .accessibilityLabel(Text("15 minutes later"))
                                 }
                             }
+							.hidden()
 
                             // Notes
 //                            HStack {
@@ -397,7 +398,7 @@ extension Treatments {
                 }
             }
             .padding(.top)
-            .ignoresSafeArea(edges: .top)
+//            .ignoresSafeArea(edges: .top)
             .scrollContentBackground(.hidden).background(appState.trioBackgroundColor(for: colorScheme))
             .blur(radius: state.showInfo ? 3 : 0)
             .navigationTitle("Treatments")
