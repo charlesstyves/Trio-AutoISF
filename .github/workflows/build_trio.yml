@@ -3,9 +3,9 @@ run-name: Build Tai (${{ github.ref_name }})
 on:
   workflow_dispatch:
   schedule:
-    # Check for updates every Sunday
-    #   Later logic builds if there are updates or if it is the 2nd Sunday of the month
-    - cron: "43 6 * * 3" # Sunday at UTC 06:43
+    # Check for updates every Thursday
+    #   Later logic builds if there are updates or if it is the 2nd Thursday of the month
+    - cron: "27 23 * * 4" # Thursday at UTC 23:27
 
 env:
   GH_PAT: ${{ secrets.GH_PAT }}
