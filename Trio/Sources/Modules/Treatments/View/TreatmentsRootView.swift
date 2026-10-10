@@ -225,11 +225,11 @@ extension Treatments {
 
         /// Own view for Reduced Bolus / Super Bolus toggles, the recommendation readout and the Bolus field
         @ViewBuilder private var bolusSection: some View {
-            if state.fattyMeals || state.sweetMeals {
+//            if state.fattyMeals || state.sweetMeals {
                 HStack(spacing: 10) {
                     if state.fattyMeals {
                         Toggle(isOn: $state.useFattyMealCorrectionFactor) {
-                            Text("Reduced Bolus")
+                            Text("Reduced")
                         }
                         .toggleStyle(RadioButtonToggleStyle())
                         .font(.footnote)
@@ -257,8 +257,13 @@ extension Treatments {
                             }
                         }
                     }
+                    Toggle(isOn: $state.externalInsulin) {
+                    	Text("External")
+                    }
+                    .toggleStyle(RadioButtonToggleStyle())
+                    .font(.footnote)
                 }
-            }
+//            }
 
             HStack {
                 HStack {
@@ -323,11 +328,11 @@ extension Treatments {
             }
             .id(FocusedField.bolus)
 
-            HStack {
-                Text("External Insulin")
-                Spacer()
-                Toggle("", isOn: $state.externalInsulin).toggleStyle(CheckboxToggleStyle())
-            }
+//            HStack {
+//                Text("External Insulin")
+//                Spacer()
+//                Toggle("", isOn: $state.externalInsulin).toggleStyle(CheckboxToggleStyle())
+//            }
         }
 
         var body: some View {
@@ -335,10 +340,10 @@ extension Treatments {
                 VStack {
                     ScrollViewReader { proxy in
                         List {
-                            Section {
-                                ForecastChart(state: state)
-                                    .padding(.vertical)
-                            }.listRowBackground(Color.chart)
+//                            Section {
+//                                ForecastChart(state: state)
+//                                    .padding(.vertical)
+//                            }.listRowBackground(Color.chart)
 
                             Section {
                                 carbsTextField()
@@ -366,7 +371,7 @@ extension Treatments {
                                         .transition(.opacity)
                                     }
                                 }
-
+/*
                                 // Time
                                 HStack {
                                     // Semi-hacky workaround to make sure the List renders the horizontal divider properly between the `Time` and `Note` rows within the Section
@@ -417,6 +422,7 @@ extension Treatments {
                                         maxLength: 25
                                     )
                                 }
+*/
                             }.listRowBackground(Color.chart)
 
                             Section {
@@ -452,8 +458,8 @@ extension Treatments {
                     CustomProgressView(text: progressText.displayName)
                 }
             }
-            .padding(.top)
-            .ignoresSafeArea(edges: .top)
+//            .padding(.top)
+//            .ignoresSafeArea(edges: .top)
             .scrollContentBackground(.hidden).background(appState.trioBackgroundColor(for: colorScheme))
             .blur(radius: state.showInfo ? 3 : 0)
             .navigationTitle("Treatments")
@@ -490,6 +496,7 @@ extension Treatments {
                         showFatProteinOrderBanner = true
                     }
                 }
+                focusedField = .carbs
             }
             .onDisappear {
                 state.isActive = false
@@ -535,7 +542,7 @@ extension Treatments {
             let isForecastVeryLow = state.minPredBG < 54
 
             // Only warn when enacting a bolus via pump
-            guard !state.externalInsulin, state.amount > 0 else {
+            guard !state.externalInsulin, state.amount > 0, state.confirmBolus else {
                 return (false, "", .primary)
             }
 
