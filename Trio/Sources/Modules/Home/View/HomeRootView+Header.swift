@@ -171,6 +171,10 @@ extension Home.RootView {
                 .accessibilityLabel(Text("Eventual glucose"))
                 .accessibilityValue(Text(verbatim: "--"))
             }
+            
+            Color.clear
+                .frame(height: 20) // Ajustez la hauteur selon la taille approximative d'une ligne d'élément
+            
         }
     }
 
