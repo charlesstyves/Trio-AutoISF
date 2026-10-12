@@ -107,6 +107,26 @@ extension Home.RootView {
 
     @ViewBuilder func rightHeaderPanel() -> some View {
         VStack(alignment: .trailing, spacing: 15) {
+            /// Loop view at bottomLeading
+            LoopView(
+                dosingMode: state.dosingMode,
+                timerDate: state.timerDate,
+                isLooping: state.isLooping,
+                lastLoopDate: state.lastLoopDate,
+                manualTempBasal: state.manualTempBasal,
+                lastGlucoseDate: state.lastGlucoseDate,
+                lastPumpCommsDate: state.lastPumpCommsDate,
+                hasDeviceIssue: state.hasDeviceIssue,
+                determination: state.determinationsFromPersistence
+            )
+            .onTapGesture {
+                state.isStatusPopupPresented.toggle()
+            }
+            .accessibilityAddTraits(.isButton)
+            .accessibilityHint(Text(String(localized: "Opens loop status", comment: "Accessibility hint")))
+            .accessibilityAction { state.isStatusPopupPresented.toggle() }
+            
+/*
             HStack(spacing: 4) {
                 Image(systemName: "arrow.up.arrow.down")
                     .font(.system(size: 16))
@@ -120,6 +140,7 @@ extension Home.RootView {
 //                    Text("\(state.units.rawValue)/U")
 //                        .font(.system(size: 12, design: .rounded))
             }
+*/
 
             /// eventualBG string
             if let eventualBG = state.enactedAndNonEnactedDeterminations.first?.eventualBG {
@@ -150,24 +171,6 @@ extension Home.RootView {
                 .accessibilityLabel(Text("Eventual glucose"))
                 .accessibilityValue(Text(verbatim: "--"))
             }
-            /// Loop view at bottomLeading
-            LoopView(
-                dosingMode: state.dosingMode,
-                timerDate: state.timerDate,
-                isLooping: state.isLooping,
-                lastLoopDate: state.lastLoopDate,
-                manualTempBasal: state.manualTempBasal,
-                lastGlucoseDate: state.lastGlucoseDate,
-                lastPumpCommsDate: state.lastPumpCommsDate,
-                hasDeviceIssue: state.hasDeviceIssue,
-                determination: state.determinationsFromPersistence
-            )
-            .onTapGesture {
-                state.isStatusPopupPresented.toggle()
-            }
-            .accessibilityAddTraits(.isButton)
-            .accessibilityHint(Text(String(localized: "Opens loop status", comment: "Accessibility hint")))
-            .accessibilityAction { state.isStatusPopupPresented.toggle() }
         }
     }
 
